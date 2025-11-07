@@ -1,0 +1,20 @@
+//! Toad - AI-powered coding terminal with semi-autonomous agents
+//!
+//! This library provides the core TUI functionality following the Elm Architecture:
+//! - Model (app.rs): Application state
+//! - Message (event.rs): Events and messages
+//! - Update (app.rs): State transitions
+//! - View (ui.rs): Rendering logic
+
+pub mod app;
+pub mod event;
+pub mod tui;
+pub mod ui;
+
+// Re-export commonly used types
+pub use app::App;
+pub use event::Event;
+pub use tui::Tui;
+
+/// Result type alias for the application
+pub type Result<T> = color_eyre::Result<T>;
