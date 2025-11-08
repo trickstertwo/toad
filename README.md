@@ -4,14 +4,16 @@ An AI coding terminal designed to rival Cursor, Claude Code, and GitHub Copilot 
 
 ## Project Status
 
-**Current Milestone:** M0 (Infrastructure) ✅ COMPLETE
+**Current Milestone:** M0 (Infrastructure) ✅ COMPLETE & VALIDATED
 
 - ✅ Evaluation framework with A/B testing
 - ✅ Statistical significance testing (Welch's t-test)
-- ✅ Feature flag architecture (12 toggleable features)
+- ✅ Feature flag architecture (13 toggleable features)
 - ✅ Metrics collection (accuracy, cost, performance)
+- ✅ Dataset management (SWE-bench Verified/Lite/Full)
+- ✅ Experiment tracking system
 - ✅ CLI interface with 4 commands
-- ✅ 26 passing tests (unit + integration)
+- ✅ 37 passing tests (29 unit + 8 integration)
 
 **Next Milestone:** M1 (Simple Baseline) - Target: 55-60% accuracy
 
@@ -37,6 +39,7 @@ cargo test
 ## Documentation
 
 - **[M0_README.md](M0_README.md)** - Milestone 0 implementation details
+- **[M0_VALIDATION.md](M0_VALIDATION.md)** - Milestone 0 validation & completeness
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Complete system architecture
 - **[ITERATIVE_IMPLEMENTATION_PLAN.md](ITERATIVE_IMPLEMENTATION_PLAN.md)** - 5-milestone roadmap
 
@@ -70,11 +73,11 @@ cargo test
 
 ## Architecture Highlights
 
-**Feature Flag System**: 12 toggleable innovations
+**Feature Flag System**: 13 toggleable innovations
 - Context: AST, embeddings, graph, reranking
 - Routing: Semantic, multi-model, speculative
 - Intelligence: Smart tests, failure memory, planning
-- Optimizations: Caching, validation
+- Optimizations: Prompt caching, semantic caching, validation
 
 **Evaluation Framework**:
 - Task loading from SWE-bench datasets

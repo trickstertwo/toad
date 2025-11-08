@@ -53,6 +53,10 @@ pub struct FeatureFlags {
     /// Evidence: 90% cost reduction PROVEN
     pub prompt_caching: bool,
 
+    /// Use semantic caching (cache by semantic similarity)
+    /// Evidence: GPTCache 68.8% API reduction, >97% accuracy
+    pub semantic_caching: bool,
+
     /// Use tree-sitter for syntax validation
     /// Evidence: Production-proven, prevents syntax errors
     pub tree_sitter_validation: bool,
@@ -80,6 +84,7 @@ impl Default for FeatureFlags {
 
             // Optimization: Enable proven optimizations
             prompt_caching: true,
+            semantic_caching: false, // Test in M2
             tree_sitter_validation: true,
         }
     }
@@ -143,6 +148,7 @@ impl FeatureFlags {
         if self.failure_memory { count += 1; }
         if self.opportunistic_planning { count += 1; }
         if self.prompt_caching { count += 1; }
+        if self.semantic_caching { count += 1; }
         if self.tree_sitter_validation { count += 1; }
         count
     }
@@ -153,7 +159,7 @@ impl FeatureFlags {
             "Context: AST={}, Embed={}, Graph={}, Rerank={} | \
              Routing: Semantic={}, Multi={}, Spec={} | \
              Intel: Tests={}, Memory={}, Plan={} | \
-             Opt: Cache={}, Validate={}",
+             Opt: PCache={}, SCache={}, Validate={}",
             self.context_ast,
             self.context_embeddings,
             self.context_graph,
@@ -165,6 +171,7 @@ impl FeatureFlags {
             self.failure_memory,
             self.opportunistic_planning,
             self.prompt_caching,
+            self.semantic_caching,
             self.tree_sitter_validation,
         )
     }

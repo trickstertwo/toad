@@ -230,7 +230,7 @@ fn show_config(milestone: Option<u8>) {
         FeatureFlags::default()
     };
 
-    println!("Enabled features: {}/12", flags.enabled_count());
+    println!("Enabled features: {}/13", flags.enabled_count());
     println!();
     println!("Context Strategies:");
     println!("  AST-based context:        {}", flags.context_ast);
@@ -250,6 +250,7 @@ fn show_config(milestone: Option<u8>) {
     println!();
     println!("Optimizations:");
     println!("  Prompt caching:           {}", flags.prompt_caching);
+    println!("  Semantic caching:         {}", flags.semantic_caching);
     println!("  Tree-sitter validation:   {}", flags.tree_sitter_validation);
     println!();
     println!("Description: {}", flags.description());

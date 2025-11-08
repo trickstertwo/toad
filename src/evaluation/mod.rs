@@ -14,6 +14,12 @@ use chrono::{DateTime, Utc};
 pub mod task_loader;
 pub use task_loader::TaskLoader;
 
+pub mod dataset_manager;
+pub use dataset_manager::{DatasetManager, DatasetSource, DatasetInfo};
+
+pub mod experiment_manager;
+pub use experiment_manager::{ExperimentManager, Experiment, ExperimentStatus, ExperimentResults};
+
 /// Complexity level of a task
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Complexity {
