@@ -41,6 +41,7 @@ pub mod undo_redo;
 pub mod vim_macros;
 pub mod vim_mode;
 pub mod welcome;
+pub mod workspace;
 
 pub use animation::{Animation, AnimationState, EasingFunction};
 pub use bar_chart::{BarChart, BarData, BarDirection};
@@ -81,3 +82,4 @@ pub use undo_redo::{Action, UndoRedoManager};
 pub use vim_macros::{MacroAction, MacroRecorder, MarkRegistry};
 pub use vim_mode::{EditMode, ModeIndicator, Selection, VimMode};
 pub use welcome::WelcomeScreen;
+pub use workspace::{Workspace, WorkspaceManager};
