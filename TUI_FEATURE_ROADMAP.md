@@ -8,39 +8,49 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ## 🟢 BASIC TIER - Essential Foundation
 
 ### Core Architecture
-- [ ] **Elm-style Architecture** (Init → Update → View)
+- [x] **Elm-style Architecture** (Init → Update → View) ✅ COMPLETED
   - Clean separation: Model (state), Messages (events), Update (logic), View (render)
   - Immutable state updates
   - Single source of truth
+  - Multi-screen state machine (Welcome → TrustDialog → Main)
 
 ### Terminal Fundamentals
-- [ ] **Terminal Detection & Setup**
+- [x] **Terminal Detection & Setup** ✅ COMPLETED
   - Raw mode activation
   - Alternate screen buffer
   - Proper cleanup on exit (restore terminal state)
   - Signal handling (SIGTERM, SIGINT)
+  - Panic hook for terminal restoration
 
-- [ ] **Event Loop**
+- [x] **Event Loop** ✅ COMPLETED
   - Keyboard event handling
   - Resize event handling
   - Graceful shutdown (Ctrl+C, q to quit)
+  - Screen-specific event routing
 
 ### Basic Rendering
-- [ ] **Block Widget** - Borders, titles, basic containers
-- [ ] **Paragraph Widget** - Text rendering with wrapping
-- [ ] **Layout System** - Basic vertical/horizontal splits
-- [ ] **Status Bar** - Bottom bar with app state/help text
-- [ ] **Title Bar** - Top bar with app name/current view
+- [x] **Block Widget** - Borders, titles, basic containers ✅ COMPLETED
+- [x] **Paragraph Widget** - Text rendering with wrapping ✅ COMPLETED
+- [x] **Layout System** - Basic vertical/horizontal splits ✅ COMPLETED
+- [x] **Status Bar** - Bottom bar with app state/help text ✅ COMPLETED
+- [x] **Title Bar** - Top bar with app name/current view ✅ COMPLETED
+- [x] **ASCII Branding** - TOAD logo (full, compact, minimal) ✅ COMPLETED
 
 ### Basic Styling
-- [ ] **Color Support** - Basic 16 ANSI colors
-- [ ] **Text Modifiers** - Bold, italic, underline
-- [ ] **Border Styles** - Single, double, rounded
+- [x] **Color Support** - RGB colors (toad green accent) ✅ COMPLETED
+- [x] **Text Modifiers** - Bold, italic, underline ✅ COMPLETED
+- [x] **Border Styles** - Box-drawing characters ✅ COMPLETED
+- [x] **Theme Module** - Toad green + grayscale palette ✅ COMPLETED
 
 ### Navigation
-- [ ] **Single View Navigation** - Arrow keys, j/k movement
+- [x] **Single View Navigation** - Arrow keys navigation ✅ COMPLETED
 - [ ] **Basic Help Screen** - List of keybindings
-- [ ] **Quit Command** - q/Esc to exit
+- [x] **Quit Command** - q/Esc to exit ✅ COMPLETED
+
+### Welcome & Onboarding
+- [x] **Welcome Screen** - Split-pane logo + tips ✅ COMPLETED
+- [x] **Trust Dialog** - Copilot-style folder confirmation ✅ COMPLETED
+- [x] **Radio Button Selection** - Number keys + arrows ✅ COMPLETED
 
 ---
 
@@ -85,9 +95,21 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Highlight Matches** - Visual search feedback
 
 ### Logging & Debugging
-- [ ] **File Logging** - Debug logs to ~/.app/logs
+- [x] **File Logging** - Debug logs to toad.log ✅ COMPLETED
 - [ ] **Error Handling** - Graceful error display
 - [ ] **Performance Metrics** - Render time tracking
+
+### Main Interface (from mockup)
+- [x] **Input Prompt** - "Ask me anything or type a command..." at bottom ✅ COMPLETED
+- [x] **Horizontal Separator** - Clean divider between content and input ✅ COMPLETED
+- [x] **Keyboard Shortcuts Bar** - "Ctrl+C quit | ? help | / commands | Ctrl+P palette | Tab autocomplete" ✅ COMPLETED
+- [x] **System Info Display** - Model (Sonnet 4.5), Runtime (Rust TUI) ✅ COMPLETED
+- [x] **Plugin Counter** - "Active Plugins: N installed" ✅ COMPLETED
+- [x] **Project Path Display** - Current working directory ✅ COMPLETED
+- [x] **Placeholder Text** - Gray placeholder in input field ✅ COMPLETED
+- [x] **Text Input Widget** - Cursor, character insertion, backspace ✅ COMPLETED
+- [x] **Cursor Navigation** - Left/Right arrows, Home/End, Ctrl+A/E ✅ COMPLETED
+- [x] **Input Editing** - Ctrl+U to clear ✅ COMPLETED
 
 ---
 

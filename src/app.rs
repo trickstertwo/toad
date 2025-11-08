@@ -4,7 +4,7 @@
 //! that handles state transitions based on events.
 
 use crate::event::Event;
-use crate::widgets::ConfirmDialog;
+use crate::widgets::{ConfirmDialog, InputField};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::env;
 use std::path::PathBuf;
@@ -43,11 +43,19 @@ pub struct App {
 
     /// Whether the user has seen the welcome screen
     welcome_shown: bool,
+
+    /// Input field for user commands/queries
+    input_field: InputField,
+
+    /// Number of installed plugins
+    plugin_count: usize,
 }
 
 impl Default for App {
     fn default() -> Self {
         let working_directory = env::current_dir().unwrap_or_else(|_| PathBuf::from("/"));
+        let mut input_field = InputField::new();
+        input_field.set_focused(true);
 
         Self {
             screen: AppScreen::Welcome,
@@ -57,6 +65,8 @@ impl Default for App {
             working_directory,
             trust_dialog: None,
             welcome_shown: false,
+            input_field,
+            plugin_count: 0,
         }
     }
 }
@@ -100,6 +110,21 @@ impl App {
     /// Get mutable trust dialog (if present)
     pub fn trust_dialog_mut(&mut self) -> Option<&mut ConfirmDialog> {
         self.trust_dialog.as_mut()
+    }
+
+    /// Get the input field
+    pub fn input_field(&self) -> &InputField {
+        &self.input_field
+    }
+
+    /// Get mutable input field
+    pub fn input_field_mut(&mut self) -> &mut InputField {
+        &mut self.input_field
+    }
+
+    /// Get plugin count
+    pub fn plugin_count(&self) -> usize {
+        self.plugin_count
     }
 
     /// Update application state based on an event (Update in Elm Architecture)
@@ -192,17 +217,54 @@ impl App {
     /// Handle keys in main interface
     fn handle_main_key(&mut self, key: KeyEvent) -> crate::Result<()> {
         match (key.code, key.modifiers) {
-            // Quit on 'q' or Ctrl+C
-            (KeyCode::Char('q'), _) | (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
+            // Quit on Ctrl+C (not q anymore, since we're typing)
+            (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
                 self.should_quit = true;
             }
-            // Escape key
-            (KeyCode::Esc, _) => {
+            // Ctrl+D to quit
+            (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
                 self.should_quit = true;
             }
-            // Display key press in status bar
-            (KeyCode::Char(c), _) => {
-                self.status_message = format!("Pressed: '{}'", c);
+            // Enter submits the command
+            (KeyCode::Enter, _) => {
+                let input = self.input_field.value().to_string();
+                if !input.is_empty() {
+                    self.status_message = format!("Submitted: {}", input);
+                    self.input_field.clear();
+                }
+            }
+            // Backspace deletes character
+            (KeyCode::Backspace, _) => {
+                self.input_field.delete_char();
+            }
+            // Arrow keys move cursor
+            (KeyCode::Left, _) => {
+                self.input_field.move_cursor_left();
+            }
+            (KeyCode::Right, _) => {
+                self.input_field.move_cursor_right();
+            }
+            // Home/End
+            (KeyCode::Home, _) => {
+                self.input_field.move_cursor_start();
+            }
+            (KeyCode::End, _) => {
+                self.input_field.move_cursor_end();
+            }
+            // Ctrl+A / Ctrl+E (Emacs-style)
+            (KeyCode::Char('a'), KeyModifiers::CONTROL) => {
+                self.input_field.move_cursor_start();
+            }
+            (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
+                self.input_field.move_cursor_end();
+            }
+            // Ctrl+U clears input
+            (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
+                self.input_field.clear();
+            }
+            // Regular character input
+            (KeyCode::Char(c), KeyModifiers::NONE) | (KeyCode::Char(c), KeyModifiers::SHIFT) => {
+                self.input_field.insert_char(c);
             }
             _ => {}
         }
@@ -280,12 +342,33 @@ mod tests {
     }
 
     #[test]
-    fn test_quit_on_q_from_main() {
+    fn test_quit_on_ctrl_c_from_main() {
         let mut app = App::new();
         // Manually set to Main screen
         app.screen = AppScreen::Main;
-        let event = Event::Key(KeyEvent::from(KeyCode::Char('q')));
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL));
         app.update(event).unwrap();
         assert!(app.should_quit());
+    }
+
+    #[test]
+    fn test_input_field() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Test character input
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('h')));
+        app.update(event).unwrap();
+        assert_eq!(app.input_field().value(), "h");
+
+        // Test more input
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('i')));
+        app.update(event).unwrap();
+        assert_eq!(app.input_field().value(), "hi");
+
+        // Test backspace
+        let event = Event::Key(KeyEvent::from(KeyCode::Backspace));
+        app.update(event).unwrap();
+        assert_eq!(app.input_field().value(), "h");
     }
 }
