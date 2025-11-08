@@ -45,7 +45,10 @@ statrs = "0.17"
 chrono = { version = "0.4", features = ["serde"] }
 
 # HTTP client
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
+eventsource-stream = "0.2"
+futures = "0.3"
+pin-project = "1.1"
 
 # Compression
 flate2 = "1.0"

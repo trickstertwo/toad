@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 /// Integration tests for TOAD evaluation framework
 use toad::config::{FeatureFlags, ToadConfig};
-use toad::evaluation::{Complexity, EvaluationHarness, Task, task_loader};
-use toad::metrics::Metrics;
-use toad::stats::ComparisonResult;
+use toad::{Complexity, EvaluationHarness, Task, task_loader};
+use toad::Metrics;
+use toad::ComparisonResult;
 
 #[tokio::test]
 async fn test_basic_evaluation() {
@@ -99,7 +99,7 @@ fn test_task_complexity_estimation() {
 
 #[test]
 fn test_metrics_aggregation() {
-    use toad::metrics::AggregateMetrics;
+    use toad::AggregateMetrics;
 
     let metrics = vec![
         Metrics {

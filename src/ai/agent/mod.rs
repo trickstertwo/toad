@@ -252,6 +252,15 @@ mod tests {
         fn model_name(&self) -> &str {
             "mock-model"
         }
+
+        async fn send_message_stream(
+            &self,
+            _messages: Vec<Message>,
+            _tools: Option<Vec<serde_json::Value>>,
+        ) -> Result<crate::ai::llm::MessageStream> {
+            // Mock implementation doesn't support streaming yet
+            Err(anyhow!("Streaming not supported in mock client"))
+        }
     }
 
     #[tokio::test]
