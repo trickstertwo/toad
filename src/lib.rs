@@ -40,6 +40,7 @@ pub mod keybinds;
 pub mod key_sequences;
 pub mod lazy_render;
 pub mod layout;
+pub mod live_graphs;
 pub mod logo;
 pub mod macros;
 pub mod marks;
@@ -63,6 +64,7 @@ pub mod vim_motions;
 pub mod virtual_scroll;
 pub mod visual_selection;
 pub mod widgets;
+pub mod workspaces;
 
 // Config module contains both M0 and TUI configs
 pub mod config;
@@ -97,6 +99,7 @@ pub use keybinds::{KeyBinding, KeyBindings};
 pub use key_sequences::{KeySequence, KeySequenceManager};
 pub use custom_keybindings::{ContextualBinding, CustomKeybindings, KeybindingContext};
 pub use lazy_render::{LazyRenderManager, LazyRenderState, LazyRenderable};
+pub use live_graphs::{DataPoint, GraphType, LiveGraph, LiveGraphManager, UpdateFrequency};
 pub use layout::{LayoutManager, Pane, PanelId, SplitDirection};
 pub use marks::{Mark, MarksManager, MarkType};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
@@ -117,6 +120,7 @@ pub use validation::{
 pub use vim_motions::{Motion, VimMotions};
 pub use virtual_scroll::VirtualScrollState;
 pub use visual_selection::{Position, SelectionMode, SelectionRange, VisualSelection};
+pub use workspaces::{Workspace, WorkspaceManager};
 pub use macros::{Macro, MacroAction, MacroManager};
 pub use file_ops::{FileOps, FileOpResult};
 pub use recent_files::{RecentFile, RecentFiles};

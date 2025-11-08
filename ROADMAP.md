@@ -200,7 +200,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Line Charts** - Time-series data ✅ COMPLETED (LineChart with 4 line styles, auto-scaling, sparkline rendering, min/max values)
 - [x] **Bar Charts** - Comparison data ✅ COMPLETED (BarChart with vertical/horizontal orientations, labeled bars, auto-scaling, optional values display)
 - [x] **Scatter Plots** - Distribution visualization ✅ COMPLETED (ScatterPlot with auto-scaling, bounds calculation, grid normalization, configurable point char)
-- [ ] **Live Graphs** - Real-time updating charts
+- [x] **Live Graphs** - Real-time updating charts ✅ COMPLETED (LiveGraph with ring buffer, auto-scaling, update frequency control, multi-graph manager)
 - [ ] **Git Graph** - Branch visualization (lazygit-style)
 
 ### Modal Editing (Vim-inspired)
@@ -224,7 +224,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Smart Suggestions** - Context-aware hints ✅ COMPLETED (SmartSuggestions with rule-based system, context builder, 6 suggestion types, custom hints)
 - [x] **Undo/Redo** - u/Ctrl+r for actions ✅ COMPLETED (UndoStack with Action trait, HistoryNavigator, dirty tracking)
 - [x] **Session Management** - Save/restore entire sessions ✅ COMPLETED (Session with save/load, recent files, working directory, vim mode)
-- [ ] **Workspace Switching** - Multiple project contexts
+- [x] **Workspace Switching** - Multiple project contexts ✅ COMPLETED (WorkspaceManager with recent files, settings, next/previous switching, path lookup)
 
 ### Git Integration (for coding terminal)
 - [ ] **Git Status Panel** - Live repository status
