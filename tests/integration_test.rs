@@ -1,10 +1,9 @@
+use std::path::PathBuf;
 /// Integration tests for TOAD evaluation framework
-
 use toad::config::{FeatureFlags, ToadConfig};
-use toad::evaluation::{task_loader, EvaluationHarness, Task, Complexity};
+use toad::evaluation::{Complexity, EvaluationHarness, Task, task_loader};
 use toad::metrics::Metrics;
 use toad::stats::ComparisonResult;
-use std::path::PathBuf;
 
 #[tokio::test]
 async fn test_basic_evaluation() {
@@ -80,13 +79,22 @@ fn test_task_complexity_estimation() {
     let tasks = task_loader::create_test_tasks(9);
 
     // Check complexity distribution
-    let simple_count = tasks.iter().filter(|t| t.complexity == Complexity::Simple).count();
-    let medium_count = tasks.iter().filter(|t| t.complexity == Complexity::Medium).count();
-    let hard_count = tasks.iter().filter(|t| t.complexity == Complexity::Hard).count();
+    let simple_count = tasks
+        .iter()
+        .filter(|t| t.complexity == Complexity::Simple)
+        .count();
+    let medium_count = tasks
+        .iter()
+        .filter(|t| t.complexity == Complexity::Medium)
+        .count();
+    let hard_count = tasks
+        .iter()
+        .filter(|t| t.complexity == Complexity::Hard)
+        .count();
 
     assert_eq!(simple_count, 3); // 0, 3, 6
     assert_eq!(medium_count, 3); // 1, 4, 7
-    assert_eq!(hard_count, 3);   // 2, 5, 8
+    assert_eq!(hard_count, 3); // 2, 5, 8
 }
 
 #[test]
@@ -135,9 +143,7 @@ async fn test_save_and_load_results() {
     harness.save_results(&results).unwrap();
 
     // Check that file was created
-    let entries: Vec<_> = std::fs::read_dir(temp_dir.path())
-        .unwrap()
-        .collect();
+    let entries: Vec<_> = std::fs::read_dir(temp_dir.path()).unwrap().collect();
 
     assert!(entries.len() > 0);
 }

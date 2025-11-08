@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go build:*)",
+      "Bash(go test:*)",
+      "Bash(go get:*)",
+      "Bash(go tool cover:*)",
+      "Bash(grep:*)",
+      "Bash(awk:*)",
+      "Bash(sort:*)",
+      "Bash(Select-String -Pattern \"(PASS|FAIL|coverage:)\")",
+      "Bash(Select-Object -Last 50)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

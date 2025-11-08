@@ -1,15 +1,13 @@
 /// TOAD - Terminal-Oriented Autonomous Developer
 /// Milestone 0: Evaluation Framework
-
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use std::time::Duration;
+use toad::ai::{ComparisonResult, EvaluationHarness};
 use toad::config::{FeatureFlags, ToadConfig};
-use toad::evaluation::{EvaluationHarness, task_loader};
-use toad::stats::ComparisonResult;
-use toad::{App, Tui};
-use tracing::{info, Level};
+use toad::core::{App, Tui};
+use tracing::{Level, info};
 use tracing_subscriber;
 
 #[derive(Parser)]
@@ -17,7 +15,7 @@ use tracing_subscriber;
 #[command(about = "Terminal-Oriented Autonomous Developer", long_about = None)]
 struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 
     /// Enable verbose logging
     #[arg(short, long)]
@@ -102,36 +100,55 @@ enum Commands {
 async fn main() -> Result<()> {
     // Load .env file if it exists
     let _ = dotenvy::dotenv();
-    
+
     let cli = Cli::parse();
 
     // Initialize logging
-    let level = if cli.verbose { Level::DEBUG } else { Level::INFO };
-    tracing_subscriber::fmt()
-        .with_max_level(level)
-        .init();
+    let level = if cli.verbose {
+        Level::DEBUG
+    } else {
+        Level::INFO
+    };
+    tracing_subscriber::fmt().with_max_level(level).init();
 
-    info!("TOAD v{} - Terminal-Oriented Autonomous Developer", toad::VERSION);
+    info!(
+        "TOAD v{} - Terminal-Oriented Autonomous Developer",
+        toad::VERSION
+    );
 
     match cli.command {
-        Commands::Eval { dataset, swebench, count, milestone, output } => {
+        Some(Commands::Eval {
+            dataset,
+            swebench,
+            count,
+            milestone,
+            output,
+        }) => {
             run_eval(dataset, swebench, count, milestone, output).await?;
         }
 
-        Commands::Compare { dataset, swebench, count, baseline, test, output } => {
+        Some(Commands::Compare {
+            dataset,
+            swebench,
+            count,
+            baseline,
+            test,
+            output,
+        }) => {
             run_compare(dataset, swebench, count, baseline, test, output).await?;
         }
 
-        Commands::ShowConfig { milestone } => {
+        Some(Commands::ShowConfig { milestone }) => {
             show_config(milestone);
         }
 
-        Commands::GenerateTestData { count, output } => {
+        Some(Commands::GenerateTestData { count, output }) => {
             generate_test_data(count, output)?;
         }
 
-        Commands::Tui => {
-            run_tui()?;
+        Some(Commands::Tui) | None => {
+            // Default to TUI when no command is specified
+            run_tui().await?;
         }
     }
 
@@ -152,7 +169,11 @@ async fn run_eval(
 
     info!("Loaded {} tasks (requested: {})", tasks.len(), count);
     if tasks.len() < count {
-        tracing::warn!("Dataset contains fewer tasks ({}) than requested ({})", tasks.len(), count);
+        tracing::warn!(
+            "Dataset contains fewer tasks ({}) than requested ({})",
+            tasks.len(),
+            count
+        );
     }
 
     // Create configuration
@@ -194,15 +215,27 @@ async fn run_compare(
 
     info!("Loaded {} tasks (requested: {})", tasks.len(), count);
     if tasks.len() < count {
-        tracing::warn!("Dataset contains fewer tasks ({}) than requested ({})", tasks.len(), count);
+        tracing::warn!(
+            "Dataset contains fewer tasks ({}) than requested ({})",
+            tasks.len(),
+            count
+        );
     }
 
     // Create configurations
     let config_a = ToadConfig::for_milestone(baseline_ms);
     let config_b = ToadConfig::for_milestone(test_ms);
 
-    info!("Config A (M{}): {}", baseline_ms, config_a.features.description());
-    info!("Config B (M{}): {}", test_ms, config_b.features.description());
+    info!(
+        "Config A (M{}): {}",
+        baseline_ms,
+        config_a.features.description()
+    );
+    info!(
+        "Config B (M{}): {}",
+        test_ms,
+        config_b.features.description()
+    );
 
     // Run comparison
     let harness = EvaluationHarness::new(tasks, output.clone());
@@ -231,8 +264,11 @@ async fn load_tasks_with_validation(
     dataset_path: Option<PathBuf>,
     swebench_variant: Option<String>,
     count: usize,
-) -> Result<Vec<toad::evaluation::Task>> {
-    use toad::evaluation::{dataset_manager::{DatasetManager, DatasetSource}, task_loader};
+) -> Result<Vec<toad::ai::evaluation::Task>> {
+    use toad::ai::evaluation::{
+        dataset_manager::{DatasetManager, DatasetSource},
+        task_loader,
+    };
 
     // Validate conflicting options
     if dataset_path.is_some() && swebench_variant.is_some() {
@@ -246,7 +282,10 @@ async fn load_tasks_with_validation(
             "verified" => DatasetSource::Verified,
             "lite" => DatasetSource::Lite,
             "full" => DatasetSource::Full,
-            _ => anyhow::bail!("Invalid SWE-bench variant: '{}'. Use 'verified', 'lite', or 'full'", variant),
+            _ => anyhow::bail!(
+                "Invalid SWE-bench variant: '{}'. Use 'verified', 'lite', or 'full'",
+                variant
+            ),
         };
 
         info!("Loading SWE-bench {} dataset", variant);
@@ -260,18 +299,18 @@ async fn load_tasks_with_validation(
 
         info!("Loading tasks from local file: {:?}", path);
         let loader = task_loader::TaskLoader::new(path);
-        
+
         // Try to load and validate
         let all_tasks = loader.load_all()?;
         info!("Dataset contains {} total tasks", all_tasks.len());
-        
+
         if all_tasks.is_empty() {
             anyhow::bail!("Dataset file is empty or invalid");
         }
 
         // Take the requested count
         let tasks: Vec<_> = all_tasks.into_iter().take(count).collect();
-        
+
         if tasks.len() < count {
             tracing::warn!(
                 "Dataset only has {} tasks, but {} were requested",
@@ -279,11 +318,14 @@ async fn load_tasks_with_validation(
                 count
             );
         }
-        
+
         tasks
     } else {
         // Generate synthetic test tasks
-        info!("No dataset specified, generating {} synthetic test tasks", count);
+        info!(
+            "No dataset specified, generating {} synthetic test tasks",
+            count
+        );
         task_loader::create_test_tasks(count)
     };
 
@@ -295,7 +337,7 @@ async fn load_tasks_with_validation(
     Ok(tasks)
 }
 
-fn run_tui() -> Result<()> {
+async fn run_tui() -> Result<()> {
     // Initialize error handling
     install_tui_panic_hook();
 
@@ -304,7 +346,10 @@ fn run_tui() -> Result<()> {
     // Init: Create initial state
     let mut tui = Tui::new().map_err(|e| anyhow::anyhow!("{}", e))?;
     let mut app = App::new();
-    let event_handler = toad::event::EventHandler::new(Duration::from_millis(250));
+
+    // Create event channel for async operations
+    let (event_tx, mut event_rx) = tokio::sync::mpsc::unbounded_channel();
+    app.set_event_tx(event_tx);
 
     info!("TUI initialized, entering main loop");
 
@@ -312,14 +357,29 @@ fn run_tui() -> Result<()> {
     while !app.should_quit() {
         // View: Render the current state
         tui.draw(|frame| {
-            toad::ui::render(&mut app, frame);
-        }).map_err(|e| anyhow::anyhow!("{}", e))?;
+            toad::core::ui::render(&mut app, frame);
+        })
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
 
-        // Wait for event (blocking)
-        let event = event_handler.next().map_err(|e| anyhow::anyhow!("{}", e))?;
+        // Poll for events from both sources with a timeout
+        tokio::select! {
+            // Terminal event (keyboard, resize, etc.)
+            terminal_event = tokio::task::spawn_blocking({
+                move || {
+                    let handler = toad::core::event::EventHandler::new(Duration::from_millis(250));
+                    handler.next()
+                }
+            }) => {
+                if let Ok(Ok(event)) = terminal_event {
+                    app.update(event).map_err(|e| anyhow::anyhow!("{}", e))?;
+                }
+            }
 
-        // Update: Process event and update state
-        app.update(event).map_err(|e| anyhow::anyhow!("{}", e))?;
+            // Async event (evaluation progress, completion, etc.)
+            Some(event) = event_rx.recv() => {
+                app.update(event).map_err(|e| anyhow::anyhow!("{}", e))?;
+            }
+        }
     }
 
     info!("Exiting main loop");
@@ -339,11 +399,7 @@ fn install_tui_panic_hook() {
     std::panic::set_hook(Box::new(move |panic_info| {
         // Attempt to restore terminal
         let _ = crossterm::terminal::disable_raw_mode();
-        let _ = crossterm::execute!(
-            std::io::stdout(),
-            crossterm::terminal::LeaveAlternateScreen,
-            crossterm::event::DisableMouseCapture
-        );
+        let _ = crossterm::execute!(std::io::stdout(), crossterm::terminal::LeaveAlternateScreen);
         original_hook(panic_info);
     }));
 }
@@ -381,17 +437,25 @@ fn show_config(milestone: Option<u8>) {
     println!("Intelligence Features:");
     println!("  Smart test selection:     {}", flags.smart_test_selection);
     println!("  Failure memory:           {}", flags.failure_memory);
-    println!("  Opportunistic planning:   {}", flags.opportunistic_planning);
+    println!(
+        "  Opportunistic planning:   {}",
+        flags.opportunistic_planning
+    );
     println!();
     println!("Optimizations:");
     println!("  Prompt caching:           {}", flags.prompt_caching);
     println!("  Semantic caching:         {}", flags.semantic_caching);
-    println!("  Tree-sitter validation:   {}", flags.tree_sitter_validation);
+    println!(
+        "  Tree-sitter validation:   {}",
+        flags.tree_sitter_validation
+    );
     println!();
     println!("Description: {}", flags.description());
 }
 
 fn generate_test_data(count: usize, output: PathBuf) -> Result<()> {
+    use toad::ai::evaluation::task_loader;
+
     info!("Generating {} test tasks", count);
 
     let tasks = task_loader::create_test_tasks(count);

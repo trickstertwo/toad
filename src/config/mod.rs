@@ -1,9 +1,8 @@
 /// Configuration module for TOAD
 /// Contains both M0 (evaluation framework) and TUI configurations
-
 mod tui;
 
-pub use tui::{Config, UiConfig, EditorConfig, AiConfig, SessionConfig};
+pub use tui::{AiConfig, Config, EditorConfig, SessionConfig, UiConfig};
 
 use serde::{Deserialize, Serialize};
 
@@ -144,19 +143,45 @@ impl FeatureFlags {
     /// Count enabled features
     pub fn enabled_count(&self) -> usize {
         let mut count = 0;
-        if self.context_ast { count += 1; }
-        if self.context_embeddings { count += 1; }
-        if self.context_graph { count += 1; }
-        if self.context_reranking { count += 1; }
-        if self.routing_semantic { count += 1; }
-        if self.routing_multi_model { count += 1; }
-        if self.routing_speculative { count += 1; }
-        if self.smart_test_selection { count += 1; }
-        if self.failure_memory { count += 1; }
-        if self.opportunistic_planning { count += 1; }
-        if self.prompt_caching { count += 1; }
-        if self.semantic_caching { count += 1; }
-        if self.tree_sitter_validation { count += 1; }
+        if self.context_ast {
+            count += 1;
+        }
+        if self.context_embeddings {
+            count += 1;
+        }
+        if self.context_graph {
+            count += 1;
+        }
+        if self.context_reranking {
+            count += 1;
+        }
+        if self.routing_semantic {
+            count += 1;
+        }
+        if self.routing_multi_model {
+            count += 1;
+        }
+        if self.routing_speculative {
+            count += 1;
+        }
+        if self.smart_test_selection {
+            count += 1;
+        }
+        if self.failure_memory {
+            count += 1;
+        }
+        if self.opportunistic_planning {
+            count += 1;
+        }
+        if self.prompt_caching {
+            count += 1;
+        }
+        if self.semantic_caching {
+            count += 1;
+        }
+        if self.tree_sitter_validation {
+            count += 1;
+        }
         count
     }
 

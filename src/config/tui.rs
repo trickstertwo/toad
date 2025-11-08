@@ -2,7 +2,6 @@
 ///
 /// This module contains configuration for the terminal user interface,
 /// including theming, keybindings, and layout preferences.
-
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
