@@ -24,6 +24,7 @@ pub mod history;
 pub mod keybinds;
 pub mod layout;
 pub mod logo;
+pub mod performance;
 pub mod search;
 pub mod theme;
 pub mod tui;
@@ -47,6 +48,7 @@ pub use event::Event;
 pub use history::History;
 pub use keybinds::{KeyBinding, KeyBindings};
 pub use layout::{LayoutManager, Pane, PanelId, SplitDirection};
+pub use performance::PerformanceMetrics;
 pub use search::{SearchMatch, SearchState};
 pub use tui::Tui;
 

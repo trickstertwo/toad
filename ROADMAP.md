@@ -68,7 +68,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ### Multi-Panel Layouts
 - [x] **Split Panes** - Resizable horizontal/vertical splits ✅ COMPLETED
 - [x] **Panel Focus System** - Tab/Shift+Tab to switch focus ✅ COMPLETED
-- [ ] **Panel Borders** - Visual indication of focused panel
+- [x] **Panel Borders** - Visual indication of focused panel ✅ COMPLETED
 - [x] **Dynamic Layout** - Panels can be shown/hidden ✅ COMPLETED
 
 ### Modal System
@@ -85,19 +85,19 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Tab Switching** - Number keys (1-9) or Tab cycling
 
 ### State Management
-- [ ] **Configuration File** - TOML/YAML settings
+- [x] **Configuration File** - TOML/YAML settings ✅ COMPLETED
 - [ ] **State Persistence** - Save/restore session state
-- [ ] **History Tracking** - Command/action history
+- [x] **History Tracking** - Command/action history ✅ COMPLETED (Already implemented)
 
 ### Basic Search
-- [x] **Forward Search** - / to search ✅ COMPLETED (keybinding added)
-- [x] **Next/Previous** - n/N to navigate results ✅ COMPLETED (keybinding added)
-- [ ] **Highlight Matches** - Visual search feedback
+- [x] **Forward Search** - / to search ✅ COMPLETED
+- [x] **Next/Previous** - n/N to navigate results ✅ COMPLETED
+- [x] **Highlight Matches** - Visual search feedback ✅ COMPLETED (SearchState implementation)
 
 ### Logging & Debugging
 - [x] **File Logging** - Debug logs to toad.log ✅ COMPLETED
 - [ ] **Error Handling** - Graceful error display
-- [ ] **Performance Metrics** - Render time tracking
+- [x] **Performance Metrics** - Render time tracking ✅ COMPLETED
 
 ### Main Interface (from mockup)
 - [x] **Input Prompt** - "Ask me anything or type a command..." at bottom ✅ COMPLETED

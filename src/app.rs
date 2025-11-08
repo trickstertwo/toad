@@ -6,6 +6,7 @@
 use crate::config::Config;
 use crate::event::Event;
 use crate::layout::LayoutManager;
+use crate::performance::PerformanceMetrics;
 use crate::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::env;
@@ -72,6 +73,12 @@ pub struct App {
 
     /// Application configuration
     config: Config,
+
+    /// Performance metrics
+    performance: PerformanceMetrics,
+
+    /// Show performance overlay
+    show_performance: bool,
 }
 
 impl Default for App {
@@ -101,6 +108,8 @@ impl Default for App {
             layout: LayoutManager::new(),
             vim_mode,
             config,
+            performance: PerformanceMetrics::new(),
+            show_performance: false,
         }
     }
 }
@@ -222,6 +231,30 @@ impl App {
 
         self.config.save_to_file(&path).map_err(|e| color_eyre::eyre::eyre!("Failed to save config: {}", e))?;
         Ok(())
+    }
+
+    /// Get performance metrics
+    pub fn performance(&self) -> &PerformanceMetrics {
+        &self.performance
+    }
+
+    /// Get mutable performance metrics
+    pub fn performance_mut(&mut self) -> &mut PerformanceMetrics {
+        &mut self.performance
+    }
+
+    /// Check if performance overlay is shown
+    pub fn show_performance(&self) -> bool {
+        self.show_performance
+    }
+
+    /// Toggle performance overlay
+    pub fn toggle_performance(&mut self) {
+        self.show_performance = !self.show_performance;
+        self.status_message = format!(
+            "Performance overlay {}",
+            if self.show_performance { "shown" } else { "hidden" }
+        );
     }
 
     /// Update application state based on an event (Update in Elm Architecture)
