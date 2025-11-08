@@ -37,7 +37,7 @@ pub use config::{
 };
 pub use core::{App, AppScreen, EvaluationProgress, EvaluationState, Event, EventHandler, Tui};
 pub use editor::{Motion, MultiCursor, UndoStack, VimMotions};
-pub use git::{BranchInfo, CommitInfo, FileChange, GitService};
+pub use git::{BranchInfo, CommitInfo, FileChange, GitGraphService, GitService};
 pub use infrastructure::{Clipboard, ErrorHandler, KeyBindings};
 pub use navigation::{FuzzyFinder, SearchState};
 pub use performance::PerformanceMetrics;
