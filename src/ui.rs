@@ -3,10 +3,12 @@
 //! This module contains the rendering logic that displays
 //! the application state to the terminal.
 
-use crate::app::App;
+use crate::app::{App, AppScreen};
+use crate::theme::ToadTheme;
+use crate::widgets::WelcomeScreen;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
     Frame,
@@ -19,6 +21,39 @@ use ratatui::{
 pub fn render(app: &App, frame: &mut Frame) {
     let area = frame.area();
 
+    match app.screen() {
+        AppScreen::Welcome => {
+            render_welcome(app, frame, area);
+        }
+        AppScreen::TrustDialog => {
+            render_trust_dialog(app, frame, area);
+        }
+        AppScreen::Main => {
+            render_main(app, frame, area);
+        }
+    }
+}
+
+/// Render the welcome screen
+fn render_welcome(_app: &App, frame: &mut Frame, area: Rect) {
+    let welcome = WelcomeScreen::new().with_tips(true);
+    welcome.render(frame, area);
+}
+
+/// Render the trust dialog screen
+fn render_trust_dialog(app: &App, frame: &mut Frame, area: Rect) {
+    // Render a semi-transparent background
+    let background = Block::default().style(Style::default().bg(ToadTheme::BLACK));
+    frame.render_widget(background, area);
+
+    // Render the dialog on top
+    if let Some(dialog) = app.trust_dialog() {
+        dialog.render(frame, area);
+    }
+}
+
+/// Render the main interface
+fn render_main(app: &App, frame: &mut Frame, area: Rect) {
     // Create the main layout: title bar, main area, status bar
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -38,13 +73,13 @@ pub fn render(app: &App, frame: &mut Frame) {
 fn render_title_bar(app: &App, frame: &mut Frame, area: Rect) {
     let title_block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Cyan))
-        .style(Style::default().bg(Color::Black));
+        .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+        .style(Style::default().bg(ToadTheme::BLACK));
 
     let title_text = Paragraph::new(app.title())
         .style(
             Style::default()
-                .fg(Color::Cyan)
+                .fg(ToadTheme::TOAD_GREEN)
                 .add_modifier(Modifier::BOLD),
         )
         .alignment(Alignment::Center)
@@ -57,43 +92,46 @@ fn render_title_bar(app: &App, frame: &mut Frame, area: Rect) {
 fn render_main_content(_app: &App, frame: &mut Frame, area: Rect) {
     let content_block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::White))
+        .border_style(Style::default().fg(ToadTheme::BORDER))
         .title("Main Content")
-        .title_style(Style::default().fg(Color::Green));
+        .title_style(Style::default().fg(ToadTheme::TOAD_GREEN));
 
     let welcome_text = vec![
         Line::from(vec![
-            Span::styled("Welcome to ", Style::default().fg(Color::White)),
+            Span::styled("Welcome to ", Style::default().fg(ToadTheme::FOREGROUND)),
             Span::styled(
                 "Toad",
                 Style::default()
-                    .fg(Color::Green)
+                    .fg(ToadTheme::TOAD_GREEN)
                     .add_modifier(Modifier::BOLD),
             ),
         ]),
         Line::from(""),
-        Line::from("An AI-powered coding terminal with semi-autonomous agents"),
+        Line::from(Span::styled(
+            "An AI-powered coding terminal with semi-autonomous agents",
+            Style::default().fg(ToadTheme::GRAY),
+        )),
         Line::from(""),
         Line::from(vec![
-            Span::styled("Built with ", Style::default().fg(Color::White)),
+            Span::styled("Built with ", Style::default().fg(ToadTheme::FOREGROUND)),
             Span::styled(
                 "Rust",
                 Style::default()
-                    .fg(Color::Red)
+                    .fg(ToadTheme::TOAD_GREEN)
                     .add_modifier(Modifier::BOLD),
             ),
-            Span::styled(" + ", Style::default().fg(Color::White)),
+            Span::styled(" + ", Style::default().fg(ToadTheme::FOREGROUND)),
             Span::styled(
                 "Ratatui",
                 Style::default()
-                    .fg(Color::Yellow)
+                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
                     .add_modifier(Modifier::BOLD),
             ),
-            Span::styled(" + ", Style::default().fg(Color::White)),
+            Span::styled(" + ", Style::default().fg(ToadTheme::FOREGROUND)),
             Span::styled(
                 "Crossterm",
                 Style::default()
-                    .fg(Color::Magenta)
+                    .fg(ToadTheme::TOAD_GREEN_DARK)
                     .add_modifier(Modifier::BOLD),
             ),
         ]),
@@ -110,11 +148,11 @@ fn render_main_content(_app: &App, frame: &mut Frame, area: Rect) {
 fn render_status_bar(app: &App, frame: &mut Frame, area: Rect) {
     let status_block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Yellow))
-        .style(Style::default().bg(Color::Black));
+        .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+        .style(Style::default().bg(ToadTheme::BLACK));
 
     let status_text = Paragraph::new(app.status_message())
-        .style(Style::default().fg(Color::Yellow))
+        .style(Style::default().fg(ToadTheme::FOREGROUND))
         .alignment(Alignment::Left)
         .block(status_block);
 

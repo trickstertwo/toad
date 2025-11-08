@@ -8,8 +8,11 @@
 
 pub mod app;
 pub mod event;
+pub mod logo;
+pub mod theme;
 pub mod tui;
 pub mod ui;
+pub mod widgets;
 
 // Re-export commonly used types
 pub use app::App;
