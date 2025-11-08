@@ -220,8 +220,8 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 
 ### Smart Features
 - [x] **Context Menus** - Right-click or keybind for actions ✅ COMPLETED (ContextMenu with MenuItem, separators, icons, shortcuts, disabled items)
-- [ ] **Quick Actions** - Frequently used commands surfaced
-- [ ] **Smart Suggestions** - Context-aware hints
+- [x] **Quick Actions** - Frequently used commands surfaced ✅ COMPLETED (QuickActionManager with usage tracking, priority scoring, category filtering, defaults)
+- [x] **Smart Suggestions** - Context-aware hints ✅ COMPLETED (SmartSuggestions with rule-based system, context builder, 6 suggestion types, custom hints)
 - [x] **Undo/Redo** - u/Ctrl+r for actions ✅ COMPLETED (UndoStack with Action trait, HistoryNavigator, dirty tracking)
 - [x] **Session Management** - Save/restore entire sessions ✅ COMPLETED (Session with save/load, recent files, working directory, vim mode)
 - [ ] **Workspace Switching** - Multiple project contexts
