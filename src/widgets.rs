@@ -2,6 +2,7 @@
 //!
 //! Reusable UI components following Ratatui patterns
 
+pub mod bar_chart;
 pub mod borders;
 pub mod dialog;
 pub mod event_metrics;
@@ -26,6 +27,7 @@ pub mod textarea;
 pub mod toast;
 pub mod welcome;
 
+pub use bar_chart::{BarChart, BarData, BarDirection};
 pub use borders::{BorderSet, BorderStyle};
 pub use dialog::{ConfirmDialog, DialogOption};
 pub use event_metrics::EventMetrics;
