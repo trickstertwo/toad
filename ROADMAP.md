@@ -215,7 +215,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Custom Keybindings** - Fully remappable keys ✅ COMPLETED (CustomKeybindings with context-aware bindings, remapping, descriptions, 8 contexts)
 - [x] **Key Sequences** - Multi-key commands (like vim) ✅ COMPLETED (KeySequenceManager with vim defaults, timeout support, prefix matching, gg/dd/yy/gc sequences)
 - [x] **Command Mode** - : for ex-style commands ✅ COMPLETED (CommandMode with buffer/cursor/history, CommandRegistry with handlers/aliases/suggestions)
-- [ ] **Aliases** - Custom command shortcuts
+- [x] **Aliases** - Custom command shortcuts ✅ COMPLETED (AliasManager with parameter substitution, recursion prevention, defaults, search, load/save)
 - [ ] **Scripts/Plugins** - Extensibility (WASM, Lua, or native)
 
 ### Smart Features

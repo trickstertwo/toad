@@ -18,6 +18,7 @@ pub mod agent;
 
 // TUI modules
 pub mod advanced_search;
+pub mod aliases;
 pub mod animations;
 pub mod app;
 pub mod async_ops;
@@ -75,6 +76,7 @@ pub use advanced_search::{
     AdvancedSearchManager, AdvancedSearchMatch, FilterCondition, FilterHistory,
     FilterHistoryEntry, FilterOperator, MultiFieldFilter, SavedFilters,
 };
+pub use aliases::{Alias, AliasManager};
 pub use app::App;
 pub use async_ops::{AsyncOperation, AsyncOperationManager, OperationId, OperationStatus};
 pub use autocomplete::{AutocompleteManager, AutocompleteProvider, CommandProvider, Suggestion, WordProvider};
