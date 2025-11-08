@@ -195,7 +195,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Sparklines** - Inline graphs for metrics (bar/line styles, min/max/avg markers, gradients) ✅ COMPLETED
 - [ ] **Canvas Drawing** - Custom graphics (charts, diagrams)
 - [x] **Box Drawing Characters** - Beautiful Unicode borders (7 styles: Plain, Thick, Double, Rounded, ASCII, Heavy, Dashed) ✅ COMPLETED
-- [ ] **Nerd Font Icons** - Icon support (file types, status indicators)
+- [x] **Nerd Font Icons** - Icon support (file types, git status, status indicators, 20+ file types) ✅ COMPLETED
 
 ### Graph & Data Visualization
 - [ ] **Line Charts** - Time-series data
