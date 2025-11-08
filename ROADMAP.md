@@ -74,14 +74,14 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ### Modal System
 - [x] **Popup/Dialog Windows** - Centered overlays ✅ COMPLETED
 - [x] **Confirmation Dialogs** - Yes/No prompts ✅ COMPLETED (TrustDialog)
-- [ ] **Input Prompts** - Modal text input
+- [x] **Input Prompts** - Modal text input ✅ COMPLETED
 - [x] **Error Messages** - Modal error display ✅ COMPLETED
 - [x] **ESC to Close** - Consistent modal dismissal ✅ COMPLETED
 
 ### Enhanced Navigation
-- [ ] **Vim-style Keybindings** - h/j/k/l navigation
-- [ ] **g/G Navigation** - Jump to top/bottom
-- [ ] **Page Up/Down** - Ctrl+u/d or PgUp/PgDn
+- [x] **Vim-style Keybindings** - h/j/k/l navigation ✅ COMPLETED
+- [x] **g/G Navigation** - Jump to top/bottom ✅ COMPLETED
+- [x] **Page Up/Down** - Ctrl+u/d or PgUp/PgDn ✅ COMPLETED
 - [ ] **Tab Switching** - Number keys (1-9) or Tab cycling
 
 ### State Management
