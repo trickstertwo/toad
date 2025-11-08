@@ -4,7 +4,7 @@
 
 use super::{LLMClient, LLMResponse, Message, StopReason, ToolUse, Usage};
 use anyhow::{anyhow, Context, Result};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::json;
 
 const API_BASE_URL: &str = "https://api.anthropic.com/v1";

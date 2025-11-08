@@ -1,7 +1,7 @@
 /// List tool - lists files in a directory
 
 use super::{Tool, ToolResult};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use serde_json::json;
 use std::collections::HashMap;
 use std::path::PathBuf;

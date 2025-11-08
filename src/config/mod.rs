@@ -1,7 +1,14 @@
-/// Feature flags for experimental A/B testing
-/// Each feature can be toggled on/off to measure its impact
+/// Configuration module for TOAD
+/// Contains both M0 (evaluation framework) and TUI configurations
+
+mod tui;
+
+pub use tui::{Config, UiConfig, EditorConfig, AiConfig};
 
 use serde::{Deserialize, Serialize};
+
+/// Feature flags for experimental A/B testing
+/// Each feature can be toggled on/off to measure its impact
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct FeatureFlags {

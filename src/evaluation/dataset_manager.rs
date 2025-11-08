@@ -3,10 +3,11 @@
 /// This module handles downloading, caching, and managing SWE-bench datasets
 /// for evaluation.
 
-use super::{Task, Complexity};
+use super::Task;
 use anyhow::{Context, Result};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::fs;
+use parquet::file::reader::{FileReader, SerializedFileReader};
 
 /// SWE-bench dataset sources
 #[derive(Debug, Clone)]
@@ -22,17 +23,17 @@ pub enum DatasetSource {
 }
 
 impl DatasetSource {
-    /// Get the HuggingFace dataset URL
+    /// Get the HuggingFace dataset URL (Parquet format)
     pub fn huggingface_url(&self) -> Option<String> {
         match self {
             DatasetSource::Verified => Some(
-                "https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified/resolve/main/data/test.jsonl".to_string()
+                "https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified/resolve/main/data/test-00000-of-00001.parquet".to_string()
             ),
             DatasetSource::Lite => Some(
-                "https://huggingface.co/datasets/princeton-nlp/SWE-bench_Lite/resolve/main/data/test.jsonl".to_string()
+                "https://huggingface.co/datasets/princeton-nlp/SWE-bench_Lite/resolve/main/data/test-00000-of-00001.parquet".to_string()
             ),
             DatasetSource::Full => Some(
-                "https://huggingface.co/datasets/princeton-nlp/SWE-bench/resolve/main/data/test.jsonl".to_string()
+                "https://huggingface.co/datasets/princeton-nlp/SWE-bench/resolve/main/data/test-00000-of-00001.parquet".to_string()
             ),
             DatasetSource::Local(_) => None,
         }
@@ -41,9 +42,9 @@ impl DatasetSource {
     /// Get the local cache filename
     pub fn cache_filename(&self) -> String {
         match self {
-            DatasetSource::Verified => "swe_bench_verified.jsonl".to_string(),
-            DatasetSource::Lite => "swe_bench_lite.jsonl".to_string(),
-            DatasetSource::Full => "swe_bench_full.jsonl".to_string(),
+            DatasetSource::Verified => "swe_bench_verified.parquet".to_string(),
+            DatasetSource::Lite => "swe_bench_lite.parquet".to_string(),
+            DatasetSource::Full => "swe_bench_full.parquet".to_string(),
             DatasetSource::Local(path) => path
                 .file_name()
                 .unwrap_or_default()
@@ -90,8 +91,8 @@ impl DatasetManager {
         self.cache_path(source).exists()
     }
 
-    /// Download a dataset (stub - requires HTTP client)
-    pub fn download(&self, source: &DatasetSource) -> Result<PathBuf> {
+    /// Download a dataset from HuggingFace
+    pub async fn download(&self, source: &DatasetSource) -> Result<PathBuf> {
         match source {
             DatasetSource::Local(path) => {
                 if !path.exists() {
@@ -100,51 +101,122 @@ impl DatasetManager {
                 Ok(path.clone())
             }
             _ => {
+                let url = source.huggingface_url()
+                    .context("No download URL available for this source")?;
                 let cache_path = self.cache_path(source);
 
-                // TODO: Implement actual HTTP download
-                // For now, return an error with instructions
-                anyhow::bail!(
-                    "Automatic dataset download not yet implemented.\n\
-                     \n\
-                     Please manually download the dataset:\n\
-                     1. Download from: {}\n\
-                     2. Save to: {:?}\n\
-                     \n\
-                     Or use --dataset flag to specify a local file.",
-                    source.huggingface_url().unwrap_or_default(),
-                    cache_path
-                )
+                tracing::info!("Downloading {} dataset from HuggingFace...", match source {
+                    DatasetSource::Verified => "SWE-bench Verified",
+                    DatasetSource::Lite => "SWE-bench Lite",
+                    DatasetSource::Full => "SWE-bench Full",
+                    _ => "dataset",
+                });
+                tracing::info!("URL: {}", url);
+                tracing::info!("Saving to: {:?}", cache_path);
+
+                // Download the file
+                let response = reqwest::get(&url)
+                    .await
+                    .context("Failed to download dataset")?;
+
+                if !response.status().is_success() {
+                    let status = response.status();
+                    if status.as_u16() == 404 {
+                        anyhow::bail!(
+                            "Dataset file not found at HuggingFace (HTTP 404).\n\
+                             \n\
+                             The SWE-bench datasets have migrated to Parquet format.\n\
+                             \n\
+                             📥 Manual Download Instructions:\n\
+                             \n\
+                             Option 1: Use Python with datasets library\n\
+                             -----------------------------------------\n\
+                             pip install datasets\n\
+                             python -c \"from datasets import load_dataset; \\\n\
+                                        ds = load_dataset('princeton-nlp/SWE-bench_Verified', split='test'); \\\n\
+                                        ds.to_json('swe_bench_verified.jsonl')\"\n\
+                             cargo run -- eval --dataset swe_bench_verified.jsonl --count 10\n\
+                             \n\
+                             Option 2: Use huggingface-cli\n\
+                             -----------------------------\n\
+                             pip install huggingface-hub\n\
+                             huggingface-cli download princeton-nlp/SWE-bench_Verified --repo-type dataset --local-dir ./data\n\
+                             \n\
+                             Dataset variants:\n\
+                             - princeton-nlp/SWE-bench_Verified (500 tasks)\n\
+                             - princeton-nlp/SWE-bench_Lite (300 tasks)\n\
+                             - princeton-nlp/SWE-bench (2,294 tasks)\n\
+                             \n\
+                             See SWEBENCH_USAGE.md for more details."
+                        );
+                    }
+                    anyhow::bail!("Failed to download dataset: HTTP {}", status);
+                }
+
+                let bytes = response.bytes()
+                    .await
+                    .context("Failed to read response body")?;
+
+                // Save Parquet file to cache
+                fs::write(&cache_path, &bytes)
+                    .context("Failed to write dataset to cache")?;
+
+                tracing::info!("Dataset downloaded successfully ({} bytes)", bytes.len());
+                
+                // Convert Parquet to JSONL for easier reading
+                let jsonl_path = cache_path.with_extension("jsonl");
+                if !jsonl_path.exists() {
+                    tracing::info!("Converting Parquet to JSONL...");
+                    convert_parquet_to_jsonl(&cache_path, &jsonl_path)?;
+                    let size = jsonl_path.metadata()?.len();
+                    tracing::info!("Converted to JSONL ({} bytes)", size);
+                }
+                
+                Ok(jsonl_path)
             }
         }
     }
 
     /// Get or download a dataset
-    pub fn get_or_download(&self, source: &DatasetSource) -> Result<PathBuf> {
+    pub async fn get_or_download(&self, source: &DatasetSource) -> Result<PathBuf> {
         self.init()?;
 
-        if self.is_cached(source) {
-            Ok(self.cache_path(source))
-        } else {
-            self.download(source)
+        let cache_path = self.cache_path(source);
+        let jsonl_path = cache_path.with_extension("jsonl");
+        
+        // Check if we already have the converted JSONL file
+        if jsonl_path.exists() {
+            tracing::info!("Using cached dataset: {:?}", jsonl_path);
+            return Ok(jsonl_path);
         }
+        
+        // Check if we have the parquet file but not the jsonl
+        if cache_path.exists() {
+            tracing::info!("Converting cached Parquet to JSONL...");
+            convert_parquet_to_jsonl(&cache_path, &jsonl_path)?;
+            tracing::info!("Converted to JSONL");
+            return Ok(jsonl_path);
+        }
+        
+        // Need to download
+        self.download(source).await
     }
 
     /// Load a sample from a dataset source
-    pub fn load_sample(
+    pub async fn load_sample(
         &self,
         source: DatasetSource,
         count: usize,
     ) -> Result<Vec<Task>> {
         use super::task_loader::TaskLoader;
 
-        let path = self.get_or_download(&source)?;
+        let path = self.get_or_download(&source).await?;
         let loader = TaskLoader::new(path);
         loader.load_sample(count)
     }
 
     /// Load stratified sample
-    pub fn load_stratified(
+    pub async fn load_stratified(
         &self,
         source: DatasetSource,
         simple: usize,
@@ -153,7 +225,7 @@ impl DatasetManager {
     ) -> Result<Vec<Task>> {
         use super::task_loader::TaskLoader;
 
-        let path = self.get_or_download(&source)?;
+        let path = self.get_or_download(&source).await?;
         let loader = TaskLoader::new(path);
         loader.load_stratified(simple, medium, hard)
     }
@@ -177,6 +249,120 @@ impl Default for DatasetManager {
     fn default() -> Self {
         Self::new(Self::default_cache_dir())
     }
+}
+
+/// Convert Parquet file to JSONL
+fn convert_parquet_to_jsonl(parquet_path: &PathBuf, jsonl_path: &PathBuf) -> Result<()> {
+    use std::fs::File;
+    use std::io::{BufWriter, Write};
+    
+    // Open parquet file
+    let file = File::open(parquet_path)
+        .context("Failed to open Parquet file")?;
+    
+    let reader = SerializedFileReader::new(file)
+        .context("Failed to create Parquet reader")?;
+    
+    // Create output file
+    let output = File::create(jsonl_path)
+        .context("Failed to create JSONL file")?;
+    let mut writer = BufWriter::new(output);
+    
+    // Read all row groups and convert to JSON
+    let metadata = reader.metadata();
+    let num_rows = metadata.file_metadata().num_rows();
+    
+    tracing::info!("Converting {} rows from Parquet to JSONL", num_rows);
+    
+    // Use arrow to read parquet
+    use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+    let arrow_reader = ParquetRecordBatchReaderBuilder::try_new(File::open(parquet_path)?)
+        .context("Failed to create Arrow reader")?
+        .build()
+        .context("Failed to build Arrow reader")?;
+    
+    let mut row_count = 0;
+    for batch_result in arrow_reader {
+        let batch = batch_result.context("Failed to read record batch")?;
+        let schema = batch.schema();
+        
+        // Convert each row to JSON
+        for row_idx in 0..batch.num_rows() {
+            let mut json_obj = serde_json::Map::new();
+            
+            for col_idx in 0..batch.num_columns() {
+                let column = batch.column(col_idx);
+                let field = schema.field(col_idx);
+                let field_name = field.name();
+                
+                // Convert arrow value to JSON value
+                let json_value = arrow_to_json_value(column, row_idx)?;
+                json_obj.insert(field_name.clone(), json_value);
+            }
+            
+            // Write as JSONL (one JSON object per line)
+            let json_str = serde_json::to_string(&json_obj)
+                .context("Failed to serialize JSON")?;
+            writeln!(writer, "{}", json_str)
+                .context("Failed to write JSONL line")?;
+            
+            row_count += 1;
+            if row_count % 100 == 0 {
+                tracing::debug!("Converted {} rows", row_count);
+            }
+        }
+    }
+    
+    writer.flush().context("Failed to flush writer")?;
+    tracing::info!("Successfully converted {} rows", row_count);
+    
+    Ok(())
+}
+
+/// Convert Arrow array value to JSON value
+fn arrow_to_json_value(column: &arrow::array::ArrayRef, row_idx: usize) -> Result<serde_json::Value> {
+    use arrow::array::*;
+    use arrow::datatypes::DataType;
+    
+    if column.is_null(row_idx) {
+        return Ok(serde_json::Value::Null);
+    }
+    
+    let value = match column.data_type() {
+        DataType::Utf8 => {
+            let array = column.as_any().downcast_ref::<StringArray>()
+                .context("Failed to downcast to StringArray")?;
+            serde_json::Value::String(array.value(row_idx).to_string())
+        }
+        DataType::Int64 => {
+            let array = column.as_any().downcast_ref::<Int64Array>()
+                .context("Failed to downcast to Int64Array")?;
+            serde_json::Value::Number(array.value(row_idx).into())
+        }
+        DataType::Int32 => {
+            let array = column.as_any().downcast_ref::<Int32Array>()
+                .context("Failed to downcast to Int32Array")?;
+            serde_json::Value::Number(array.value(row_idx).into())
+        }
+        DataType::Boolean => {
+            let array = column.as_any().downcast_ref::<BooleanArray>()
+                .context("Failed to downcast to BooleanArray")?;
+            serde_json::Value::Bool(array.value(row_idx))
+        }
+        DataType::Float64 => {
+            let array = column.as_any().downcast_ref::<Float64Array>()
+                .context("Failed to downcast to Float64Array")?;
+            serde_json::Number::from_f64(array.value(row_idx))
+                .map(serde_json::Value::Number)
+                .unwrap_or(serde_json::Value::Null)
+        }
+        _ => {
+            // For other types, try to convert to string
+            serde_json::Value::String(format!("{:?}", column))
+        }
+    };
+    
+    Ok(value)
 }
 
 /// Information about a dataset

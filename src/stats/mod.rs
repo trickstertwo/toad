@@ -1,7 +1,6 @@
 /// Statistical testing for A/B comparisons
 
 use crate::evaluation::EvaluationResults;
-use crate::metrics::Metrics;
 use serde::{Deserialize, Serialize};
 use statrs::distribution::{ContinuousCDF, StudentsT};
 use statrs::statistics::Statistics;
@@ -146,7 +145,7 @@ impl ComparisonResult {
             return TTestResult {
                 t_stat: 0.0,
                 p_value: 1.0,
-                degrees_of_freedom: 0.0,
+                _degrees_of_freedom: 0.0,
             };
         }
 
@@ -172,7 +171,7 @@ impl ComparisonResult {
         TTestResult {
             t_stat,
             p_value,
-            degrees_of_freedom: df,
+            _degrees_of_freedom: df,
         }
     }
 
@@ -268,7 +267,7 @@ impl ComparisonResult {
 struct TTestResult {
     t_stat: f64,
     p_value: f64,
-    degrees_of_freedom: f64,
+    _degrees_of_freedom: f64,
 }
 
 /// Statistical test utilities

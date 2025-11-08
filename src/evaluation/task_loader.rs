@@ -4,7 +4,7 @@ use super::{Task, Complexity};
 use anyhow::{Context, Result};
 use serde_json::Value;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// Load tasks from SWE-bench dataset
 pub struct TaskLoader {
@@ -17,13 +17,29 @@ impl TaskLoader {
         Self { dataset_path }
     }
 
-    /// Load all tasks from the dataset
+    /// Load all tasks from the dataset (supports JSON and JSONL)
     pub fn load_all(&self) -> Result<Vec<Task>> {
         let content = std::fs::read_to_string(&self.dataset_path)
             .context("Failed to read dataset file")?;
 
-        let tasks: Vec<Value> = serde_json::from_str(&content)
-            .context("Failed to parse JSON")?;
+        // Detect file format
+        let extension = self.dataset_path.extension()
+            .and_then(|s| s.to_str())
+            .unwrap_or("");
+
+        let tasks: Vec<Value> = if extension == "jsonl" {
+            // Parse JSONL (one JSON object per line)
+            content
+                .lines()
+                .filter(|line| !line.trim().is_empty())
+                .map(|line| serde_json::from_str(line))
+                .collect::<Result<Vec<Value>, _>>()
+                .context("Failed to parse JSONL")?
+        } else {
+            // Parse regular JSON array
+            serde_json::from_str(&content)
+                .context("Failed to parse JSON")?
+        };
 
         tasks.into_iter()
             .map(|v| self.parse_task(v))

@@ -1,8 +1,7 @@
 /// Metrics collection and analysis for TOAD evaluations
 
 use serde::{Deserialize, Serialize};
-use std::time::{Duration, Instant};
-use std::collections::HashMap;
+use std::time::Instant;
 
 /// Quality metrics for a task solution
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

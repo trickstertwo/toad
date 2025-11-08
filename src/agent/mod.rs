@@ -7,9 +7,9 @@
 /// 4. Solution validation
 
 use crate::evaluation::Task;
-use crate::llm::{LLMClient, LLMResponse, Message, Role, StopReason, ToolUse};
+use crate::llm::{LLMClient, Message, StopReason, ToolUse};
 use crate::metrics::MetricsCollector;
-use crate::tools::{ToolRegistry, ToolResult};
+use crate::tools::ToolRegistry;
 use anyhow::{anyhow, Context, Result};
 use serde_json::json;
 

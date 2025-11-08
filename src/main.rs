@@ -4,9 +4,11 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
+use std::time::Duration;
 use toad::config::{FeatureFlags, ToadConfig};
 use toad::evaluation::{EvaluationHarness, task_loader};
 use toad::stats::ComparisonResult;
+use toad::{App, Tui};
 use tracing::{info, Level};
 use tracing_subscriber;
 
@@ -26,11 +28,15 @@ struct Cli {
 enum Commands {
     /// Run evaluation on a dataset
     Eval {
-        /// Path to SWE-bench dataset (JSON)
+        /// Path to local SWE-bench dataset (JSON/JSONL)
         #[arg(short, long)]
         dataset: Option<PathBuf>,
 
-        /// Number of test tasks to generate (if no dataset)
+        /// Auto-download SWE-bench dataset (verified, lite, or full)
+        #[arg(long, value_name = "VARIANT")]
+        swebench: Option<String>,
+
+        /// Number of test tasks to use
         #[arg(short, long, default_value = "10")]
         count: usize,
 
@@ -45,9 +51,13 @@ enum Commands {
 
     /// Compare two configurations (A/B test)
     Compare {
-        /// Path to SWE-bench dataset (JSON)
+        /// Path to local SWE-bench dataset (JSON/JSONL)
         #[arg(short, long)]
         dataset: Option<PathBuf>,
+
+        /// Auto-download SWE-bench dataset (verified, lite, or full)
+        #[arg(long, value_name = "VARIANT")]
+        swebench: Option<String>,
 
         /// Number of test tasks
         #[arg(short = 'n', long, default_value = "20")]
@@ -83,10 +93,16 @@ enum Commands {
         #[arg(short, long, default_value = "./test_data.json")]
         output: PathBuf,
     },
+
+    /// Start the interactive TUI
+    Tui,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Load .env file if it exists
+    let _ = dotenvy::dotenv();
+    
     let cli = Cli::parse();
 
     // Initialize logging
@@ -98,12 +114,12 @@ async fn main() -> Result<()> {
     info!("TOAD v{} - Terminal-Oriented Autonomous Developer", toad::VERSION);
 
     match cli.command {
-        Commands::Eval { dataset, count, milestone, output } => {
-            run_eval(dataset, count, milestone, output).await?;
+        Commands::Eval { dataset, swebench, count, milestone, output } => {
+            run_eval(dataset, swebench, count, milestone, output).await?;
         }
 
-        Commands::Compare { dataset, count, baseline, test, output } => {
-            run_compare(dataset, count, baseline, test, output).await?;
+        Commands::Compare { dataset, swebench, count, baseline, test, output } => {
+            run_compare(dataset, swebench, count, baseline, test, output).await?;
         }
 
         Commands::ShowConfig { milestone } => {
@@ -113,6 +129,10 @@ async fn main() -> Result<()> {
         Commands::GenerateTestData { count, output } => {
             generate_test_data(count, output)?;
         }
+
+        Commands::Tui => {
+            run_tui()?;
+        }
     }
 
     Ok(())
@@ -120,23 +140,20 @@ async fn main() -> Result<()> {
 
 async fn run_eval(
     dataset_path: Option<PathBuf>,
+    swebench_variant: Option<String>,
     count: usize,
     milestone: Option<u8>,
     output: PathBuf,
 ) -> Result<()> {
     info!("Running evaluation...");
 
-    // Load tasks
-    let tasks = if let Some(path) = dataset_path {
-        info!("Loading tasks from: {:?}", path);
-        let loader = task_loader::TaskLoader::new(path);
-        loader.load_sample(count)?
-    } else {
-        info!("Generating {} test tasks", count);
-        task_loader::create_test_tasks(count)
-    };
+    // Load tasks with validation
+    let tasks = load_tasks_with_validation(dataset_path, swebench_variant, count).await?;
 
-    info!("Loaded {} tasks", tasks.len());
+    info!("Loaded {} tasks (requested: {})", tasks.len(), count);
+    if tasks.len() < count {
+        tracing::warn!("Dataset contains fewer tasks ({}) than requested ({})", tasks.len(), count);
+    }
 
     // Create configuration
     let config = if let Some(m) = milestone {
@@ -164,6 +181,7 @@ async fn run_eval(
 
 async fn run_compare(
     dataset_path: Option<PathBuf>,
+    swebench_variant: Option<String>,
     count: usize,
     baseline_ms: u8,
     test_ms: u8,
@@ -171,17 +189,13 @@ async fn run_compare(
 ) -> Result<()> {
     info!("Running A/B comparison...");
 
-    // Load tasks
-    let tasks = if let Some(path) = dataset_path {
-        info!("Loading tasks from: {:?}", path);
-        let loader = task_loader::TaskLoader::new(path);
-        loader.load_sample(count)?
-    } else {
-        info!("Generating {} test tasks", count);
-        task_loader::create_test_tasks(count)
-    };
+    // Load tasks with validation
+    let tasks = load_tasks_with_validation(dataset_path, swebench_variant, count).await?;
 
-    info!("Loaded {} tasks", tasks.len());
+    info!("Loaded {} tasks (requested: {})", tasks.len(), count);
+    if tasks.len() < count {
+        tracing::warn!("Dataset contains fewer tasks ({}) than requested ({})", tasks.len(), count);
+    }
 
     // Create configurations
     let config_a = ToadConfig::for_milestone(baseline_ms);
@@ -209,69 +223,121 @@ async fn run_compare(
     harness.save_results(&results_b)?;
 
     info!("Results saved to: {:?}", output);
-//! Toad - AI-powered coding terminal with semi-autonomous agents
-//!
-//! Main entry point for the application.
-
-use std::time::Duration;
-use toad::{App, Result, Tui};
-
-fn main() -> Result<()> {
-    // Initialize error handling
-    install_panic_hook();
-
-    // Initialize logging
-    init_logging()?;
-
-    tracing::info!("Starting Toad TUI");
-
-    // Run the application
-    let result = run();
-
-    // Log shutdown
-    if let Err(ref e) = result {
-        tracing::error!("Application error: {}", e);
-    } else {
-        tracing::info!("Application shutdown successfully");
-    }
-
-    result
+    Ok(())
 }
 
-/// Main application loop
-///
-/// This implements the Elm Architecture:
-/// 1. Init: Create initial state (App, Tui, EventHandler)
-/// 2. Loop:
-///    - Wait for events
-///    - Update state based on events
-///    - Render new state
-/// 3. Cleanup: Restore terminal (handled by Tui Drop)
-fn run() -> Result<()> {
+/// Load tasks with validation and smart dataset handling
+async fn load_tasks_with_validation(
+    dataset_path: Option<PathBuf>,
+    swebench_variant: Option<String>,
+    count: usize,
+) -> Result<Vec<toad::evaluation::Task>> {
+    use toad::evaluation::{dataset_manager::{DatasetManager, DatasetSource}, task_loader};
+
+    // Validate conflicting options
+    if dataset_path.is_some() && swebench_variant.is_some() {
+        anyhow::bail!("Cannot specify both --dataset and --swebench. Choose one.");
+    }
+
+    // Load tasks based on source
+    let tasks = if let Some(variant) = swebench_variant {
+        // Auto-download from HuggingFace
+        let source = match variant.to_lowercase().as_str() {
+            "verified" => DatasetSource::Verified,
+            "lite" => DatasetSource::Lite,
+            "full" => DatasetSource::Full,
+            _ => anyhow::bail!("Invalid SWE-bench variant: '{}'. Use 'verified', 'lite', or 'full'", variant),
+        };
+
+        info!("Loading SWE-bench {} dataset", variant);
+        let manager = DatasetManager::default();
+        manager.load_sample(source, count).await?
+    } else if let Some(path) = dataset_path {
+        // Load from local file with validation
+        if !path.exists() {
+            anyhow::bail!("Dataset file not found: {:?}", path);
+        }
+
+        info!("Loading tasks from local file: {:?}", path);
+        let loader = task_loader::TaskLoader::new(path);
+        
+        // Try to load and validate
+        let all_tasks = loader.load_all()?;
+        info!("Dataset contains {} total tasks", all_tasks.len());
+        
+        if all_tasks.is_empty() {
+            anyhow::bail!("Dataset file is empty or invalid");
+        }
+
+        // Take the requested count
+        let tasks: Vec<_> = all_tasks.into_iter().take(count).collect();
+        
+        if tasks.len() < count {
+            tracing::warn!(
+                "Dataset only has {} tasks, but {} were requested",
+                tasks.len(),
+                count
+            );
+        }
+        
+        tasks
+    } else {
+        // Generate synthetic test tasks
+        info!("No dataset specified, generating {} synthetic test tasks", count);
+        task_loader::create_test_tasks(count)
+    };
+
+    // Final validation
+    if tasks.is_empty() {
+        anyhow::bail!("No tasks loaded. Check your dataset or count parameter.");
+    }
+
+    Ok(tasks)
+}
+
+fn run_tui() -> Result<()> {
+    // Initialize error handling
+    install_tui_panic_hook();
+
+    info!("Starting Toad TUI");
+
     // Init: Create initial state
-    let mut tui = Tui::new()?;
+    let mut tui = Tui::new().map_err(|e| anyhow::anyhow!("{}", e))?;
     let mut app = App::new();
     let event_handler = toad::event::EventHandler::new(Duration::from_millis(250));
 
-    tracing::info!("TUI initialized, entering main loop");
+    info!("TUI initialized, entering main loop");
 
     // Main event loop
     while !app.should_quit() {
         // View: Render the current state
         tui.draw(|frame| {
             toad::ui::render(&mut app, frame);
-        })?;
+        }).map_err(|e| anyhow::anyhow!("{}", e))?;
 
         // Wait for event (blocking)
-        let event = event_handler.next()?;
+        let event = event_handler.next().map_err(|e| anyhow::anyhow!("{}", e))?;
 
         // Update: Process event and update state
-        app.update(event)?;
+        app.update(event).map_err(|e| anyhow::anyhow!("{}", e))?;
     }
 
-    tracing::info!("Exiting main loop");
-
+    info!("Exiting main loop");
     Ok(())
+}
+
+fn install_tui_panic_hook() {
+    let original_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
+        // Attempt to restore terminal
+        let _ = crossterm::terminal::disable_raw_mode();
+        let _ = crossterm::execute!(
+            std::io::stdout(),
+            crossterm::terminal::LeaveAlternateScreen,
+            crossterm::event::DisableMouseCapture
+        );
+        original_hook(panic_info);
+    }));
 }
 
 fn show_config(milestone: Option<u8>) {
@@ -326,30 +392,13 @@ fn generate_test_data(count: usize, output: PathBuf) -> Result<()> {
 
     info!("Test data saved to: {:?}", output);
     println!("Generated {} tasks", tasks.len());
-/// Install a panic hook that restores the terminal before panicking
-///
-/// This ensures that even if the application panics, the terminal
-/// is properly restored to its original state.
-fn install_panic_hook() {
-    let original_hook = std::panic::take_hook();
-
-    std::panic::set_hook(Box::new(move |panic_info| {
-        // Attempt to restore terminal
-        let _ = crossterm::terminal::disable_raw_mode();
-        let _ = crossterm::execute!(
-            std::io::stdout(),
-            crossterm::terminal::LeaveAlternateScreen,
-            crossterm::event::DisableMouseCapture
-        );
-
-        // Call original panic hook
-        original_hook(panic_info);
-    }));
+    Ok(())
 }
 
 /// Initialize logging to a file
 ///
 /// Logs are written to `toad.log` in the current directory.
+#[allow(dead_code)]
 fn init_logging() -> Result<()> {
     use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 

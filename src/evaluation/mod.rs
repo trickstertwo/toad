@@ -265,7 +265,7 @@ impl EvaluationHarness {
     }
 
     /// Run a single task with the agent
-    async fn run_task(&self, task: &Task, config: &ToadConfig) -> Result<TaskResult> {
+    async fn run_task(&self, task: &Task, _config: &ToadConfig) -> Result<TaskResult> {
         use crate::agent::Agent;
         use crate::llm::{AnthropicClient, get_api_key};
         use crate::tools::ToolRegistry;

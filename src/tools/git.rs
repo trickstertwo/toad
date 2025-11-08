@@ -1,7 +1,7 @@
 /// Git tools - git diff and git status
 
 use super::{Tool, ToolResult};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use serde_json::json;
 use std::collections::HashMap;
 use std::process::Stdio;
