@@ -24,6 +24,7 @@ pub mod history;
 pub mod keybinds;
 pub mod layout;
 pub mod logo;
+pub mod search;
 pub mod theme;
 pub mod tui;
 pub mod ui;
@@ -46,6 +47,7 @@ pub use event::Event;
 pub use history::History;
 pub use keybinds::{KeyBinding, KeyBindings};
 pub use layout::{LayoutManager, Pane, PanelId, SplitDirection};
+pub use search::{SearchMatch, SearchState};
 pub use tui::Tui;
 
 /// Current TOAD version

@@ -334,13 +334,14 @@ mod tests {
     #[test]
     fn test_pane_visibility() {
         let mut pane = Pane::leaf(0);
-        assert_eq!(pane.leaf_ids(), vec![0]);
+        assert_eq!(pane.leaf_ids(), vec![0_usize]);
 
         pane.toggle_visibility(0);
-        assert_eq!(pane.leaf_ids(), vec![]);
+        let empty: Vec<usize> = vec![];
+        assert_eq!(pane.leaf_ids(), empty);
 
         pane.toggle_visibility(0);
-        assert_eq!(pane.leaf_ids(), vec![0]);
+        assert_eq!(pane.leaf_ids(), vec![0_usize]);
     }
 
     #[test]

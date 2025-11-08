@@ -3,6 +3,7 @@
 //! This module contains the application state and the update logic
 //! that handles state transitions based on events.
 
+use crate::config::Config;
 use crate::event::Event;
 use crate::layout::LayoutManager;
 use crate::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField};
@@ -68,6 +69,9 @@ pub struct App {
 
     /// Vim mode enabled
     vim_mode: bool,
+
+    /// Application configuration
+    config: Config,
 }
 
 impl Default for App {
@@ -75,6 +79,10 @@ impl Default for App {
         let working_directory = env::current_dir().unwrap_or_else(|_| PathBuf::from("/"));
         let mut input_field = InputField::new();
         input_field.set_focused(true);
+
+        // Load configuration or use default
+        let config = Config::load_or_default();
+        let vim_mode = config.ui.vim_mode;
 
         Self {
             screen: AppScreen::Welcome,
@@ -91,7 +99,8 @@ impl Default for App {
             command_palette: CommandPalette::new(),
             show_palette: false,
             layout: LayoutManager::new(),
-            vim_mode: false,
+            vim_mode,
+            config,
         }
     }
 }
@@ -190,10 +199,29 @@ impl App {
     /// Toggle Vim mode
     pub fn toggle_vim_mode(&mut self) {
         self.vim_mode = !self.vim_mode;
+        self.config.ui.vim_mode = self.vim_mode;
         self.status_message = format!(
             "Vim mode {}",
             if self.vim_mode { "enabled" } else { "disabled" }
         );
+    }
+
+    /// Get configuration
+    pub fn config(&self) -> &Config {
+        &self.config
+    }
+
+    /// Save configuration to file
+    pub fn save_config(&self) -> crate::Result<()> {
+        let path = Config::default_path();
+
+        // Create parent directory if it doesn't exist
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        self.config.save_to_file(&path).map_err(|e| color_eyre::eyre::eyre!("Failed to save config: {}", e))?;
+        Ok(())
     }
 
     /// Update application state based on an event (Update in Elm Architecture)
