@@ -11,6 +11,7 @@ pub mod clipboard;
 pub mod config;
 pub mod event;
 pub mod history;
+pub mod keybinds;
 pub mod logo;
 pub mod theme;
 pub mod tui;
@@ -23,6 +24,7 @@ pub use clipboard::Clipboard;
 pub use config::Config;
 pub use event::Event;
 pub use history::History;
+pub use keybinds::{KeyBinding, KeyBindings};
 pub use tui::Tui;
 
 /// Result type alias for the application
