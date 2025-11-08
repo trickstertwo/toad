@@ -22,6 +22,7 @@ pub mod app;
 pub mod async_ops;
 pub mod autocomplete;
 pub mod background_tasks;
+pub mod box_drawing;
 pub mod clipboard;
 pub mod diff;
 pub mod event;
@@ -41,6 +42,7 @@ pub mod tabs;
 pub mod theme;
 pub mod tui;
 pub mod ui;
+pub mod undo;
 pub mod validation;
 pub mod virtual_scroll;
 pub mod widgets;
@@ -63,6 +65,7 @@ pub use app::App;
 pub use async_ops::{AsyncOperation, AsyncOperationManager, OperationId, OperationStatus};
 pub use autocomplete::{AutocompleteManager, AutocompleteProvider, CommandProvider, Suggestion, WordProvider};
 pub use background_tasks::{BackgroundTask, BackgroundTaskManager, TaskId, TaskStatus};
+pub use box_drawing::{BoxBuilder, BoxChars, BoxStyle};
 pub use clipboard::Clipboard;
 pub use diff::{
     ChunkHeader, DiffHunk, DiffLine, DiffLineType, DiffParser, DiffStats, FileDiff,
@@ -82,6 +85,7 @@ pub use search::{SearchMatch, SearchState};
 pub use session::Session;
 pub use tabs::{Tab, TabId, TabManager};
 pub use tui::Tui;
+pub use undo::{Action, UndoStack, HistoryNavigator, TextInsert, TextDelete};
 pub use validation::{
     CompositeValidator, InputValidator, LengthValidator, NotEmptyValidator, RegexValidator,
     ValidationResult, Validator,

@@ -190,10 +190,10 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ### Visual Polish
 - [ ] **Animations & Transitions** - Smooth panel transitions
 - [x] **Loading Spinners** - Aesthetic async indicators ✅ COMPLETED (Spinner with 8 styles: Dots, Line, Bars, Bounce, Arrows, SimpleDots, Binary, Clock)
-- [ ] **Progress Animations** - Multi-stage task progress
+- [x] **Progress Animations** - Multi-stage task progress ✅ COMPLETED (MultiStageProgress widget with stage tracking, overall progress)
 - [ ] **Sparklines** - Inline graphs for metrics
 - [ ] **Canvas Drawing** - Custom graphics (charts, diagrams)
-- [ ] **Box Drawing Characters** - Beautiful Unicode borders
+- [x] **Box Drawing Characters** - Beautiful Unicode borders ✅ COMPLETED (BoxChars with Light/Heavy/Double/Rounded/ASCII styles, BoxBuilder, draw utilities)
 - [ ] **Nerd Font Icons** - Icon support (file types, status indicators)
 
 ### Graph & Data Visualization
@@ -222,7 +222,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Context Menus** - Right-click or keybind for actions ✅ COMPLETED (ContextMenu with MenuItem, separators, icons, shortcuts, disabled items)
 - [ ] **Quick Actions** - Frequently used commands surfaced
 - [ ] **Smart Suggestions** - Context-aware hints
-- [ ] **Undo/Redo** - u/Ctrl+r for actions
+- [x] **Undo/Redo** - u/Ctrl+r for actions ✅ COMPLETED (UndoStack with Action trait, HistoryNavigator, dirty tracking)
 - [ ] **Session Management** - Save/restore entire sessions
 - [ ] **Workspace Switching** - Multiple project contexts
 
