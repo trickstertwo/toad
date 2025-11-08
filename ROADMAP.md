@@ -205,10 +205,10 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Git Graph** - Branch visualization (lazygit-style) ✅ COMPLETED
 
 ### Modal Editing (Vim-inspired)
-- [ ] **Multiple Modes** - Normal, Insert, Visual, Command
-- [ ] **Mode Indicator** - Visual mode display
-- [ ] **Vim Motions** - w/b/e word movement, f/t character jump
-- [ ] **Visual Selection** - V for line, v for char, Ctrl+v for block
+- [x] **Multiple Modes** - Normal, Insert, Visual, Command ✅ COMPLETED
+- [x] **Mode Indicator** - Visual mode display ✅ COMPLETED
+- [x] **Vim Motions** - w/b/e word movement, f/t character jump ✅ COMPLETED (via state management)
+- [x] **Visual Selection** - V for line, v for char, Ctrl+v for block ✅ COMPLETED
 - [ ] **Macros** - Record and replay actions
 - [ ] **Marks** - Set and jump to bookmarks
 
