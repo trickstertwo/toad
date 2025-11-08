@@ -27,6 +27,7 @@ pub mod clipboard;
 pub mod command_mode;
 pub mod diff;
 pub mod event;
+pub mod file_ops;
 pub mod fuzzy;
 pub mod history;
 pub mod keybinds;
@@ -38,6 +39,7 @@ pub mod marks;
 pub mod mouse;
 pub mod multicursor;
 pub mod performance;
+pub mod recent_files;
 pub mod resizable;
 pub mod search;
 pub mod session;
@@ -101,6 +103,8 @@ pub use vim_motions::{Motion, VimMotions};
 pub use virtual_scroll::VirtualScrollState;
 pub use visual_selection::{Position, SelectionMode, SelectionRange, VisualSelection};
 pub use macros::{Macro, MacroAction, MacroManager};
+pub use file_ops::{FileOps, FileOpResult};
+pub use recent_files::{RecentFile, RecentFiles};
 
 /// Current TOAD version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

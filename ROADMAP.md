@@ -239,9 +239,9 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Tree View** - Collapsible directory tree ✅ COMPLETED
 - [ ] **File Preview** - Quick file preview pane
 - [ ] **File Icons** - Type-based icons (Nerd Fonts)
-- [ ] **File Operations** - Copy/move/delete/rename
+- [x] **File Operations** - Copy/move/delete/rename ✅ COMPLETED (FileOps with copy/move/rename/delete, FileOpResult with error handling)
 - [ ] **Bookmarks** - Quick navigation to locations
-- [ ] **Recent Files** - MRU list
+- [x] **Recent Files** - MRU list ✅ COMPLETED (RecentFiles with MRU tracking, search, frequency sorting, save/load persistence)
 
 ### AI-Specific Features (for AI coding terminal)
 - [ ] **Chat Panel** - Conversational AI interaction
@@ -253,10 +253,10 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Context Display** - Show what AI sees
 
 ### Developer Experience
-- [ ] **Command History** - Searchable command log
-- [ ] **Breadcrumbs** - Navigation trail
+- [x] **Command History** - Searchable command log ✅ COMPLETED (History with search, navigation, save/load)
+- [x] **Breadcrumbs** - Navigation trail ✅ COMPLETED (Breadcrumbs widget)
 - [ ] **Minimap** - Document overview (VSCode-style)
-- [ ] **Multi-select** - Bulk operations on items
+- [x] **Multi-select** - Bulk operations on items ✅ COMPLETED (MultiSelect widget with Single/Multiple/Range modes, select_all/invert)
 - [ ] **Batch Operations** - Apply actions to selections
 - [ ] **Incremental Loading** - Stream large datasets
 - [ ] **Export/Import** - Data portability
