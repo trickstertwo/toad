@@ -4,12 +4,15 @@
 
 pub mod borders;
 pub mod dialog;
+pub mod event_metrics;
 pub mod filetree;
+pub mod fps;
 pub mod help;
 pub mod icons;
 pub mod input;
 pub mod input_dialog;
 pub mod input_prompt;
+pub mod memory;
 pub mod modal;
 pub mod palette;
 pub mod progress;
@@ -23,10 +26,13 @@ pub mod welcome;
 
 pub use borders::{BorderSet, BorderStyle};
 pub use dialog::{ConfirmDialog, DialogOption};
+pub use event_metrics::EventMetrics;
 pub use filetree::{FileTree, FileTreeNode, FileTreeNodeType};
+pub use fps::FpsCounter;
 pub use help::HelpScreen;
 pub use icons::{FileType, GitStatus, Icons, StatusIcon};
 pub use input::InputField;
+pub use memory::{MemoryMonitor, MemoryStats};
 pub use input_dialog::{InputDialog, InputDialogState};
 pub use input_prompt::InputPrompt;
 pub use modal::{Modal, ModalType};
