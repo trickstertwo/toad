@@ -261,6 +261,362 @@ impl LineChart {
     }
 }
 
+/// Bar chart orientation
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum BarOrientation {
+    /// Vertical bars (default)
+    Vertical,
+    /// Horizontal bars
+    Horizontal,
+}
+
+impl Default for BarOrientation {
+    fn default() -> Self {
+        BarOrientation::Vertical
+    }
+}
+
+/// Bar chart for comparison data
+#[derive(Debug, Clone)]
+pub struct BarChart {
+    /// Data points with labels
+    data: Vec<(String, f64)>,
+    /// Chart title
+    title: Option<String>,
+    /// Bar orientation
+    orientation: BarOrientation,
+    /// Bar color
+    color: Color,
+    /// Show border
+    show_border: bool,
+    /// Show values
+    show_values: bool,
+}
+
+impl BarChart {
+    /// Create a new bar chart
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::widgets::BarChart;
+    ///
+    /// let data = vec![
+    ///     ("A".to_string(), 10.0),
+    ///     ("B".to_string(), 20.0),
+    ///     ("C".to_string(), 15.0),
+    /// ];
+    /// let chart = BarChart::new(data);
+    /// assert_eq!(chart.data().len(), 3);
+    /// ```
+    pub fn new(data: Vec<(String, f64)>) -> Self {
+        Self {
+            data,
+            title: None,
+            orientation: BarOrientation::Vertical,
+            color: ToadTheme::TOAD_GREEN,
+            show_border: true,
+            show_values: false,
+        }
+    }
+
+    /// Set title
+    pub fn with_title<S: Into<String>>(mut self, title: S) -> Self {
+        self.title = Some(title.into());
+        self
+    }
+
+    /// Set orientation
+    pub fn with_orientation(mut self, orientation: BarOrientation) -> Self {
+        self.orientation = orientation;
+        self
+    }
+
+    /// Set color
+    pub fn with_color(mut self, color: Color) -> Self {
+        self.color = color;
+        self
+    }
+
+    /// Set whether to show border
+    pub fn with_border(mut self, show: bool) -> Self {
+        self.show_border = show;
+        self
+    }
+
+    /// Set whether to show values
+    pub fn with_values(mut self, show: bool) -> Self {
+        self.show_values = show;
+        self
+    }
+
+    /// Get data
+    pub fn data(&self) -> &[(String, f64)] {
+        &self.data
+    }
+
+    /// Set data
+    pub fn set_data(&mut self, data: Vec<(String, f64)>) {
+        self.data = data;
+    }
+
+    /// Add data point
+    pub fn add_bar<S: Into<String>>(&mut self, label: S, value: f64) {
+        self.data.push((label.into(), value));
+    }
+
+    /// Get max value
+    fn max_value(&self) -> f64 {
+        self.data
+            .iter()
+            .map(|(_, v)| *v)
+            .fold(f64::NEG_INFINITY, |a, b| a.max(b))
+            .max(1.0)
+    }
+
+    /// Render the bar chart
+    pub fn render(&self, frame: &mut Frame, area: Rect) {
+        if area.width < 4 || area.height < 4 {
+            return;
+        }
+
+        let mut lines_to_render: Vec<Line> = Vec::new();
+
+        match self.orientation {
+            BarOrientation::Vertical => {
+                let chart_height = area.height.saturating_sub(3) as usize;
+                let max_value = self.max_value();
+
+                for (label, value) in &self.data {
+                    let bar_height = ((value / max_value) * chart_height as f64) as usize;
+                    let bar = "█".repeat(bar_height.min(chart_height));
+                    let text = if self.show_values {
+                        format!("{}: {:.1}", label, value)
+                    } else {
+                        label.clone()
+                    };
+
+                    lines_to_render.push(Line::from(vec![
+                        Span::styled(bar, Style::default().fg(self.color)),
+                        Span::raw(" "),
+                        Span::styled(text, Style::default().fg(ToadTheme::LIGHT_GRAY)),
+                    ]));
+                }
+            }
+            BarOrientation::Horizontal => {
+                let chart_width = area.width.saturating_sub(15) as usize;
+                let max_value = self.max_value();
+
+                for (label, value) in &self.data {
+                    let bar_width = ((value / max_value) * chart_width as f64) as usize;
+                    let bar = "█".repeat(bar_width.min(chart_width));
+                    let text = if self.show_values {
+                        format!("{:>10} {:.1} ", label, value)
+                    } else {
+                        format!("{:>10} ", label)
+                    };
+
+                    lines_to_render.push(Line::from(vec![
+                        Span::styled(text, Style::default().fg(ToadTheme::LIGHT_GRAY)),
+                        Span::styled(bar, Style::default().fg(self.color)),
+                    ]));
+                }
+            }
+        }
+
+        let paragraph = if self.show_border {
+            let title = self.title.as_deref().unwrap_or("Bar Chart");
+            Paragraph::new(lines_to_render).block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(title)
+                    .border_style(Style::default().fg(ToadTheme::BORDER)),
+            )
+        } else {
+            Paragraph::new(lines_to_render)
+        };
+
+        frame.render_widget(paragraph, area);
+    }
+}
+
+/// Scatter plot for distribution visualization
+#[derive(Debug, Clone)]
+pub struct ScatterPlot {
+    /// Data points (x, y)
+    data: Vec<(f64, f64)>,
+    /// Chart title
+    title: Option<String>,
+    /// Point character
+    point_char: char,
+    /// Point color
+    color: Color,
+    /// Show border
+    show_border: bool,
+    /// Show axes
+    show_axes: bool,
+}
+
+impl ScatterPlot {
+    /// Create a new scatter plot
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::widgets::ScatterPlot;
+    ///
+    /// let data = vec![(1.0, 2.0), (2.0, 4.0), (3.0, 6.0)];
+    /// let plot = ScatterPlot::new(data);
+    /// assert_eq!(plot.data().len(), 3);
+    /// ```
+    pub fn new(data: Vec<(f64, f64)>) -> Self {
+        Self {
+            data,
+            title: None,
+            point_char: '•',
+            color: ToadTheme::TOAD_GREEN,
+            show_border: true,
+            show_axes: true,
+        }
+    }
+
+    /// Set title
+    pub fn with_title<S: Into<String>>(mut self, title: S) -> Self {
+        self.title = Some(title.into());
+        self
+    }
+
+    /// Set point character
+    pub fn with_point_char(mut self, ch: char) -> Self {
+        self.point_char = ch;
+        self
+    }
+
+    /// Set color
+    pub fn with_color(mut self, color: Color) -> Self {
+        self.color = color;
+        self
+    }
+
+    /// Set whether to show border
+    pub fn with_border(mut self, show: bool) -> Self {
+        self.show_border = show;
+        self
+    }
+
+    /// Set whether to show axes
+    pub fn with_axes(mut self, show: bool) -> Self {
+        self.show_axes = show;
+        self
+    }
+
+    /// Get data
+    pub fn data(&self) -> &[(f64, f64)] {
+        &self.data
+    }
+
+    /// Set data
+    pub fn set_data(&mut self, data: Vec<(f64, f64)>) {
+        self.data = data;
+    }
+
+    /// Add point
+    pub fn add_point(&mut self, x: f64, y: f64) {
+        self.data.push((x, y));
+    }
+
+    /// Get bounds
+    fn bounds(&self) -> (f64, f64, f64, f64) {
+        if self.data.is_empty() {
+            return (0.0, 1.0, 0.0, 1.0);
+        }
+
+        let mut min_x = f64::INFINITY;
+        let mut max_x = f64::NEG_INFINITY;
+        let mut min_y = f64::INFINITY;
+        let mut max_y = f64::NEG_INFINITY;
+
+        for (x, y) in &self.data {
+            min_x = min_x.min(*x);
+            max_x = max_x.max(*x);
+            min_y = min_y.min(*y);
+            max_y = max_y.max(*y);
+        }
+
+        // Add padding
+        if (max_x - min_x).abs() < 1e-10 {
+            min_x -= 1.0;
+            max_x += 1.0;
+        }
+        if (max_y - min_y).abs() < 1e-10 {
+            min_y -= 1.0;
+            max_y += 1.0;
+        }
+
+        (min_x, max_x, min_y, max_y)
+    }
+
+    /// Normalize point to grid coordinates
+    fn normalize(&self, x: f64, y: f64, width: usize, height: usize) -> (usize, usize) {
+        let (min_x, max_x, min_y, max_y) = self.bounds();
+
+        let norm_x = (x - min_x) / (max_x - min_x);
+        let norm_y = 1.0 - (y - min_y) / (max_y - min_y);
+
+        let grid_x = (norm_x * (width - 1) as f64) as usize;
+        let grid_y = (norm_y * (height - 1) as f64) as usize;
+
+        (grid_x.min(width - 1), grid_y.min(height - 1))
+    }
+
+    /// Render the scatter plot
+    pub fn render(&self, frame: &mut Frame, area: Rect) {
+        if area.width < 4 || area.height < 4 {
+            return;
+        }
+
+        let chart_height = area.height.saturating_sub(3) as usize;
+        let chart_width = area.width.saturating_sub(3) as usize;
+
+        if chart_height == 0 || chart_width == 0 {
+            return;
+        }
+
+        // Create grid
+        let mut grid = vec![vec![' '; chart_width]; chart_height];
+
+        // Plot points
+        for (x, y) in &self.data {
+            let (grid_x, grid_y) = self.normalize(*x, *y, chart_width, chart_height);
+            grid[grid_y][grid_x] = self.point_char;
+        }
+
+        // Render grid
+        let mut lines_to_render: Vec<Line> = Vec::new();
+        for row in grid {
+            let line_str: String = row.into_iter().collect();
+            lines_to_render.push(Line::from(Span::styled(
+                line_str,
+                Style::default().fg(self.color),
+            )));
+        }
+
+        let paragraph = if self.show_border {
+            let title = self.title.as_deref().unwrap_or("Scatter Plot");
+            Paragraph::new(lines_to_render).block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(title)
+                    .border_style(Style::default().fg(ToadTheme::BORDER)),
+            )
+        } else {
+            Paragraph::new(lines_to_render)
+        };
+
+        frame.render_widget(paragraph, area);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -396,5 +752,206 @@ mod tests {
         let chart = LineChart::new(vec![1.0, 2.0, 3.0])
             .with_values(true);
         assert!(chart.show_values);
+    }
+
+    // BarChart tests
+
+    #[test]
+    fn test_bar_chart_creation() {
+        let data = vec![
+            ("A".to_string(), 10.0),
+            ("B".to_string(), 20.0),
+            ("C".to_string(), 15.0),
+        ];
+        let chart = BarChart::new(data);
+        assert_eq!(chart.data().len(), 3);
+    }
+
+    #[test]
+    fn test_bar_chart_with_title() {
+        let chart = BarChart::new(vec![("A".to_string(), 10.0)])
+            .with_title("Test Bar Chart");
+        assert_eq!(chart.title, Some("Test Bar Chart".to_string()));
+    }
+
+    #[test]
+    fn test_bar_chart_with_orientation() {
+        let chart = BarChart::new(vec![("A".to_string(), 10.0)])
+            .with_orientation(BarOrientation::Horizontal);
+        assert_eq!(chart.orientation, BarOrientation::Horizontal);
+    }
+
+    #[test]
+    fn test_bar_chart_with_color() {
+        let chart = BarChart::new(vec![("A".to_string(), 10.0)])
+            .with_color(Color::Blue);
+        assert_eq!(chart.color, Color::Blue);
+    }
+
+    #[test]
+    fn test_bar_chart_set_data() {
+        let mut chart = BarChart::new(vec![("A".to_string(), 10.0)]);
+        chart.set_data(vec![
+            ("X".to_string(), 5.0),
+            ("Y".to_string(), 15.0),
+        ]);
+        assert_eq!(chart.data().len(), 2);
+    }
+
+    #[test]
+    fn test_bar_chart_add_bar() {
+        let mut chart = BarChart::new(vec![("A".to_string(), 10.0)]);
+        chart.add_bar("B", 20.0);
+        assert_eq!(chart.data().len(), 2);
+        assert_eq!(chart.data()[1].0, "B");
+        assert_eq!(chart.data()[1].1, 20.0);
+    }
+
+    #[test]
+    fn test_bar_chart_max_value() {
+        let chart = BarChart::new(vec![
+            ("A".to_string(), 10.0),
+            ("B".to_string(), 25.0),
+            ("C".to_string(), 15.0),
+        ]);
+        assert_eq!(chart.max_value(), 25.0);
+    }
+
+    #[test]
+    fn test_bar_chart_max_value_empty() {
+        let chart = BarChart::new(vec![]);
+        assert_eq!(chart.max_value(), 1.0);
+    }
+
+    #[test]
+    fn test_bar_chart_with_border() {
+        let chart = BarChart::new(vec![("A".to_string(), 10.0)])
+            .with_border(false);
+        assert!(!chart.show_border);
+    }
+
+    #[test]
+    fn test_bar_chart_with_values() {
+        let chart = BarChart::new(vec![("A".to_string(), 10.0)])
+            .with_values(true);
+        assert!(chart.show_values);
+    }
+
+    #[test]
+    fn test_bar_orientation_default() {
+        let orientation = BarOrientation::default();
+        assert_eq!(orientation, BarOrientation::Vertical);
+    }
+
+    // ScatterPlot tests
+
+    #[test]
+    fn test_scatter_plot_creation() {
+        let data = vec![(1.0, 2.0), (2.0, 4.0), (3.0, 6.0)];
+        let plot = ScatterPlot::new(data);
+        assert_eq!(plot.data().len(), 3);
+    }
+
+    #[test]
+    fn test_scatter_plot_with_title() {
+        let plot = ScatterPlot::new(vec![(1.0, 2.0)])
+            .with_title("Test Scatter");
+        assert_eq!(plot.title, Some("Test Scatter".to_string()));
+    }
+
+    #[test]
+    fn test_scatter_plot_with_point_char() {
+        let plot = ScatterPlot::new(vec![(1.0, 2.0)])
+            .with_point_char('*');
+        assert_eq!(plot.point_char, '*');
+    }
+
+    #[test]
+    fn test_scatter_plot_with_color() {
+        let plot = ScatterPlot::new(vec![(1.0, 2.0)])
+            .with_color(Color::Red);
+        assert_eq!(plot.color, Color::Red);
+    }
+
+    #[test]
+    fn test_scatter_plot_set_data() {
+        let mut plot = ScatterPlot::new(vec![(1.0, 2.0)]);
+        plot.set_data(vec![(3.0, 4.0), (5.0, 6.0)]);
+        assert_eq!(plot.data().len(), 2);
+    }
+
+    #[test]
+    fn test_scatter_plot_add_point() {
+        let mut plot = ScatterPlot::new(vec![(1.0, 2.0)]);
+        plot.add_point(3.0, 4.0);
+        assert_eq!(plot.data().len(), 2);
+        assert_eq!(plot.data()[1], (3.0, 4.0));
+    }
+
+    #[test]
+    fn test_scatter_plot_bounds() {
+        let plot = ScatterPlot::new(vec![
+            (1.0, 2.0),
+            (5.0, 10.0),
+            (3.0, 6.0),
+        ]);
+        let (min_x, max_x, min_y, max_y) = plot.bounds();
+        assert_eq!(min_x, 1.0);
+        assert_eq!(max_x, 5.0);
+        assert_eq!(min_y, 2.0);
+        assert_eq!(max_y, 10.0);
+    }
+
+    #[test]
+    fn test_scatter_plot_bounds_empty() {
+        let plot = ScatterPlot::new(vec![]);
+        let (min_x, max_x, min_y, max_y) = plot.bounds();
+        assert_eq!(min_x, 0.0);
+        assert_eq!(max_x, 1.0);
+        assert_eq!(min_y, 0.0);
+        assert_eq!(max_y, 1.0);
+    }
+
+    #[test]
+    fn test_scatter_plot_bounds_single_point() {
+        let plot = ScatterPlot::new(vec![(5.0, 10.0)]);
+        let (min_x, max_x, min_y, max_y) = plot.bounds();
+        // Should add padding
+        assert_eq!(min_x, 4.0);
+        assert_eq!(max_x, 6.0);
+        assert_eq!(min_y, 9.0);
+        assert_eq!(max_y, 11.0);
+    }
+
+    #[test]
+    fn test_scatter_plot_normalize() {
+        let plot = ScatterPlot::new(vec![
+            (0.0, 0.0),
+            (10.0, 10.0),
+        ]);
+
+        // Bottom-left corner
+        let (x, y) = plot.normalize(0.0, 0.0, 10, 10);
+        assert_eq!(x, 0);
+        assert_eq!(y, 9); // Inverted Y
+
+        // Top-right corner
+        let (x, y) = plot.normalize(10.0, 10.0, 10, 10);
+        assert_eq!(x, 9);
+        assert_eq!(y, 0); // Inverted Y
+    }
+
+    #[test]
+    fn test_scatter_plot_with_border() {
+        let plot = ScatterPlot::new(vec![(1.0, 2.0)])
+            .with_border(false);
+        assert!(!plot.show_border);
+    }
+
+    #[test]
+    fn test_scatter_plot_with_axes() {
+        let plot = ScatterPlot::new(vec![(1.0, 2.0)])
+            .with_axes(false);
+        assert!(!plot.show_axes);
     }
 }

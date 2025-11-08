@@ -31,7 +31,7 @@ pub mod toast;
 pub mod welcome;
 
 pub use breadcrumbs::{Breadcrumbs, BreadcrumbSegment};
-pub use chart::{LineChart, LineStyle};
+pub use chart::{BarChart, BarOrientation, LineChart, LineStyle, ScatterPlot};
 pub use collapsible::{CollapsibleList, CollapsibleSection};
 pub use context_menu::{ContextMenu, MenuItem};
 pub use dialog::{ConfirmDialog, DialogOption};

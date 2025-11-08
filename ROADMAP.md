@@ -198,8 +198,8 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 
 ### Graph & Data Visualization
 - [x] **Line Charts** - Time-series data ✅ COMPLETED (LineChart with 4 line styles, auto-scaling, sparkline rendering, min/max values)
-- [ ] **Bar Charts** - Comparison data
-- [ ] **Scatter Plots** - Distribution visualization
+- [x] **Bar Charts** - Comparison data ✅ COMPLETED (BarChart with vertical/horizontal orientations, labeled bars, auto-scaling, optional values display)
+- [x] **Scatter Plots** - Distribution visualization ✅ COMPLETED (ScatterPlot with auto-scaling, bounds calculation, grid normalization, configurable point char)
 - [ ] **Live Graphs** - Real-time updating charts
 - [ ] **Git Graph** - Branch visualization (lazygit-style)
 
