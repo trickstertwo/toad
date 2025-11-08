@@ -234,12 +234,29 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
   - File counts summary (modified/staged/untracked)
   - GitService backend with async operations (6 unit tests)
   - Total: 19 tests passing
-- [ ] **Commit Graph** - Visual branch history (GitGraph widget exists with 36 tests, needs real git integration)
-- [ ] **Diff Viewer** - Inline/side-by-side diffs
+- [x] **Commit Graph** - Visual branch history ✅ COMPLETED
+  - GitGraphService bridges GitService and GitGraph widget (7 unit tests)
+  - Fetches real commit history with intelligent branch coloring
+  - Enriched graph with authors, branches, compact mode
+  - Branch hint extraction from commit messages (conventional commits, bracketed tags)
+  - Gracefully handles empty repos
+  - Color palette: Green (root), Magenta (merge), Cyan/Yellow/Blue (branches)
+  - GitGraph widget with 36 tests (existing)
+  - Total: 43 tests passing (7 new + 36 existing)
+- [x] **Diff Viewer** - Unified diff with syntax highlighting ✅ COMPLETED
+  - GitDiffViewer widget with line-by-line visualization (10 unit tests)
+  - Syntax highlighting (additions=green, deletions=red, hunks=cyan)
+  - Line number display (old and new)
+  - Supports file headers, hunks, additions, deletions, context
+  - Stats tracking (additions/deletions/context counts)
+  - Filter by file, compact mode, toggle line numbers
+  - Total: 10 tests passing
 - [ ] **Stage/Unstage** - Visual git add/reset (Backend exists, needs UI)
 - [ ] **Commit UI** - Interactive commit creation (Backend exists, needs UI)
 - [ ] **Branch Management** - Create/switch/delete branches
 - [ ] **Conflict Resolution** - Merge conflict UI
+
+**Git Integration Test Summary: 72 tests passing** (19 status + 43 graph + 10 diff)
 
 ### File Management
 - [x] **Tree View** - Collapsible directory tree ✅ COMPLETED
