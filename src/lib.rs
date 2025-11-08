@@ -22,6 +22,8 @@ pub mod app;
 pub mod async_ops;
 pub mod autocomplete;
 pub mod background_tasks;
+pub mod batch_ops;
+pub mod bookmarks;
 pub mod box_drawing;
 pub mod clipboard;
 pub mod command_mode;
@@ -105,6 +107,8 @@ pub use visual_selection::{Position, SelectionMode, SelectionRange, VisualSelect
 pub use macros::{Macro, MacroAction, MacroManager};
 pub use file_ops::{FileOps, FileOpResult};
 pub use recent_files::{RecentFile, RecentFiles};
+pub use bookmarks::{Bookmark, BookmarkManager};
+pub use batch_ops::{BatchHandler, BatchManager, BatchOperation, BatchResult, BatchStats, OpResult};
 
 /// Current TOAD version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
