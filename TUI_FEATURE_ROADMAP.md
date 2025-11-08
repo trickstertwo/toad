@@ -59,11 +59,11 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ### Advanced Widgets
 - [x] **List Widget** - Scrollable lists with selection ✅ COMPLETED (via CommandPalette)
 - [ ] **Table Widget** - Multi-column data with headers
-- [ ] **Scrollbar** - Visual scroll indicators
+- [x] **Scrollbar** - Visual scroll indicators ✅ COMPLETED
 - [x] **Input Field** - Single-line text input ✅ COMPLETED
 - [ ] **Textarea** - Multi-line text editing
-- [ ] **Progress Bars** - Task progress indicators
-- [ ] **Gauge/Meter** - Visual metrics display
+- [x] **Progress Bars** - Task progress indicators ✅ COMPLETED
+- [x] **Gauge/Meter** - Visual metrics display ✅ COMPLETED (via ProgressBar)
 
 ### Multi-Panel Layouts
 - [ ] **Split Panes** - Resizable horizontal/vertical splits
@@ -236,7 +236,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Conflict Resolution** - Merge conflict UI
 
 ### File Management
-- [ ] **Tree View** - Collapsible directory tree
+- [x] **Tree View** - Collapsible directory tree ✅ COMPLETED
 - [ ] **File Preview** - Quick file preview pane
 - [ ] **File Icons** - Type-based icons (Nerd Fonts)
 - [ ] **File Operations** - Copy/move/delete/rename

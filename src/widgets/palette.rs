@@ -7,7 +7,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState},
     Frame,
 };
 
@@ -347,6 +347,26 @@ impl CommandPalette {
             .highlight_symbol("> ");
 
         frame.render_stateful_widget(list, area, &mut self.list_state);
+
+        // Render scrollbar if there are items
+        if !self.filtered.is_empty() {
+            let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
+                .style(Style::default().fg(ToadTheme::DARK_GRAY))
+                .begin_symbol(Some("↑"))
+                .end_symbol(Some("↓"));
+
+            let mut scrollbar_state = ScrollbarState::new(self.filtered.len())
+                .position(self.list_state.selected().unwrap_or(0));
+
+            frame.render_stateful_widget(
+                scrollbar,
+                area.inner(ratatui::layout::Margin {
+                    vertical: 0,
+                    horizontal: 0,
+                }),
+                &mut scrollbar_state,
+            );
+        }
     }
 
     fn render_help_text(&self, frame: &mut Frame, area: Rect) {
