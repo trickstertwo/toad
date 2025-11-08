@@ -41,7 +41,7 @@ pub use git::{BranchInfo, CommitInfo, FileChange, GitGraphService, GitService};
 pub use infrastructure::{Clipboard, ErrorHandler, KeyBindings};
 pub use navigation::{FuzzyFinder, SearchState};
 pub use performance::PerformanceMetrics;
-pub use ui::ToadTheme;
+pub use ui::{HighlightTheme, HighlightedSpan, Language, SyntaxHighlighter, ToadTheme};
 pub use workspace::{LayoutManager, SessionState, Tab, TabManager};
 
 /// Current TOAD version
