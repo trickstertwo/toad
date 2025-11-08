@@ -244,12 +244,12 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Recent Files** - MRU list ✅ COMPLETED (RecentFiles with MRU tracking, search, frequency sorting, save/load persistence)
 
 ### AI-Specific Features (for AI coding terminal)
-- [ ] **Chat Panel** - Conversational AI interaction
+- [x] **Chat Panel** - Conversational AI interaction ✅ COMPLETED (ChatPanel widget with user/assistant/system messages, streaming support, markdown/code blocks, scrolling, auto-scroll)
 - [ ] **Diff View** - Proposed changes visualization
 - [ ] **Accept/Reject** - Quick code change approval
-- [ ] **Streaming Responses** - Real-time AI output
-- [ ] **Token Counter** - Usage tracking display
-- [ ] **Model Selector** - Switch AI models
+- [x] **Streaming Responses** - Real-time AI output ✅ COMPLETED (Integrated into ChatPanel with streaming messages, append support, finish streaming)
+- [x] **Token Counter** - Usage tracking display ✅ COMPLETED (TokenCounter widget with session/total tracking, cost calculation for multiple models, budget monitoring, compact/full views)
+- [x] **Model Selector** - Switch AI models ✅ COMPLETED (ModelSelector widget with 6 default models, context/cost/speed indicators, filtering by capability, detailed info view)
 - [ ] **Context Display** - Show what AI sees
 
 ### Developer Experience
