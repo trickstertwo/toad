@@ -197,12 +197,12 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Box Drawing Characters** - Beautiful Unicode borders (7 styles: Plain, Thick, Double, Rounded, ASCII, Heavy, Dashed) ✅ COMPLETED
 - [x] **Nerd Font Icons** - Icon support (file types, git status, status indicators, 20+ file types) ✅ COMPLETED
 
-### Graph & Data Visualization
+### Graph & Data Visualization ✅ COMPLETE (5/5)
 - [x] **Line Charts** - Time-series data ✅ COMPLETED
 - [x] **Bar Charts** - Comparison data ✅ COMPLETED
 - [x] **Scatter Plots** - Distribution visualization ✅ COMPLETED
-- [ ] **Live Graphs** - Real-time updating charts
-- [ ] **Git Graph** - Branch visualization (lazygit-style)
+- [x] **Live Graphs** - Real-time updating charts ✅ COMPLETED
+- [x] **Git Graph** - Branch visualization (lazygit-style) ✅ COMPLETED
 
 ### Modal Editing (Vim-inspired)
 - [ ] **Multiple Modes** - Normal, Insert, Visual, Command
