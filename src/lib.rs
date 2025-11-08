@@ -9,6 +9,7 @@
 pub mod app;
 pub mod config;
 pub mod event;
+pub mod history;
 pub mod logo;
 pub mod theme;
 pub mod tui;
@@ -19,6 +20,7 @@ pub mod widgets;
 pub use app::App;
 pub use config::Config;
 pub use event::Event;
+pub use history::History;
 pub use tui::Tui;
 
 /// Result type alias for the application
