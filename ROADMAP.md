@@ -155,11 +155,11 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ### Advanced Layouts
 - [x] **Resizable Panes** - Drag borders or keybinds ✅ COMPLETED (ResizablePaneManager with grow/shrink, min/max limits)
 - [x] **Collapsible Sections** - Accordion-style panels ✅ COMPLETED (CollapsibleSection/CollapsibleList with expand/collapse)
-- [ ] **Floating Windows** - Draggable overlays
+- [x] **Floating Windows** - Draggable overlays ✅ COMPLETED (FloatingWindow/FloatingWindowManager with drag, minimize, close)
 - [x] **Layout Presets** - Save/load layout configs ✅ COMPLETED (save_preset/load_preset with TOML)
 
 ### Performance Optimization
-- [ ] **Lazy Rendering** - Only render visible elements
+- [x] **Lazy Rendering** - Only render visible elements ✅ COMPLETED (LazyRenderState/LazyRenderManager with viewport, buffer zone)
 - [x] **Virtual Scrolling** - Handle massive lists (1M+ items) ✅ COMPLETED (VirtualScrollState for efficient large datasets)
 - [x] **Frame Rate Control** - Configurable FPS (30/60/120) ✅ COMPLETED (TargetFPS + FrameLimiter)
 - [x] **Async Operations** - Non-blocking I/O ✅ COMPLETED (AsyncOperationManager with status, result tracking)
