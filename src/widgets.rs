@@ -27,7 +27,7 @@ pub use input_dialog::{InputDialog, InputDialogState};
 pub use input_prompt::InputPrompt;
 pub use modal::{Modal, ModalType};
 pub use palette::{CommandPalette, PaletteCommand};
-pub use progress::{MultiStageProgress, ProgressBar};
+pub use progress::{MultiStageProgress, ProgressBar, StageStatus};
 pub use sparkline::{Sparkline, SparklineStyle};
 pub use spinner::{Spinner, SpinnerStyle};
 pub use split::{PaneBorderStyle, SplitDirection, SplitPane, SplitPaneError, SplitSize};
