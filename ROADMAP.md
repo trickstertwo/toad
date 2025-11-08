@@ -212,8 +212,8 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Marks** - Set and jump to bookmarks ✅ COMPLETED (MarksManager with local/global/number/special marks, save/load to file)
 
 ### Power User Features
-- [ ] **Custom Keybindings** - Fully remappable keys
-- [ ] **Key Sequences** - Multi-key commands (like vim)
+- [x] **Custom Keybindings** - Fully remappable keys ✅ COMPLETED (CustomKeybindings with context-aware bindings, remapping, descriptions, 8 contexts)
+- [x] **Key Sequences** - Multi-key commands (like vim) ✅ COMPLETED (KeySequenceManager with vim defaults, timeout support, prefix matching, gg/dd/yy/gc sequences)
 - [x] **Command Mode** - : for ex-style commands ✅ COMPLETED (CommandMode with buffer/cursor/history, CommandRegistry with handlers/aliases/suggestions)
 - [ ] **Aliases** - Custom command shortcuts
 - [ ] **Scripts/Plugins** - Extensibility (WASM, Lua, or native)
