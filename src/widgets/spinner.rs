@@ -334,10 +334,10 @@ mod tests {
     #[test]
     fn test_spinner_style_frames() {
         let dots = SpinnerStyle::Dots;
-        assert!(dots.frames().len() > 0);
+        assert!(!dots.frames().is_empty());
 
         let bar = SpinnerStyle::Bar;
-        assert!(bar.frames().len() > 0);
+        assert!(!bar.frames().is_empty());
     }
 
     #[test]
@@ -440,7 +440,7 @@ mod tests {
     fn test_spinner_render_string() {
         let mut spinner = Spinner::new(SpinnerStyle::Dots);
         let output = spinner.render_string();
-        assert!(output.len() > 0);
+        assert!(!output.is_empty());
 
         spinner.set_message("Loading data...".to_string());
         let output = spinner.render_string();
@@ -472,7 +472,7 @@ mod tests {
 
         for style in &styles {
             let spinner = Spinner::new(*style);
-            assert!(spinner.current_frame().len() > 0);
+            assert!(!spinner.current_frame().is_empty());
         }
     }
 }

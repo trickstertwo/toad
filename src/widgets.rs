@@ -5,6 +5,7 @@
 pub mod animation;
 pub mod bar_chart;
 pub mod borders;
+pub mod canvas;
 pub mod dialog;
 pub mod event_metrics;
 pub mod filetree;
@@ -32,6 +33,7 @@ pub mod welcome;
 pub use animation::{Animation, AnimationState, EasingFunction};
 pub use bar_chart::{BarChart, BarData, BarDirection};
 pub use borders::{BorderSet, BorderStyle};
+pub use canvas::{Canvas, Shape};
 pub use dialog::{ConfirmDialog, DialogOption};
 pub use event_metrics::EventMetrics;
 pub use filetree::{FileTree, FileTreeNode, FileTreeNodeType};

@@ -569,7 +569,7 @@ mod tests {
             // All statuses should have icons and short representations
             let icon = status.icon();
             let short = status.short();
-            assert!(icon.len() > 0 || short.len() > 0, "Status {:?} should have icon or short", status);
+            assert!(!icon.is_empty() || !short.is_empty(), "Status {:?} should have icon or short", status);
         }
     }
 
@@ -591,7 +591,7 @@ mod tests {
 
         for icon in &icons {
             // All status icons should have representations
-            assert!(icon.icon().len() > 0, "Icon {:?} should have representation", icon);
+            assert!(!icon.icon().is_empty(), "Icon {:?} should have representation", icon);
         }
     }
 
