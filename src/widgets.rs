@@ -12,6 +12,7 @@ pub mod palette;
 pub mod progress;
 pub mod table;
 pub mod textarea;
+pub mod toast;
 pub mod welcome;
 
 pub use dialog::{ConfirmDialog, DialogOption};
@@ -24,4 +25,5 @@ pub use palette::{CommandPalette, PaletteCommand};
 pub use progress::{MultiStageProgress, ProgressBar};
 pub use table::{ColumnAlignment, DataTable, TableColumn};
 pub use textarea::Textarea;
+pub use toast::{Toast, ToastLevel, ToastManager};
 pub use welcome::WelcomeScreen;

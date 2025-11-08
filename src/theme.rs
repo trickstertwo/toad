@@ -31,6 +31,11 @@ impl ToadTheme {
     pub const WARNING: Color = Color::Rgb(255, 152, 0); // Orange
     pub const INFO: Color = Self::LIGHT_GRAY;
 
+    // Additional colors
+    pub const RED: Color = Color::Rgb(244, 67, 54);
+    pub const YELLOW: Color = Color::Rgb(255, 193, 7);
+    pub const BLUE: Color = Color::Rgb(33, 150, 243);
+
     // UI element colors
     pub const BACKGROUND: Color = Self::BLACK;
     pub const FOREGROUND: Color = Self::LIGHT_GRAY;
