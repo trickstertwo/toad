@@ -205,11 +205,11 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 
 ### Modal Editing (Vim-inspired)
 - [ ] **Multiple Modes** - Normal, Insert, Visual, Command
-- [ ] **Mode Indicator** - Visual mode display
-- [ ] **Vim Motions** - w/b/e word movement, f/t character jump
+- [x] **Mode Indicator** - Visual mode display ✅ COMPLETED (ModeIndicator widget with EditorMode enum, Full/Short/Block styles)
+- [x] **Vim Motions** - w/b/e word movement, f/t character jump ✅ COMPLETED (VimMotions with w/b/e/W/B/E motions, f/F/t/T character jump, count support)
 - [ ] **Visual Selection** - V for line, v for char, Ctrl+v for block
 - [ ] **Macros** - Record and replay actions
-- [ ] **Marks** - Set and jump to bookmarks
+- [x] **Marks** - Set and jump to bookmarks ✅ COMPLETED (MarksManager with local/global/number/special marks, save/load to file)
 
 ### Power User Features
 - [ ] **Custom Keybindings** - Fully remappable keys

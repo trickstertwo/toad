@@ -33,6 +33,7 @@ pub mod keybinds;
 pub mod lazy_render;
 pub mod layout;
 pub mod logo;
+pub mod marks;
 pub mod mouse;
 pub mod multicursor;
 pub mod performance;
@@ -45,6 +46,7 @@ pub mod tui;
 pub mod ui;
 pub mod undo;
 pub mod validation;
+pub mod vim_motions;
 pub mod virtual_scroll;
 pub mod widgets;
 
@@ -79,6 +81,7 @@ pub use history::History;
 pub use keybinds::{KeyBinding, KeyBindings};
 pub use lazy_render::{LazyRenderManager, LazyRenderState, LazyRenderable};
 pub use layout::{LayoutManager, Pane, PanelId, SplitDirection};
+pub use marks::{Mark, MarksManager, MarkType};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
 pub use multicursor::{CursorPosition, MultiCursor};
 pub use performance::{FrameLimiter, PerformanceMetrics, TargetFPS};
@@ -92,6 +95,7 @@ pub use validation::{
     CompositeValidator, InputValidator, LengthValidator, NotEmptyValidator, RegexValidator,
     ValidationResult, Validator,
 };
+pub use vim_motions::{Motion, VimMotions};
 pub use virtual_scroll::VirtualScrollState;
 
 /// Current TOAD version
