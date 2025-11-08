@@ -4,11 +4,14 @@
 
 use crate::theme::ToadTheme;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState},
-    Frame,
+    widgets::{
+        Block, Borders, List, ListItem, ListState, Paragraph, Scrollbar, ScrollbarOrientation,
+        ScrollbarState,
+    },
 };
 
 /// Command palette entry
@@ -303,7 +306,10 @@ impl CommandPalette {
         ];
 
         if !rest.is_empty() {
-            spans.push(Span::styled(rest, Style::default().fg(ToadTheme::FOREGROUND)));
+            spans.push(Span::styled(
+                rest,
+                Style::default().fg(ToadTheme::FOREGROUND),
+            ));
         }
 
         let search_text = Line::from(spans);
@@ -318,20 +324,15 @@ impl CommandPalette {
             .map(|&idx| {
                 let cmd = &self.commands[idx];
                 let content = vec![
-                    Line::from(vec![
-                        Span::styled(
-                            &cmd.label,
-                            Style::default()
-                                .fg(ToadTheme::FOREGROUND)
-                                .add_modifier(Modifier::BOLD),
-                        ),
-                    ]),
+                    Line::from(vec![Span::styled(
+                        &cmd.label,
+                        Style::default()
+                            .fg(ToadTheme::FOREGROUND)
+                            .add_modifier(Modifier::BOLD),
+                    )]),
                     Line::from(vec![
                         Span::styled("  ", Style::default()),
-                        Span::styled(
-                            &cmd.description,
-                            Style::default().fg(ToadTheme::GRAY),
-                        ),
+                        Span::styled(&cmd.description, Style::default().fg(ToadTheme::GRAY)),
                     ]),
                 ];
                 ListItem::new(content)

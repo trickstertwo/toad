@@ -4,11 +4,11 @@
 
 use crate::theme::ToadTheme;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Wrap},
-    Frame,
 };
 
 /// Modal type
@@ -166,9 +166,9 @@ impl Modal {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Min(3),      // Message + details
-                Constraint::Length(1),   // Spacing
-                Constraint::Length(1),   // Button
+                Constraint::Min(3),    // Message + details
+                Constraint::Length(1), // Spacing
+                Constraint::Length(1), // Button
             ])
             .split(inner);
 
@@ -203,9 +203,7 @@ impl Modal {
         let button_text = format!("[ {} ]", self.button_label);
         let button_line = Line::from(Span::styled(
             button_text,
-            Style::default()
-                .fg(color)
-                .add_modifier(Modifier::BOLD),
+            Style::default().fg(color).add_modifier(Modifier::BOLD),
         ));
         let button_paragraph = Paragraph::new(button_line).alignment(Alignment::Center);
 

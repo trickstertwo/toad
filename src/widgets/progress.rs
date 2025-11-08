@@ -4,10 +4,10 @@
 
 use crate::theme::ToadTheme;
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Modifier, Style},
     widgets::{Block, Borders, Gauge},
-    Frame,
 };
 
 /// Progress bar widget

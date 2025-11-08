@@ -15,9 +15,9 @@
 //! assert_eq!(history.get(0), Some(&"cargo test".to_string()));
 //! ```
 
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use anyhow::{Context, Result};
 
 /// Command/action history with persistence and search
 ///
@@ -369,8 +369,7 @@ impl History {
     /// history.save(Path::new("history.json")).unwrap();
     /// ```
     pub fn save(&self, path: &Path) -> Result<()> {
-        let contents = serde_json::to_string_pretty(self)
-            .context("Failed to serialize history")?;
+        let contents = serde_json::to_string_pretty(self).context("Failed to serialize history")?;
 
         // Create parent directory if needed
         if let Some(parent) = path.parent() {

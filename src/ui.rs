@@ -7,11 +7,11 @@ use crate::app::{App, AppScreen};
 use crate::theme::ToadTheme;
 use crate::widgets::WelcomeScreen;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 
 /// Render the application UI (View in Elm Architecture)
@@ -166,10 +166,7 @@ fn render_metadata_line(app: &mut App, frame: &mut Frame, area: Rect) {
             Style::default().fg(ToadTheme::GRAY),
         ),
         Span::styled(padding, Style::default()),
-        Span::styled(
-            model_info,
-            Style::default().fg(ToadTheme::GRAY),
-        ),
+        Span::styled(model_info, Style::default().fg(ToadTheme::GRAY)),
     ]);
 
     let paragraph = Paragraph::new(metadata_line);
@@ -202,10 +199,7 @@ fn render_shortcuts_bar(frame: &mut Frame, area: Rect) {
         if i > 0 {
             spans.push(Span::styled(" · ", Style::default().fg(ToadTheme::GRAY)));
         }
-        spans.push(Span::styled(
-            *key,
-            Style::default().fg(ToadTheme::GRAY),
-        ));
+        spans.push(Span::styled(*key, Style::default().fg(ToadTheme::GRAY)));
         spans.push(Span::styled(" ", Style::default()));
         spans.push(Span::styled(*desc, Style::default().fg(ToadTheme::GRAY)));
     }

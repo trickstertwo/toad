@@ -204,8 +204,7 @@ impl App {
                 self.welcome_shown = true;
                 self.screen = AppScreen::TrustDialog;
                 self.create_trust_dialog();
-                self.status_message =
-                    "Confirm folder trust to continue".to_string();
+                self.status_message = "Confirm folder trust to continue".to_string();
             }
         }
         Ok(())
@@ -301,7 +300,8 @@ impl App {
                     self.command_palette.clear_query();
                 }
                 // Regular character input for search
-                (KeyCode::Char(c), KeyModifiers::NONE) | (KeyCode::Char(c), KeyModifiers::SHIFT) => {
+                (KeyCode::Char(c), KeyModifiers::NONE)
+                | (KeyCode::Char(c), KeyModifiers::SHIFT) => {
                     self.command_palette.insert_char(c);
                 }
                 _ => {}
@@ -381,7 +381,8 @@ impl App {
                     self.status_message = "Showing help screen".to_string();
                 }
                 "commands" => {
-                    self.status_message = "Available commands: /help, /commands, /clear".to_string();
+                    self.status_message =
+                        "Available commands: /help, /commands, /clear".to_string();
                 }
                 "clear" => {
                     self.status_message = "Screen cleared".to_string();
@@ -432,10 +433,7 @@ impl App {
 
     /// Create the trust dialog for the current directory
     fn create_trust_dialog(&mut self) {
-        let dir_path = self
-            .working_directory
-            .to_string_lossy()
-            .to_string();
+        let dir_path = self.working_directory.to_string_lossy().to_string();
 
         self.trust_dialog = Some(
             ConfirmDialog::new("Confirm folder trust")

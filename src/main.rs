@@ -88,7 +88,7 @@ fn install_panic_hook() {
 ///
 /// Logs are written to `toad.log` in the current directory.
 fn init_logging() -> Result<()> {
-    use tracing_subscriber::{fmt, prelude::*, EnvFilter};
+    use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
     // Create log file
     let log_file = std::fs::File::create("toad.log")?;
@@ -103,8 +103,7 @@ fn init_logging() -> Result<()> {
                 .with_line_number(true),
         )
         .with(
-            EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("toad=debug,info")),
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("toad=debug,info")),
         )
         .init();
 

@@ -90,8 +90,8 @@ impl Clipboard {
     /// let clipboard = Clipboard::new().unwrap();
     /// ```
     pub fn new() -> Result<Self, ClipboardError> {
-        let context = ClipboardContext::new()
-            .map_err(|e| ClipboardError::NotAvailable(e.to_string()))?;
+        let context =
+            ClipboardContext::new().map_err(|e| ClipboardError::NotAvailable(e.to_string()))?;
 
         Ok(Self {
             context: Arc::new(Mutex::new(context)),
@@ -113,7 +113,9 @@ impl Clipboard {
     /// clipboard.copy("Text to copy").unwrap();
     /// ```
     pub fn copy(&mut self, text: &str) -> Result<(), ClipboardError> {
-        let mut ctx = self.context.lock()
+        let mut ctx = self
+            .context
+            .lock()
             .map_err(|e| ClipboardError::CopyFailed(format!("Lock error: {}", e)))?;
 
         ctx.set_contents(text.to_string())
@@ -139,7 +141,9 @@ impl Clipboard {
     /// assert_eq!(text, "Hello");
     /// ```
     pub fn paste(&mut self) -> Result<String, ClipboardError> {
-        let mut ctx = self.context.lock()
+        let mut ctx = self
+            .context
+            .lock()
             .map_err(|e| ClipboardError::PasteFailed(format!("Lock error: {}", e)))?;
 
         ctx.get_contents()

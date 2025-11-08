@@ -14,11 +14,11 @@
 
 use crate::theme::ToadTheme;
 use ratatui::{
+    Frame,
     layout::{Alignment, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 use std::time::{Duration, Instant};
 
@@ -265,9 +265,7 @@ impl Toast {
         let text = Line::from(vec![
             Span::styled(
                 format!("{} ", icon),
-                Style::default()
-                    .fg(color)
-                    .add_modifier(Modifier::BOLD),
+                Style::default().fg(color).add_modifier(Modifier::BOLD),
             ),
             Span::styled(&self.message, Style::default().fg(ToadTheme::FOREGROUND)),
         ]);
