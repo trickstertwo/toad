@@ -60,6 +60,13 @@ fn run() -> Result<()> {
 
     tracing::info!("Exiting main loop");
 
+    // Save session state on graceful exit
+    if let Err(e) = app.save_session() {
+        tracing::warn!("Failed to save session state: {}", e);
+    } else {
+        tracing::info!("Session state saved successfully");
+    }
+
     Ok(())
 }
 

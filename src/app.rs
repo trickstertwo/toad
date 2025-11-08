@@ -3,10 +3,11 @@
 //! This module contains the application state and the update logic
 //! that handles state transitions based on events.
 
+use crate::config::Config;
 use crate::event::Event;
+use crate::session::SessionState;
 use crate::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use std::env;
 use std::path::PathBuf;
 
 /// Different screens/modes the application can be in
@@ -61,28 +62,56 @@ pub struct App {
 
     /// Whether to show the command palette
     show_palette: bool,
+
+    /// Application configuration
+    config: Config,
+
+    /// Session state for persistence
+    session: SessionState,
 }
 
 impl Default for App {
     fn default() -> Self {
-        let working_directory = env::current_dir().unwrap_or_else(|_| PathBuf::from("/"));
+        let config = Config::load_or_default();
+        let session = if config.session.persist_session {
+            SessionState::load_or_new()
+        } else {
+            SessionState::new()
+        };
+
+        let working_directory = session.working_directory().clone();
+        let welcome_shown = session.welcome_shown();
+
         let mut input_field = InputField::new();
         input_field.set_focused(true);
 
+        // Determine initial screen based on session
+        let screen = if welcome_shown {
+            AppScreen::Main
+        } else {
+            AppScreen::Welcome
+        };
+
         Self {
-            screen: AppScreen::Welcome,
+            screen,
             should_quit: false,
-            status_message: "Press any key to continue...".to_string(),
+            status_message: if welcome_shown {
+                "Welcome back!".to_string()
+            } else {
+                "Press any key to continue...".to_string()
+            },
             title: "Toad - AI Coding Terminal".to_string(),
             working_directory,
             trust_dialog: None,
-            welcome_shown: false,
+            welcome_shown,
             input_field,
-            plugin_count: 0,
+            plugin_count: session.plugin_count(),
             help_screen: HelpScreen::new(),
             show_help: false,
             command_palette: CommandPalette::new(),
             show_palette: false,
+            config,
+            session,
         }
     }
 }
@@ -462,9 +491,11 @@ impl App {
                         "Folder trusted for this session. Press 'q' to quit.".to_string();
                 }
                 1 => {
-                    // Yes and remember - TODO: Save to config
+                    // Yes and remember - Save to session
                     self.screen = AppScreen::Main;
                     self.trust_dialog = None;
+                    self.session.set_welcome_shown(true);
+                    let _ = self.save_session();
                     self.status_message =
                         "Folder trusted and remembered. Press 'q' to quit.".to_string();
                 }
@@ -475,6 +506,57 @@ impl App {
                 _ => {}
             }
         }
+    }
+
+    /// Update session state from current app state
+    ///
+    /// Synchronizes the session state with the current application state.
+    fn update_session_state(&mut self) {
+        self.session.set_welcome_shown(self.welcome_shown);
+        self.session
+            .set_working_directory(self.working_directory.clone());
+        self.session.set_plugin_count(self.plugin_count);
+
+        // Convert current screen to string for session
+        let screen_str = match self.screen {
+            AppScreen::Welcome => "Welcome",
+            AppScreen::TrustDialog => "TrustDialog",
+            AppScreen::Main => "Main",
+        };
+        self.session.set_last_screen(screen_str.to_string());
+    }
+
+    /// Save session state to disk
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use toad::App;
+    ///
+    /// let mut app = App::new();
+    /// app.save_session().unwrap();
+    /// ```
+    pub fn save_session(&mut self) -> crate::Result<()> {
+        if self.config.session.persist_session && self.config.session.auto_save {
+            self.update_session_state();
+            self.session.auto_save()?;
+        }
+        Ok(())
+    }
+
+    /// Get reference to session state
+    pub fn session(&self) -> &SessionState {
+        &self.session
+    }
+
+    /// Get mutable reference to session state
+    pub fn session_mut(&mut self) -> &mut SessionState {
+        &mut self.session
+    }
+
+    /// Get reference to config
+    pub fn config(&self) -> &Config {
+        &self.config
     }
 }
 

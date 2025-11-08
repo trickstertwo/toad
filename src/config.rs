@@ -60,6 +60,9 @@ pub struct Config {
     /// AI model settings
     #[serde(default)]
     pub ai: AiConfig,
+    /// Session persistence settings
+    #[serde(default)]
+    pub session: SessionConfig,
 }
 
 impl Config {
@@ -263,6 +266,40 @@ impl Default for AiConfig {
     }
 }
 
+/// Session persistence configuration settings
+///
+/// # Examples
+///
+/// ```
+/// use toad::config::SessionConfig;
+///
+/// let session = SessionConfig::default();
+/// assert!(session.persist_session);
+/// assert!(session.auto_save);
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionConfig {
+    /// Enable session persistence across restarts
+    pub persist_session: bool,
+    /// Automatically save session on exit
+    pub auto_save: bool,
+    /// Auto-save interval in seconds (0 = disabled)
+    pub auto_save_interval: u64,
+    /// Maximum history entries to persist
+    pub max_history: usize,
+}
+
+impl Default for SessionConfig {
+    fn default() -> Self {
+        Self {
+            persist_session: true,
+            auto_save: true,
+            auto_save_interval: 60,
+            max_history: 1000,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -273,6 +310,8 @@ mod tests {
         assert_eq!(config.ui.theme, "default");
         assert_eq!(config.editor.tab_width, 4);
         assert_eq!(config.ai.model, "claude-sonnet-4.5");
+        assert!(config.session.persist_session);
+        assert!(config.session.auto_save);
     }
 
     #[test]
@@ -357,5 +396,14 @@ mod tests {
         // Should return default config when file doesn't exist
         let config = Config::load_or_default();
         assert_eq!(config.ui.theme, "default");
+    }
+
+    #[test]
+    fn test_session_config_default() {
+        let session = SessionConfig::default();
+        assert!(session.persist_session);
+        assert!(session.auto_save);
+        assert_eq!(session.auto_save_interval, 60);
+        assert_eq!(session.max_history, 1000);
     }
 }

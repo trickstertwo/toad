@@ -16,6 +16,7 @@ pub mod keybinds;
 pub mod logo;
 pub mod navigation;
 pub mod search;
+pub mod session;
 pub mod theme;
 pub mod tui;
 pub mod ui;
@@ -31,6 +32,7 @@ pub use history::History;
 pub use keybinds::{KeyBinding, KeyBindings};
 pub use navigation::{NavigationAction, VimNavigation};
 pub use search::{Search, SearchDirection, SearchMode, SearchOptions};
+pub use session::SessionState;
 pub use tui::Tui;
 
 /// Result type alias for the application
