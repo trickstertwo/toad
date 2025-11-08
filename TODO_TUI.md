@@ -201,7 +201,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Bar Charts** - Comparison data ✅ COMPLETED (BarChart with vertical/horizontal orientations, labeled bars, auto-scaling, optional values display)
 - [x] **Scatter Plots** - Distribution visualization ✅ COMPLETED (ScatterPlot with auto-scaling, bounds calculation, grid normalization, configurable point char)
 - [x] **Live Graphs** - Real-time updating charts ✅ COMPLETED (LiveGraph with ring buffer, auto-scaling, update frequency control, multi-graph manager)
-- [ ] **Git Graph** - Branch visualization (lazygit-style)
+- [x] **Git Graph** - Branch visualization (lazygit-style) ✅ COMPLETED (GitGraph widget with commit nodes, branch lines, visual history)
 
 ### Modal Editing (Vim-inspired)
 - [x] **Multiple Modes** - Normal, Insert, Visual, Command ✅ COMPLETED (EditorMode enum: Normal/Insert/Visual/VisualLine/VisualBlock/Command/Replace)
@@ -269,10 +269,10 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Keyboard-only Mode** - Full functionality without mouse
 
 ### Performance Monitoring
-- [ ] **FPS Counter** - Real-time performance
-- [ ] **Memory Usage** - Resource monitoring
-- [ ] **Event Metrics** - Track input lag
-- [ ] **Render Profiling** - Debug slow renders
+- [x] **FPS Counter** - Real-time performance ✅ COMPLETED (FpsCounter widget with rolling average, peak tracking, smoothing)
+- [x] **Memory Usage** - Resource monitoring ✅ COMPLETED (MemoryMonitor widget with heap/RSS tracking, formatted display)
+- [x] **Event Metrics** - Track input lag ✅ COMPLETED (EventMetrics widget with event processing time, queue depth, latency stats)
+- [x] **Render Profiling** - Debug slow renders ✅ COMPLETED (RenderProfiler with per-component timing, bottleneck detection, stats aggregation)
 
 ### Cross-Platform Excellence
 - [ ] **Windows Support** - Full functionality on Windows
