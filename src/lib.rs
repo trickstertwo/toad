@@ -18,6 +18,7 @@ pub mod agent;
 
 // TUI modules
 pub mod advanced_search;
+pub mod animations;
 pub mod app;
 pub mod async_ops;
 pub mod autocomplete;
@@ -25,6 +26,7 @@ pub mod background_tasks;
 pub mod batch_ops;
 pub mod bookmarks;
 pub mod box_drawing;
+pub mod canvas;
 pub mod clipboard;
 pub mod command_mode;
 pub mod diff;
@@ -109,6 +111,8 @@ pub use file_ops::{FileOps, FileOpResult};
 pub use recent_files::{RecentFile, RecentFiles};
 pub use bookmarks::{Bookmark, BookmarkManager};
 pub use batch_ops::{BatchHandler, BatchManager, BatchOperation, BatchResult, BatchStats, OpResult};
+pub use animations::{Animation, AnimationState, EasingFunction, TransitionManager};
+pub use canvas::{Canvas, Pixel, Shape};
 
 /// Current TOAD version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

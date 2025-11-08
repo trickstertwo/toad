@@ -3,6 +3,7 @@
 //! Reusable UI components following Ratatui patterns
 
 pub mod breadcrumbs;
+pub mod chart;
 pub mod collapsible;
 pub mod context_menu;
 pub mod dialog;
@@ -30,6 +31,7 @@ pub mod toast;
 pub mod welcome;
 
 pub use breadcrumbs::{Breadcrumbs, BreadcrumbSegment};
+pub use chart::{LineChart, LineStyle};
 pub use collapsible::{CollapsibleList, CollapsibleSection};
 pub use context_menu::{ContextMenu, MenuItem};
 pub use dialog::{ConfirmDialog, DialogOption};
