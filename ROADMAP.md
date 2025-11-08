@@ -168,7 +168,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ### Syntax Highlighting
 - [ ] **Tree-sitter Integration** - AST-based highlighting
 - [ ] **Language Support** - Common languages (Rust, JS, Python, etc.)
-- [ ] **Diff Highlighting** - Git-style diffs
+- [x] **Diff Highlighting** - Git-style diffs ✅ COMPLETED (DiffParser with unified diff format, ChunkHeader, DiffLine, FileDiff, DiffStats)
 - [ ] **Semantic Colors** - Context-aware coloring
 
 ### Advanced Search & Filter

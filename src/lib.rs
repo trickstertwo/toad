@@ -23,6 +23,7 @@ pub mod async_ops;
 pub mod autocomplete;
 pub mod background_tasks;
 pub mod clipboard;
+pub mod diff;
 pub mod event;
 pub mod fuzzy;
 pub mod history;
@@ -63,6 +64,9 @@ pub use async_ops::{AsyncOperation, AsyncOperationManager, OperationId, Operatio
 pub use autocomplete::{AutocompleteManager, AutocompleteProvider, CommandProvider, Suggestion, WordProvider};
 pub use background_tasks::{BackgroundTask, BackgroundTaskManager, TaskId, TaskStatus};
 pub use clipboard::Clipboard;
+pub use diff::{
+    ChunkHeader, DiffHunk, DiffLine, DiffLineType, DiffParser, DiffStats, FileDiff,
+};
 pub use config::{Config, AiConfig, EditorConfig, UiConfig};
 pub use event::Event;
 pub use fuzzy::{CaseMode, FuzzyFinder, FuzzyMatch, FuzzyMatcher, MatchStrategy};
