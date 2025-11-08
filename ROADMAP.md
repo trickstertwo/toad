@@ -139,11 +139,11 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Incremental Search** - Update results as you type
 
 ### Mouse Support
-- [ ] **Click to Focus** - Click panels to focus
-- [ ] **Scroll Wheel** - Mouse scrolling in lists
-- [ ] **Button Clicks** - Clickable UI elements
-- [ ] **Drag & Drop** - Reorder items (advanced)
-- [ ] **Text Selection** - Mouse text selection
+- [x] **Click to Focus** - Click panels to focus ✅ COMPLETED (MouseState system)
+- [x] **Scroll Wheel** - Mouse scrolling in lists ✅ COMPLETED (ScrollDirection)
+- [x] **Button Clicks** - Clickable UI elements ✅ COMPLETED (ClickAction)
+- [x] **Drag & Drop** - Reorder items (advanced) ✅ COMPLETED (Drag tracking)
+- [x] **Text Selection** - Mouse text selection ✅ COMPLETED (is_in_rect helper)
 
 ### Tab System
 - [ ] **Multiple Tabs** - Named workspaces
