@@ -18,6 +18,7 @@ pub mod agent;
 
 // TUI modules
 pub mod app;
+pub mod autocomplete;
 pub mod clipboard;
 pub mod event;
 pub mod history;
@@ -44,6 +45,7 @@ pub use stats::{ComparisonResult, StatisticalTest};
 
 // TUI re-exports
 pub use app::App;
+pub use autocomplete::{AutocompleteManager, AutocompleteProvider, CommandProvider, Suggestion, WordProvider};
 pub use clipboard::Clipboard;
 pub use config::{Config, AiConfig, EditorConfig, UiConfig};
 pub use event::Event;
