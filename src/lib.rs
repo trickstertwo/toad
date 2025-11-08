@@ -33,6 +33,7 @@ pub mod keybinds;
 pub mod lazy_render;
 pub mod layout;
 pub mod logo;
+pub mod macros;
 pub mod marks;
 pub mod mouse;
 pub mod multicursor;
@@ -48,6 +49,7 @@ pub mod undo;
 pub mod validation;
 pub mod vim_motions;
 pub mod virtual_scroll;
+pub mod visual_selection;
 pub mod widgets;
 
 // Config module contains both M0 and TUI configs
@@ -97,6 +99,8 @@ pub use validation::{
 };
 pub use vim_motions::{Motion, VimMotions};
 pub use virtual_scroll::VirtualScrollState;
+pub use visual_selection::{Position, SelectionMode, SelectionRange, VisualSelection};
+pub use macros::{Macro, MacroAction, MacroManager};
 
 /// Current TOAD version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

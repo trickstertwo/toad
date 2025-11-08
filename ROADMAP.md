@@ -204,11 +204,11 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Git Graph** - Branch visualization (lazygit-style)
 
 ### Modal Editing (Vim-inspired)
-- [ ] **Multiple Modes** - Normal, Insert, Visual, Command
+- [x] **Multiple Modes** - Normal, Insert, Visual, Command ✅ COMPLETED (EditorMode enum: Normal/Insert/Visual/VisualLine/VisualBlock/Command/Replace)
 - [x] **Mode Indicator** - Visual mode display ✅ COMPLETED (ModeIndicator widget with EditorMode enum, Full/Short/Block styles)
 - [x] **Vim Motions** - w/b/e word movement, f/t character jump ✅ COMPLETED (VimMotions with w/b/e/W/B/E motions, f/F/t/T character jump, count support)
-- [ ] **Visual Selection** - V for line, v for char, Ctrl+v for block
-- [ ] **Macros** - Record and replay actions
+- [x] **Visual Selection** - V for line, v for char, Ctrl+v for block ✅ COMPLETED (VisualSelection with Character/Line/Block modes, contains/range checking)
+- [x] **Macros** - Record and replay actions ✅ COMPLETED (MacroManager with recording, execution, save/load, 6 action types)
 - [x] **Marks** - Set and jump to bookmarks ✅ COMPLETED (MarksManager with local/global/number/special marks, save/load to file)
 
 ### Power User Features
