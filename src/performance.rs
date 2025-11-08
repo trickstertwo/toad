@@ -2,8 +2,115 @@
 ///
 /// Tracks FPS, render times, and other performance metrics
 
+use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::time::{Duration, Instant};
+
+/// Target FPS configuration
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum TargetFPS {
+    /// 30 FPS (balanced for slower terminals)
+    Fps30,
+    /// 60 FPS (smooth, recommended)
+    Fps60,
+    /// 120 FPS (ultra-smooth for high-refresh displays)
+    Fps120,
+    /// Unlimited (no frame limiting)
+    Unlimited,
+}
+
+impl TargetFPS {
+    /// Get target frame time in microseconds
+    pub fn frame_time_micros(&self) -> Option<u64> {
+        match self {
+            TargetFPS::Fps30 => Some(33_333), // 1_000_000 / 30
+            TargetFPS::Fps60 => Some(16_667), // 1_000_000 / 60
+            TargetFPS::Fps120 => Some(8_333), // 1_000_000 / 120
+            TargetFPS::Unlimited => None,
+        }
+    }
+
+    /// Get target FPS value
+    pub fn value(&self) -> Option<u32> {
+        match self {
+            TargetFPS::Fps30 => Some(30),
+            TargetFPS::Fps60 => Some(60),
+            TargetFPS::Fps120 => Some(120),
+            TargetFPS::Unlimited => None,
+        }
+    }
+
+    /// Get as string
+    pub fn as_str(&self) -> &str {
+        match self {
+            TargetFPS::Fps30 => "30 FPS",
+            TargetFPS::Fps60 => "60 FPS",
+            TargetFPS::Fps120 => "120 FPS",
+            TargetFPS::Unlimited => "Unlimited",
+        }
+    }
+}
+
+impl Default for TargetFPS {
+    fn default() -> Self {
+        TargetFPS::Fps60
+    }
+}
+
+/// Frame rate limiter for controlling render rate
+#[derive(Debug)]
+pub struct FrameLimiter {
+    /// Target FPS
+    target_fps: TargetFPS,
+    /// Last frame start time
+    last_frame_start: Option<Instant>,
+}
+
+impl FrameLimiter {
+    /// Create a new frame limiter
+    pub fn new(target_fps: TargetFPS) -> Self {
+        Self {
+            target_fps,
+            last_frame_start: None,
+        }
+    }
+
+    /// Start a frame (call at the beginning of frame)
+    pub fn start_frame(&mut self) {
+        self.last_frame_start = Some(Instant::now());
+    }
+
+    /// End frame and sleep if needed to match target FPS
+    pub fn end_frame(&mut self) {
+        if let Some(target_micros) = self.target_fps.frame_time_micros() {
+            if let Some(start) = self.last_frame_start {
+                let elapsed = start.elapsed();
+                let target_duration = Duration::from_micros(target_micros);
+
+                if elapsed < target_duration {
+                    let sleep_duration = target_duration - elapsed;
+                    std::thread::sleep(sleep_duration);
+                }
+            }
+        }
+    }
+
+    /// Set target FPS
+    pub fn set_target_fps(&mut self, target_fps: TargetFPS) {
+        self.target_fps = target_fps;
+    }
+
+    /// Get target FPS
+    pub fn target_fps(&self) -> TargetFPS {
+        self.target_fps
+    }
+}
+
+impl Default for FrameLimiter {
+    fn default() -> Self {
+        Self::new(TargetFPS::default())
+    }
+}
 
 /// Performance metrics tracker
 #[derive(Debug)]
@@ -207,5 +314,45 @@ mod tests {
         assert!(summary.contains("FPS:"));
         assert!(summary.contains("Avg:"));
         assert!(summary.contains("Frames:"));
+    }
+
+    #[test]
+    fn test_target_fps_values() {
+        assert_eq!(TargetFPS::Fps30.value(), Some(30));
+        assert_eq!(TargetFPS::Fps60.value(), Some(60));
+        assert_eq!(TargetFPS::Fps120.value(), Some(120));
+        assert_eq!(TargetFPS::Unlimited.value(), None);
+    }
+
+    #[test]
+    fn test_target_fps_frame_time() {
+        assert_eq!(TargetFPS::Fps30.frame_time_micros(), Some(33_333));
+        assert_eq!(TargetFPS::Fps60.frame_time_micros(), Some(16_667));
+        assert_eq!(TargetFPS::Fps120.frame_time_micros(), Some(8_333));
+        assert_eq!(TargetFPS::Unlimited.frame_time_micros(), None);
+    }
+
+    #[test]
+    fn test_target_fps_default() {
+        assert_eq!(TargetFPS::default(), TargetFPS::Fps60);
+    }
+
+    #[test]
+    fn test_frame_limiter_creation() {
+        let limiter = FrameLimiter::new(TargetFPS::Fps60);
+        assert_eq!(limiter.target_fps(), TargetFPS::Fps60);
+    }
+
+    #[test]
+    fn test_frame_limiter_set_target() {
+        let mut limiter = FrameLimiter::new(TargetFPS::Fps60);
+        limiter.set_target_fps(TargetFPS::Fps120);
+        assert_eq!(limiter.target_fps(), TargetFPS::Fps120);
+    }
+
+    #[test]
+    fn test_frame_limiter_default() {
+        let limiter = FrameLimiter::default();
+        assert_eq!(limiter.target_fps(), TargetFPS::Fps60);
     }
 }

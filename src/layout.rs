@@ -180,7 +180,7 @@ impl Pane {
 }
 
 /// Layout manager for panels
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct LayoutManager {
     /// Root pane
     root: Pane,
@@ -312,6 +312,25 @@ impl LayoutManager {
     pub fn is_focused(&self, id: PanelId) -> bool {
         self.focused == id
     }
+
+    /// Save layout as a preset
+    pub fn save_preset(&self, path: impl AsRef<std::path::Path>) -> std::io::Result<()> {
+        let content = toml::to_string_pretty(self)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+        std::fs::write(path, content)
+    }
+
+    /// Load layout from a preset
+    pub fn load_preset(path: impl AsRef<std::path::Path>) -> std::io::Result<Self> {
+        let content = std::fs::read_to_string(path)?;
+        toml::from_str(&content)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+    }
+
+    /// Set the root pane (useful for loading presets with modifications)
+    pub fn set_root(&mut self, root: Pane) {
+        self.root = root;
+    }
 }
 
 impl Default for LayoutManager {
@@ -372,5 +391,41 @@ mod tests {
         layout.show_panel(0);
         let ids = layout.root().leaf_ids();
         assert_eq!(ids, vec![0, 1]);
+    }
+
+    #[test]
+    fn test_layout_preset_save_load() {
+        use tempfile::tempdir;
+
+        let dir = tempdir().unwrap();
+        let preset_path = dir.path().join("test_preset.toml");
+
+        // Create a layout with hsplit
+        let layout = LayoutManager::with_hsplit();
+
+        // Save preset
+        layout.save_preset(&preset_path).unwrap();
+
+        // Load preset
+        let loaded = LayoutManager::load_preset(&preset_path).unwrap();
+
+        // Verify structure matches
+        assert_eq!(layout.root().leaf_ids(), loaded.root().leaf_ids());
+    }
+
+    #[test]
+    fn test_layout_root_access() {
+        let layout = LayoutManager::new();
+        let root = layout.root();
+        assert!(matches!(root, Pane::Leaf { .. }));
+    }
+
+    #[test]
+    fn test_layout_set_root() {
+        let mut layout = LayoutManager::new();
+        let new_root = Pane::leaf(42);
+        layout.set_root(new_root);
+
+        assert_eq!(layout.root().leaf_ids(), vec![42]);
     }
 }

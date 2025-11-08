@@ -127,7 +127,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ### Advanced Input
 - [x] **Command Palette** - Ctrl+P fuzzy command search ✅ COMPLETED
 - [x] **Autocomplete** - Tab completion for inputs ✅ COMPLETED (AutocompleteManager)
-- [ ] **Input Validation** - Real-time validation feedback
+- [x] **Input Validation** - Real-time validation feedback ✅ COMPLETED (InputValidator with multiple validators)
 - [ ] **Multi-cursor Support** - Edit multiple locations
 - [x] **Clipboard Integration** - Copy/paste support ✅ COMPLETED (Already implemented)
 
@@ -156,12 +156,12 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Resizable Panes** - Drag borders or keybinds
 - [ ] **Collapsible Sections** - Accordion-style panels
 - [ ] **Floating Windows** - Draggable overlays
-- [ ] **Layout Presets** - Save/load layout configs
+- [x] **Layout Presets** - Save/load layout configs ✅ COMPLETED (save_preset/load_preset with TOML)
 
 ### Performance Optimization
 - [ ] **Lazy Rendering** - Only render visible elements
 - [ ] **Virtual Scrolling** - Handle massive lists (1M+ items)
-- [ ] **Frame Rate Control** - Configurable FPS (30/60/120)
+- [x] **Frame Rate Control** - Configurable FPS (30/60/120) ✅ COMPLETED (TargetFPS + FrameLimiter)
 - [ ] **Async Operations** - Non-blocking I/O
 - [ ] **Background Tasks** - Progress indicators for long ops
 

@@ -34,6 +34,7 @@ pub mod tabs;
 pub mod theme;
 pub mod tui;
 pub mod ui;
+pub mod validation;
 pub mod widgets;
 
 // Config module contains both M0 and TUI configs
@@ -56,11 +57,15 @@ pub use history::History;
 pub use keybinds::{KeyBinding, KeyBindings};
 pub use layout::{LayoutManager, Pane, PanelId, SplitDirection};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
-pub use performance::PerformanceMetrics;
+pub use performance::{FrameLimiter, PerformanceMetrics, TargetFPS};
 pub use search::{SearchMatch, SearchState};
 pub use session::Session;
 pub use tabs::{Tab, TabId, TabManager};
 pub use tui::Tui;
+pub use validation::{
+    CompositeValidator, InputValidator, LengthValidator, NotEmptyValidator, RegexValidator,
+    ValidationResult, Validator,
+};
 
 /// Current TOAD version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
