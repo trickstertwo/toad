@@ -212,10 +212,10 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Macros** - Record and replay actions ✅ COMPLETED
 - [x] **Marks** - Set and jump to bookmarks ✅ COMPLETED
 
-### Power User Features
+### Power User Features (40% Complete)
 - [x] **Custom Keybindings** - Fully remappable keys ✅ COMPLETED
 - [ ] **Key Sequences** - Multi-key commands (like vim)
-- [ ] **Command Mode** - : for ex-style commands
+- [x] **Command Mode** - : for ex-style commands ✅ COMPLETED
 - [ ] **Aliases** - Custom command shortcuts
 - [ ] **Scripts/Plugins** - Extensibility (WASM, Lua, or native)
 

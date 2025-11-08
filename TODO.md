@@ -164,10 +164,10 @@ All main interface components are implemented.
 - [x] **Macros** - Record and replay actions ✅ COMPLETED
 - [x] **Marks** - Set and jump to bookmarks ✅ COMPLETED
 
-### Power User Features (20% Complete)
+### Power User Features (40% Complete)
 - [x] **Custom Keybindings** - Fully remappable keys
 - [ ] **Key Sequences** - Multi-key commands (like vim)
-- [ ] **Command Mode** - : for ex-style commands
+- [x] **Command Mode** - : for ex-style commands ✅ COMPLETED
 - [ ] **Aliases** - Custom command shortcuts
 - [ ] **Scripts/Plugins** - Extensibility (WASM, Lua, or native)
 
@@ -363,15 +363,15 @@ All main interface components are implemented.
 - **Basic Tier**: 100% ✅ (All features)
 - **Medium Tier**: 100% ✅ (All features)
 - **Advanced Tier**: ~25% (Foundation features)
-- **Platinum Tier**: ~49% (Visual Polish 7/7 100% ✅, Performance Monitoring 4/4 100% ✅, Graph & Data Viz 5/5 100% ✅, Modal Editing 6/6 100% ✅, Developer Experience 2/7 29%, Smart Features 3/6 50%)
+- **Platinum Tier**: ~50% (Visual Polish 7/7 100% ✅, Performance Monitoring 4/4 100% ✅, Graph & Data Viz 5/5 100% ✅, Modal Editing 6/6 100% ✅, Developer Experience 2/7 29%, Smart Features 3/6 50%, Power User Features 2/5 40%)
 
 ### Total Progress
-- **Completed**: ~161 features
-- **Remaining**: ~139 features
+- **Completed**: ~162 features
+- **Remaining**: ~138 features
 - **Overall**: ~54% complete
 
 ### Quality Metrics
-- **Tests**: 652 passing (excellent coverage, +74 from Smart Features)
+- **Tests**: 665 passing (excellent coverage, +107 total from Smart Features + Power User Features)
 - **Documentation**: 100% (all public APIs)
 - **Clippy Warnings**: 0 (zero tolerance)
 - **Binary Size**: ~2.2 MB (excellent)
