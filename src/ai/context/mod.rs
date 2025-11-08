@@ -34,7 +34,9 @@ pub mod ast;
 pub mod cache;
 pub mod extractors;
 pub mod parser;
+pub mod registry;
 
 pub use ast::{AstContext, FileContext, Import, Language, Symbol, SymbolKind};
 pub use cache::AstCache;
 pub use parser::AstParser;
+pub use registry::ExtractorRegistry;

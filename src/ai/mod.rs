@@ -15,7 +15,7 @@ pub mod tools;
 
 // Re-exports
 pub use agent::{Agent, AgentResult, PromptBuilder};
-pub use context::{AstCache, AstContext, AstParser, FileContext, Import, Language, Symbol, SymbolKind};
+pub use context::{AstCache, AstContext, AstParser, ExtractorRegistry, FileContext, Import, Language, Symbol, SymbolKind};
 pub use eval_commands::{
     CompareArgs, EvalArgs, EvalCommand, ParseError as EvalParseError, ShowConfigArgs,
     parse_eval_command,
