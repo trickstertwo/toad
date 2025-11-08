@@ -100,6 +100,6 @@ pub use textarea::Textarea;
 pub use toast::{Toast, ToastLevel, ToastManager};
 pub use undo_redo::{Action, UndoRedoManager};
 pub use vim_macros::{MacroAction, MacroRecorder, MarkRegistry};
-pub use vim_mode::{EditMode, ModeIndicator, Selection, VimMode};
+pub use vim_mode::{EditMode, Selection, VimMode};
 pub use welcome::WelcomeScreen;
 pub use workspace::{Workspace, WorkspaceManager};

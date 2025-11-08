@@ -215,7 +215,7 @@ impl MarksManager {
     pub fn local_marks(&self) -> Vec<(char, &Mark)> {
         self.marks
             .iter()
-            .filter(|(&ch, _)| matches!(MarkType::classify(ch), Some(MarkType::Local)))
+            .filter(|&(&ch, _)| matches!(MarkType::classify(ch), Some(MarkType::Local)))
             .map(|(&ch, mark)| (ch, mark))
             .collect()
     }
@@ -224,7 +224,7 @@ impl MarksManager {
     pub fn global_marks(&self) -> Vec<(char, &Mark)> {
         self.marks
             .iter()
-            .filter(|(&ch, _)| matches!(MarkType::classify(ch), Some(MarkType::Global)))
+            .filter(|&(&ch, _)| matches!(MarkType::classify(ch), Some(MarkType::Global)))
             .map(|(&ch, mark)| (ch, mark))
             .collect()
     }

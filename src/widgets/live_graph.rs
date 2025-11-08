@@ -20,7 +20,7 @@
 //! graph.add_point(48.1);
 //! ```
 
-use crate::widgets::{BarChart, BarData, DataSeries, LineChart, ScatterPlot, ScatterSeries};
+use crate::widgets::{BarChartWidget as BarChart, BarData, DataSeries, LineChartWidget as LineChart, ScatterPlotWidget as ScatterPlot, ScatterSeries};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,

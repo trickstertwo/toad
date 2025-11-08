@@ -69,9 +69,6 @@ pub mod visual_selection;
 pub mod widgets;
 pub mod workspaces;
 
-// Config module contains both M0 and TUI configs
-pub mod config;
-
 // M0 re-exports
 pub use config::{FeatureFlags, ToadConfig};
 pub use evaluation::{Task, TaskResult, EvaluationHarness};
@@ -91,7 +88,7 @@ pub use background_tasks::{BackgroundTask, BackgroundTaskManager, TaskId, TaskSt
 pub use box_drawing::{BoxBuilder, BoxChars, BoxStyle};
 pub use clipboard::Clipboard;
 pub use command_mode::{Command, CommandMode, CommandRegistry, CommandHandler, CommandResult};
-pub use config::{Config, AiConfig, EditorConfig, UiConfig};
+pub use config::{Config, AiConfig, EditorConfig, SessionConfig, UiConfig};
 pub use diff::{
     ChunkHeader, DiffHunk, DiffLine, DiffLineType, DiffParser, DiffStats, FileDiff,
 };

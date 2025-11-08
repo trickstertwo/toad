@@ -503,7 +503,7 @@ impl App {
                     self.tabs.next_tab();
                     self.status_message = format!(
                         "Switched to tab: {}",
-                        self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
+                        self.tabs.active_tab().map(|t| &t.title).unwrap_or(&"".to_string())
                     );
                 } else {
                     // If input is focused, use tab for layout panel switching
@@ -514,10 +514,10 @@ impl App {
             (KeyCode::BackTab, _) => {
                 // BackTab is Shift+Tab
                 if !self.input_field.is_focused() {
-                    self.tabs.prev_tab();
+                    self.tabs.previous_tab();
                     self.status_message = format!(
                         "Switched to tab: {}",
-                        self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
+                        self.tabs.active_tab().map(|t| &t.title).unwrap_or(&"".to_string())
                     );
                 } else {
                     self.layout.focus_previous();
@@ -527,11 +527,11 @@ impl App {
             // Ctrl+Number keys (1-9) for direct tab switching
             (KeyCode::Char(c @ '1'..='9'), KeyModifiers::CONTROL) => {
                 let number = c.to_digit(10).unwrap() as usize;
-                if self.tabs.switch_to_number(number) {
+                if self.tabs.switch_to_index(number - 1) {
                     self.status_message = format!(
                         "Switched to tab {}: {}",
                         number,
-                        self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
+                        self.tabs.active_tab().map(|t| &t.title).unwrap_or(&"".to_string())
                     );
                 } else {
                     self.status_message = format!("Tab {} does not exist", number);
@@ -624,11 +624,11 @@ impl App {
             // Number keys for tab switching (when not in input field)
             (KeyCode::Char(c @ '1'..='9'), KeyModifiers::NONE) if !self.input_field.is_focused() => {
                 let tab_num = c.to_digit(10).unwrap() as usize;
-                if self.tabs.switch_to_number(tab_num) {
+                if self.tabs.switch_to_index(tab_num - 1) {
                     self.status_message = format!(
                         "Switched to tab {}: {}",
                         tab_num,
-                        self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
+                        self.tabs.active_tab().map(|t| &t.title).unwrap_or(&"".to_string())
                     );
                 } else {
                     self.status_message = format!("Tab {} does not exist", tab_num);
@@ -637,11 +637,11 @@ impl App {
             // Alt+Number for tab switching (works even in input field)
             (KeyCode::Char(c @ '1'..='9'), KeyModifiers::ALT) => {
                 let tab_num = c.to_digit(10).unwrap() as usize;
-                if self.tabs.switch_to_number(tab_num) {
+                if self.tabs.switch_to_index(tab_num - 1) {
                     self.status_message = format!(
                         "Switched to tab {}: {}",
                         tab_num,
-                        self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
+                        self.tabs.active_tab().map(|t| &t.title).unwrap_or(&"".to_string())
                     );
                 } else {
                     self.status_message = format!("Tab {} does not exist", tab_num);
