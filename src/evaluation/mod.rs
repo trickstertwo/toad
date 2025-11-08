@@ -264,20 +264,59 @@ impl EvaluationHarness {
         Ok(EvaluationResults::from_results(config_name, results))
     }
 
-    /// Run a single task (stub for now)
-    async fn run_task(&self, task: &Task, _config: &ToadConfig) -> Result<TaskResult> {
-        // TODO: Implement actual task execution
-        // For now, return a placeholder result
-        let mut result = TaskResult::new(task.id.clone());
-        result.duration_ms = 1000;
-        result.cost_usd = 0.01;
-        result.api_calls = 1;
-        result.total_tokens = 1000;
+    /// Run a single task with the agent
+    async fn run_task(&self, task: &Task, config: &ToadConfig) -> Result<TaskResult> {
+        use crate::agent::Agent;
+        use crate::llm::{AnthropicClient, get_api_key};
+        use crate::tools::ToolRegistry;
+        use crate::metrics::MetricsCollector;
+        use anyhow::Context;
 
-        // Simulate 50% success rate for testing
-        if task.id.ends_with('1') || task.id.ends_with('3') || task.id.ends_with('5') {
+        tracing::info!("Running task: {}", task.id);
+
+        // Get API key
+        let api_key = get_api_key().context("Failed to get API key. Set ANTHROPIC_API_KEY environment variable")?;
+
+        // Create LLM client
+        let llm_client = AnthropicClient::new(api_key)
+            .with_model("claude-sonnet-4-20250514");
+
+        // Create tool registry based on milestone
+        let tool_registry = ToolRegistry::m1_baseline();
+
+        // Create agent
+        let agent = Agent::new(Box::new(llm_client), tool_registry);
+
+        // Create metrics collector
+        let mut metrics_collector = MetricsCollector::new();
+
+        // Execute task
+        let agent_result = agent.execute_task(task, &mut metrics_collector).await?;
+
+        // Build task result
+        let final_metrics = metrics_collector.finish();
+        let mut result = TaskResult::new(task.id.clone());
+
+        result.duration_ms = final_metrics.duration_ms;
+        result.cost_usd = final_metrics.cost_usd;
+        result.api_calls = final_metrics.api_calls;
+        result.total_tokens = final_metrics.total_tokens();
+        result.metrics = final_metrics;
+
+        // For M1: We consider a task "solved" if agent completed successfully
+        // In M2+, we'd validate against test_patch
+        if agent_result.success {
             result.mark_solved();
         }
+
+        tracing::info!(
+            "Task {} complete: solved={}, cost=${:.4}, tokens={}, steps={}",
+            task.id,
+            result.solved,
+            result.cost_usd,
+            result.total_tokens,
+            agent_result.steps
+        );
 
         Ok(result)
     }
@@ -352,6 +391,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore] // Requires ANTHROPIC_API_KEY, run with `cargo test -- --ignored`
     async fn test_harness_evaluate() {
         let tasks = vec![Task::example()];
         let harness = EvaluationHarness::new(tasks, PathBuf::from("/tmp/toad-test"));

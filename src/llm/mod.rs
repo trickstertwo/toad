@@ -12,9 +12,11 @@ use std::env;
 
 pub mod anthropic;
 pub mod errors;
+pub mod rate_limiter;
 
 pub use anthropic::AnthropicClient;
 pub use errors::LLMError;
+pub use rate_limiter::{RateLimiter, RateLimitConfig, RateLimitStatus};
 
 /// Represents a message in the conversation
 #[derive(Debug, Clone, Serialize, Deserialize)]
