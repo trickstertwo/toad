@@ -147,14 +147,14 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 
 ### Tab System
 - [x] **Multiple Tabs** - Named workspaces ✅ COMPLETED (TabManager with add/close/navigation)
-- [ ] **Tab Bar** - Visual tab indicator (Core ready, UI integration pending)
+- [x] **Tab Bar** - Visual tab indicator ✅ COMPLETED (TabBar widget with selection, icons, close buttons)
 - [x] **Tab Switching** - gt/gT or number keys ✅ COMPLETED (next_tab/previous_tab/switch_to_index)
 - [x] **Tab Creation/Deletion** - :tabnew, :tabclose ✅ COMPLETED (add_tab/close_tab methods)
 - [x] **Tab State** - Independent state per tab ✅ COMPLETED (Tab with title, icon, closable, modified)
 
 ### Advanced Layouts
 - [ ] **Resizable Panes** - Drag borders or keybinds
-- [ ] **Collapsible Sections** - Accordion-style panels
+- [x] **Collapsible Sections** - Accordion-style panels ✅ COMPLETED (CollapsibleSection/CollapsibleList with expand/collapse)
 - [ ] **Floating Windows** - Draggable overlays
 - [x] **Layout Presets** - Save/load layout configs ✅ COMPLETED (save_preset/load_preset with TOML)
 
@@ -189,7 +189,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 
 ### Visual Polish
 - [ ] **Animations & Transitions** - Smooth panel transitions
-- [ ] **Loading Spinners** - Aesthetic async indicators (dots, bars, custom)
+- [x] **Loading Spinners** - Aesthetic async indicators ✅ COMPLETED (Spinner with 8 styles: Dots, Line, Bars, Bounce, Arrows, SimpleDots, Binary, Clock)
 - [ ] **Progress Animations** - Multi-stage task progress
 - [ ] **Sparklines** - Inline graphs for metrics
 - [ ] **Canvas Drawing** - Custom graphics (charts, diagrams)
@@ -219,7 +219,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Scripts/Plugins** - Extensibility (WASM, Lua, or native)
 
 ### Smart Features
-- [ ] **Context Menus** - Right-click or keybind for actions
+- [x] **Context Menus** - Right-click or keybind for actions ✅ COMPLETED (ContextMenu with MenuItem, separators, icons, shortcuts, disabled items)
 - [ ] **Quick Actions** - Frequently used commands surfaced
 - [ ] **Smart Suggestions** - Context-aware hints
 - [ ] **Undo/Redo** - u/Ctrl+r for actions
