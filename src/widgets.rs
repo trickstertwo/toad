@@ -2,6 +2,7 @@
 //!
 //! Reusable UI components following Ratatui patterns
 
+pub mod animation;
 pub mod bar_chart;
 pub mod borders;
 pub mod dialog;
@@ -28,6 +29,7 @@ pub mod textarea;
 pub mod toast;
 pub mod welcome;
 
+pub use animation::{Animation, AnimationState, EasingFunction};
 pub use bar_chart::{BarChart, BarData, BarDirection};
 pub use borders::{BorderSet, BorderStyle};
 pub use dialog::{ConfirmDialog, DialogOption};
