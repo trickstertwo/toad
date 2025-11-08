@@ -4,6 +4,7 @@
 //! that handles state transitions based on events.
 
 use crate::event::Event;
+use crate::layout::LayoutManager;
 use crate::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::env;
@@ -61,6 +62,12 @@ pub struct App {
 
     /// Whether to show the command palette
     show_palette: bool,
+
+    /// Layout manager for split panes
+    layout: LayoutManager,
+
+    /// Vim mode enabled
+    vim_mode: bool,
 }
 
 impl Default for App {
@@ -83,6 +90,8 @@ impl Default for App {
             show_help: false,
             command_palette: CommandPalette::new(),
             show_palette: false,
+            layout: LayoutManager::new(),
+            vim_mode: false,
         }
     }
 }
@@ -161,6 +170,30 @@ impl App {
     /// Check if command palette should be shown
     pub fn show_palette(&self) -> bool {
         self.show_palette
+    }
+
+    /// Get the layout manager
+    pub fn layout(&self) -> &LayoutManager {
+        &self.layout
+    }
+
+    /// Get mutable layout manager
+    pub fn layout_mut(&mut self) -> &mut LayoutManager {
+        &mut self.layout
+    }
+
+    /// Check if Vim mode is enabled
+    pub fn vim_mode(&self) -> bool {
+        self.vim_mode
+    }
+
+    /// Toggle Vim mode
+    pub fn toggle_vim_mode(&mut self) {
+        self.vim_mode = !self.vim_mode;
+        self.status_message = format!(
+            "Vim mode {}",
+            if self.vim_mode { "enabled" } else { "disabled" }
+        );
     }
 
     /// Update application state based on an event (Update in Elm Architecture)
@@ -310,13 +343,27 @@ impl App {
         }
 
         match (key.code, key.modifiers) {
-            // Quit on Ctrl+C (not q anymore, since we're typing)
+            // Quit on Ctrl+C
             (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
                 self.should_quit = true;
             }
-            // Ctrl+D to quit
+            // Ctrl+D for page down (Vim-style), or quit if input is focused and empty
             (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
-                self.should_quit = true;
+                if self.input_field.is_focused() && self.input_field.value().is_empty() {
+                    self.should_quit = true;
+                } else if !self.input_field.is_focused() {
+                    self.status_message = "Page down".to_string();
+                    // TODO: Implement page down for scrollable content
+                }
+            }
+            // Ctrl+U for page up (Vim-style) or clear input if focused
+            (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
+                if self.input_field.is_focused() {
+                    self.input_field.clear();
+                } else {
+                    self.status_message = "Page up".to_string();
+                    // TODO: Implement page up for scrollable content
+                }
             }
             // Ctrl+P opens command palette
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
@@ -359,9 +406,66 @@ impl App {
             (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
                 self.input_field.move_cursor_end();
             }
-            // Ctrl+U clears input
-            (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
-                self.input_field.clear();
+            // Page Up/Down keys
+            (KeyCode::PageUp, _) => {
+                self.status_message = "Page up".to_string();
+                // TODO: Implement page up for scrollable content
+            }
+            (KeyCode::PageDown, _) => {
+                self.status_message = "Page down".to_string();
+                // TODO: Implement page down for scrollable content
+            }
+            // Tab for next panel
+            (KeyCode::Tab, KeyModifiers::NONE) => {
+                self.layout.focus_next();
+                self.status_message = format!("Focused panel {}", self.layout.focused());
+            }
+            // Shift+Tab for previous panel
+            (KeyCode::Tab, KeyModifiers::SHIFT) | (KeyCode::BackTab, _) => {
+                self.layout.focus_previous();
+                self.status_message = format!("Focused panel {}", self.layout.focused());
+            }
+            // Vim-style navigation (when not in input field and vim mode enabled)
+            (KeyCode::Char('h'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Vim: move left".to_string();
+                // TODO: Implement vim-style left navigation
+            }
+            (KeyCode::Char('j'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Vim: move down".to_string();
+                // TODO: Implement vim-style down navigation
+            }
+            (KeyCode::Char('k'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Vim: move up".to_string();
+                // TODO: Implement vim-style up navigation
+            }
+            (KeyCode::Char('l'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Vim: move right".to_string();
+                // TODO: Implement vim-style right navigation
+            }
+            // g for jump to top (Vim-style)
+            (KeyCode::Char('g'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Vim: jump to top".to_string();
+                // TODO: Implement jump to top
+            }
+            // G for jump to bottom (Vim-style)
+            (KeyCode::Char('G'), KeyModifiers::SHIFT) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Vim: jump to bottom".to_string();
+                // TODO: Implement jump to bottom
+            }
+            // Forward slash for search
+            (KeyCode::Char('/'), KeyModifiers::NONE) if !self.input_field.is_focused() => {
+                self.status_message = "Search mode (coming soon)".to_string();
+                // TODO: Implement search mode
+            }
+            // n for next search result
+            (KeyCode::Char('n'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Next search result (coming soon)".to_string();
+                // TODO: Implement next search
+            }
+            // N for previous search result
+            (KeyCode::Char('N'), KeyModifiers::SHIFT) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Previous search result (coming soon)".to_string();
+                // TODO: Implement previous search
             }
             // Regular character input
             (KeyCode::Char(c), KeyModifiers::NONE) | (KeyCode::Char(c), KeyModifiers::SHIFT) => {
@@ -409,8 +513,17 @@ impl App {
             "quit" => {
                 self.should_quit = true;
             }
+            "vim_mode" => {
+                self.toggle_vim_mode();
+            }
             "theme_toggle" => {
                 self.status_message = "Theme toggled (coming soon)".to_string();
+            }
+            "split_horizontal" => {
+                self.status_message = "Split horizontal (coming soon)".to_string();
+            }
+            "split_vertical" => {
+                self.status_message = "Split vertical (coming soon)".to_string();
             }
             "open_file" => {
                 self.status_message = "Open file (coming soon)".to_string();

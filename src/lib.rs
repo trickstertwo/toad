@@ -22,6 +22,7 @@ pub mod clipboard;
 pub mod event;
 pub mod history;
 pub mod keybinds;
+pub mod layout;
 pub mod logo;
 pub mod theme;
 pub mod tui;
@@ -44,6 +45,7 @@ pub use config::{Config, AiConfig, EditorConfig, UiConfig};
 pub use event::Event;
 pub use history::History;
 pub use keybinds::{KeyBinding, KeyBindings};
+pub use layout::{LayoutManager, Pane, PanelId, SplitDirection};
 pub use tui::Tui;
 
 /// Current TOAD version

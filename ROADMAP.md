@@ -66,10 +66,10 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Gauge/Meter** - Visual metrics display ✅ COMPLETED (via ProgressBar)
 
 ### Multi-Panel Layouts
-- [ ] **Split Panes** - Resizable horizontal/vertical splits
-- [ ] **Panel Focus System** - Tab/Shift+Tab to switch focus
+- [x] **Split Panes** - Resizable horizontal/vertical splits ✅ COMPLETED
+- [x] **Panel Focus System** - Tab/Shift+Tab to switch focus ✅ COMPLETED
 - [ ] **Panel Borders** - Visual indication of focused panel
-- [ ] **Dynamic Layout** - Panels can be shown/hidden
+- [x] **Dynamic Layout** - Panels can be shown/hidden ✅ COMPLETED
 
 ### Modal System
 - [x] **Popup/Dialog Windows** - Centered overlays ✅ COMPLETED
@@ -79,9 +79,9 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **ESC to Close** - Consistent modal dismissal ✅ COMPLETED
 
 ### Enhanced Navigation
-- [ ] **Vim-style Keybindings** - h/j/k/l navigation
-- [ ] **g/G Navigation** - Jump to top/bottom
-- [ ] **Page Up/Down** - Ctrl+u/d or PgUp/PgDn
+- [x] **Vim-style Keybindings** - h/j/k/l navigation ✅ COMPLETED
+- [x] **g/G Navigation** - Jump to top/bottom ✅ COMPLETED
+- [x] **Page Up/Down** - Ctrl+u/d or PgUp/PgDn ✅ COMPLETED
 - [ ] **Tab Switching** - Number keys (1-9) or Tab cycling
 
 ### State Management
@@ -90,8 +90,8 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **History Tracking** - Command/action history
 
 ### Basic Search
-- [ ] **Forward Search** - / to search
-- [ ] **Next/Previous** - n/N to navigate results
+- [x] **Forward Search** - / to search ✅ COMPLETED (keybinding added)
+- [x] **Next/Previous** - n/N to navigate results ✅ COMPLETED (keybinding added)
 - [ ] **Highlight Matches** - Visual search feedback
 
 ### Logging & Debugging
