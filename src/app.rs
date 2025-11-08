@@ -199,10 +199,10 @@ impl App {
             }
             // Number keys select directly
             (KeyCode::Char(c @ '1'..='3'), _) => {
-                if let Some(dialog) = &mut self.trust_dialog {
-                    if dialog.select_by_key(c).is_some() {
-                        self.confirm_trust_selection();
-                    }
+                if let Some(dialog) = &mut self.trust_dialog
+                    && dialog.select_by_key(c).is_some()
+                {
+                    self.confirm_trust_selection();
                 }
             }
             // Enter confirms selection

@@ -84,9 +84,8 @@ impl ConfirmDialog {
         self.options
             .iter()
             .position(|opt| opt.key == key)
-            .map(|idx| {
+            .inspect(|&idx| {
                 self.selected = idx;
-                idx
             })
     }
 

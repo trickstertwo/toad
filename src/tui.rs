@@ -91,6 +91,5 @@ mod tests {
         // This test is mostly to ensure the code compiles
         // Actually running it would affect the terminal
         // In a real scenario, you'd use a mock backend
-        assert!(true);
     }
 }

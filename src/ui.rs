@@ -78,25 +78,6 @@ fn render_main(app: &App, frame: &mut Frame, area: Rect) {
     render_shortcuts_bar(frame, chunks[4]);
 }
 
-/// Render the title bar
-fn render_title_bar(app: &App, frame: &mut Frame, area: Rect) {
-    let title_block = Block::default()
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
-        .style(Style::default().bg(ToadTheme::BLACK));
-
-    let title_text = Paragraph::new(app.title())
-        .style(
-            Style::default()
-                .fg(ToadTheme::TOAD_GREEN)
-                .add_modifier(Modifier::BOLD),
-        )
-        .alignment(Alignment::Center)
-        .block(title_block);
-
-    frame.render_widget(title_text, area);
-}
-
 /// Render the main content area
 fn render_main_content(_app: &App, frame: &mut Frame, area: Rect) {
     let content_block = Block::default()
@@ -162,14 +143,14 @@ fn render_system_info(app: &App, frame: &mut Frame, area: Rect) {
 
     // Left side: Model + Runtime
     // Right side: Plugins + Project path
-    let model_info = format!("Sonnet 4.5 · Rust TUI");
+    let model_info = "Sonnet 4.5 · Rust TUI";
     let plugin_info = format!("Active Plugins: {} installed", app.plugin_count());
     let project_path = app.working_directory().to_string_lossy();
 
     let info_text = vec![
         Line::from(vec![
             Span::styled(
-                &model_info,
+                model_info,
                 Style::default()
                     .fg(ToadTheme::TOAD_GREEN_BRIGHT)
                     .add_modifier(Modifier::BOLD),
@@ -203,7 +184,7 @@ fn render_separator(frame: &mut Frame, area: Rect) {
 
 /// Render keyboard shortcuts bar
 fn render_shortcuts_bar(frame: &mut Frame, area: Rect) {
-    let shortcuts = vec![
+    let shortcuts = [
         ("Ctrl+C", "quit"),
         ("?", "help"),
         ("/", "commands"),
