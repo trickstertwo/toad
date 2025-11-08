@@ -72,11 +72,11 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Dynamic Layout** - Panels can be shown/hidden
 
 ### Modal System
-- [ ] **Popup/Dialog Windows** - Centered overlays
-- [ ] **Confirmation Dialogs** - Yes/No prompts
+- [x] **Popup/Dialog Windows** - Centered overlays ✅ COMPLETED
+- [x] **Confirmation Dialogs** - Yes/No prompts ✅ COMPLETED (TrustDialog)
 - [ ] **Input Prompts** - Modal text input
-- [ ] **Error Messages** - Modal error display
-- [ ] **ESC to Close** - Consistent modal dismissal
+- [x] **Error Messages** - Modal error display ✅ COMPLETED
+- [x] **ESC to Close** - Consistent modal dismissal ✅ COMPLETED
 
 ### Enhanced Navigation
 - [ ] **Vim-style Keybindings** - h/j/k/l navigation
