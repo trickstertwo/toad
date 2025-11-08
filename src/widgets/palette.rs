@@ -56,9 +56,24 @@ impl CommandPalette {
                 description: "Exit Toad".to_string(),
             },
             PaletteCommand {
+                id: "vim_mode".to_string(),
+                label: "Toggle Vim Mode".to_string(),
+                description: "Enable/disable Vim-style keybindings (h/j/k/l, g/G)".to_string(),
+            },
+            PaletteCommand {
                 id: "theme_toggle".to_string(),
                 label: "Toggle Theme".to_string(),
                 description: "Switch between light and dark themes".to_string(),
+            },
+            PaletteCommand {
+                id: "split_horizontal".to_string(),
+                label: "Split Horizontal".to_string(),
+                description: "Split the current panel horizontally".to_string(),
+            },
+            PaletteCommand {
+                id: "split_vertical".to_string(),
+                label: "Split Vertical".to_string(),
+                description: "Split the current panel vertically".to_string(),
             },
             PaletteCommand {
                 id: "open_file".to_string(),

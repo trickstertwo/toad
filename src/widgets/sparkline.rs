@@ -1,277 +1,174 @@
-//! Sparkline widgets for inline metric visualization
-//!
-//! Provides compact inline graphs for displaying trends and metrics in limited space.
-//!
-//! # Examples
-//!
-//! ```
-//! use toad::widgets::{Sparkline, SparklineStyle};
-//!
-//! // Create a bar sparkline
-//! let data = vec![1.0, 3.0, 2.0, 5.0, 4.0];
-//! let sparkline = Sparkline::new(data)
-//!     .style(SparklineStyle::Bar)
-//!     .show_markers(true);
-//!
-//! assert_eq!(sparkline.data_points(), 5);
-//! ```
-
-use ratatui::{
-    buffer::Buffer,
-    layout::Rect,
-    style::{Color, Style},
-    widgets::Widget,
-};
-
-/// Sparkline rendering styles
+/// Sparkline widget - Inline graphs for metrics
 ///
-/// # Examples
-///
-/// ```
-/// use toad::widgets::SparklineStyle;
-///
-/// let bar = SparklineStyle::Bar;
-/// let line = SparklineStyle::Line;
-/// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum SparklineStyle {
-    /// Vertical bars: ▁ ▂ ▃ ▄ ▅ ▆ ▇ █
-    #[default]
-    Bar,
-    /// Connected line graph
-    Line,
-}
-
-/// Compact inline graph widget
-///
-/// Sparklines visualize data trends in minimal space, perfect for dashboards
-/// and status displays.
+/// Compact visual representation of data trends
 ///
 /// # Examples
 ///
 /// ```
 /// use toad::widgets::Sparkline;
-/// use ratatui::style::Color;
 ///
-/// let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-/// let mut sparkline = Sparkline::new(data);
-/// sparkline.set_color(Color::Cyan);
-///
-/// assert_eq!(sparkline.max(), Some(5.0));
-/// assert_eq!(sparkline.min(), Some(1.0));
+/// let data = vec![1.0, 3.0, 2.0, 5.0, 4.0];
+/// let sparkline = Sparkline::new(data);
+/// assert_eq!(sparkline.data().len(), 5);
 /// ```
-#[derive(Debug, Clone)]
+
+use crate::theme::ToadTheme;
+use ratatui::{
+    layout::Rect,
+    style::{Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph},
+    Frame,
+};
+use serde::{Deserialize, Serialize};
+use std::fmt;
+
+/// Sparkline rendering style
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SparklineStyle {
+    /// Bar style using block characters
+    Bars,
+    /// Line style using braille characters
+    Braille,
+    /// Dot style using simple dots
+    Dots,
+}
+
+impl SparklineStyle {
+    /// All available styles
+    pub fn all() -> &'static [SparklineStyle] {
+        &[
+            SparklineStyle::Bars,
+            SparklineStyle::Braille,
+            SparklineStyle::Dots,
+        ]
+    }
+
+    /// Get style name
+    pub fn name(&self) -> &'static str {
+        match self {
+            SparklineStyle::Bars => "Bars",
+            SparklineStyle::Braille => "Braille",
+            SparklineStyle::Dots => "Dots",
+        }
+    }
+}
+
+impl Default for SparklineStyle {
+    fn default() -> Self {
+        SparklineStyle::Bars
+    }
+}
+
+impl fmt::Display for SparklineStyle {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name())
+    }
+}
+
+/// Bar characters for sparklines (from lowest to highest)
+const BAR_CHARS: &[char] = &[' ', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+
+/// Sparkline widget for inline metric visualization
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Sparkline {
     /// Data points to visualize
     data: Vec<f64>,
+    /// Optional title
+    title: Option<String>,
     /// Rendering style
     style: SparklineStyle,
-    /// Whether to show min/max/avg markers
-    show_markers: bool,
-    /// Base color for sparkline
-    color: Color,
-    /// Whether to use gradient coloring
-    use_gradient: bool,
-    /// Gradient start color
-    gradient_start: Color,
-    /// Gradient end color
-    gradient_end: Color,
+    /// Whether to show borders
+    show_border: bool,
+    /// Whether to show min/max labels
+    show_labels: bool,
 }
 
 impl Sparkline {
-    /// Create a new sparkline with the given data
+    /// Create a new sparkline with data
     ///
     /// # Examples
     ///
     /// ```
     /// use toad::widgets::Sparkline;
     ///
-    /// let data = vec![1.0, 2.0, 3.0];
-    /// let sparkline = Sparkline::new(data);
-    /// assert_eq!(sparkline.data_points(), 3);
+    /// let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
+    /// assert_eq!(sparkline.data().len(), 3);
     /// ```
     pub fn new(data: Vec<f64>) -> Self {
         Self {
             data,
-            style: SparklineStyle::default(),
-            show_markers: false,
-            color: Color::Green,
-            use_gradient: false,
-            gradient_start: Color::Green,
-            gradient_end: Color::Red,
+            title: None,
+            style: SparklineStyle::Bars,
+            show_border: false,
+            show_labels: false,
         }
     }
 
-    /// Create an empty sparkline
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Sparkline;
-    ///
-    /// let sparkline = Sparkline::empty();
-    /// assert_eq!(sparkline.data_points(), 0);
-    /// ```
-    pub fn empty() -> Self {
-        Self::new(Vec::new())
+    /// Set the title
+    pub fn title(mut self, title: impl Into<String>) -> Self {
+        self.title = Some(title.into());
+        self
     }
 
-    /// Set the sparkline style
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::{Sparkline, SparklineStyle};
-    ///
-    /// let sparkline = Sparkline::empty()
-    ///     .style(SparklineStyle::Line);
-    /// ```
+    /// Set the rendering style
     pub fn style(mut self, style: SparklineStyle) -> Self {
         self.style = style;
         self
     }
 
-    /// Set whether to show statistical markers
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Sparkline;
-    ///
-    /// let sparkline = Sparkline::empty()
-    ///     .show_markers(true);
-    /// ```
-    pub fn show_markers(mut self, show: bool) -> Self {
-        self.show_markers = show;
+    /// Set whether to show borders
+    pub fn show_border(mut self, show: bool) -> Self {
+        self.show_border = show;
         self
     }
 
-    /// Set the sparkline color
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Sparkline;
-    /// use ratatui::style::Color;
-    ///
-    /// let sparkline = Sparkline::empty()
-    ///     .color(Color::Cyan);
-    /// ```
-    pub fn color(mut self, color: Color) -> Self {
-        self.color = color;
+    /// Set whether to show labels
+    pub fn show_labels(mut self, show: bool) -> Self {
+        self.show_labels = show;
         self
     }
 
-    /// Enable gradient coloring from start to end color
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Sparkline;
-    /// use ratatui::style::Color;
-    ///
-    /// let sparkline = Sparkline::empty()
-    ///     .gradient(Color::Green, Color::Red);
-    /// ```
-    pub fn gradient(mut self, start: Color, end: Color) -> Self {
-        self.use_gradient = true;
-        self.gradient_start = start;
-        self.gradient_end = end;
-        self
+    /// Get the data
+    pub fn data(&self) -> &[f64] {
+        &self.data
     }
 
-    /// Set the base color (mutable)
-    pub fn set_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    /// Get the number of data points
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Sparkline;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let sparkline = Sparkline::new(data);
-    /// assert_eq!(sparkline.data_points(), 4);
-    /// ```
-    pub fn data_points(&self) -> usize {
-        self.data.len()
+    /// Set the data
+    pub fn set_data(&mut self, data: Vec<f64>) {
+        self.data = data;
     }
 
     /// Add a data point
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Sparkline;
-    ///
-    /// let mut sparkline = Sparkline::empty();
-    /// sparkline.push(5.0);
-    /// assert_eq!(sparkline.data_points(), 1);
-    /// ```
     pub fn push(&mut self, value: f64) {
         self.data.push(value);
     }
 
-    /// Clear all data points
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Sparkline;
-    ///
-    /// let mut sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
-    /// sparkline.clear();
-    /// assert_eq!(sparkline.data_points(), 0);
-    /// ```
-    pub fn clear(&mut self) {
-        self.data.clear();
+    /// Add a data point and remove oldest if exceeds max width
+    pub fn push_with_limit(&mut self, value: f64, max: usize) {
+        self.data.push(value);
+        if self.data.len() > max {
+            self.data.remove(0);
+        }
     }
 
-    /// Get maximum value in dataset
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Sparkline;
-    ///
-    /// let sparkline = Sparkline::new(vec![1.0, 5.0, 3.0]);
-    /// assert_eq!(sparkline.max(), Some(5.0));
-    /// ```
-    pub fn max(&self) -> Option<f64> {
-        self.data.iter().copied().fold(None, |acc, x| {
-            Some(acc.map_or(x, |a| a.max(x)))
-        })
-    }
-
-    /// Get minimum value in dataset
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Sparkline;
-    ///
-    /// let sparkline = Sparkline::new(vec![1.0, 5.0, 3.0]);
-    /// assert_eq!(sparkline.min(), Some(1.0));
-    /// ```
+    /// Get min value
     pub fn min(&self) -> Option<f64> {
-        self.data.iter().copied().fold(None, |acc, x| {
-            Some(acc.map_or(x, |a| a.min(x)))
+        self.data.iter().copied().fold(None, |acc, x| match acc {
+            None => Some(x),
+            Some(min) => Some(min.min(x)),
         })
     }
 
-    /// Get average value of dataset
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Sparkline;
-    ///
-    /// let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-    /// assert_eq!(sparkline.avg(), Some(3.0));
-    /// ```
+    /// Get max value
+    pub fn max(&self) -> Option<f64> {
+        self.data.iter().copied().fold(None, |acc, x| match acc {
+            None => Some(x),
+            Some(max) => Some(max.max(x)),
+        })
+    }
+
+    /// Get average value
     pub fn avg(&self) -> Option<f64> {
         if self.data.is_empty() {
             None
@@ -280,136 +177,173 @@ impl Sparkline {
         }
     }
 
-    /// Get bar character for a normalized value (0.0 - 1.0)
-    fn bar_char(normalized: f64) -> &'static str {
-        match (normalized * 8.0) as usize {
-            0 => " ",
-            1 => "▁",
-            2 => "▂",
-            3 => "▃",
-            4 => "▄",
-            5 => "▅",
-            6 => "▆",
-            7 => "▇",
-            _ => "█",
-        }
-    }
-
-    /// Normalize a value to 0.0 - 1.0 range
-    fn normalize(&self, value: f64) -> f64 {
-        if let (Some(min), Some(max)) = (self.min(), self.max()) {
-            if max == min {
-                0.5 // All values are equal, center them
-            } else {
-                (value - min) / (max - min)
-            }
-        } else {
-            0.0
-        }
-    }
-
-    /// Get color for a value based on gradient settings
-    fn get_color(&self, value: f64) -> Color {
-        if !self.use_gradient {
-            return self.color;
-        }
-
-        let normalized = self.normalize(value);
-
-        // Simple gradient interpolation
-        match (normalized * 5.0) as usize {
-            0 => self.gradient_start,
-            1 => Color::Yellow,
-            2 => Color::LightYellow,
-            3 => Color::LightRed,
-            _ => self.gradient_end,
-        }
-    }
-
-    /// Render sparkline to a string representation
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::{Sparkline, SparklineStyle};
-    ///
-    /// let data = vec![1.0, 3.0, 2.0];
-    /// let sparkline = Sparkline::new(data)
-    ///     .style(SparklineStyle::Bar);
-    /// let output = sparkline.render_string(10);
-    /// assert!(output.len() > 0);
-    /// ```
-    pub fn render_string(&self, max_width: usize) -> String {
+    /// Normalize data to 0.0-1.0 range
+    fn normalize(&self) -> Vec<f64> {
         if self.data.is_empty() {
-            return String::new();
+            return Vec::new();
         }
 
-        let mut output = String::new();
+        let min = self.min().unwrap_or(0.0);
+        let max = self.max().unwrap_or(1.0);
 
+        if (max - min).abs() < f64::EPSILON {
+            return vec![0.5; self.data.len()];
+        }
+
+        self.data
+            .iter()
+            .map(|&x| (x - min) / (max - min))
+            .collect()
+    }
+
+    /// Render as bars
+    fn render_bars(&self, width: usize) -> String {
+        let normalized = self.normalize();
+        let data = if normalized.len() > width {
+            // Downsample if too many points
+            let step = normalized.len() as f64 / width as f64;
+            (0..width)
+                .map(|i| {
+                    let idx = (i as f64 * step) as usize;
+                    normalized.get(idx).copied().unwrap_or(0.0)
+                })
+                .collect::<Vec<_>>()
+        } else {
+            normalized
+        };
+
+        data.iter()
+            .map(|&value| {
+                let index = (value * (BAR_CHARS.len() - 1) as f64).round() as usize;
+                BAR_CHARS[index.min(BAR_CHARS.len() - 1)]
+            })
+            .collect()
+    }
+
+    /// Render as dots
+    fn render_dots(&self, width: usize, height: usize) -> Vec<String> {
+        let normalized = self.normalize();
+        let data = if normalized.len() > width {
+            let step = normalized.len() as f64 / width as f64;
+            (0..width)
+                .map(|i| {
+                    let idx = (i as f64 * step) as usize;
+                    normalized.get(idx).copied().unwrap_or(0.0)
+                })
+                .collect::<Vec<_>>()
+        } else {
+            normalized
+        };
+
+        let mut lines = vec![" ".repeat(width); height];
+
+        for (x, &value) in data.iter().enumerate() {
+            if x < width {
+                let y = ((1.0 - value) * (height - 1) as f64).round() as usize;
+                if y < height {
+                    let mut line = lines[y].chars().collect::<Vec<_>>();
+                    if x < line.len() {
+                        line[x] = '•';
+                    }
+                    lines[y] = line.into_iter().collect();
+                }
+            }
+        }
+
+        lines
+    }
+
+    /// Render as braille (simple version - just uses dots for now)
+    fn render_braille(&self, width: usize, height: usize) -> Vec<String> {
+        // Simplified braille rendering using dots
+        self.render_dots(width, height)
+    }
+
+    /// Render the sparkline
+    pub fn render(&self, frame: &mut Frame, area: Rect) {
+        let content_width = if self.show_border {
+            area.width.saturating_sub(2) as usize
+        } else {
+            area.width as usize
+        };
+
+        let content_height = if self.show_border {
+            area.height.saturating_sub(2) as usize
+        } else {
+            area.height as usize
+        };
+
+        let sparkline_text = match self.style {
+            SparklineStyle::Bars => {
+                let bars = self.render_bars(content_width);
+                if self.show_labels {
+                    let min = self.min().unwrap_or(0.0);
+                    let max = self.max().unwrap_or(0.0);
+                    format!("{}\nMin: {:.2} Max: {:.2}", bars, min, max)
+                } else {
+                    bars
+                }
+            }
+            SparklineStyle::Dots => {
+                let dots = self.render_dots(content_width, content_height.max(1));
+                if self.show_labels {
+                    let min = self.min().unwrap_or(0.0);
+                    let max = self.max().unwrap_or(0.0);
+                    format!("{}\nMin: {:.2} Max: {:.2}", dots.join("\n"), min, max)
+                } else {
+                    dots.join("\n")
+                }
+            }
+            SparklineStyle::Braille => {
+                let braille = self.render_braille(content_width, content_height.max(1));
+                if self.show_labels {
+                    let min = self.min().unwrap_or(0.0);
+                    let max = self.max().unwrap_or(0.0);
+                    format!("{}\nMin: {:.2} Max: {:.2}", braille.join("\n"), min, max)
+                } else {
+                    braille.join("\n")
+                }
+            }
+        };
+
+        let paragraph = if self.show_border {
+            let block = Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(ToadTheme::TOAD_GREEN));
+
+            let block = if let Some(ref title) = self.title {
+                block.title(format!(" {} ", title)).title_style(
+                    Style::default()
+                        .fg(ToadTheme::TOAD_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                )
+            } else {
+                block
+            };
+
+            Paragraph::new(sparkline_text)
+                .block(block)
+                .style(Style::default().fg(ToadTheme::FOREGROUND))
+        } else {
+            Paragraph::new(sparkline_text).style(Style::default().fg(ToadTheme::FOREGROUND))
+        };
+
+        frame.render_widget(paragraph, area);
+    }
+
+    /// Get sparkline as text (for testing/display)
+    pub fn to_string(&self, width: usize) -> String {
         match self.style {
-            SparklineStyle::Bar => {
-                for value in &self.data {
-                    let normalized = self.normalize(*value);
-                    output.push_str(Self::bar_char(normalized));
-
-                    if output.len() >= max_width {
-                        break;
-                    }
-                }
-            }
-            SparklineStyle::Line => {
-                // For line style, use bar chars but connect them visually
-                for value in &self.data {
-                    let normalized = self.normalize(*value);
-                    output.push_str(Self::bar_char(normalized));
-
-                    if output.len() >= max_width {
-                        break;
-                    }
-                }
-            }
+            SparklineStyle::Bars => self.render_bars(width),
+            SparklineStyle::Dots => self.render_dots(width, 5).join("\n"),
+            SparklineStyle::Braille => self.render_braille(width, 5).join("\n"),
         }
-
-        // Add markers if enabled
-        if self.show_markers && !output.is_empty()
-            && let (Some(min), Some(max), Some(avg)) = (self.min(), self.max(), self.avg())
-        {
-            output.push_str(&format!(" ↓{:.1} ↑{:.1} ~{:.1}", min, max, avg));
-        }
-
-        output
     }
 }
 
-impl Widget for Sparkline {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        if area.width == 0 || area.height == 0 || self.data.is_empty() {
-            return;
-        }
-
-        let max_width = area.width as usize;
-        let sparkline_str = self.render_string(max_width);
-
-        // Render with appropriate coloring
-        let mut x = area.x;
-        let y = area.y;
-
-        for (i, ch) in sparkline_str.chars().enumerate() {
-            if x >= area.x + area.width {
-                break;
-            }
-
-            // Get color for this data point
-            let color = if i < self.data.len() {
-                self.get_color(self.data[i])
-            } else {
-                self.color
-            };
-
-            let style = Style::default().fg(color);
-            buf.set_string(x, y, ch.to_string(), style);
-            x += 1;
-        }
+impl Default for Sparkline {
+    fn default() -> Self {
+        Self::new(Vec::new())
     }
 }
 
@@ -419,164 +353,177 @@ mod tests {
 
     #[test]
     fn test_sparkline_creation() {
-        let data = vec![1.0, 2.0, 3.0];
-        let sparkline = Sparkline::new(data);
-        assert_eq!(sparkline.data_points(), 3);
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
+        assert_eq!(sparkline.data().len(), 3);
+        assert_eq!(sparkline.style, SparklineStyle::Bars);
     }
 
     #[test]
-    fn test_sparkline_empty() {
-        let sparkline = Sparkline::empty();
-        assert_eq!(sparkline.data_points(), 0);
+    fn test_sparkline_with_title() {
+        let sparkline = Sparkline::new(vec![1.0]).title("Test");
+        assert_eq!(sparkline.title, Some("Test".to_string()));
     }
 
     #[test]
-    fn test_sparkline_push() {
-        let mut sparkline = Sparkline::empty();
-        sparkline.push(1.0);
+    fn test_sparkline_style() {
+        let sparkline = Sparkline::new(vec![1.0]).style(SparklineStyle::Dots);
+        assert_eq!(sparkline.style, SparklineStyle::Dots);
+    }
+
+    #[test]
+    fn test_sparkline_borders() {
+        let sparkline = Sparkline::new(vec![1.0]).show_border(true);
+        assert!(sparkline.show_border);
+    }
+
+    #[test]
+    fn test_sparkline_labels() {
+        let sparkline = Sparkline::new(vec![1.0]).show_labels(true);
+        assert!(sparkline.show_labels);
+    }
+
+    #[test]
+    fn test_set_data() {
+        let mut sparkline = Sparkline::new(vec![1.0]);
+        sparkline.set_data(vec![1.0, 2.0, 3.0]);
+        assert_eq!(sparkline.data().len(), 3);
+    }
+
+    #[test]
+    fn test_push() {
+        let mut sparkline = Sparkline::new(vec![1.0]);
         sparkline.push(2.0);
-        assert_eq!(sparkline.data_points(), 2);
+        assert_eq!(sparkline.data().len(), 2);
     }
 
     #[test]
-    fn test_sparkline_clear() {
+    fn test_push_with_limit() {
         let mut sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
-        assert_eq!(sparkline.data_points(), 3);
-
-        sparkline.clear();
-        assert_eq!(sparkline.data_points(), 0);
+        sparkline.push_with_limit(4.0, 3);
+        assert_eq!(sparkline.data().len(), 3);
+        assert_eq!(sparkline.data()[0], 2.0);
+        assert_eq!(sparkline.data()[2], 4.0);
     }
 
     #[test]
-    fn test_sparkline_max() {
+    fn test_min_max() {
         let sparkline = Sparkline::new(vec![1.0, 5.0, 3.0, 2.0]);
+        assert_eq!(sparkline.min(), Some(1.0));
         assert_eq!(sparkline.max(), Some(5.0));
     }
 
     #[test]
-    fn test_sparkline_max_empty() {
-        let sparkline = Sparkline::empty();
+    fn test_min_max_empty() {
+        let sparkline = Sparkline::new(vec![]);
+        assert_eq!(sparkline.min(), None);
         assert_eq!(sparkline.max(), None);
     }
 
     #[test]
-    fn test_sparkline_min() {
-        let sparkline = Sparkline::new(vec![3.0, 1.0, 5.0, 2.0]);
-        assert_eq!(sparkline.min(), Some(1.0));
+    fn test_avg() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(sparkline.avg(), Some(2.5));
     }
 
     #[test]
-    fn test_sparkline_min_empty() {
-        let sparkline = Sparkline::empty();
-        assert_eq!(sparkline.min(), None);
-    }
-
-    #[test]
-    fn test_sparkline_avg() {
-        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        assert_eq!(sparkline.avg(), Some(3.0));
-    }
-
-    #[test]
-    fn test_sparkline_avg_empty() {
-        let sparkline = Sparkline::empty();
+    fn test_avg_empty() {
+        let sparkline = Sparkline::new(vec![]);
         assert_eq!(sparkline.avg(), None);
     }
 
     #[test]
-    fn test_sparkline_builder_style() {
-        let sparkline = Sparkline::empty()
-            .style(SparklineStyle::Line);
-        assert_eq!(sparkline.style, SparklineStyle::Line);
-    }
-
-    #[test]
-    fn test_sparkline_builder_color() {
-        let sparkline = Sparkline::empty()
-            .color(Color::Cyan);
-        assert_eq!(sparkline.color, Color::Cyan);
-    }
-
-    #[test]
-    fn test_sparkline_builder_markers() {
-        let sparkline = Sparkline::empty()
-            .show_markers(true);
-        assert!(sparkline.show_markers);
-    }
-
-    #[test]
-    fn test_sparkline_builder_gradient() {
-        let sparkline = Sparkline::empty()
-            .gradient(Color::Green, Color::Red);
-        assert!(sparkline.use_gradient);
-        assert_eq!(sparkline.gradient_start, Color::Green);
-        assert_eq!(sparkline.gradient_end, Color::Red);
-    }
-
-    #[test]
-    fn test_sparkline_normalize() {
+    fn test_normalize() {
         let sparkline = Sparkline::new(vec![0.0, 5.0, 10.0]);
-        assert_eq!(sparkline.normalize(0.0), 0.0);
-        assert_eq!(sparkline.normalize(5.0), 0.5);
-        assert_eq!(sparkline.normalize(10.0), 1.0);
+        let normalized = sparkline.normalize();
+        assert_eq!(normalized.len(), 3);
+        assert!((normalized[0] - 0.0).abs() < f64::EPSILON);
+        assert!((normalized[1] - 0.5).abs() < f64::EPSILON);
+        assert!((normalized[2] - 1.0).abs() < f64::EPSILON);
     }
 
     #[test]
-    fn test_sparkline_normalize_equal_values() {
+    fn test_normalize_single_value() {
         let sparkline = Sparkline::new(vec![5.0, 5.0, 5.0]);
-        assert_eq!(sparkline.normalize(5.0), 0.5);
+        let normalized = sparkline.normalize();
+        // All values should be 0.5 when min == max
+        for &value in &normalized {
+            assert!((value - 0.5).abs() < f64::EPSILON);
+        }
     }
 
     #[test]
-    fn test_sparkline_bar_char() {
-        assert_eq!(Sparkline::bar_char(0.0), " ");
-        assert_eq!(Sparkline::bar_char(0.5), "▄");
-        assert_eq!(Sparkline::bar_char(1.0), "█");
+    fn test_render_bars() {
+        let sparkline = Sparkline::new(vec![0.0, 5.0, 10.0]);
+        let bars = sparkline.render_bars(3);
+        // Should have 3 characters representing the values
+        assert_eq!(bars.chars().count(), 3);
     }
 
     #[test]
-    fn test_sparkline_render_string_empty() {
-        let sparkline = Sparkline::empty();
-        let output = sparkline.render_string(10);
-        assert_eq!(output, "");
+    fn test_render_bars_empty() {
+        let sparkline = Sparkline::new(vec![]);
+        let bars = sparkline.render_bars(5);
+        assert!(bars.is_empty());
     }
 
     #[test]
-    fn test_sparkline_render_string_bar() {
-        let sparkline = Sparkline::new(vec![0.0, 5.0, 10.0])
-            .style(SparklineStyle::Bar);
-        let output = sparkline.render_string(10);
-        assert!(!output.is_empty());
+    fn test_render_dots() {
+        let sparkline = Sparkline::new(vec![0.0, 5.0, 10.0]);
+        let dots = sparkline.render_dots(10, 5);
+        assert_eq!(dots.len(), 5);
     }
 
     #[test]
-    fn test_sparkline_render_string_with_markers() {
-        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0])
-            .show_markers(true);
-        let output = sparkline.render_string(50);
-        assert!(output.contains("↓"));
-        assert!(output.contains("↑"));
-        assert!(output.contains("~"));
+    fn test_to_string_bars() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
+        let text = sparkline.to_string(10);
+        assert!(!text.is_empty());
     }
 
     #[test]
-    fn test_sparkline_set_color() {
-        let mut sparkline = Sparkline::empty();
-        sparkline.set_color(Color::Magenta);
-        assert_eq!(sparkline.color, Color::Magenta);
+    fn test_to_string_dots() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]).style(SparklineStyle::Dots);
+        let text = sparkline.to_string(10);
+        assert!(!text.is_empty());
     }
 
     #[test]
-    fn test_sparkline_chained_builders() {
-        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0])
-            .style(SparklineStyle::Line)
-            .color(Color::Cyan)
-            .show_markers(true)
-            .gradient(Color::Green, Color::Red);
+    fn test_sparkline_style_all() {
+        let styles = SparklineStyle::all();
+        assert_eq!(styles.len(), 3);
+    }
 
-        assert_eq!(sparkline.style, SparklineStyle::Line);
-        assert_eq!(sparkline.color, Color::Cyan);
-        assert!(sparkline.show_markers);
-        assert!(sparkline.use_gradient);
+    #[test]
+    fn test_sparkline_style_name() {
+        assert_eq!(SparklineStyle::Bars.name(), "Bars");
+        assert_eq!(SparklineStyle::Braille.name(), "Braille");
+        assert_eq!(SparklineStyle::Dots.name(), "Dots");
+    }
+
+    #[test]
+    fn test_sparkline_style_display() {
+        assert_eq!(format!("{}", SparklineStyle::Bars), "Bars");
+    }
+
+    #[test]
+    fn test_sparkline_style_default() {
+        let style = SparklineStyle::default();
+        assert_eq!(style, SparklineStyle::Bars);
+    }
+
+    #[test]
+    fn test_sparkline_default() {
+        let sparkline = Sparkline::default();
+        assert!(sparkline.data().is_empty());
+        assert_eq!(sparkline.style, SparklineStyle::Bars);
+    }
+
+    #[test]
+    fn test_downsampling() {
+        let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+        let sparkline = Sparkline::new(data);
+        // Request fewer points than available - should downsample
+        let bars = sparkline.render_bars(5);
+        assert_eq!(bars.chars().count(), 5);
     }
 }

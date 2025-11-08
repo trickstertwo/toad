@@ -1,7 +1,7 @@
 [package]
 name = "toad"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 authors = ["Toad Contributors"]
 description = "AI-powered coding terminal with semi-autonomous agents"
 license = "MIT OR Apache-2.0"
@@ -14,6 +14,7 @@ crossterm = { version = "0.28", features = ["event-stream"] }
 
 # Async Runtime
 tokio = { version = "1.42", features = ["full"] }
+async-trait = "0.1"
 
 # Error Handling
 anyhow = "1.0"
@@ -28,12 +29,36 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
+dotenvy = "0.15"
+dirs = "5.0"
 
 # CLI
 clap = { version = "4.5", features = ["derive", "cargo"] }
 
 # Clipboard
 copypasta = "0.10"
+
+# Statistics
+statrs = "0.17"
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json"] }
+
+# Compression
+flate2 = "1.0"
+
+# Parquet support for SWE-bench datasets
+parquet = "53"
+arrow = "53"
+
+# Testing
+mockall = "0.12"
+
+[dev-dependencies]
+tempfile = "3.8"
 
 [profile.release]
 opt-level = 3

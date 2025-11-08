@@ -5,9 +5,11 @@
 
 use crate::config::Config;
 use crate::event::Event;
+use crate::layout::LayoutManager;
+use crate::performance::PerformanceMetrics;
 use crate::session::SessionState;
 use crate::tabs::TabManager;
-use crate::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField};
+use crate::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, ToastManager};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::path::PathBuf;
 
@@ -72,6 +74,21 @@ pub struct App {
 
     /// Tab manager for multiple workspaces
     tabs: TabManager,
+
+    /// Layout manager for split panes
+    layout: LayoutManager,
+
+    /// Vim mode enabled
+    vim_mode: bool,
+
+    /// Performance metrics
+    performance: PerformanceMetrics,
+
+    /// Show performance overlay
+    show_performance: bool,
+
+    /// Toast notification manager
+    toasts: ToastManager,
 }
 
 impl Default for App {
@@ -96,6 +113,9 @@ impl Default for App {
             AppScreen::Welcome
         };
 
+        // Load vim mode from config
+        let vim_mode = config.ui.vim_mode;
+
         Self {
             screen,
             should_quit: false,
@@ -117,6 +137,11 @@ impl Default for App {
             config,
             session,
             tabs: TabManager::new(),
+            layout: LayoutManager::new(),
+            vim_mode,
+            performance: PerformanceMetrics::new(),
+            show_performance: false,
+            toasts: ToastManager::new(),
         }
     }
 }
@@ -197,6 +222,103 @@ impl App {
         self.show_palette
     }
 
+    /// Get the layout manager
+    pub fn layout(&self) -> &LayoutManager {
+        &self.layout
+    }
+
+    /// Get mutable layout manager
+    pub fn layout_mut(&mut self) -> &mut LayoutManager {
+        &mut self.layout
+    }
+
+    /// Check if Vim mode is enabled
+    pub fn vim_mode(&self) -> bool {
+        self.vim_mode
+    }
+
+    /// Toggle Vim mode
+    pub fn toggle_vim_mode(&mut self) {
+        self.vim_mode = !self.vim_mode;
+        self.config.ui.vim_mode = self.vim_mode;
+        self.status_message = format!(
+            "Vim mode {}",
+            if self.vim_mode { "enabled" } else { "disabled" }
+        );
+    }
+
+    /// Get configuration
+    pub fn config(&self) -> &Config {
+        &self.config
+    }
+
+    /// Save configuration to file
+    pub fn save_config(&self) -> crate::Result<()> {
+        let path = Config::default_path();
+
+        // Create parent directory if it doesn't exist
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        self.config.save_to_file(&path).map_err(|e| color_eyre::eyre::eyre!("Failed to save config: {}", e))?;
+        Ok(())
+    }
+
+    /// Get performance metrics
+    pub fn performance(&self) -> &PerformanceMetrics {
+        &self.performance
+    }
+
+    /// Get mutable performance metrics
+    pub fn performance_mut(&mut self) -> &mut PerformanceMetrics {
+        &mut self.performance
+    }
+
+    /// Check if performance overlay is shown
+    pub fn show_performance(&self) -> bool {
+        self.show_performance
+    }
+
+    /// Toggle performance overlay
+    pub fn toggle_performance(&mut self) {
+        self.show_performance = !self.show_performance;
+        self.status_message = format!(
+            "Performance overlay {}",
+            if self.show_performance { "shown" } else { "hidden" }
+        );
+    }
+
+    /// Get toast manager
+    pub fn toasts(&self) -> &ToastManager {
+        &self.toasts
+    }
+
+    /// Get mutable toast manager
+    pub fn toasts_mut(&mut self) -> &mut ToastManager {
+        &mut self.toasts
+    }
+
+    /// Show an info toast
+    pub fn toast_info(&mut self, message: impl Into<String>) {
+        self.toasts.info(message);
+    }
+
+    /// Show a success toast
+    pub fn toast_success(&mut self, message: impl Into<String>) {
+        self.toasts.success(message);
+    }
+
+    /// Show a warning toast
+    pub fn toast_warning(&mut self, message: impl Into<String>) {
+        self.toasts.warning(message);
+    }
+
+    /// Show an error toast
+    pub fn toast_error(&mut self, message: impl Into<String>) {
+        self.toasts.error(message);
+    }
+
     /// Update application state based on an event (Update in Elm Architecture)
     ///
     /// This is the core state transition function that takes an event
@@ -268,10 +390,10 @@ impl App {
             }
             // Number keys select directly
             (KeyCode::Char(c @ '1'..='3'), _) => {
-                if let Some(dialog) = &mut self.trust_dialog
-                    && dialog.select_by_key(c).is_some()
-                {
-                    self.confirm_trust_selection();
+                if let Some(dialog) = &mut self.trust_dialog {
+                    if dialog.select_by_key(c).is_some() {
+                        self.confirm_trust_selection();
+                    }
                 }
             }
             // Enter confirms selection
@@ -344,13 +466,27 @@ impl App {
         }
 
         match (key.code, key.modifiers) {
-            // Quit on Ctrl+C (not q anymore, since we're typing)
+            // Quit on Ctrl+C
             (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
                 self.should_quit = true;
             }
-            // Ctrl+D to quit
+            // Ctrl+D for page down (Vim-style), or quit if input is focused and empty
             (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
-                self.should_quit = true;
+                if self.input_field.is_focused() && self.input_field.value().is_empty() {
+                    self.should_quit = true;
+                } else if !self.input_field.is_focused() {
+                    self.status_message = "Page down".to_string();
+                    // TODO: Implement page down for scrollable content
+                }
+            }
+            // Ctrl+U for page up (Vim-style) or clear input if focused
+            (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
+                if self.input_field.is_focused() {
+                    self.input_field.clear();
+                } else {
+                    self.status_message = "Page up".to_string();
+                    // TODO: Implement page up for scrollable content
+                }
             }
             // Ctrl+P opens command palette
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
@@ -360,23 +496,35 @@ impl App {
             (KeyCode::Char('?'), _) => {
                 self.show_help = !self.show_help;
             }
-            // Tab cycling: Tab for next, Shift+Tab for previous
+            // Tab cycling: Tab for next tab, Shift+Tab for previous tab
             (KeyCode::Tab, KeyModifiers::NONE) => {
-                self.tabs.next_tab();
-                self.status_message = format!(
-                    "Switched to tab: {}",
-                    self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
-                );
+                // If input field is not focused, use tab for workspace switching
+                if !self.input_field.is_focused() {
+                    self.tabs.next_tab();
+                    self.status_message = format!(
+                        "Switched to tab: {}",
+                        self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
+                    );
+                } else {
+                    // If input is focused, use tab for layout panel switching
+                    self.layout.focus_next();
+                    self.status_message = format!("Focused panel {}", self.layout.focused());
+                }
             }
             (KeyCode::BackTab, _) => {
                 // BackTab is Shift+Tab
-                self.tabs.prev_tab();
-                self.status_message = format!(
-                    "Switched to tab: {}",
-                    self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
-                );
+                if !self.input_field.is_focused() {
+                    self.tabs.prev_tab();
+                    self.status_message = format!(
+                        "Switched to tab: {}",
+                        self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
+                    );
+                } else {
+                    self.layout.focus_previous();
+                    self.status_message = format!("Focused panel {}", self.layout.focused());
+                }
             }
-            // Number keys (1-9) for direct tab switching
+            // Ctrl+Number keys (1-9) for direct tab switching
             (KeyCode::Char(c @ '1'..='9'), KeyModifiers::CONTROL) => {
                 let number = c.to_digit(10).unwrap() as usize;
                 if self.tabs.switch_to_number(number) {
@@ -422,9 +570,82 @@ impl App {
             (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
                 self.input_field.move_cursor_end();
             }
-            // Ctrl+U clears input
-            (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
-                self.input_field.clear();
+            // Page Up/Down keys
+            (KeyCode::PageUp, _) => {
+                self.status_message = "Page up".to_string();
+                // TODO: Implement page up for scrollable content
+            }
+            (KeyCode::PageDown, _) => {
+                self.status_message = "Page down".to_string();
+                // TODO: Implement page down for scrollable content
+            }
+            // Vim-style navigation (when not in input field and vim mode enabled)
+            (KeyCode::Char('h'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Vim: move left".to_string();
+                // TODO: Implement vim-style left navigation
+            }
+            (KeyCode::Char('j'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Vim: move down".to_string();
+                // TODO: Implement vim-style down navigation
+            }
+            (KeyCode::Char('k'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Vim: move up".to_string();
+                // TODO: Implement vim-style up navigation
+            }
+            (KeyCode::Char('l'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Vim: move right".to_string();
+                // TODO: Implement vim-style right navigation
+            }
+            // g for jump to top (Vim-style)
+            (KeyCode::Char('g'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Vim: jump to top".to_string();
+                // TODO: Implement jump to top
+            }
+            // G for jump to bottom (Vim-style)
+            (KeyCode::Char('G'), KeyModifiers::SHIFT) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Vim: jump to bottom".to_string();
+                // TODO: Implement jump to bottom
+            }
+            // Forward slash for search
+            (KeyCode::Char('/'), KeyModifiers::NONE) if !self.input_field.is_focused() => {
+                self.status_message = "Search mode (coming soon)".to_string();
+                // TODO: Implement search mode
+            }
+            // n for next search result
+            (KeyCode::Char('n'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Next search result (coming soon)".to_string();
+                // TODO: Implement next search
+            }
+            // N for previous search result
+            (KeyCode::Char('N'), KeyModifiers::SHIFT) if self.vim_mode && !self.input_field.is_focused() => {
+                self.status_message = "Previous search result (coming soon)".to_string();
+                // TODO: Implement previous search
+            }
+            // Number keys for tab switching (when not in input field)
+            (KeyCode::Char(c @ '1'..='9'), KeyModifiers::NONE) if !self.input_field.is_focused() => {
+                let tab_num = c.to_digit(10).unwrap() as usize;
+                if self.tabs.switch_to_number(tab_num) {
+                    self.status_message = format!(
+                        "Switched to tab {}: {}",
+                        tab_num,
+                        self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
+                    );
+                } else {
+                    self.status_message = format!("Tab {} does not exist", tab_num);
+                }
+            }
+            // Alt+Number for tab switching (works even in input field)
+            (KeyCode::Char(c @ '1'..='9'), KeyModifiers::ALT) => {
+                let tab_num = c.to_digit(10).unwrap() as usize;
+                if self.tabs.switch_to_number(tab_num) {
+                    self.status_message = format!(
+                        "Switched to tab {}: {}",
+                        tab_num,
+                        self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
+                    );
+                } else {
+                    self.status_message = format!("Tab {} does not exist", tab_num);
+                }
             }
             // Regular character input
             (KeyCode::Char(c), KeyModifiers::NONE) | (KeyCode::Char(c), KeyModifiers::SHIFT) => {
@@ -473,8 +694,17 @@ impl App {
             "quit" => {
                 self.should_quit = true;
             }
+            "vim_mode" => {
+                self.toggle_vim_mode();
+            }
             "theme_toggle" => {
                 self.status_message = "Theme toggled (coming soon)".to_string();
+            }
+            "split_horizontal" => {
+                self.status_message = "Split horizontal (coming soon)".to_string();
+            }
+            "split_vertical" => {
+                self.status_message = "Split vertical (coming soon)".to_string();
             }
             "open_file" => {
                 self.status_message = "Open file (coming soon)".to_string();
@@ -586,11 +816,6 @@ impl App {
     /// Get mutable reference to session state
     pub fn session_mut(&mut self) -> &mut SessionState {
         &mut self.session
-    }
-
-    /// Get reference to config
-    pub fn config(&self) -> &Config {
-        &self.config
     }
 
     /// Get reference to tab manager

@@ -1,112 +1,103 @@
-//! Loading spinner widgets for async operations
-//!
-//! Provides animated spinners for visual feedback during long-running operations.
-//!
-//! # Examples
-//!
-//! ```
-//! use toad::widgets::{Spinner, SpinnerStyle};
-//!
-//! // Create a dots spinner
-//! let mut spinner = Spinner::new(SpinnerStyle::Dots);
-//! spinner.tick(); // Advance animation
-//!
-//! assert!(spinner.is_active());
-//! ```
-
-use ratatui::{
-    buffer::Buffer,
-    layout::Rect,
-    style::{Color, Style},
-    widgets::Widget,
-};
-
-/// Spinner animation styles
+/// Loading spinner widget
 ///
-/// # Examples
-///
-/// ```
-/// use toad::widgets::SpinnerStyle;
-///
-/// let dots = SpinnerStyle::Dots;
-/// let bar = SpinnerStyle::Bar;
-/// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SpinnerStyle {
-    /// Rotating dots: ⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏
-    Dots,
-    /// Horizontal bar: ▁ ▂ ▃ ▄ ▅ ▆ ▇ █ ▇ ▆ ▅ ▄ ▃
-    Bar,
-    /// Growing arc: ◜ ◝ ◞ ◟
-    Arc,
-    /// Simple line: - \ | /
-    Line,
-    /// Bouncing ball: ⠁ ⠂ ⠄ ⡀ ⢀ ⠠ ⠐ ⠈
-    Bounce,
-    /// Clock: 🕐 🕑 🕒 🕓 🕔 🕕 🕖 🕗 🕘 🕙 🕚 🕛
-    Clock,
-}
-
-impl SpinnerStyle {
-    /// Get animation frames for this style
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::SpinnerStyle;
-    ///
-    /// let frames = SpinnerStyle::Dots.frames();
-    /// assert!(frames.len() > 0);
-    /// ```
-    pub fn frames(self) -> &'static [&'static str] {
-        match self {
-            SpinnerStyle::Dots => &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
-            SpinnerStyle::Bar => &[
-                "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█", "▇", "▆", "▅", "▄", "▃",
-            ],
-            SpinnerStyle::Arc => &["◜", "◝", "◞", "◟"],
-            SpinnerStyle::Line => &["-", "\\", "|", "/"],
-            SpinnerStyle::Bounce => &["⠁", "⠂", "⠄", "⡀", "⢀", "⠠", "⠐", "⠈"],
-            SpinnerStyle::Clock => &[
-                "🕐", "🕑", "🕒", "🕓", "🕔", "🕕", "🕖", "🕗", "🕘", "🕙", "🕚", "🕛",
-            ],
-        }
-    }
-
-    /// Get frame count for this style
-    pub fn frame_count(self) -> usize {
-        self.frames().len()
-    }
-}
-
-/// Animated loading spinner
+/// Aesthetic async indicators with various animation styles
 ///
 /// # Examples
 ///
 /// ```
 /// use toad::widgets::{Spinner, SpinnerStyle};
 ///
-/// let mut spinner = Spinner::new(SpinnerStyle::Dots);
-/// spinner.set_message("Loading...".to_string());
-///
-/// assert_eq!(spinner.message(), Some("Loading..."));
+/// let spinner = Spinner::new(SpinnerStyle::Dots);
+/// assert_eq!(spinner.current_frame(), 0);
 /// ```
+
+use crate::theme::ToadTheme;
+use ratatui::{
+    layout::{Alignment, Rect},
+    style::{Modifier, Style},
+    text::{Line, Span},
+    widgets::Paragraph,
+    Frame,
+};
+use serde::{Deserialize, Serialize};
+
+/// Spinner animation style
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SpinnerStyle {
+    /// Rotating dots: ⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏
+    Dots,
+    /// Rotating line: | / - \
+    Line,
+    /// Growing bars: ▁ ▂ ▃ ▄ ▅ ▆ ▇ █
+    Bars,
+    /// Bouncing ball: ⠁ ⠂ ⠄ ⡀ ⢀ ⠠ ⠐ ⠈
+    Bounce,
+    /// Arrow chase: ← ↖ ↑ ↗ → ↘ ↓ ↙
+    Arrows,
+    /// Simple dots: . .. ...
+    SimpleDots,
+    /// Binary: 0 1
+    Binary,
+    /// Clock: 🕐 🕑 🕒 🕓 🕔 🕕 🕖 🕗 🕘 🕙 🕚 🕛
+    Clock,
+}
+
+impl SpinnerStyle {
+    /// Get animation frames for this style
+    pub fn frames(&self) -> &'static [&'static str] {
+        match self {
+            SpinnerStyle::Dots => &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
+            SpinnerStyle::Line => &["|", "/", "-", "\\"],
+            SpinnerStyle::Bars => &["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█", "▇", "▆", "▅", "▄", "▃", "▂"],
+            SpinnerStyle::Bounce => &["⠁", "⠂", "⠄", "⡀", "⢀", "⠠", "⠐", "⠈"],
+            SpinnerStyle::Arrows => &["←", "↖", "↑", "↗", "→", "↘", "↓", "↙"],
+            SpinnerStyle::SimpleDots => &["   ", ".  ", ".. ", "..."],
+            SpinnerStyle::Binary => &["0", "1"],
+            SpinnerStyle::Clock => &["🕐", "🕑", "🕒", "🕓", "🕔", "🕕", "🕖", "🕗", "🕘", "🕙", "🕚", "🕛"],
+        }
+    }
+
+    /// Get frame count for this style
+    pub fn frame_count(&self) -> usize {
+        self.frames().len()
+    }
+
+    /// Get name of this style
+    pub fn name(&self) -> &'static str {
+        match self {
+            SpinnerStyle::Dots => "Dots",
+            SpinnerStyle::Line => "Line",
+            SpinnerStyle::Bars => "Bars",
+            SpinnerStyle::Bounce => "Bounce",
+            SpinnerStyle::Arrows => "Arrows",
+            SpinnerStyle::SimpleDots => "Simple Dots",
+            SpinnerStyle::Binary => "Binary",
+            SpinnerStyle::Clock => "Clock",
+        }
+    }
+}
+
+impl Default for SpinnerStyle {
+    fn default() -> Self {
+        SpinnerStyle::Dots
+    }
+}
+
+/// Loading spinner widget
 #[derive(Debug, Clone)]
 pub struct Spinner {
     /// Spinner style
     style: SpinnerStyle,
     /// Current frame index
-    frame_index: usize,
-    /// Whether spinner is active
-    active: bool,
-    /// Optional message to display
-    message: Option<String>,
-    /// Spinner color
-    color: Color,
+    frame: usize,
+    /// Optional label text
+    label: Option<String>,
+    /// Color for spinner
+    color: ratatui::style::Color,
 }
 
 impl Spinner {
-    /// Create a new spinner with the given style
+    /// Create a new spinner
     ///
     /// # Examples
     ///
@@ -114,64 +105,48 @@ impl Spinner {
     /// use toad::widgets::{Spinner, SpinnerStyle};
     ///
     /// let spinner = Spinner::new(SpinnerStyle::Dots);
-    /// assert!(spinner.is_active());
     /// ```
     pub fn new(style: SpinnerStyle) -> Self {
         Self {
             style,
-            frame_index: 0,
-            active: true,
-            message: None,
-            color: Color::Green,
+            frame: 0,
+            label: None,
+            color: ToadTheme::TOAD_GREEN,
         }
     }
 
-    /// Set the spinner message
+    /// Set label text
     ///
     /// # Examples
     ///
     /// ```
     /// use toad::widgets::{Spinner, SpinnerStyle};
     ///
-    /// let mut spinner = Spinner::new(SpinnerStyle::Dots);
-    /// spinner.set_message("Loading data...".to_string());
-    /// assert_eq!(spinner.message(), Some("Loading data..."));
+    /// let spinner = Spinner::new(SpinnerStyle::Dots).label("Loading...");
     /// ```
-    pub fn set_message(&mut self, message: String) {
-        self.message = Some(message);
+    pub fn label(mut self, text: impl Into<String>) -> Self {
+        self.label = Some(text.into());
+        self
     }
 
-    /// Get the spinner message
-    pub fn message(&self) -> Option<&str> {
-        self.message.as_deref()
-    }
-
-    /// Clear the spinner message
-    pub fn clear_message(&mut self) {
-        self.message = None;
-    }
-
-    /// Set the spinner color
+    /// Set spinner color
     ///
     /// # Examples
     ///
     /// ```
     /// use toad::widgets::{Spinner, SpinnerStyle};
-    /// use ratatui::style::Color;
+    /// use toad::theme::ToadTheme;
     ///
-    /// let mut spinner = Spinner::new(SpinnerStyle::Dots);
-    /// spinner.set_color(Color::Cyan);
+    /// let spinner = Spinner::new(SpinnerStyle::Dots).color(ToadTheme::BLUE);
     /// ```
-    pub fn set_color(&mut self, color: Color) {
+    pub fn color(mut self, color: ratatui::style::Color) -> Self {
         self.color = color;
+        self
     }
 
-    /// Get the spinner color
-    pub fn color(&self) -> Color {
-        self.color
-    }
-
-    /// Advance the animation by one frame
+    /// Advance to next frame
+    ///
+    /// Call this on each tick/update cycle
     ///
     /// # Examples
     ///
@@ -179,56 +154,25 @@ impl Spinner {
     /// use toad::widgets::{Spinner, SpinnerStyle};
     ///
     /// let mut spinner = Spinner::new(SpinnerStyle::Dots);
-    /// let initial_frame = spinner.current_frame();
-    ///
+    /// assert_eq!(spinner.current_frame(), 0);
     /// spinner.tick();
-    /// // Frame should have advanced
+    /// assert_eq!(spinner.current_frame(), 1);
     /// ```
     pub fn tick(&mut self) {
-        if self.active {
-            self.frame_index = (self.frame_index + 1) % self.style.frame_count();
-        }
-    }
-
-    /// Reset animation to first frame
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::{Spinner, SpinnerStyle};
-    ///
-    /// let mut spinner = Spinner::new(SpinnerStyle::Dots);
-    /// spinner.tick();
-    /// spinner.tick();
-    ///
-    /// spinner.reset();
-    /// assert_eq!(spinner.frame_index(), 0);
-    /// ```
-    pub fn reset(&mut self) {
-        self.frame_index = 0;
+        self.frame = (self.frame + 1) % self.style.frame_count();
     }
 
     /// Get current frame index
-    pub fn frame_index(&self) -> usize {
-        self.frame_index
+    pub fn current_frame(&self) -> usize {
+        self.frame
     }
 
-    /// Get current frame character
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::{Spinner, SpinnerStyle};
-    ///
-    /// let spinner = Spinner::new(SpinnerStyle::Dots);
-    /// let frame = spinner.current_frame();
-    /// assert!(frame.len() > 0);
-    /// ```
-    pub fn current_frame(&self) -> &str {
-        self.style.frames()[self.frame_index]
+    /// Get current frame symbol
+    pub fn current_symbol(&self) -> &str {
+        self.style.frames()[self.frame]
     }
 
-    /// Check if spinner is active
+    /// Reset to first frame
     ///
     /// # Examples
     ///
@@ -236,94 +180,57 @@ impl Spinner {
     /// use toad::widgets::{Spinner, SpinnerStyle};
     ///
     /// let mut spinner = Spinner::new(SpinnerStyle::Dots);
-    /// assert!(spinner.is_active());
-    ///
-    /// spinner.stop();
-    /// assert!(!spinner.is_active());
+    /// spinner.tick();
+    /// spinner.tick();
+    /// assert_eq!(spinner.current_frame(), 2);
+    /// spinner.reset();
+    /// assert_eq!(spinner.current_frame(), 0);
     /// ```
-    pub fn is_active(&self) -> bool {
-        self.active
+    pub fn reset(&mut self) {
+        self.frame = 0;
     }
 
-    /// Start the spinner
-    pub fn start(&mut self) {
-        self.active = true;
+    /// Set frame index directly
+    pub fn set_frame(&mut self, frame: usize) {
+        self.frame = frame % self.style.frame_count();
     }
 
-    /// Stop the spinner
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::{Spinner, SpinnerStyle};
-    ///
-    /// let mut spinner = Spinner::new(SpinnerStyle::Dots);
-    /// spinner.stop();
-    /// assert!(!spinner.is_active());
-    /// ```
-    pub fn stop(&mut self) {
-        self.active = false;
-    }
-
-    /// Toggle spinner active state
-    pub fn toggle(&mut self) {
-        self.active = !self.active;
-    }
-
-    /// Get the spinner style
+    /// Get spinner style
     pub fn style(&self) -> SpinnerStyle {
         self.style
     }
 
-    /// Set the spinner style
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::{Spinner, SpinnerStyle};
-    ///
-    /// let mut spinner = Spinner::new(SpinnerStyle::Dots);
-    /// spinner.set_style(SpinnerStyle::Bar);
-    /// assert_eq!(spinner.style(), SpinnerStyle::Bar);
-    /// ```
+    /// Set spinner style
     pub fn set_style(&mut self, style: SpinnerStyle) {
         self.style = style;
-        self.reset(); // Reset frame index when style changes
+        self.frame = 0; // Reset frame when changing style
     }
 
-    /// Render the spinner to a string
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::{Spinner, SpinnerStyle};
-    ///
-    /// let mut spinner = Spinner::new(SpinnerStyle::Dots);
-    /// spinner.set_message("Loading...".to_string());
-    ///
-    /// let output = spinner.render_string();
-    /// assert!(output.contains("Loading..."));
-    /// ```
-    pub fn render_string(&self) -> String {
-        if let Some(msg) = &self.message {
-            format!("{} {}", self.current_frame(), msg)
+    /// Render the spinner
+    pub fn render(&self, frame: &mut Frame, area: Rect) {
+        let symbol = self.current_symbol();
+        let spinner_style = Style::default()
+            .fg(self.color)
+            .add_modifier(Modifier::BOLD);
+
+        let text = if let Some(label) = &self.label {
+            Line::from(vec![
+                Span::styled(symbol, spinner_style),
+                Span::raw(" "),
+                Span::styled(label, Style::default().fg(ToadTheme::FOREGROUND)),
+            ])
         } else {
-            self.current_frame().to_string()
-        }
+            Line::from(Span::styled(symbol, spinner_style))
+        };
+
+        let paragraph = Paragraph::new(text).alignment(Alignment::Left);
+        frame.render_widget(paragraph, area);
     }
 }
 
-impl Widget for Spinner {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        if area.width == 0 || area.height == 0 {
-            return;
-        }
-
-        let text = self.render_string();
-        let style = Style::default().fg(self.color);
-
-        // Render spinner text at top-left of area
-        buf.set_string(area.x, area.y, text, style);
+impl Default for Spinner {
+    fn default() -> Self {
+        Self::new(SpinnerStyle::default())
     }
 }
 
@@ -332,43 +239,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_spinner_style_frames() {
-        let dots = SpinnerStyle::Dots;
-        assert!(!dots.frames().is_empty());
-
-        let bar = SpinnerStyle::Bar;
-        assert!(!bar.frames().is_empty());
-    }
-
-    #[test]
     fn test_spinner_creation() {
         let spinner = Spinner::new(SpinnerStyle::Dots);
-        assert!(spinner.is_active());
-        assert_eq!(spinner.frame_index(), 0);
-        assert_eq!(spinner.message(), None);
+        assert_eq!(spinner.current_frame(), 0);
+        assert_eq!(spinner.style(), SpinnerStyle::Dots);
     }
 
     #[test]
     fn test_spinner_tick() {
-        let mut spinner = Spinner::new(SpinnerStyle::Dots);
-        let initial_frame = spinner.frame_index();
+        let mut spinner = Spinner::new(SpinnerStyle::Line);
+        assert_eq!(spinner.current_frame(), 0);
 
         spinner.tick();
-        assert_eq!(spinner.frame_index(), initial_frame + 1);
-    }
+        assert_eq!(spinner.current_frame(), 1);
 
-    #[test]
-    fn test_spinner_tick_wraps() {
-        let mut spinner = Spinner::new(SpinnerStyle::Arc);
-        let frame_count = spinner.style().frame_count();
+        spinner.tick();
+        assert_eq!(spinner.current_frame(), 2);
 
-        // Tick through all frames
-        for _ in 0..frame_count {
-            spinner.tick();
-        }
+        spinner.tick();
+        assert_eq!(spinner.current_frame(), 3);
 
-        // Should wrap to 0
-        assert_eq!(spinner.frame_index(), 0);
+        // Should wrap around
+        spinner.tick();
+        assert_eq!(spinner.current_frame(), 0);
     }
 
     #[test]
@@ -376,103 +269,85 @@ mod tests {
         let mut spinner = Spinner::new(SpinnerStyle::Dots);
         spinner.tick();
         spinner.tick();
+        assert_eq!(spinner.current_frame(), 2);
 
         spinner.reset();
-        assert_eq!(spinner.frame_index(), 0);
+        assert_eq!(spinner.current_frame(), 0);
     }
 
     #[test]
-    fn test_spinner_start_stop() {
-        let mut spinner = Spinner::new(SpinnerStyle::Dots);
-        assert!(spinner.is_active());
-
-        spinner.stop();
-        assert!(!spinner.is_active());
-
-        spinner.start();
-        assert!(spinner.is_active());
+    fn test_spinner_with_label() {
+        let spinner = Spinner::new(SpinnerStyle::Dots).label("Loading...");
+        assert_eq!(spinner.current_frame(), 0);
     }
 
     #[test]
-    fn test_spinner_toggle() {
-        let mut spinner = Spinner::new(SpinnerStyle::Dots);
-        assert!(spinner.is_active());
+    fn test_spinner_set_frame() {
+        let mut spinner = Spinner::new(SpinnerStyle::Arrows);
+        spinner.set_frame(5);
+        assert_eq!(spinner.current_frame(), 5);
 
-        spinner.toggle();
-        assert!(!spinner.is_active());
-
-        spinner.toggle();
-        assert!(spinner.is_active());
+        // Test wrap around
+        spinner.set_frame(20);
+        assert!(spinner.current_frame() < SpinnerStyle::Arrows.frame_count());
     }
 
     #[test]
-    fn test_spinner_message() {
-        let mut spinner = Spinner::new(SpinnerStyle::Dots);
-        assert_eq!(spinner.message(), None);
+    fn test_spinner_current_symbol() {
+        let mut spinner = Spinner::new(SpinnerStyle::Line);
+        assert_eq!(spinner.current_symbol(), "|");
 
-        spinner.set_message("Loading...".to_string());
-        assert_eq!(spinner.message(), Some("Loading..."));
-
-        spinner.clear_message();
-        assert_eq!(spinner.message(), None);
-    }
-
-    #[test]
-    fn test_spinner_color() {
-        let mut spinner = Spinner::new(SpinnerStyle::Dots);
-        assert_eq!(spinner.color(), Color::Green);
-
-        spinner.set_color(Color::Cyan);
-        assert_eq!(spinner.color(), Color::Cyan);
-    }
-
-    #[test]
-    fn test_spinner_style() {
-        let mut spinner = Spinner::new(SpinnerStyle::Dots);
-        assert_eq!(spinner.style(), SpinnerStyle::Dots);
-
-        spinner.set_style(SpinnerStyle::Bar);
-        assert_eq!(spinner.style(), SpinnerStyle::Bar);
-        assert_eq!(spinner.frame_index(), 0); // Should reset
-    }
-
-    #[test]
-    fn test_spinner_render_string() {
-        let mut spinner = Spinner::new(SpinnerStyle::Dots);
-        let output = spinner.render_string();
-        assert!(!output.is_empty());
-
-        spinner.set_message("Loading data...".to_string());
-        let output = spinner.render_string();
-        assert!(output.contains("Loading data..."));
-    }
-
-    #[test]
-    fn test_inactive_spinner_no_tick() {
-        let mut spinner = Spinner::new(SpinnerStyle::Dots);
-        spinner.stop();
-
-        let initial_frame = spinner.frame_index();
         spinner.tick();
+        assert_eq!(spinner.current_symbol(), "/");
 
-        // Should not advance when inactive
-        assert_eq!(spinner.frame_index(), initial_frame);
+        spinner.tick();
+        assert_eq!(spinner.current_symbol(), "-");
+
+        spinner.tick();
+        assert_eq!(spinner.current_symbol(), "\\");
     }
 
     #[test]
-    fn test_all_spinner_styles() {
-        let styles = [
-            SpinnerStyle::Dots,
-            SpinnerStyle::Bar,
-            SpinnerStyle::Arc,
-            SpinnerStyle::Line,
-            SpinnerStyle::Bounce,
-            SpinnerStyle::Clock,
-        ];
+    fn test_spinner_styles() {
+        assert_eq!(SpinnerStyle::Dots.name(), "Dots");
+        assert_eq!(SpinnerStyle::Line.name(), "Line");
+        assert_eq!(SpinnerStyle::Bars.name(), "Bars");
+        assert_eq!(SpinnerStyle::Bounce.name(), "Bounce");
+        assert_eq!(SpinnerStyle::Arrows.name(), "Arrows");
+        assert_eq!(SpinnerStyle::SimpleDots.name(), "Simple Dots");
+        assert_eq!(SpinnerStyle::Binary.name(), "Binary");
+        assert_eq!(SpinnerStyle::Clock.name(), "Clock");
+    }
 
-        for style in &styles {
-            let spinner = Spinner::new(*style);
-            assert!(!spinner.current_frame().is_empty());
-        }
+    #[test]
+    fn test_spinner_frame_counts() {
+        assert_eq!(SpinnerStyle::Dots.frame_count(), 10);
+        assert_eq!(SpinnerStyle::Line.frame_count(), 4);
+        assert_eq!(SpinnerStyle::Bars.frame_count(), 14);
+        assert_eq!(SpinnerStyle::Bounce.frame_count(), 8);
+        assert_eq!(SpinnerStyle::Arrows.frame_count(), 8);
+        assert_eq!(SpinnerStyle::SimpleDots.frame_count(), 4);
+        assert_eq!(SpinnerStyle::Binary.frame_count(), 2);
+        assert_eq!(SpinnerStyle::Clock.frame_count(), 12);
+    }
+
+    #[test]
+    fn test_spinner_set_style() {
+        let mut spinner = Spinner::new(SpinnerStyle::Dots);
+        spinner.tick();
+        spinner.tick();
+        assert_eq!(spinner.current_frame(), 2);
+
+        // Changing style should reset frame
+        spinner.set_style(SpinnerStyle::Line);
+        assert_eq!(spinner.current_frame(), 0);
+        assert_eq!(spinner.style(), SpinnerStyle::Line);
+    }
+
+    #[test]
+    fn test_spinner_default() {
+        let spinner = Spinner::default();
+        assert_eq!(spinner.style(), SpinnerStyle::Dots);
+        assert_eq!(spinner.current_frame(), 0);
     }
 }

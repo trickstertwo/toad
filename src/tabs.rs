@@ -1,578 +1,247 @@
-//! Tab system for managing multiple workspaces
-//!
-//! Provides tab management functionality allowing users to work with multiple
-//! independent workspaces in a single session.
-//!
-//! # Examples
-//!
-//! ```
-//! use toad::tabs::{Tab, TabManager};
-//!
-//! // Create tab manager (starts with default "Main" tab)
-//! let mut tabs = TabManager::new();
-//! assert_eq!(tabs.tab_count(), 1);
-//!
-//! // Add more tabs
-//! tabs.add_tab("Debug".to_string());
-//! tabs.add_tab("Test".to_string());
-//!
-//! assert_eq!(tabs.tab_count(), 3);
-//! assert_eq!(tabs.active_index(), 0);
-//! ```
-//!
-//! # Tab Navigation
-//!
-//! - Number keys (1-9): Jump to specific tab
-//! - Tab: Cycle to next tab
-//! - Shift+Tab: Cycle to previous tab
-//! - gt: Vim-style next tab (future)
-//! - gT: Vim-style previous tab (future)
+/// Tab system for managing multiple workspaces
+///
+/// Provides a tab-based interface for organizing different views or workspaces
 
 use serde::{Deserialize, Serialize};
+use std::fmt;
+
+/// Unique tab identifier
+pub type TabId = usize;
 
 /// A single tab in the tab system
-///
-/// Each tab represents an independent workspace with its own state.
-///
-/// # Examples
-///
-/// ```
-/// use toad::tabs::Tab;
-///
-/// let tab = Tab::new("Project 1".to_string());
-/// assert_eq!(tab.name(), "Project 1");
-/// assert!(!tab.is_modified());
-/// ```
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Tab {
-    /// Unique identifier for the tab
-    id: usize,
-
-    /// Display name of the tab
-    name: String,
-
-    /// Whether the tab has unsaved changes
-    modified: bool,
-
-    /// Optional icon for the tab (for future use)
-    icon: Option<String>,
+    /// Unique ID
+    pub id: TabId,
+    /// Display title
+    pub title: String,
+    /// Optional icon
+    pub icon: Option<String>,
+    /// Whether this tab can be closed
+    pub closable: bool,
+    /// Whether this tab has unsaved changes
+    pub modified: bool,
 }
 
 impl Tab {
-    /// Create a new tab with the given name
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::Tab;
-    ///
-    /// let tab = Tab::new("Home".to_string());
-    /// assert_eq!(tab.name(), "Home");
-    /// ```
-    pub fn new(name: String) -> Self {
-        Self {
-            id: 0, // Will be set by TabManager
-            name,
-            modified: false,
-            icon: None,
-        }
-    }
-
-    /// Create a tab with a specific ID
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::Tab;
-    ///
-    /// let tab = Tab::with_id(5, "Tab 5".to_string());
-    /// assert_eq!(tab.id(), 5);
-    /// ```
-    pub fn with_id(id: usize, name: String) -> Self {
+    /// Create a new tab
+    pub fn new(id: TabId, title: impl Into<String>) -> Self {
         Self {
             id,
-            name,
-            modified: false,
+            title: title.into(),
             icon: None,
+            closable: true,
+            modified: false,
         }
     }
 
-    /// Get the tab ID
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::Tab;
-    ///
-    /// let tab = Tab::with_id(3, "Tab".to_string());
-    /// assert_eq!(tab.id(), 3);
-    /// ```
-    pub fn id(&self) -> usize {
-        self.id
+    /// Set icon
+    pub fn with_icon(mut self, icon: impl Into<String>) -> Self {
+        self.icon = Some(icon.into());
+        self
     }
 
-    /// Set the tab ID
-    pub(crate) fn set_id(&mut self, id: usize) {
-        self.id = id;
+    /// Set closable
+    pub fn with_closable(mut self, closable: bool) -> Self {
+        self.closable = closable;
+        self
     }
 
-    /// Get the tab name
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::Tab;
-    ///
-    /// let tab = Tab::new("My Tab".to_string());
-    /// assert_eq!(tab.name(), "My Tab");
-    /// ```
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    /// Set the tab name
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::Tab;
-    ///
-    /// let mut tab = Tab::new("Old Name".to_string());
-    /// tab.set_name("New Name".to_string());
-    /// assert_eq!(tab.name(), "New Name");
-    /// ```
-    pub fn set_name(&mut self, name: String) {
-        self.name = name;
-    }
-
-    /// Check if tab has unsaved changes
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::Tab;
-    ///
-    /// let mut tab = Tab::new("Tab".to_string());
-    /// assert!(!tab.is_modified());
-    ///
-    /// tab.set_modified(true);
-    /// assert!(tab.is_modified());
-    /// ```
-    pub fn is_modified(&self) -> bool {
-        self.modified
-    }
-
-    /// Set the modified status
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::Tab;
-    ///
-    /// let mut tab = Tab::new("Tab".to_string());
-    /// tab.set_modified(true);
-    /// assert!(tab.is_modified());
-    /// ```
+    /// Set modified state
     pub fn set_modified(&mut self, modified: bool) {
         self.modified = modified;
     }
 
-    /// Get the tab icon
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::Tab;
-    ///
-    /// let tab = Tab::new("Tab".to_string());
-    /// assert_eq!(tab.icon(), None);
-    /// ```
-    pub fn icon(&self) -> Option<&String> {
-        self.icon.as_ref()
-    }
-
-    /// Set the tab icon
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::Tab;
-    ///
-    /// let mut tab = Tab::new("Tab".to_string());
-    /// tab.set_icon(Some("📁".to_string()));
-    /// assert_eq!(tab.icon(), Some(&"📁".to_string()));
-    /// ```
-    pub fn set_icon(&mut self, icon: Option<String>) {
-        self.icon = icon;
-    }
-
-    /// Get a display string for the tab (with modified indicator)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::Tab;
-    ///
-    /// let mut tab = Tab::new("File".to_string());
-    /// assert_eq!(tab.display_name(), "File");
-    ///
-    /// tab.set_modified(true);
-    /// assert_eq!(tab.display_name(), "File *");
-    /// ```
+    /// Get display name (with modification indicator)
     pub fn display_name(&self) -> String {
         if self.modified {
-            format!("{} *", self.name)
+            format!("{}*", self.title)
         } else {
-            self.name.clone()
+            self.title.clone()
         }
     }
 }
 
-/// Manages a collection of tabs with navigation
-///
-/// # Examples
-///
-/// ```
-/// use toad::tabs::TabManager;
-///
-/// let mut tabs = TabManager::new();
-/// tabs.add_tab("Tab 2".to_string());
-///
-/// assert_eq!(tabs.tab_count(), 2);
-/// assert_eq!(tabs.active_tab().map(|t| t.name()), Some("Main"));
-///
-/// tabs.next_tab();
-/// assert_eq!(tabs.active_tab().map(|t| t.name()), Some("Tab 2"));
-/// ```
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TabManager {
-    /// List of tabs
-    tabs: Vec<Tab>,
-
-    /// Index of the currently active tab
-    active_index: usize,
-
-    /// Next ID to assign to a new tab
-    next_id: usize,
-
-    /// Maximum number of tabs allowed
-    max_tabs: usize,
+impl fmt::Display for Tab {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.display_name())
+    }
 }
 
-impl Default for TabManager {
-    fn default() -> Self {
-        Self::new()
-    }
+/// Tab manager for organizing multiple tabs
+#[derive(Debug, Clone)]
+pub struct TabManager {
+    /// All tabs
+    tabs: Vec<Tab>,
+    /// Currently active tab index
+    active: Option<usize>,
+    /// Next tab ID to assign
+    next_id: TabId,
 }
 
 impl TabManager {
-    /// Create a new tab manager with a default tab
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let tabs = TabManager::new();
-    /// assert_eq!(tabs.tab_count(), 1);
-    /// assert_eq!(tabs.active_tab().map(|t| t.name()), Some("Main"));
-    /// ```
+    /// Create a new tab manager
     pub fn new() -> Self {
-        let mut manager = Self {
+        Self {
             tabs: Vec::new(),
-            active_index: 0,
+            active: None,
             next_id: 0,
-            max_tabs: 9, // Limit to 9 for number key navigation
-        };
+        }
+    }
 
-        // Add default tab
-        manager.add_tab("Main".to_string());
+    /// Create with an initial tab
+    pub fn with_tab(title: impl Into<String>) -> Self {
+        let mut manager = Self::new();
+        manager.add_tab(title);
         manager
     }
 
-    /// Create an empty tab manager (no default tab)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let tabs = TabManager::empty();
-    /// assert_eq!(tabs.tab_count(), 0);
-    /// ```
-    pub fn empty() -> Self {
-        Self {
-            tabs: Vec::new(),
-            active_index: 0,
-            next_id: 0,
-            max_tabs: 9,
-        }
-    }
-
-    /// Add a new tab with the given name
-    ///
-    /// Returns the ID of the new tab, or None if max tabs reached.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let mut tabs = TabManager::empty();
-    /// let id = tabs.add_tab("New Tab".to_string());
-    /// assert_eq!(id, Some(0));
-    /// assert_eq!(tabs.tab_count(), 1);
-    /// ```
-    pub fn add_tab(&mut self, name: String) -> Option<usize> {
-        if self.tabs.len() >= self.max_tabs {
-            return None;
-        }
-
+    /// Add a new tab
+    pub fn add_tab(&mut self, title: impl Into<String>) -> TabId {
         let id = self.next_id;
         self.next_id += 1;
 
-        let mut tab = Tab::new(name);
-        tab.set_id(id);
+        let tab = Tab::new(id, title);
         self.tabs.push(tab);
 
-        Some(id)
-    }
-
-    /// Remove the tab at the given index
-    ///
-    /// Returns the removed tab, or None if index is invalid.
-    /// Cannot remove the last tab.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let mut tabs = TabManager::new();
-    /// tabs.add_tab("Tab 2".to_string());
-    ///
-    /// let removed = tabs.remove_tab(1);
-    /// assert!(removed.is_some());
-    /// assert_eq!(tabs.tab_count(), 1);
-    /// ```
-    pub fn remove_tab(&mut self, index: usize) -> Option<Tab> {
-        // Don't allow removing the last tab
-        if self.tabs.len() <= 1 || index >= self.tabs.len() {
-            return None;
+        // Auto-activate if this is the first tab
+        if self.tabs.len() == 1 {
+            self.active = Some(0);
         }
 
-        let tab = self.tabs.remove(index);
+        id
+    }
 
-        // Adjust active index if needed
-        if self.active_index >= self.tabs.len() {
-            self.active_index = self.tabs.len().saturating_sub(1);
-        } else if self.active_index > index {
-            self.active_index -= 1;
+    /// Add a tab with custom configuration
+    pub fn add_tab_with(&mut self, tab: Tab) -> TabId {
+        let id = tab.id;
+        self.tabs.push(tab);
+
+        if self.tabs.len() == 1 {
+            self.active = Some(0);
         }
 
-        Some(tab)
+        // Update next_id to avoid conflicts
+        if id >= self.next_id {
+            self.next_id = id + 1;
+        }
+
+        id
     }
 
-    /// Get the number of tabs
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let tabs = TabManager::new();
-    /// assert_eq!(tabs.tab_count(), 1);
-    /// ```
-    pub fn tab_count(&self) -> usize {
-        self.tabs.len()
+    /// Close a tab by ID
+    pub fn close_tab(&mut self, id: TabId) -> Option<Tab> {
+        if let Some(idx) = self.tabs.iter().position(|t| t.id == id) {
+            let tab = self.tabs.remove(idx);
+
+            // Adjust active index
+            if let Some(active_idx) = self.active {
+                if active_idx == idx {
+                    // Closing active tab
+                    if self.tabs.is_empty() {
+                        self.active = None;
+                    } else if active_idx >= self.tabs.len() {
+                        self.active = Some(self.tabs.len() - 1);
+                    }
+                } else if active_idx > idx {
+                    self.active = Some(active_idx - 1);
+                }
+            }
+
+            Some(tab)
+        } else {
+            None
+        }
     }
 
-    /// Get the active tab index
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let tabs = TabManager::new();
-    /// assert_eq!(tabs.active_index(), 0);
-    /// ```
-    pub fn active_index(&self) -> usize {
-        self.active_index
+    /// Get tab by ID
+    pub fn get_tab(&self, id: TabId) -> Option<&Tab> {
+        self.tabs.iter().find(|t| t.id == id)
     }
 
-    /// Get reference to the active tab
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let tabs = TabManager::new();
-    /// assert_eq!(tabs.active_tab().map(|t| t.name()), Some("Main"));
-    /// ```
-    pub fn active_tab(&self) -> Option<&Tab> {
-        self.tabs.get(self.active_index)
+    /// Get mutable tab by ID
+    pub fn get_tab_mut(&mut self, id: TabId) -> Option<&mut Tab> {
+        self.tabs.iter_mut().find(|t| t.id == id)
     }
 
-    /// Get mutable reference to the active tab
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let mut tabs = TabManager::new();
-    /// if let Some(tab) = tabs.active_tab_mut() {
-    ///     tab.set_modified(true);
-    /// }
-    /// assert!(tabs.active_tab().unwrap().is_modified());
-    /// ```
-    pub fn active_tab_mut(&mut self) -> Option<&mut Tab> {
-        self.tabs.get_mut(self.active_index)
-    }
-
-    /// Get reference to a tab by index
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let tabs = TabManager::new();
-    /// assert_eq!(tabs.tab(0).map(|t| t.name()), Some("Main"));
-    /// assert_eq!(tabs.tab(1), None);
-    /// ```
-    pub fn tab(&self, index: usize) -> Option<&Tab> {
-        self.tabs.get(index)
-    }
-
-    /// Get mutable reference to a tab by index
-    pub fn tab_mut(&mut self, index: usize) -> Option<&mut Tab> {
-        self.tabs.get_mut(index)
-    }
-
-    /// Get all tabs as a slice
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let tabs = TabManager::new();
-    /// assert_eq!(tabs.tabs().len(), 1);
-    /// ```
+    /// Get all tabs
     pub fn tabs(&self) -> &[Tab] {
         &self.tabs
     }
 
-    /// Switch to the next tab (wraps around)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let mut tabs = TabManager::new();
-    /// tabs.add_tab("Tab 2".to_string());
-    ///
-    /// assert_eq!(tabs.active_index(), 0);
-    /// tabs.next_tab();
-    /// assert_eq!(tabs.active_index(), 1);
-    /// tabs.next_tab();
-    /// assert_eq!(tabs.active_index(), 0); // Wrapped around
-    /// ```
+    /// Get active tab
+    pub fn active_tab(&self) -> Option<&Tab> {
+        self.active.and_then(|idx| self.tabs.get(idx))
+    }
+
+    /// Get active tab ID
+    pub fn active_tab_id(&self) -> Option<TabId> {
+        self.active_tab().map(|t| t.id)
+    }
+
+    /// Set active tab by ID
+    pub fn set_active(&mut self, id: TabId) -> bool {
+        if let Some(idx) = self.tabs.iter().position(|t| t.id == id) {
+            self.active = Some(idx);
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Switch to next tab
     pub fn next_tab(&mut self) {
         if self.tabs.is_empty() {
             return;
         }
 
-        self.active_index = (self.active_index + 1) % self.tabs.len();
+        self.active = Some(match self.active {
+            Some(idx) if idx + 1 < self.tabs.len() => idx + 1,
+            _ => 0,
+        });
     }
 
-    /// Switch to the previous tab (wraps around)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let mut tabs = TabManager::new();
-    /// tabs.add_tab("Tab 2".to_string());
-    ///
-    /// assert_eq!(tabs.active_index(), 0);
-    /// tabs.prev_tab();
-    /// assert_eq!(tabs.active_index(), 1); // Wrapped to last
-    /// tabs.prev_tab();
-    /// assert_eq!(tabs.active_index(), 0);
-    /// ```
-    pub fn prev_tab(&mut self) {
+    /// Switch to previous tab
+    pub fn previous_tab(&mut self) {
         if self.tabs.is_empty() {
             return;
         }
 
-        if self.active_index == 0 {
-            self.active_index = self.tabs.len() - 1;
-        } else {
-            self.active_index -= 1;
-        }
+        self.active = Some(match self.active {
+            Some(0) | None => self.tabs.len() - 1,
+            Some(idx) => idx - 1,
+        });
     }
 
-    /// Switch to a specific tab by index
-    ///
-    /// Returns true if successful, false if index is invalid.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let mut tabs = TabManager::new();
-    /// tabs.add_tab("Tab 2".to_string());
-    ///
-    /// assert!(tabs.switch_to(1));
-    /// assert_eq!(tabs.active_index(), 1);
-    ///
-    /// assert!(!tabs.switch_to(5)); // Invalid index
-    /// ```
-    pub fn switch_to(&mut self, index: usize) -> bool {
+    /// Switch to tab by index (0-based)
+    pub fn switch_to_index(&mut self, index: usize) -> bool {
         if index < self.tabs.len() {
-            self.active_index = index;
+            self.active = Some(index);
             true
         } else {
             false
         }
     }
 
-    /// Switch to tab by number key (1-9)
-    ///
-    /// Returns true if successful, false if number is invalid.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::tabs::TabManager;
-    ///
-    /// let mut tabs = TabManager::new();
-    /// tabs.add_tab("Tab 2".to_string());
-    ///
-    /// assert!(tabs.switch_to_number(2)); // Switch to second tab
-    /// assert_eq!(tabs.active_index(), 1);
-    ///
-    /// assert!(!tabs.switch_to_number(5)); // No 5th tab
-    /// ```
-    pub fn switch_to_number(&mut self, number: usize) -> bool {
-        if number > 0 && number <= self.tabs.len() {
-            self.active_index = number - 1;
-            true
-        } else {
-            false
-        }
+    /// Get tab count
+    pub fn count(&self) -> usize {
+        self.tabs.len()
     }
 
-    /// Get maximum number of tabs allowed
-    pub fn max_tabs(&self) -> usize {
-        self.max_tabs
+    /// Check if manager is empty
+    pub fn is_empty(&self) -> bool {
+        self.tabs.is_empty()
+    }
+
+    /// Get active tab index
+    pub fn active_index(&self) -> Option<usize> {
+        self.active
+    }
+}
+
+impl Default for TabManager {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -582,211 +251,112 @@ mod tests {
 
     #[test]
     fn test_tab_creation() {
-        let tab = Tab::new("Test".to_string());
-        assert_eq!(tab.name(), "Test");
-        assert_eq!(tab.id(), 0);
-        assert!(!tab.is_modified());
-        assert_eq!(tab.icon(), None);
-    }
-
-    #[test]
-    fn test_tab_with_id() {
-        let tab = Tab::with_id(5, "Tab 5".to_string());
-        assert_eq!(tab.id(), 5);
-        assert_eq!(tab.name(), "Tab 5");
-    }
-
-    #[test]
-    fn test_tab_setters() {
-        let mut tab = Tab::new("Original".to_string());
-
-        tab.set_name("Changed".to_string());
-        assert_eq!(tab.name(), "Changed");
-
-        tab.set_modified(true);
-        assert!(tab.is_modified());
-
-        tab.set_icon(Some("🔧".to_string()));
-        assert_eq!(tab.icon(), Some(&"🔧".to_string()));
+        let tab = Tab::new(0, "Test Tab");
+        assert_eq!(tab.id, 0);
+        assert_eq!(tab.title, "Test Tab");
+        assert!(tab.closable);
+        assert!(!tab.modified);
     }
 
     #[test]
     fn test_tab_display_name() {
-        let mut tab = Tab::new("File".to_string());
-        assert_eq!(tab.display_name(), "File");
+        let mut tab = Tab::new(0, "Document");
+        assert_eq!(tab.display_name(), "Document");
 
         tab.set_modified(true);
-        assert_eq!(tab.display_name(), "File *");
+        assert_eq!(tab.display_name(), "Document*");
     }
 
     #[test]
-    fn test_tab_manager_creation() {
-        let tabs = TabManager::new();
-        assert_eq!(tabs.tab_count(), 1);
-        assert_eq!(tabs.active_index(), 0);
-        assert_eq!(tabs.active_tab().map(|t| t.name()), Some("Main"));
+    fn test_tab_manager_add() {
+        let mut manager = TabManager::new();
+        assert_eq!(manager.count(), 0);
+
+        let id1 = manager.add_tab("Tab 1");
+        assert_eq!(manager.count(), 1);
+        assert_eq!(manager.active_tab_id(), Some(id1));
+
+        let _id2 = manager.add_tab("Tab 2");
+        assert_eq!(manager.count(), 2);
+        assert_eq!(manager.active_tab_id(), Some(id1)); // Active doesn't change
     }
 
     #[test]
-    fn test_tab_manager_empty() {
-        let tabs = TabManager::empty();
-        assert_eq!(tabs.tab_count(), 0);
-        assert_eq!(tabs.active_tab(), None);
+    fn test_tab_manager_close() {
+        let mut manager = TabManager::new();
+        let _id1 = manager.add_tab("Tab 1");
+        let id2 = manager.add_tab("Tab 2");
+        let _id3 = manager.add_tab("Tab 3");
+
+        manager.set_active(id2);
+        assert_eq!(manager.count(), 3);
+
+        // Close active tab
+        let closed = manager.close_tab(id2);
+        assert!(closed.is_some());
+        assert_eq!(manager.count(), 2);
+        assert_ne!(manager.active_tab_id(), Some(id2));
+
+        // Close non-existent tab
+        let closed = manager.close_tab(999);
+        assert!(closed.is_none());
     }
 
     #[test]
-    fn test_add_tab() {
-        let mut tabs = TabManager::empty();
+    fn test_tab_manager_navigation() {
+        let mut manager = TabManager::new();
+        manager.add_tab("Tab 1");
+        manager.add_tab("Tab 2");
+        manager.add_tab("Tab 3");
 
-        let id1 = tabs.add_tab("Tab 1".to_string());
-        assert_eq!(id1, Some(0));
-        assert_eq!(tabs.tab_count(), 1);
+        assert_eq!(manager.active_index(), Some(0));
 
-        let id2 = tabs.add_tab("Tab 2".to_string());
-        assert_eq!(id2, Some(1));
-        assert_eq!(tabs.tab_count(), 2);
+        manager.next_tab();
+        assert_eq!(manager.active_index(), Some(1));
+
+        manager.next_tab();
+        assert_eq!(manager.active_index(), Some(2));
+
+        manager.next_tab(); // Wrap around
+        assert_eq!(manager.active_index(), Some(0));
+
+        manager.previous_tab(); // Wrap to end
+        assert_eq!(manager.active_index(), Some(2));
     }
 
     #[test]
-    fn test_max_tabs() {
-        let mut tabs = TabManager::empty();
+    fn test_tab_manager_switch_by_index() {
+        let mut manager = TabManager::new();
+        manager.add_tab("Tab 1");
+        manager.add_tab("Tab 2");
+        manager.add_tab("Tab 3");
 
-        // Add 9 tabs (max)
-        for i in 1..=9 {
-            let id = tabs.add_tab(format!("Tab {}", i));
-            assert!(id.is_some());
-        }
+        assert!(manager.switch_to_index(2));
+        assert_eq!(manager.active_index(), Some(2));
 
-        assert_eq!(tabs.tab_count(), 9);
-
-        // Try to add 10th tab
-        let id = tabs.add_tab("Tab 10".to_string());
-        assert_eq!(id, None);
-        assert_eq!(tabs.tab_count(), 9);
+        assert!(!manager.switch_to_index(10));
+        assert_eq!(manager.active_index(), Some(2)); // Unchanged
     }
 
     #[test]
-    fn test_remove_tab() {
-        let mut tabs = TabManager::new();
-        tabs.add_tab("Tab 2".to_string());
-        tabs.add_tab("Tab 3".to_string());
+    fn test_tab_manager_get_tab() {
+        let mut manager = TabManager::new();
+        let id = manager.add_tab("Test");
 
-        assert_eq!(tabs.tab_count(), 3);
+        let tab = manager.get_tab(id);
+        assert!(tab.is_some());
+        assert_eq!(tab.unwrap().title, "Test");
 
-        let removed = tabs.remove_tab(1);
-        assert!(removed.is_some());
-        assert_eq!(removed.unwrap().name(), "Tab 2");
-        assert_eq!(tabs.tab_count(), 2);
+        let tab_mut = manager.get_tab_mut(id);
+        assert!(tab_mut.is_some());
+        tab_mut.unwrap().set_modified(true);
+
+        assert!(manager.get_tab(id).unwrap().modified);
     }
 
     #[test]
-    fn test_cannot_remove_last_tab() {
-        let mut tabs = TabManager::new();
-
-        let removed = tabs.remove_tab(0);
-        assert_eq!(removed, None);
-        assert_eq!(tabs.tab_count(), 1);
-    }
-
-    #[test]
-    fn test_remove_tab_adjusts_active_index() {
-        let mut tabs = TabManager::new();
-        tabs.add_tab("Tab 2".to_string());
-        tabs.add_tab("Tab 3".to_string());
-
-        tabs.switch_to(2); // Active on last tab
-        assert_eq!(tabs.active_index(), 2);
-
-        tabs.remove_tab(2);
-        assert_eq!(tabs.active_index(), 1); // Adjusted
-    }
-
-    #[test]
-    fn test_next_tab() {
-        let mut tabs = TabManager::new();
-        tabs.add_tab("Tab 2".to_string());
-        tabs.add_tab("Tab 3".to_string());
-
-        assert_eq!(tabs.active_index(), 0);
-
-        tabs.next_tab();
-        assert_eq!(tabs.active_index(), 1);
-
-        tabs.next_tab();
-        assert_eq!(tabs.active_index(), 2);
-
-        tabs.next_tab(); // Wrap around
-        assert_eq!(tabs.active_index(), 0);
-    }
-
-    #[test]
-    fn test_prev_tab() {
-        let mut tabs = TabManager::new();
-        tabs.add_tab("Tab 2".to_string());
-        tabs.add_tab("Tab 3".to_string());
-
-        assert_eq!(tabs.active_index(), 0);
-
-        tabs.prev_tab(); // Wrap to last
-        assert_eq!(tabs.active_index(), 2);
-
-        tabs.prev_tab();
-        assert_eq!(tabs.active_index(), 1);
-
-        tabs.prev_tab();
-        assert_eq!(tabs.active_index(), 0);
-    }
-
-    #[test]
-    fn test_switch_to() {
-        let mut tabs = TabManager::new();
-        tabs.add_tab("Tab 2".to_string());
-
-        assert!(tabs.switch_to(1));
-        assert_eq!(tabs.active_index(), 1);
-
-        assert!(!tabs.switch_to(5)); // Invalid
-        assert_eq!(tabs.active_index(), 1); // Unchanged
-    }
-
-    #[test]
-    fn test_switch_to_number() {
-        let mut tabs = TabManager::new();
-        tabs.add_tab("Tab 2".to_string());
-        tabs.add_tab("Tab 3".to_string());
-
-        assert!(tabs.switch_to_number(2));
-        assert_eq!(tabs.active_index(), 1);
-
-        assert!(tabs.switch_to_number(3));
-        assert_eq!(tabs.active_index(), 2);
-
-        assert!(!tabs.switch_to_number(0)); // Invalid (numbers are 1-based)
-        assert!(!tabs.switch_to_number(5)); // Out of range
-    }
-
-    #[test]
-    fn test_tab_access() {
-        let mut tabs = TabManager::new();
-        tabs.add_tab("Tab 2".to_string());
-
-        assert_eq!(tabs.tab(0).map(|t| t.name()), Some("Main"));
-        assert_eq!(tabs.tab(1).map(|t| t.name()), Some("Tab 2"));
-        assert_eq!(tabs.tab(5), None);
-
-        if let Some(tab) = tabs.tab_mut(0) {
-            tab.set_modified(true);
-        }
-
-        assert!(tabs.tab(0).unwrap().is_modified());
-    }
-
-    #[test]
-    fn test_tabs_slice() {
-        let tabs = TabManager::new();
-        let all_tabs = tabs.tabs();
-
-        assert_eq!(all_tabs.len(), 1);
-        assert_eq!(all_tabs[0].name(), "Main");
+    fn test_tab_with_icon() {
+        let tab = Tab::new(0, "File").with_icon("📄");
+        assert_eq!(tab.icon, Some("📄".to_string()));
     }
 }

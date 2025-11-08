@@ -1,57 +1,180 @@
-//! Breadcrumbs widget for navigation trails
-//!
-//! Displays a navigation path showing the current location in a hierarchy.
-//!
-//! # Examples
-//!
-//! ```
-//! use toad::widgets::Breadcrumbs;
-//!
-//! let breadcrumbs = Breadcrumbs::new()
-//!     .add("Home")
-//!     .add("Projects")
-//!     .add("Toad")
-//!     .add("src");
-//!
-//! assert_eq!(breadcrumbs.path_count(), 4);
-//! ```
+/// Breadcrumbs navigation widget
+///
+/// Shows hierarchical navigation path with clickable segments
 
+use crate::theme::ToadTheme;
 use ratatui::{
-    buffer::Buffer,
     layout::Rect,
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Widget},
+    widgets::Paragraph,
+    Frame,
 };
 
-/// Breadcrumbs widget for navigation trails
-///
-/// Displays the current location in a hierarchy as a path.
-///
-/// # Examples
-///
-/// ```
-/// use toad::widgets::Breadcrumbs;
-///
-/// let breadcrumbs = Breadcrumbs::new()
-///     .add("Home")
-///     .add("Documents")
-///     .add("file.txt");
-///
-/// assert_eq!(breadcrumbs.current(), Some("file.txt"));
-/// ```
+/// A single breadcrumb segment
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BreadcrumbSegment {
+    /// Label for this segment
+    pub label: String,
+    /// Optional icon
+    pub icon: Option<String>,
+    /// Whether this segment is clickable
+    pub clickable: bool,
+}
+
+impl BreadcrumbSegment {
+    /// Create a new breadcrumb segment
+    pub fn new(label: impl Into<String>) -> Self {
+        Self {
+            label: label.into(),
+            icon: None,
+            clickable: true,
+        }
+    }
+
+    /// Set icon
+    pub fn with_icon(mut self, icon: impl Into<String>) -> Self {
+        self.icon = Some(icon.into());
+        self
+    }
+
+    /// Set clickable
+    pub fn with_clickable(mut self, clickable: bool) -> Self {
+        self.clickable = clickable;
+        self
+    }
+}
+
+/// Breadcrumbs navigation widget
 #[derive(Debug, Clone)]
 pub struct Breadcrumbs {
-    /// Path components
-    path: Vec<String>,
-    /// Separator character
+    /// Path segments
+    segments: Vec<BreadcrumbSegment>,
+    /// Separator between segments
     separator: String,
-    /// Show icons for path types
-    show_icons: bool,
-    /// Truncate long paths
-    truncate: bool,
-    /// Maximum path length before truncation
-    max_length: usize,
+    /// Currently hovered segment index
+    hovered: Option<usize>,
+}
+
+impl Breadcrumbs {
+    /// Create a new breadcrumbs widget
+    pub fn new() -> Self {
+        Self {
+            segments: Vec::new(),
+            separator: " / ".to_string(),
+            hovered: None,
+        }
+    }
+
+    /// Create from path string
+    pub fn from_path(path: &str) -> Self {
+        let segments = path
+            .split('/')
+            .filter(|s| !s.is_empty())
+            .map(|s| BreadcrumbSegment::new(s))
+            .collect();
+
+        Self {
+            segments,
+            separator: " / ".to_string(),
+            hovered: None,
+        }
+    }
+
+    /// Set segments
+    pub fn set_segments(&mut self, segments: Vec<BreadcrumbSegment>) {
+        self.segments = segments;
+    }
+
+    /// Add a segment
+    pub fn push(&mut self, segment: BreadcrumbSegment) {
+        self.segments.push(segment);
+    }
+
+    /// Remove last segment
+    pub fn pop(&mut self) -> Option<BreadcrumbSegment> {
+        self.segments.pop()
+    }
+
+    /// Get segments
+    pub fn segments(&self) -> &[BreadcrumbSegment] {
+        &self.segments
+    }
+
+    /// Set separator
+    pub fn set_separator(&mut self, separator: impl Into<String>) {
+        self.separator = separator.into();
+    }
+
+    /// Set hovered segment
+    pub fn set_hovered(&mut self, index: Option<usize>) {
+        self.hovered = index;
+    }
+
+    /// Get hovered segment index
+    pub fn hovered(&self) -> Option<usize> {
+        self.hovered
+    }
+
+    /// Clear all segments
+    pub fn clear(&mut self) {
+        self.segments.clear();
+        self.hovered = None;
+    }
+
+    /// Render the breadcrumbs
+    pub fn render(&self, frame: &mut Frame, area: Rect) {
+        if self.segments.is_empty() {
+            return;
+        }
+
+        let mut spans = Vec::new();
+
+        for (i, segment) in self.segments.iter().enumerate() {
+            // Add icon if present
+            if let Some(icon) = &segment.icon {
+                spans.push(Span::styled(
+                    format!("{} ", icon),
+                    Style::default().fg(ToadTheme::GRAY),
+                ));
+            }
+
+            // Add label
+            let is_last = i == self.segments.len() - 1;
+            let is_hovered = self.hovered == Some(i);
+
+            let style = if is_last {
+                // Last segment is highlighted
+                Style::default()
+                    .fg(ToadTheme::TOAD_GREEN)
+                    .add_modifier(Modifier::BOLD)
+            } else if is_hovered && segment.clickable {
+                // Hovered clickable segment
+                Style::default()
+                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
+                    .add_modifier(Modifier::UNDERLINED)
+            } else if segment.clickable {
+                // Regular clickable segment
+                Style::default().fg(ToadTheme::BLUE)
+            } else {
+                // Non-clickable segment
+                Style::default().fg(ToadTheme::GRAY)
+            };
+
+            spans.push(Span::styled(&segment.label, style));
+
+            // Add separator if not last
+            if !is_last {
+                spans.push(Span::styled(
+                    &self.separator,
+                    Style::default().fg(ToadTheme::DARK_GRAY),
+                ));
+            }
+        }
+
+        let paragraph = Paragraph::new(Line::from(spans));
+        frame.render_widget(paragraph, area);
+    }
 }
 
 impl Default for Breadcrumbs {
@@ -60,378 +183,67 @@ impl Default for Breadcrumbs {
     }
 }
 
-impl Breadcrumbs {
-    /// Create new breadcrumbs
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Breadcrumbs;
-    ///
-    /// let breadcrumbs = Breadcrumbs::new();
-    /// assert_eq!(breadcrumbs.path_count(), 0);
-    /// ```
-    pub fn new() -> Self {
-        Self {
-            path: Vec::new(),
-            separator: " > ".to_string(),
-            show_icons: true,
-            truncate: true,
-            max_length: 50,
-        }
-    }
-
-    /// Add a path component
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Breadcrumbs;
-    ///
-    /// let breadcrumbs = Breadcrumbs::new()
-    ///     .add("Home")
-    ///     .add("Projects");
-    ///
-    /// assert_eq!(breadcrumbs.path_count(), 2);
-    /// ```
-    #[allow(clippy::should_implement_trait)]
-    pub fn add(mut self, component: impl Into<String>) -> Self {
-        self.path.push(component.into());
-        self
-    }
-
-    /// Set separator
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Breadcrumbs;
-    ///
-    /// let breadcrumbs = Breadcrumbs::new()
-    ///     .with_separator(" / ");
-    /// ```
-    pub fn with_separator(mut self, separator: impl Into<String>) -> Self {
-        self.separator = separator.into();
-        self
-    }
-
-    /// Show or hide icons
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Breadcrumbs;
-    ///
-    /// let breadcrumbs = Breadcrumbs::new()
-    ///     .with_icons(false);
-    /// ```
-    pub fn with_icons(mut self, show: bool) -> Self {
-        self.show_icons = show;
-        self
-    }
-
-    /// Enable or disable truncation
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Breadcrumbs;
-    ///
-    /// let breadcrumbs = Breadcrumbs::new()
-    ///     .with_truncate(false);
-    /// ```
-    pub fn with_truncate(mut self, truncate: bool) -> Self {
-        self.truncate = truncate;
-        self
-    }
-
-    /// Set maximum length before truncation
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Breadcrumbs;
-    ///
-    /// let breadcrumbs = Breadcrumbs::new()
-    ///     .with_max_length(100);
-    /// ```
-    pub fn with_max_length(mut self, max: usize) -> Self {
-        self.max_length = max;
-        self
-    }
-
-    /// Clear all path components
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Breadcrumbs;
-    ///
-    /// let mut breadcrumbs = Breadcrumbs::new()
-    ///     .add("Home");
-    ///
-    /// breadcrumbs.clear();
-    /// assert_eq!(breadcrumbs.path_count(), 0);
-    /// ```
-    pub fn clear(&mut self) {
-        self.path.clear();
-    }
-
-    /// Get number of path components
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Breadcrumbs;
-    ///
-    /// let breadcrumbs = Breadcrumbs::new()
-    ///     .add("Home")
-    ///     .add("Projects");
-    ///
-    /// assert_eq!(breadcrumbs.path_count(), 2);
-    /// ```
-    pub fn path_count(&self) -> usize {
-        self.path.len()
-    }
-
-    /// Get current (last) component
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::Breadcrumbs;
-    ///
-    /// let breadcrumbs = Breadcrumbs::new()
-    ///     .add("Home")
-    ///     .add("file.txt");
-    ///
-    /// assert_eq!(breadcrumbs.current(), Some("file.txt"));
-    /// ```
-    pub fn current(&self) -> Option<&str> {
-        self.path.last().map(|s| s.as_str())
-    }
-
-    /// Get all path components
-    pub fn path(&self) -> &[String] {
-        &self.path
-    }
-
-    /// Render breadcrumbs as a line
-    pub fn render_line(&self) -> Line<'static> {
-        if self.path.is_empty() {
-            return Line::from("");
-        }
-
-        let mut spans = Vec::new();
-        let total_len = self.path.iter().map(|s| s.len()).sum::<usize>()
-            + (self.path.len() - 1) * self.separator.len();
-
-        // Check if truncation is needed
-        let should_truncate = self.truncate && total_len > self.max_length && self.path.len() > 2;
-
-        if should_truncate {
-            // Show first and last components with "..." in between
-            if let Some(first) = self.path.first() {
-                if self.show_icons {
-                    spans.push(Span::styled("📁 ", Style::default().fg(Color::Blue)));
-                }
-                spans.push(Span::styled(
-                    first.clone(),
-                    Style::default().fg(Color::Gray),
-                ));
-            }
-
-            spans.push(Span::raw(self.separator.clone()));
-            spans.push(Span::styled("...", Style::default().fg(Color::DarkGray)));
-            spans.push(Span::raw(self.separator.clone()));
-
-            if let Some(last) = self.path.last() {
-                if self.show_icons {
-                    spans.push(Span::styled("📄 ", Style::default().fg(Color::Yellow)));
-                }
-                spans.push(Span::styled(
-                    last.clone(),
-                    Style::default()
-                        .fg(Color::White)
-                        .add_modifier(Modifier::BOLD),
-                ));
-            }
-        } else {
-            // Show full path
-            for (i, component) in self.path.iter().enumerate() {
-                if i > 0 {
-                    spans.push(Span::raw(self.separator.clone()));
-                }
-
-                if self.show_icons {
-                    let icon = if i == self.path.len() - 1 {
-                        "📄 "
-                    } else {
-                        "📁 "
-                    };
-                    let color = if i == self.path.len() - 1 {
-                        Color::Yellow
-                    } else {
-                        Color::Blue
-                    };
-                    spans.push(Span::styled(icon.to_string(), Style::default().fg(color)));
-                }
-
-                let style = if i == self.path.len() - 1 {
-                    Style::default()
-                        .fg(Color::White)
-                        .add_modifier(Modifier::BOLD)
-                } else {
-                    Style::default().fg(Color::Gray)
-                };
-
-                spans.push(Span::styled(component.clone(), style));
-            }
-        }
-
-        Line::from(spans)
-    }
-}
-
-impl Widget for &Breadcrumbs {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let line = self.render_line();
-        let block = Block::default().borders(Borders::NONE);
-        let inner = block.inner(area);
-
-        block.render(area, buf);
-        buf.set_line(inner.x, inner.y, &line, inner.width);
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_breadcrumbs_new() {
+    fn test_breadcrumbs_creation() {
         let breadcrumbs = Breadcrumbs::new();
-        assert_eq!(breadcrumbs.path_count(), 0);
-        assert_eq!(breadcrumbs.separator, " > ");
-        assert!(breadcrumbs.show_icons);
-        assert!(breadcrumbs.truncate);
+        assert_eq!(breadcrumbs.segments().len(), 0);
     }
 
     #[test]
-    fn test_breadcrumbs_default() {
-        let breadcrumbs = Breadcrumbs::default();
-        assert_eq!(breadcrumbs.path_count(), 0);
+    fn test_from_path() {
+        let breadcrumbs = Breadcrumbs::from_path("/home/user/projects");
+        assert_eq!(breadcrumbs.segments().len(), 3);
+        assert_eq!(breadcrumbs.segments()[0].label, "home");
+        assert_eq!(breadcrumbs.segments()[1].label, "user");
+        assert_eq!(breadcrumbs.segments()[2].label, "projects");
     }
 
     #[test]
-    fn test_breadcrumbs_add() {
-        let breadcrumbs = Breadcrumbs::new()
-            .add("Home")
-            .add("Projects")
-            .add("Toad");
+    fn test_push_pop() {
+        let mut breadcrumbs = Breadcrumbs::new();
+        breadcrumbs.push(BreadcrumbSegment::new("root"));
+        breadcrumbs.push(BreadcrumbSegment::new("folder"));
 
-        assert_eq!(breadcrumbs.path_count(), 3);
-        assert_eq!(breadcrumbs.current(), Some("Toad"));
+        assert_eq!(breadcrumbs.segments().len(), 2);
+
+        let popped = breadcrumbs.pop();
+        assert_eq!(popped.unwrap().label, "folder");
+        assert_eq!(breadcrumbs.segments().len(), 1);
     }
 
     #[test]
-    fn test_breadcrumbs_with_separator() {
-        let breadcrumbs = Breadcrumbs::new()
-            .with_separator(" / ");
+    fn test_hover() {
+        let mut breadcrumbs = Breadcrumbs::new();
+        breadcrumbs.push(BreadcrumbSegment::new("a"));
+        breadcrumbs.push(BreadcrumbSegment::new("b"));
 
-        assert_eq!(breadcrumbs.separator, " / ");
+        assert_eq!(breadcrumbs.hovered(), None);
+
+        breadcrumbs.set_hovered(Some(1));
+        assert_eq!(breadcrumbs.hovered(), Some(1));
     }
 
     #[test]
-    fn test_breadcrumbs_with_icons() {
-        let breadcrumbs = Breadcrumbs::new()
-            .with_icons(false);
+    fn test_clear() {
+        let mut breadcrumbs = Breadcrumbs::from_path("/a/b/c");
+        assert_eq!(breadcrumbs.segments().len(), 3);
 
-        assert!(!breadcrumbs.show_icons);
-    }
-
-    #[test]
-    fn test_breadcrumbs_with_truncate() {
-        let breadcrumbs = Breadcrumbs::new()
-            .with_truncate(false);
-
-        assert!(!breadcrumbs.truncate);
-    }
-
-    #[test]
-    fn test_breadcrumbs_with_max_length() {
-        let breadcrumbs = Breadcrumbs::new()
-            .with_max_length(100);
-
-        assert_eq!(breadcrumbs.max_length, 100);
-    }
-
-    #[test]
-    fn test_breadcrumbs_clear() {
-        let mut breadcrumbs = Breadcrumbs::new()
-            .add("Home")
-            .add("Projects");
-
-        assert_eq!(breadcrumbs.path_count(), 2);
         breadcrumbs.clear();
-        assert_eq!(breadcrumbs.path_count(), 0);
+        assert_eq!(breadcrumbs.segments().len(), 0);
     }
 
     #[test]
-    fn test_breadcrumbs_current() {
-        let breadcrumbs = Breadcrumbs::new()
-            .add("Home")
-            .add("file.txt");
+    fn test_segment_with_icon() {
+        let segment = BreadcrumbSegment::new("Home")
+            .with_icon("🏠")
+            .with_clickable(false);
 
-        assert_eq!(breadcrumbs.current(), Some("file.txt"));
-
-        let empty = Breadcrumbs::new();
-        assert_eq!(empty.current(), None);
-    }
-
-    #[test]
-    fn test_breadcrumbs_path() {
-        let breadcrumbs = Breadcrumbs::new()
-            .add("Home")
-            .add("Projects");
-
-        let path = breadcrumbs.path();
-        assert_eq!(path.len(), 2);
-        assert_eq!(path[0], "Home");
-        assert_eq!(path[1], "Projects");
-    }
-
-    #[test]
-    fn test_breadcrumbs_render_line_empty() {
-        let breadcrumbs = Breadcrumbs::new();
-        let line = breadcrumbs.render_line();
-        assert!(line.spans.is_empty() || line.spans[0].content.is_empty());
-    }
-
-    #[test]
-    fn test_breadcrumbs_render_line() {
-        let breadcrumbs = Breadcrumbs::new()
-            .add("Home")
-            .add("Projects");
-
-        let line = breadcrumbs.render_line();
-        assert!(!line.spans.is_empty());
-    }
-
-    #[test]
-    fn test_breadcrumbs_builder_pattern() {
-        let breadcrumbs = Breadcrumbs::new()
-            .add("Home")
-            .add("Projects")
-            .with_separator(" / ")
-            .with_icons(false)
-            .with_truncate(true)
-            .with_max_length(80);
-
-        assert_eq!(breadcrumbs.path_count(), 2);
-        assert_eq!(breadcrumbs.separator, " / ");
-        assert!(!breadcrumbs.show_icons);
-        assert!(breadcrumbs.truncate);
-        assert_eq!(breadcrumbs.max_length, 80);
+        assert_eq!(segment.label, "Home");
+        assert_eq!(segment.icon, Some("🏠".to_string()));
+        assert!(!segment.clickable);
     }
 }
