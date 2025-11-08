@@ -7,6 +7,7 @@
 //! - View (ui.rs): Rendering logic
 
 pub mod app;
+pub mod clipboard;
 pub mod config;
 pub mod event;
 pub mod history;
@@ -18,6 +19,7 @@ pub mod widgets;
 
 // Re-export commonly used types
 pub use app::App;
+pub use clipboard::Clipboard;
 pub use config::Config;
 pub use event::Event;
 pub use history::History;
