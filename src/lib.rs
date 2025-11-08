@@ -6,6 +6,7 @@ pub mod evaluation;
 pub mod metrics;
 pub mod stats;
 pub mod tools;
+pub mod llm;
 
 // Re-exports for convenience
 pub use config::{FeatureFlags, ToadConfig};
