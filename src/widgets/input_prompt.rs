@@ -19,11 +19,11 @@
 
 use crate::theme::ToadTheme;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Wrap},
-    Frame,
 };
 
 /// Input prompt modal for collecting user text input.
@@ -452,7 +452,10 @@ impl InputPrompt {
                 ));
             }
 
-            spans.push(Span::styled(rest, Style::default().fg(ToadTheme::FOREGROUND)));
+            spans.push(Span::styled(
+                rest,
+                Style::default().fg(ToadTheme::FOREGROUND),
+            ));
 
             Line::from(spans)
         };
@@ -481,7 +484,7 @@ mod tests {
     fn test_input_prompt_creation() {
         let prompt = InputPrompt::new("Test Title", "Enter something");
         assert_eq!(prompt.value(), "");
-        assert_eq!(prompt.is_focused, true);
+        assert!(prompt.is_focused);
     }
 
     #[test]
@@ -540,9 +543,9 @@ mod tests {
     #[test]
     fn test_input_prompt_set_focused() {
         let mut prompt = InputPrompt::new("Title", "Message");
-        assert_eq!(prompt.is_focused, true);
+        assert!(prompt.is_focused);
 
         prompt.set_focused(false);
-        assert_eq!(prompt.is_focused, false);
+        assert!(!prompt.is_focused);
     }
 }

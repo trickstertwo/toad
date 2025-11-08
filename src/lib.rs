@@ -30,8 +30,10 @@ pub mod box_drawing;
 pub mod canvas;
 pub mod clipboard;
 pub mod command_mode;
+pub mod config;
 pub mod custom_keybindings;
 pub mod diff;
+pub mod errors;
 pub mod event;
 pub mod file_ops;
 pub mod fuzzy;
@@ -46,6 +48,7 @@ pub mod macros;
 pub mod marks;
 pub mod mouse;
 pub mod multicursor;
+pub mod navigation;
 pub mod nerd_fonts;
 pub mod performance;
 pub mod quick_actions;
@@ -66,9 +69,6 @@ pub mod visual_selection;
 pub mod widgets;
 pub mod workspaces;
 
-// Config module contains both M0 and TUI configs
-pub mod config;
-
 // M0 re-exports
 pub use config::{FeatureFlags, ToadConfig};
 pub use evaluation::{Task, TaskResult, EvaluationHarness};
@@ -88,10 +88,11 @@ pub use background_tasks::{BackgroundTask, BackgroundTaskManager, TaskId, TaskSt
 pub use box_drawing::{BoxBuilder, BoxChars, BoxStyle};
 pub use clipboard::Clipboard;
 pub use command_mode::{Command, CommandMode, CommandRegistry, CommandHandler, CommandResult};
+pub use config::{Config, AiConfig, EditorConfig, SessionConfig, UiConfig};
 pub use diff::{
     ChunkHeader, DiffHunk, DiffLine, DiffLineType, DiffParser, DiffStats, FileDiff,
 };
-pub use config::{Config, AiConfig, EditorConfig, UiConfig};
+pub use errors::{ErrorEntry, ErrorHandler, ErrorSeverity};
 pub use event::Event;
 pub use fuzzy::{CaseMode, FuzzyFinder, FuzzyMatch, FuzzyMatcher, MatchStrategy};
 pub use history::History;
@@ -104,11 +105,12 @@ pub use layout::{LayoutManager, Pane, PanelId, SplitDirection};
 pub use marks::{Mark, MarksManager, MarkType};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
 pub use multicursor::{CursorPosition, MultiCursor};
+pub use navigation::{NavigationAction, VimNavigation};
 pub use performance::{FrameLimiter, PerformanceMetrics, TargetFPS};
 pub use quick_actions::{ActionCategory, QuickAction, QuickActionManager};
 pub use resizable::{ResizablePane, ResizablePaneManager, ResizeDirection};
 pub use search::{SearchMatch, SearchState};
-pub use session::Session;
+pub use session::SessionState;
 pub use smart_suggestions::{ContextBuilder, SmartSuggestions, Suggestion as SmartSuggestion, SuggestionContext, SuggestionType};
 pub use tabs::{Tab, TabId, TabManager};
 pub use tui::Tui;

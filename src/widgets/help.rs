@@ -4,11 +4,11 @@
 
 use crate::theme::ToadTheme;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 
 /// Help screen widget
@@ -156,7 +156,10 @@ impl HelpScreen {
                     .add_modifier(Modifier::BOLD),
             ),
             Span::styled(" ", Style::default()),
-            Span::styled(description.to_string(), Style::default().fg(ToadTheme::FOREGROUND)),
+            Span::styled(
+                description.to_string(),
+                Style::default().fg(ToadTheme::FOREGROUND),
+            ),
         ])
     }
 }

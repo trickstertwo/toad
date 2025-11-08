@@ -3,11 +3,11 @@
 //! Displays the TOAD logo, version, and quick start tips
 
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 
 use crate::{logo, theme::ToadTheme};
@@ -96,24 +96,45 @@ impl WelcomeScreen {
             Line::from(""),
             Line::from(vec![
                 Span::styled("  • ", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled("Ask questions or request changes", Style::default().fg(ToadTheme::FOREGROUND)),
+                Span::styled(
+                    "Ask questions or request changes",
+                    Style::default().fg(ToadTheme::FOREGROUND),
+                ),
             ]),
             Line::from(vec![
                 Span::styled("  • ", Style::default().fg(ToadTheme::TOAD_GREEN)),
                 Span::styled("Type ", Style::default().fg(ToadTheme::FOREGROUND)),
-                Span::styled("/help", Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "/help",
+                    Style::default()
+                        .fg(ToadTheme::TOAD_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::styled(" for commands", Style::default().fg(ToadTheme::FOREGROUND)),
             ]),
             Line::from(vec![
                 Span::styled("  • ", Style::default().fg(ToadTheme::TOAD_GREEN)),
                 Span::styled("Press ", Style::default().fg(ToadTheme::FOREGROUND)),
-                Span::styled("?", Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD)),
-                Span::styled(" for keybindings", Style::default().fg(ToadTheme::FOREGROUND)),
+                Span::styled(
+                    "?",
+                    Style::default()
+                        .fg(ToadTheme::TOAD_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    " for keybindings",
+                    Style::default().fg(ToadTheme::FOREGROUND),
+                ),
             ]),
             Line::from(vec![
                 Span::styled("  • ", Style::default().fg(ToadTheme::TOAD_GREEN)),
                 Span::styled("Use ", Style::default().fg(ToadTheme::FOREGROUND)),
-                Span::styled("Ctrl+P", Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "Ctrl+P",
+                    Style::default()
+                        .fg(ToadTheme::TOAD_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::styled(" for palette", Style::default().fg(ToadTheme::FOREGROUND)),
             ]),
         ];
@@ -142,7 +163,11 @@ impl WelcomeScreen {
 
         let tips_block = Block::default()
             .title(" Features ")
-            .title_style(Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD))
+            .title_style(
+                Style::default()
+                    .fg(ToadTheme::TOAD_GREEN)
+                    .add_modifier(Modifier::BOLD),
+            )
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::DARK_GRAY));
 
@@ -152,28 +177,73 @@ impl WelcomeScreen {
         let tips = vec![
             Line::from(""),
             Line::from(vec![
-                Span::styled("  1. ", Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD)),
-                Span::styled("AI-powered code generation ", Style::default().fg(ToadTheme::FOREGROUND)),
+                Span::styled(
+                    "  1. ",
+                    Style::default()
+                        .fg(ToadTheme::TOAD_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    "AI-powered code generation ",
+                    Style::default().fg(ToadTheme::FOREGROUND),
+                ),
                 Span::styled("✓", Style::default().fg(ToadTheme::TOAD_GREEN)),
             ]),
             Line::from(vec![
-                Span::styled("  2. ", Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD)),
-                Span::styled("Semi-autonomous coding agents ", Style::default().fg(ToadTheme::FOREGROUND)),
+                Span::styled(
+                    "  2. ",
+                    Style::default()
+                        .fg(ToadTheme::TOAD_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    "Semi-autonomous coding agents ",
+                    Style::default().fg(ToadTheme::FOREGROUND),
+                ),
                 Span::styled("✓", Style::default().fg(ToadTheme::TOAD_GREEN)),
             ]),
             Line::from(vec![
-                Span::styled("  3. ", Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD)),
-                Span::styled("Plugin marketplace ", Style::default().fg(ToadTheme::FOREGROUND)),
-                Span::styled("(coming soon)", Style::default().fg(ToadTheme::GRAY).add_modifier(Modifier::ITALIC)),
+                Span::styled(
+                    "  3. ",
+                    Style::default()
+                        .fg(ToadTheme::TOAD_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    "Plugin marketplace ",
+                    Style::default().fg(ToadTheme::FOREGROUND),
+                ),
+                Span::styled(
+                    "(coming soon)",
+                    Style::default()
+                        .fg(ToadTheme::GRAY)
+                        .add_modifier(Modifier::ITALIC),
+                ),
             ]),
             Line::from(vec![
-                Span::styled("  4. ", Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD)),
-                Span::styled("Native terminal experience ", Style::default().fg(ToadTheme::FOREGROUND)),
+                Span::styled(
+                    "  4. ",
+                    Style::default()
+                        .fg(ToadTheme::TOAD_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    "Native terminal experience ",
+                    Style::default().fg(ToadTheme::FOREGROUND),
+                ),
                 Span::styled("✓", Style::default().fg(ToadTheme::TOAD_GREEN)),
             ]),
             Line::from(vec![
-                Span::styled("  5. ", Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD)),
-                Span::styled("Command palette & shortcuts ", Style::default().fg(ToadTheme::FOREGROUND)),
+                Span::styled(
+                    "  5. ",
+                    Style::default()
+                        .fg(ToadTheme::TOAD_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    "Command palette & shortcuts ",
+                    Style::default().fg(ToadTheme::FOREGROUND),
+                ),
                 Span::styled("✓", Style::default().fg(ToadTheme::TOAD_GREEN)),
             ]),
             Line::from(""),
@@ -187,7 +257,12 @@ impl WelcomeScreen {
         let status_lines = vec![
             Line::from(vec![
                 Span::styled("Status: ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled("Ready ", Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "Ready ",
+                    Style::default()
+                        .fg(ToadTheme::TOAD_GREEN)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::styled("●", Style::default().fg(ToadTheme::TOAD_GREEN)),
             ]),
             Line::from(""),

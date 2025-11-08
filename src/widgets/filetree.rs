@@ -4,11 +4,13 @@
 
 use crate::theme::ToadTheme;
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Scrollbar, ScrollbarOrientation, ScrollbarState},
-    Frame,
+    widgets::{
+        Block, Borders, List, ListItem, ListState, Scrollbar, ScrollbarOrientation, ScrollbarState,
+    },
 };
 use std::path::{Path, PathBuf};
 
@@ -241,7 +243,8 @@ impl FileTree {
 
         if node.is_expanded {
             for child in &node.children {
-                if let Some(found) = Self::find_node_at_flat_index(child, target_index, nodes_seen) {
+                if let Some(found) = Self::find_node_at_flat_index(child, target_index, nodes_seen)
+                {
                     return Some(found);
                 }
             }
@@ -273,7 +276,9 @@ impl FileTree {
 
         if node.is_expanded {
             for child in &mut node.children {
-                if let Some(found) = Self::find_node_at_flat_index_mut_helper(child, target_index, nodes_seen) {
+                if let Some(found) =
+                    Self::find_node_at_flat_index_mut_helper(child, target_index, nodes_seen)
+                {
                     return Some(found);
                 }
             }
@@ -296,7 +301,11 @@ impl FileTree {
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
         let block = Block::default()
             .title(format!(" {} ", self.title))
-            .title_style(Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD))
+            .title_style(
+                Style::default()
+                    .fg(ToadTheme::TOAD_GREEN)
+                    .add_modifier(Modifier::BOLD),
+            )
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::TOAD_GREEN));
 
@@ -329,11 +338,7 @@ impl FileTree {
             let mut scrollbar_state = ScrollbarState::new(self.flattened.len())
                 .position(self.list_state.selected().unwrap_or(0));
 
-            frame.render_stateful_widget(
-                scrollbar,
-                inner,
-                &mut scrollbar_state,
-            );
+            frame.render_stateful_widget(scrollbar, inner, &mut scrollbar_state);
         }
     }
 

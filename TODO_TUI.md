@@ -201,7 +201,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Bar Charts** - Comparison data ✅ COMPLETED (BarChart with vertical/horizontal orientations, labeled bars, auto-scaling, optional values display)
 - [x] **Scatter Plots** - Distribution visualization ✅ COMPLETED (ScatterPlot with auto-scaling, bounds calculation, grid normalization, configurable point char)
 - [x] **Live Graphs** - Real-time updating charts ✅ COMPLETED (LiveGraph with ring buffer, auto-scaling, update frequency control, multi-graph manager)
-- [ ] **Git Graph** - Branch visualization (lazygit-style)
+- [x] **Git Graph** - Branch visualization (lazygit-style) ✅ COMPLETED (GitGraph widget with commit nodes, branch lines, visual history)
 
 ### Modal Editing (Vim-inspired)
 - [x] **Multiple Modes** - Normal, Insert, Visual, Command ✅ COMPLETED (EditorMode enum: Normal/Insert/Visual/VisualLine/VisualBlock/Command/Replace)
@@ -244,12 +244,12 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Recent Files** - MRU list ✅ COMPLETED (RecentFiles with MRU tracking, search, frequency sorting, save/load persistence)
 
 ### AI-Specific Features (for AI coding terminal)
-- [ ] **Chat Panel** - Conversational AI interaction
+- [x] **Chat Panel** - Conversational AI interaction ✅ COMPLETED (ChatPanel widget with user/assistant/system messages, streaming support, markdown/code blocks, scrolling, auto-scroll)
 - [ ] **Diff View** - Proposed changes visualization
 - [ ] **Accept/Reject** - Quick code change approval
-- [ ] **Streaming Responses** - Real-time AI output
-- [ ] **Token Counter** - Usage tracking display
-- [ ] **Model Selector** - Switch AI models
+- [x] **Streaming Responses** - Real-time AI output ✅ COMPLETED (Integrated into ChatPanel with streaming messages, append support, finish streaming)
+- [x] **Token Counter** - Usage tracking display ✅ COMPLETED (TokenCounter widget with session/total tracking, cost calculation for multiple models, budget monitoring, compact/full views)
+- [x] **Model Selector** - Switch AI models ✅ COMPLETED (ModelSelector widget with 6 default models, context/cost/speed indicators, filtering by capability, detailed info view)
 - [ ] **Context Display** - Show what AI sees
 
 ### Developer Experience
@@ -269,10 +269,10 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Keyboard-only Mode** - Full functionality without mouse
 
 ### Performance Monitoring
-- [ ] **FPS Counter** - Real-time performance
-- [ ] **Memory Usage** - Resource monitoring
-- [ ] **Event Metrics** - Track input lag
-- [ ] **Render Profiling** - Debug slow renders
+- [x] **FPS Counter** - Real-time performance ✅ COMPLETED (FpsCounter widget with rolling average, peak tracking, smoothing)
+- [x] **Memory Usage** - Resource monitoring ✅ COMPLETED (MemoryMonitor widget with heap/RSS tracking, formatted display)
+- [x] **Event Metrics** - Track input lag ✅ COMPLETED (EventMetrics widget with event processing time, queue depth, latency stats)
+- [x] **Render Profiling** - Debug slow renders ✅ COMPLETED (RenderProfiler with per-component timing, bottleneck detection, stats aggregation)
 
 ### Cross-Platform Excellence
 - [ ] **Windows Support** - Full functionality on Windows

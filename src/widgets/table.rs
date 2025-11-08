@@ -4,10 +4,13 @@
 
 use crate::theme::ToadTheme;
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Modifier, Style},
-    widgets::{Block, Borders, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, Table as RatatuiTable, TableState},
-    Frame,
+    widgets::{
+        Block, Borders, Row, Scrollbar, ScrollbarOrientation, ScrollbarState,
+        Table as RatatuiTable, TableState,
+    },
 };
 
 /// Column alignment
@@ -190,7 +193,10 @@ impl DataTable {
             .rows
             .iter()
             .map(|row_data| {
-                let cells = row_data.iter().map(|cell| cell.as_str()).collect::<Vec<_>>();
+                let cells = row_data
+                    .iter()
+                    .map(|cell| cell.as_str())
+                    .collect::<Vec<_>>();
                 Row::new(cells).style(Style::default().fg(ToadTheme::FOREGROUND))
             })
             .collect();
@@ -221,8 +227,8 @@ impl DataTable {
                 .begin_symbol(Some("↑"))
                 .end_symbol(Some("↓"));
 
-            let mut scrollbar_state = ScrollbarState::new(self.rows.len())
-                .position(self.state.selected().unwrap_or(0));
+            let mut scrollbar_state =
+                ScrollbarState::new(self.rows.len()).position(self.state.selected().unwrap_or(0));
 
             frame.render_stateful_widget(scrollbar, inner, &mut scrollbar_state);
         }
@@ -248,10 +254,7 @@ mod tests {
 
     #[test]
     fn test_table_add_rows() {
-        let columns = vec![
-            TableColumn::new("Name", 20),
-            TableColumn::new("Age", 10),
-        ];
+        let columns = vec![TableColumn::new("Name", 20), TableColumn::new("Age", 10)];
 
         let mut table = DataTable::new("Test", columns);
 
@@ -259,7 +262,10 @@ mod tests {
         table.add_row(vec!["Bob".to_string(), "25".to_string()]);
 
         assert_eq!(table.row_count(), 2);
-        assert_eq!(table.selected_row(), Some(&vec!["Alice".to_string(), "30".to_string()]));
+        assert_eq!(
+            table.selected_row(),
+            Some(&vec!["Alice".to_string(), "30".to_string()])
+        );
     }
 
     #[test]

@@ -3,11 +3,11 @@
 //! Copilot-style confirmation dialogs with radio button selection
 
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 
 use crate::theme::ToadTheme;
@@ -163,7 +163,12 @@ impl ConfirmDialog {
         let message_lines: Vec<Line> = self
             .message
             .iter()
-            .map(|msg| Line::from(Span::styled(msg, Style::default().fg(ToadTheme::FOREGROUND))))
+            .map(|msg| {
+                Line::from(Span::styled(
+                    msg,
+                    Style::default().fg(ToadTheme::FOREGROUND),
+                ))
+            })
             .collect();
 
         let message_paragraph = Paragraph::new(message_lines).alignment(Alignment::Left);

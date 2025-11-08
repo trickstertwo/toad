@@ -17,6 +17,10 @@ pub struct Config {
 
     /// AI-specific settings
     pub ai: AiConfig,
+
+    /// Session persistence settings
+    #[serde(default)]
+    pub session: SessionConfig,
 }
 
 impl Default for Config {
@@ -25,6 +29,7 @@ impl Default for Config {
             ui: UiConfig::default(),
             editor: EditorConfig::default(),
             ai: AiConfig::default(),
+            session: SessionConfig::default(),
         }
     }
 }
@@ -153,6 +158,30 @@ impl Default for AiConfig {
             temperature: 0.7,
             max_tokens: 4096,
             streaming: true,
+        }
+    }
+}
+
+/// Session persistence configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionConfig {
+    /// Enable session persistence across restarts
+    pub persist_session: bool,
+    /// Automatically save session on exit
+    pub auto_save: bool,
+    /// Auto-save interval in seconds (0 = disabled)
+    pub auto_save_interval: u64,
+    /// Maximum history entries to persist
+    pub max_history: usize,
+}
+
+impl Default for SessionConfig {
+    fn default() -> Self {
+        Self {
+            persist_session: true,
+            auto_save: true,
+            auto_save_interval: 60,
+            max_history: 1000,
         }
     }
 }

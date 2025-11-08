@@ -4,11 +4,11 @@
 
 use crate::theme::ToadTheme;
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState},
-    Frame,
 };
 
 /// Multi-line text editor
@@ -163,7 +163,11 @@ impl Textarea {
             }
         } else if self.cursor_row > 0 {
             self.cursor_row -= 1;
-            self.cursor_col = self.lines.get(self.cursor_row).map(|l| l.len()).unwrap_or(0);
+            self.cursor_col = self
+                .lines
+                .get(self.cursor_row)
+                .map(|l| l.len())
+                .unwrap_or(0);
             self.ensure_cursor_visible();
         }
     }

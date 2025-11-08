@@ -3,7 +3,7 @@
 
 mod tui;
 
-pub use tui::{Config, UiConfig, EditorConfig, AiConfig};
+pub use tui::{Config, UiConfig, EditorConfig, AiConfig, SessionConfig};
 
 use serde::{Deserialize, Serialize};
 

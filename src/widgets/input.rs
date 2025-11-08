@@ -4,11 +4,11 @@
 
 use crate::theme::ToadTheme;
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::Paragraph,
-    Frame,
 };
 
 /// A single-line text input widget
@@ -174,7 +174,10 @@ impl InputField {
                 ));
             }
 
-            spans.push(Span::styled(rest, Style::default().fg(ToadTheme::FOREGROUND)));
+            spans.push(Span::styled(
+                rest,
+                Style::default().fg(ToadTheme::FOREGROUND),
+            ));
 
             Line::from(spans)
         };

@@ -7,9 +7,10 @@ use crate::config::Config;
 use crate::event::Event;
 use crate::layout::LayoutManager;
 use crate::performance::PerformanceMetrics;
+use crate::session::SessionState;
+use crate::tabs::TabManager;
 use crate::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, ToastManager};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use std::env;
 use std::path::PathBuf;
 
 /// Different screens/modes the application can be in
@@ -65,14 +66,20 @@ pub struct App {
     /// Whether to show the command palette
     show_palette: bool,
 
+    /// Application configuration
+    config: Config,
+
+    /// Session state for persistence
+    session: SessionState,
+
+    /// Tab manager for multiple workspaces
+    tabs: TabManager,
+
     /// Layout manager for split panes
     layout: LayoutManager,
 
     /// Vim mode enabled
     vim_mode: bool,
-
-    /// Application configuration
-    config: Config,
 
     /// Performance metrics
     performance: PerformanceMetrics,
@@ -86,31 +93,52 @@ pub struct App {
 
 impl Default for App {
     fn default() -> Self {
-        let working_directory = env::current_dir().unwrap_or_else(|_| PathBuf::from("/"));
+        let config = Config::load_or_default();
+        let session = if config.session.persist_session {
+            SessionState::load_or_new()
+        } else {
+            SessionState::new()
+        };
+
+        let working_directory = session.working_directory().clone();
+        let welcome_shown = session.welcome_shown();
+
         let mut input_field = InputField::new();
         input_field.set_focused(true);
 
-        // Load configuration or use default
-        let config = Config::load_or_default();
+        // Determine initial screen based on session
+        let screen = if welcome_shown {
+            AppScreen::Main
+        } else {
+            AppScreen::Welcome
+        };
+
+        // Load vim mode from config
         let vim_mode = config.ui.vim_mode;
 
         Self {
-            screen: AppScreen::Welcome,
+            screen,
             should_quit: false,
-            status_message: "Press any key to continue...".to_string(),
+            status_message: if welcome_shown {
+                "Welcome back!".to_string()
+            } else {
+                "Press any key to continue...".to_string()
+            },
             title: "Toad - AI Coding Terminal".to_string(),
             working_directory,
             trust_dialog: None,
-            welcome_shown: false,
+            welcome_shown,
             input_field,
-            plugin_count: 0,
+            plugin_count: session.plugin_count(),
             help_screen: HelpScreen::new(),
             show_help: false,
             command_palette: CommandPalette::new(),
             show_palette: false,
+            config,
+            session,
+            tabs: TabManager::new(),
             layout: LayoutManager::new(),
             vim_mode,
-            config,
             performance: PerformanceMetrics::new(),
             show_performance: false,
             toasts: ToastManager::new(),
@@ -332,8 +360,7 @@ impl App {
                 self.welcome_shown = true;
                 self.screen = AppScreen::TrustDialog;
                 self.create_trust_dialog();
-                self.status_message =
-                    "Confirm folder trust to continue".to_string();
+                self.status_message = "Confirm folder trust to continue".to_string();
             }
         }
         Ok(())
@@ -429,7 +456,8 @@ impl App {
                     self.command_palette.clear_query();
                 }
                 // Regular character input for search
-                (KeyCode::Char(c), KeyModifiers::NONE) | (KeyCode::Char(c), KeyModifiers::SHIFT) => {
+                (KeyCode::Char(c), KeyModifiers::NONE)
+                | (KeyCode::Char(c), KeyModifiers::SHIFT) => {
                     self.command_palette.insert_char(c);
                 }
                 _ => {}
@@ -467,6 +495,47 @@ impl App {
             // Toggle help screen with '?' (shift+/)
             (KeyCode::Char('?'), _) => {
                 self.show_help = !self.show_help;
+            }
+            // Tab cycling: Tab for next tab, Shift+Tab for previous tab
+            (KeyCode::Tab, KeyModifiers::NONE) => {
+                // If input field is not focused, use tab for workspace switching
+                if !self.input_field.is_focused() {
+                    self.tabs.next_tab();
+                    self.status_message = format!(
+                        "Switched to tab: {}",
+                        self.tabs.active_tab().map(|t| &t.title).unwrap_or(&"".to_string())
+                    );
+                } else {
+                    // If input is focused, use tab for layout panel switching
+                    self.layout.focus_next();
+                    self.status_message = format!("Focused panel {}", self.layout.focused());
+                }
+            }
+            (KeyCode::BackTab, _) => {
+                // BackTab is Shift+Tab
+                if !self.input_field.is_focused() {
+                    self.tabs.previous_tab();
+                    self.status_message = format!(
+                        "Switched to tab: {}",
+                        self.tabs.active_tab().map(|t| &t.title).unwrap_or(&"".to_string())
+                    );
+                } else {
+                    self.layout.focus_previous();
+                    self.status_message = format!("Focused panel {}", self.layout.focused());
+                }
+            }
+            // Ctrl+Number keys (1-9) for direct tab switching
+            (KeyCode::Char(c @ '1'..='9'), KeyModifiers::CONTROL) => {
+                let number = c.to_digit(10).unwrap() as usize;
+                if self.tabs.switch_to_index(number - 1) {
+                    self.status_message = format!(
+                        "Switched to tab {}: {}",
+                        number,
+                        self.tabs.active_tab().map(|t| &t.title).unwrap_or(&"".to_string())
+                    );
+                } else {
+                    self.status_message = format!("Tab {} does not exist", number);
+                }
             }
             // Enter submits the command
             (KeyCode::Enter, _) => {
@@ -509,16 +578,6 @@ impl App {
             (KeyCode::PageDown, _) => {
                 self.status_message = "Page down".to_string();
                 // TODO: Implement page down for scrollable content
-            }
-            // Tab for next panel
-            (KeyCode::Tab, KeyModifiers::NONE) => {
-                self.layout.focus_next();
-                self.status_message = format!("Focused panel {}", self.layout.focused());
-            }
-            // Shift+Tab for previous panel
-            (KeyCode::Tab, KeyModifiers::SHIFT) | (KeyCode::BackTab, _) => {
-                self.layout.focus_previous();
-                self.status_message = format!("Focused panel {}", self.layout.focused());
             }
             // Vim-style navigation (when not in input field and vim mode enabled)
             (KeyCode::Char('h'), KeyModifiers::NONE) if self.vim_mode && !self.input_field.is_focused() => {
@@ -565,14 +624,28 @@ impl App {
             // Number keys for tab switching (when not in input field)
             (KeyCode::Char(c @ '1'..='9'), KeyModifiers::NONE) if !self.input_field.is_focused() => {
                 let tab_num = c.to_digit(10).unwrap() as usize;
-                self.status_message = format!("Switched to tab {}", tab_num);
-                // TODO: Implement actual tab system
+                if self.tabs.switch_to_index(tab_num - 1) {
+                    self.status_message = format!(
+                        "Switched to tab {}: {}",
+                        tab_num,
+                        self.tabs.active_tab().map(|t| &t.title).unwrap_or(&"".to_string())
+                    );
+                } else {
+                    self.status_message = format!("Tab {} does not exist", tab_num);
+                }
             }
             // Alt+Number for tab switching (works even in input field)
             (KeyCode::Char(c @ '1'..='9'), KeyModifiers::ALT) => {
                 let tab_num = c.to_digit(10).unwrap() as usize;
-                self.status_message = format!("Switched to tab {}", tab_num);
-                // TODO: Implement actual tab system
+                if self.tabs.switch_to_index(tab_num - 1) {
+                    self.status_message = format!(
+                        "Switched to tab {}: {}",
+                        tab_num,
+                        self.tabs.active_tab().map(|t| &t.title).unwrap_or(&"".to_string())
+                    );
+                } else {
+                    self.status_message = format!("Tab {} does not exist", tab_num);
+                }
             }
             // Regular character input
             (KeyCode::Char(c), KeyModifiers::NONE) | (KeyCode::Char(c), KeyModifiers::SHIFT) => {
@@ -592,7 +665,8 @@ impl App {
                     self.status_message = "Showing help screen".to_string();
                 }
                 "commands" => {
-                    self.status_message = "Available commands: /help, /commands, /clear".to_string();
+                    self.status_message =
+                        "Available commands: /help, /commands, /clear".to_string();
                 }
                 "clear" => {
                     self.status_message = "Screen cleared".to_string();
@@ -652,10 +726,7 @@ impl App {
 
     /// Create the trust dialog for the current directory
     fn create_trust_dialog(&mut self) {
-        let dir_path = self
-            .working_directory
-            .to_string_lossy()
-            .to_string();
+        let dir_path = self.working_directory.to_string_lossy().to_string();
 
         self.trust_dialog = Some(
             ConfirmDialog::new("Confirm folder trust")
@@ -684,9 +755,11 @@ impl App {
                         "Folder trusted for this session. Press 'q' to quit.".to_string();
                 }
                 1 => {
-                    // Yes and remember - TODO: Save to config
+                    // Yes and remember - Save to session
                     self.screen = AppScreen::Main;
                     self.trust_dialog = None;
+                    self.session.set_welcome_shown(true);
+                    let _ = self.save_session();
                     self.status_message =
                         "Folder trusted and remembered. Press 'q' to quit.".to_string();
                 }
@@ -697,6 +770,62 @@ impl App {
                 _ => {}
             }
         }
+    }
+
+    /// Update session state from current app state
+    ///
+    /// Synchronizes the session state with the current application state.
+    fn update_session_state(&mut self) {
+        self.session.set_welcome_shown(self.welcome_shown);
+        self.session
+            .set_working_directory(self.working_directory.clone());
+        self.session.set_plugin_count(self.plugin_count);
+
+        // Convert current screen to string for session
+        let screen_str = match self.screen {
+            AppScreen::Welcome => "Welcome",
+            AppScreen::TrustDialog => "TrustDialog",
+            AppScreen::Main => "Main",
+        };
+        self.session.set_last_screen(screen_str.to_string());
+    }
+
+    /// Save session state to disk
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use toad::App;
+    ///
+    /// let mut app = App::new();
+    /// app.save_session().unwrap();
+    /// ```
+    pub fn save_session(&mut self) -> crate::Result<()> {
+        if self.config.session.persist_session && self.config.session.auto_save {
+            self.update_session_state();
+            self.session.auto_save()?;
+        }
+        Ok(())
+    }
+
+    /// Get reference to session state
+    pub fn session(&self) -> &SessionState {
+        &self.session
+    }
+
+    /// Get mutable reference to session state
+    pub fn session_mut(&mut self) -> &mut SessionState {
+        &mut self.session
+    }
+
+    /// Get reference to tab manager
+    pub fn tabs(&self) -> &TabManager {
+        &self.tabs
+    }
+
+    /// Get mutable reference to tab manager
+    pub fn tabs_mut(&mut self) -> &mut TabManager {
+        &mut self.tabs
     }
 }
 

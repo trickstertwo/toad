@@ -323,6 +323,14 @@ fn run_tui() -> Result<()> {
     }
 
     info!("Exiting main loop");
+
+    // Save session state on graceful exit
+    if let Err(e) = app.save_session() {
+        tracing::warn!("Failed to save session state: {}", e);
+    } else {
+        info!("Session state saved successfully");
+    }
+
     Ok(())
 }
 
@@ -400,7 +408,7 @@ fn generate_test_data(count: usize, output: PathBuf) -> Result<()> {
 /// Logs are written to `toad.log` in the current directory.
 #[allow(dead_code)]
 fn init_logging() -> Result<()> {
-    use tracing_subscriber::{fmt, prelude::*, EnvFilter};
+    use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
     // Create log file
     let log_file = std::fs::File::create("toad.log")?;
@@ -415,8 +423,7 @@ fn init_logging() -> Result<()> {
                 .with_line_number(true),
         )
         .with(
-            EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("toad=debug,info")),
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("toad=debug,info")),
         )
         .init();
 
