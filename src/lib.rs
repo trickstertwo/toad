@@ -21,6 +21,7 @@ pub mod app;
 pub mod autocomplete;
 pub mod clipboard;
 pub mod event;
+pub mod fuzzy;
 pub mod history;
 pub mod keybinds;
 pub mod layout;
@@ -29,6 +30,7 @@ pub mod mouse;
 pub mod performance;
 pub mod search;
 pub mod session;
+pub mod tabs;
 pub mod theme;
 pub mod tui;
 pub mod ui;
@@ -49,6 +51,7 @@ pub use autocomplete::{AutocompleteManager, AutocompleteProvider, CommandProvide
 pub use clipboard::Clipboard;
 pub use config::{Config, AiConfig, EditorConfig, UiConfig};
 pub use event::Event;
+pub use fuzzy::{CaseMode, FuzzyFinder, FuzzyMatch, FuzzyMatcher, MatchStrategy};
 pub use history::History;
 pub use keybinds::{KeyBinding, KeyBindings};
 pub use layout::{LayoutManager, Pane, PanelId, SplitDirection};
@@ -56,6 +59,7 @@ pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
 pub use performance::PerformanceMetrics;
 pub use search::{SearchMatch, SearchState};
 pub use session::Session;
+pub use tabs::{Tab, TabId, TabManager};
 pub use tui::Tui;
 
 /// Current TOAD version

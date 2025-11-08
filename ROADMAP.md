@@ -132,11 +132,11 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Clipboard Integration** - Copy/paste support ✅ COMPLETED (Already implemented)
 
 ### Fuzzy Finding
-- [ ] **Fuzzy Search** - Skim/fzf-style searching
-- [ ] **Smart Case** - Case-insensitive by default, smart switching
-- [ ] **Preview Pane** - Show results in split pane
-- [ ] **Sorting & Ranking** - Relevance-based results
-- [ ] **Incremental Search** - Update results as you type
+- [x] **Fuzzy Search** - Skim/fzf-style searching ✅ COMPLETED (FuzzyMatcher with Exact/Substring/Fuzzy strategies)
+- [x] **Smart Case** - Case-insensitive by default, smart switching ✅ COMPLETED (CaseMode::Smart)
+- [ ] **Preview Pane** - Show results in split pane (Core ready, UI integration pending)
+- [x] **Sorting & Ranking** - Relevance-based results ✅ COMPLETED (Score-based with consecutive bonus)
+- [x] **Incremental Search** - Update results as you type ✅ COMPLETED (Real-time matching)
 
 ### Mouse Support
 - [x] **Click to Focus** - Click panels to focus ✅ COMPLETED (MouseState system)
@@ -146,11 +146,11 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Text Selection** - Mouse text selection ✅ COMPLETED (is_in_rect helper)
 
 ### Tab System
-- [ ] **Multiple Tabs** - Named workspaces
-- [ ] **Tab Bar** - Visual tab indicator
-- [ ] **Tab Switching** - gt/gT or number keys
-- [ ] **Tab Creation/Deletion** - :tabnew, :tabclose
-- [ ] **Tab State** - Independent state per tab
+- [x] **Multiple Tabs** - Named workspaces ✅ COMPLETED (TabManager with add/close/navigation)
+- [ ] **Tab Bar** - Visual tab indicator (Core ready, UI integration pending)
+- [x] **Tab Switching** - gt/gT or number keys ✅ COMPLETED (next_tab/previous_tab/switch_to_index)
+- [x] **Tab Creation/Deletion** - :tabnew, :tabclose ✅ COMPLETED (add_tab/close_tab methods)
+- [x] **Tab State** - Independent state per tab ✅ COMPLETED (Tab with title, icon, closable, modified)
 
 ### Advanced Layouts
 - [ ] **Resizable Panes** - Drag borders or keybinds
