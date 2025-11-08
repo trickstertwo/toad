@@ -134,7 +134,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ### Fuzzy Finding
 - [x] **Fuzzy Search** - Skim/fzf-style searching ✅ COMPLETED (FuzzyMatcher with Exact/Substring/Fuzzy strategies)
 - [x] **Smart Case** - Case-insensitive by default, smart switching ✅ COMPLETED (CaseMode::Smart)
-- [ ] **Preview Pane** - Show results in split pane (Core ready, UI integration pending)
+- [x] **Preview Pane** - Show results in split pane ✅ COMPLETED (PreviewPane widget with scroll, line numbers, wrapping)
 - [x] **Sorting & Ranking** - Relevance-based results ✅ COMPLETED (Score-based with consecutive bonus)
 - [x] **Incremental Search** - Update results as you type ✅ COMPLETED (Real-time matching)
 
@@ -153,16 +153,16 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Tab State** - Independent state per tab ✅ COMPLETED (Tab with title, icon, closable, modified)
 
 ### Advanced Layouts
-- [ ] **Resizable Panes** - Drag borders or keybinds
+- [x] **Resizable Panes** - Drag borders or keybinds ✅ COMPLETED (ResizablePaneManager with grow/shrink, min/max limits)
 - [x] **Collapsible Sections** - Accordion-style panels ✅ COMPLETED (CollapsibleSection/CollapsibleList with expand/collapse)
 - [ ] **Floating Windows** - Draggable overlays
 - [x] **Layout Presets** - Save/load layout configs ✅ COMPLETED (save_preset/load_preset with TOML)
 
 ### Performance Optimization
 - [ ] **Lazy Rendering** - Only render visible elements
-- [ ] **Virtual Scrolling** - Handle massive lists (1M+ items)
+- [x] **Virtual Scrolling** - Handle massive lists (1M+ items) ✅ COMPLETED (VirtualScrollState for efficient large datasets)
 - [x] **Frame Rate Control** - Configurable FPS (30/60/120) ✅ COMPLETED (TargetFPS + FrameLimiter)
-- [ ] **Async Operations** - Non-blocking I/O
+- [x] **Async Operations** - Non-blocking I/O ✅ COMPLETED (AsyncOperationManager with status, result tracking)
 - [x] **Background Tasks** - Progress indicators for long ops ✅ COMPLETED (BackgroundTaskManager with status, progress, task lifecycle)
 
 ### Syntax Highlighting

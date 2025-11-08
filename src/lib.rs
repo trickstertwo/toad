@@ -19,6 +19,7 @@ pub mod agent;
 // TUI modules
 pub mod advanced_search;
 pub mod app;
+pub mod async_ops;
 pub mod autocomplete;
 pub mod background_tasks;
 pub mod clipboard;
@@ -31,6 +32,7 @@ pub mod logo;
 pub mod mouse;
 pub mod multicursor;
 pub mod performance;
+pub mod resizable;
 pub mod search;
 pub mod session;
 pub mod tabs;
@@ -38,6 +40,7 @@ pub mod theme;
 pub mod tui;
 pub mod ui;
 pub mod validation;
+pub mod virtual_scroll;
 pub mod widgets;
 
 // Config module contains both M0 and TUI configs
@@ -55,6 +58,7 @@ pub use advanced_search::{
     FilterHistoryEntry, FilterOperator, MultiFieldFilter, SavedFilters,
 };
 pub use app::App;
+pub use async_ops::{AsyncOperation, AsyncOperationManager, OperationId, OperationStatus};
 pub use autocomplete::{AutocompleteManager, AutocompleteProvider, CommandProvider, Suggestion, WordProvider};
 pub use background_tasks::{BackgroundTask, BackgroundTaskManager, TaskId, TaskStatus};
 pub use clipboard::Clipboard;
@@ -67,6 +71,7 @@ pub use layout::{LayoutManager, Pane, PanelId, SplitDirection};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
 pub use multicursor::{CursorPosition, MultiCursor};
 pub use performance::{FrameLimiter, PerformanceMetrics, TargetFPS};
+pub use resizable::{ResizablePane, ResizablePaneManager, ResizeDirection};
 pub use search::{SearchMatch, SearchState};
 pub use session::Session;
 pub use tabs::{Tab, TabId, TabManager};
@@ -75,6 +80,7 @@ pub use validation::{
     CompositeValidator, InputValidator, LengthValidator, NotEmptyValidator, RegexValidator,
     ValidationResult, Validator,
 };
+pub use virtual_scroll::VirtualScrollState;
 
 /// Current TOAD version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
