@@ -255,8 +255,8 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 
 ### Developer Experience
 - [ ] **Command History** - Searchable command log
-- [ ] **Breadcrumbs** - Navigation trail
-- [ ] **Minimap** - Document overview (VSCode-style)
+- [x] **Breadcrumbs** - Navigation trail ✅ COMPLETED
+- [x] **Minimap** - Document overview (VSCode-style) ✅ COMPLETED
 - [ ] **Multi-select** - Bulk operations on items
 - [ ] **Batch Operations** - Apply actions to selections
 - [ ] **Incremental Loading** - Stream large datasets

@@ -3,7 +3,7 @@
 > Comprehensive checklist for implementing remaining features from ROADMAP.md
 
 **Last Updated**: 2025-11-08
-**Overall Progress**: Medium Tier 100% ✅ | Advanced Tier ~25% | Platinum Tier ~43%
+**Overall Progress**: Medium Tier 100% ✅ | Advanced Tier ~25% | Platinum Tier ~46%
 
 ---
 
@@ -205,10 +205,10 @@ All main interface components are implemented.
 - [ ] **Model Selector** - Switch AI models
 - [ ] **Context Display** - Show what AI sees
 
-### Developer Experience (0% Complete)
+### Developer Experience (29% Complete)
 - [ ] **Command History** - Searchable command log
-- [ ] **Breadcrumbs** - Navigation trail
-- [ ] **Minimap** - Document overview (VSCode-style)
+- [x] **Breadcrumbs** - Navigation trail ✅ COMPLETED
+- [x] **Minimap** - Document overview (VSCode-style) ✅ COMPLETED
 - [ ] **Multi-select** - Bulk operations on items
 - [ ] **Batch Operations** - Apply actions to selections
 - [ ] **Incremental Loading** - Stream large datasets
@@ -363,15 +363,15 @@ All main interface components are implemented.
 - **Basic Tier**: 100% ✅ (All features)
 - **Medium Tier**: 100% ✅ (All features)
 - **Advanced Tier**: ~25% (Foundation features)
-- **Platinum Tier**: ~43% (Visual Polish 7/7 100% ✅, Performance Monitoring 4/4 100% ✅, Graph & Data Viz 5/5 100% ✅, Modal Editing 6/6 100% ✅)
+- **Platinum Tier**: ~46% (Visual Polish 7/7 100% ✅, Performance Monitoring 4/4 100% ✅, Graph & Data Viz 5/5 100% ✅, Modal Editing 6/6 100% ✅, Developer Experience 2/7 29%)
 
 ### Total Progress
-- **Completed**: ~156 features
-- **Remaining**: ~144 features
-- **Overall**: ~52% complete
+- **Completed**: ~158 features
+- **Remaining**: ~142 features
+- **Overall**: ~53% complete
 
 ### Quality Metrics
-- **Tests**: 938 passing (excellent coverage, +24 from macros/marks)
+- **Tests**: 959 passing (excellent coverage, +21 from DX features)
 - **Documentation**: 100% (all public APIs)
 - **Clippy Warnings**: 0 (zero tolerance)
 - **Binary Size**: ~2.2 MB (excellent)
