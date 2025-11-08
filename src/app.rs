@@ -6,6 +6,7 @@
 use crate::config::Config;
 use crate::event::Event;
 use crate::session::SessionState;
+use crate::tabs::TabManager;
 use crate::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::path::PathBuf;
@@ -68,6 +69,9 @@ pub struct App {
 
     /// Session state for persistence
     session: SessionState,
+
+    /// Tab manager for multiple workspaces
+    tabs: TabManager,
 }
 
 impl Default for App {
@@ -112,6 +116,7 @@ impl Default for App {
             show_palette: false,
             config,
             session,
+            tabs: TabManager::new(),
         }
     }
 }
@@ -355,6 +360,35 @@ impl App {
             (KeyCode::Char('?'), _) => {
                 self.show_help = !self.show_help;
             }
+            // Tab cycling: Tab for next, Shift+Tab for previous
+            (KeyCode::Tab, KeyModifiers::NONE) => {
+                self.tabs.next_tab();
+                self.status_message = format!(
+                    "Switched to tab: {}",
+                    self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
+                );
+            }
+            (KeyCode::BackTab, _) => {
+                // BackTab is Shift+Tab
+                self.tabs.prev_tab();
+                self.status_message = format!(
+                    "Switched to tab: {}",
+                    self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
+                );
+            }
+            // Number keys (1-9) for direct tab switching
+            (KeyCode::Char(c @ '1'..='9'), KeyModifiers::CONTROL) => {
+                let number = c.to_digit(10).unwrap() as usize;
+                if self.tabs.switch_to_number(number) {
+                    self.status_message = format!(
+                        "Switched to tab {}: {}",
+                        number,
+                        self.tabs.active_tab().map(|t| t.name()).unwrap_or("")
+                    );
+                } else {
+                    self.status_message = format!("Tab {} does not exist", number);
+                }
+            }
             // Enter submits the command
             (KeyCode::Enter, _) => {
                 let input = self.input_field.value().to_string();
@@ -557,6 +591,16 @@ impl App {
     /// Get reference to config
     pub fn config(&self) -> &Config {
         &self.config
+    }
+
+    /// Get reference to tab manager
+    pub fn tabs(&self) -> &TabManager {
+        &self.tabs
+    }
+
+    /// Get mutable reference to tab manager
+    pub fn tabs_mut(&mut self) -> &mut TabManager {
+        &mut self.tabs
     }
 }
 
