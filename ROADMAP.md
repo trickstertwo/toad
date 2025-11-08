@@ -128,7 +128,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Command Palette** - Ctrl+P fuzzy command search ✅ COMPLETED
 - [x] **Autocomplete** - Tab completion for inputs ✅ COMPLETED (AutocompleteManager)
 - [x] **Input Validation** - Real-time validation feedback ✅ COMPLETED (InputValidator with multiple validators)
-- [ ] **Multi-cursor Support** - Edit multiple locations
+- [x] **Multi-cursor Support** - Edit multiple locations ✅ COMPLETED (MultiCursor with position tracking, movement, primary cursor)
 - [x] **Clipboard Integration** - Copy/paste support ✅ COMPLETED (Already implemented)
 
 ### Fuzzy Finding
@@ -163,7 +163,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Virtual Scrolling** - Handle massive lists (1M+ items)
 - [x] **Frame Rate Control** - Configurable FPS (30/60/120) ✅ COMPLETED (TargetFPS + FrameLimiter)
 - [ ] **Async Operations** - Non-blocking I/O
-- [ ] **Background Tasks** - Progress indicators for long ops
+- [x] **Background Tasks** - Progress indicators for long ops ✅ COMPLETED (BackgroundTaskManager with status, progress, task lifecycle)
 
 ### Syntax Highlighting
 - [ ] **Tree-sitter Integration** - AST-based highlighting
