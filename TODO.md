@@ -3,7 +3,7 @@
 > Comprehensive checklist for implementing remaining features from ROADMAP.md
 
 **Last Updated**: 2025-11-08
-**Overall Progress**: Medium Tier 100% ✅ | Advanced Tier ~25% | Platinum Tier ~40%
+**Overall Progress**: Medium Tier 100% ✅ | Advanced Tier ~25% | Platinum Tier ~43%
 
 ---
 
@@ -155,14 +155,14 @@ All main interface components are implemented.
 - [x] **Live Graphs** - Real-time updating charts ✅ COMPLETED
 - [x] **Git Graph** - Branch visualization (lazygit-style) ✅ COMPLETED
 
-### Modal Editing (Vim-inspired) (67% Complete)
+### Modal Editing (Vim-inspired) ✅ COMPLETE (6/6 - 100%)
 - [x] **Basic Vim Navigation** - h/j/k/l, gg, G
 - [x] **Multiple Modes** - Normal, Insert, Visual, Command ✅ COMPLETED
 - [x] **Mode Indicator** - Visual mode display ✅ COMPLETED
 - [x] **Vim Motions** - w/b/e word movement, f/t character jump ✅ COMPLETED (state management)
 - [x] **Visual Selection** - V for line, v for char, Ctrl+v for block ✅ COMPLETED
-- [ ] **Macros** - Record and replay actions
-- [ ] **Marks** - Set and jump to bookmarks
+- [x] **Macros** - Record and replay actions ✅ COMPLETED
+- [x] **Marks** - Set and jump to bookmarks ✅ COMPLETED
 
 ### Power User Features (20% Complete)
 - [x] **Custom Keybindings** - Fully remappable keys
@@ -363,18 +363,18 @@ All main interface components are implemented.
 - **Basic Tier**: 100% ✅ (All features)
 - **Medium Tier**: 100% ✅ (All features)
 - **Advanced Tier**: ~25% (Foundation features)
-- **Platinum Tier**: ~40% (Visual Polish 7/7 100% ✅, Performance Monitoring 4/4 ✅, Graph & Data Viz 5/5 100% ✅, Modal Editing 4/6 67%)
+- **Platinum Tier**: ~43% (Visual Polish 7/7 100% ✅, Performance Monitoring 4/4 100% ✅, Graph & Data Viz 5/5 100% ✅, Modal Editing 6/6 100% ✅)
 
 ### Total Progress
-- **Completed**: ~154 features
-- **Remaining**: ~146 features
-- **Overall**: ~51% complete
+- **Completed**: ~156 features
+- **Remaining**: ~144 features
+- **Overall**: ~52% complete
 
 ### Quality Metrics
-- **Tests**: 914 passing (excellent coverage, +23 from modal editing)
+- **Tests**: 938 passing (excellent coverage, +24 from macros/marks)
 - **Documentation**: 100% (all public APIs)
 - **Clippy Warnings**: 0 (zero tolerance)
-- **Binary Size**: ~2.1 MB (excellent)
+- **Binary Size**: ~2.2 MB (excellent)
 - **Build Time**: ~2s incremental (fast)
 
 ---
