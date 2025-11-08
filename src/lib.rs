@@ -26,6 +26,7 @@ pub mod layout;
 pub mod logo;
 pub mod performance;
 pub mod search;
+pub mod session;
 pub mod theme;
 pub mod tui;
 pub mod ui;
@@ -50,6 +51,7 @@ pub use keybinds::{KeyBinding, KeyBindings};
 pub use layout::{LayoutManager, Pane, PanelId, SplitDirection};
 pub use performance::PerformanceMetrics;
 pub use search::{SearchMatch, SearchState};
+pub use session::Session;
 pub use tui::Tui;
 
 /// Current TOAD version

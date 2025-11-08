@@ -74,7 +74,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ### Modal System
 - [x] **Popup/Dialog Windows** - Centered overlays ✅ COMPLETED
 - [x] **Confirmation Dialogs** - Yes/No prompts ✅ COMPLETED (TrustDialog)
-- [ ] **Input Prompts** - Modal text input
+- [x] **Input Prompts** - Modal text input ✅ COMPLETED (InputPrompt widget)
 - [x] **Error Messages** - Modal error display ✅ COMPLETED
 - [x] **ESC to Close** - Consistent modal dismissal ✅ COMPLETED
 
@@ -82,11 +82,11 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Vim-style Keybindings** - h/j/k/l navigation ✅ COMPLETED
 - [x] **g/G Navigation** - Jump to top/bottom ✅ COMPLETED
 - [x] **Page Up/Down** - Ctrl+u/d or PgUp/PgDn ✅ COMPLETED
-- [ ] **Tab Switching** - Number keys (1-9) or Tab cycling
+- [x] **Tab Switching** - Number keys (1-9) or Alt+Number ✅ COMPLETED
 
 ### State Management
 - [x] **Configuration File** - TOML/YAML settings ✅ COMPLETED
-- [ ] **State Persistence** - Save/restore session state
+- [x] **State Persistence** - Save/restore session state ✅ COMPLETED (Session module)
 - [x] **History Tracking** - Command/action history ✅ COMPLETED (Already implemented)
 
 ### Basic Search
@@ -96,7 +96,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 
 ### Logging & Debugging
 - [x] **File Logging** - Debug logs to toad.log ✅ COMPLETED
-- [ ] **Error Handling** - Graceful error display
+- [x] **Error Handling** - Graceful error display ✅ COMPLETED (Toast notifications)
 - [x] **Performance Metrics** - Render time tracking ✅ COMPLETED
 
 ### Main Interface (from mockup)

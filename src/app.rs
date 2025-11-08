@@ -7,7 +7,7 @@ use crate::config::Config;
 use crate::event::Event;
 use crate::layout::LayoutManager;
 use crate::performance::PerformanceMetrics;
-use crate::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField};
+use crate::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, ToastManager};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::env;
 use std::path::PathBuf;
@@ -79,6 +79,9 @@ pub struct App {
 
     /// Show performance overlay
     show_performance: bool,
+
+    /// Toast notification manager
+    toasts: ToastManager,
 }
 
 impl Default for App {
@@ -110,6 +113,7 @@ impl Default for App {
             config,
             performance: PerformanceMetrics::new(),
             show_performance: false,
+            toasts: ToastManager::new(),
         }
     }
 }
@@ -255,6 +259,36 @@ impl App {
             "Performance overlay {}",
             if self.show_performance { "shown" } else { "hidden" }
         );
+    }
+
+    /// Get toast manager
+    pub fn toasts(&self) -> &ToastManager {
+        &self.toasts
+    }
+
+    /// Get mutable toast manager
+    pub fn toasts_mut(&mut self) -> &mut ToastManager {
+        &mut self.toasts
+    }
+
+    /// Show an info toast
+    pub fn toast_info(&mut self, message: impl Into<String>) {
+        self.toasts.info(message);
+    }
+
+    /// Show a success toast
+    pub fn toast_success(&mut self, message: impl Into<String>) {
+        self.toasts.success(message);
+    }
+
+    /// Show a warning toast
+    pub fn toast_warning(&mut self, message: impl Into<String>) {
+        self.toasts.warning(message);
+    }
+
+    /// Show an error toast
+    pub fn toast_error(&mut self, message: impl Into<String>) {
+        self.toasts.error(message);
     }
 
     /// Update application state based on an event (Update in Elm Architecture)
@@ -527,6 +561,18 @@ impl App {
             (KeyCode::Char('N'), KeyModifiers::SHIFT) if self.vim_mode && !self.input_field.is_focused() => {
                 self.status_message = "Previous search result (coming soon)".to_string();
                 // TODO: Implement previous search
+            }
+            // Number keys for tab switching (when not in input field)
+            (KeyCode::Char(c @ '1'..='9'), KeyModifiers::NONE) if !self.input_field.is_focused() => {
+                let tab_num = c.to_digit(10).unwrap() as usize;
+                self.status_message = format!("Switched to tab {}", tab_num);
+                // TODO: Implement actual tab system
+            }
+            // Alt+Number for tab switching (works even in input field)
+            (KeyCode::Char(c @ '1'..='9'), KeyModifiers::ALT) => {
+                let tab_num = c.to_digit(10).unwrap() as usize;
+                self.status_message = format!("Switched to tab {}", tab_num);
+                // TODO: Implement actual tab system
             }
             // Regular character input
             (KeyCode::Char(c), KeyModifiers::NONE) | (KeyCode::Char(c), KeyModifiers::SHIFT) => {
