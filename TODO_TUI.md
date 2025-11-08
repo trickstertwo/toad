@@ -227,11 +227,17 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Workspace Switching** - Multiple project contexts ✅ COMPLETED (WorkspaceManager with recent files, settings, next/previous switching, path lookup)
 
 ### Git Integration (for coding terminal)
-- [ ] **Git Status Panel** - Live repository status
-- [ ] **Commit Graph** - Visual branch history
+- [x] **Git Status Panel** - Live repository status ✅ COMPLETED
+  - GitStatusPanel widget with 6 status types (13 unit tests)
+  - Interactive file selection with checkboxes
+  - Branch display with ahead/behind indicators
+  - File counts summary (modified/staged/untracked)
+  - GitService backend with async operations (6 unit tests)
+  - Total: 19 tests passing
+- [ ] **Commit Graph** - Visual branch history (GitGraph widget exists with 36 tests, needs real git integration)
 - [ ] **Diff Viewer** - Inline/side-by-side diffs
-- [ ] **Stage/Unstage** - Visual git add/reset
-- [ ] **Commit UI** - Interactive commit creation
+- [ ] **Stage/Unstage** - Visual git add/reset (Backend exists, needs UI)
+- [ ] **Commit UI** - Interactive commit creation (Backend exists, needs UI)
 - [ ] **Branch Management** - Create/switch/delete branches
 - [ ] **Conflict Resolution** - Merge conflict UI
 
@@ -260,6 +266,45 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Batch Operations** - Apply actions to selections ✅ COMPLETED (BatchOperation with handlers, BatchManager with history, BatchStats)
 - [ ] **Incremental Loading** - Stream large datasets
 - [ ] **Export/Import** - Data portability
+
+### Project Management (Platinum)
+- [ ] **Kanban Board** - Task management with columns (Todo/In Progress/Done)
+  - Drag & drop cards between columns
+  - Card details (title, description, assignee, priority, tags)
+  - Filter and search cards
+  - Custom columns and workflows
+  - Save/load board state
+- [ ] **Task List** - Hierarchical task management
+  - Nested tasks with dependencies
+  - Progress tracking and completion %
+  - Due dates and priorities
+  - Tags and categories
+- [ ] **Timeline View** - Gantt-style project timeline
+  - Visual task dependencies
+  - Milestone markers
+  - Critical path highlighting
+
+### Multi-Window System (Platinum)
+- [ ] **Window Management** - Multiple TOAD instances in one session
+  - Independent window state per "instance"
+  - Each window can have different workspace/context
+  - Windows can run separate tasks simultaneously
+- [ ] **Window Switching** - Efficient navigation
+  - Ctrl+Tab: Switch to next window
+  - Ctrl+Shift+Tab: Switch to previous window
+  - Alt+Tab style overview: Visual window switcher
+  - Show preview of each window's content
+  - Window numbers (Alt+1, Alt+2, etc. for direct access)
+- [ ] **Window Overview** - Task switcher UI
+  - Grid or list view of all windows
+  - Window titles and status indicators
+  - Preview pane showing window content
+  - Close/minimize windows from overview
+- [ ] **Cross-Window Context** (Future)
+  - Shared clipboard between windows
+  - Drag & drop between windows
+  - Reference other window's context
+  - Agent context sharing across windows
 
 ### Accessibility
 - [ ] **Screen Reader Support** - Accessibility labels
