@@ -32,6 +32,7 @@ pub mod split;
 pub mod table;
 pub mod textarea;
 pub mod toast;
+pub mod undo_redo;
 pub mod vim_macros;
 pub mod vim_mode;
 pub mod welcome;
@@ -66,6 +67,7 @@ pub use split::{PaneBorderStyle, SplitDirection, SplitPane, SplitPaneError, Spli
 pub use table::{ColumnAlignment, DataTable, TableColumn};
 pub use textarea::Textarea;
 pub use toast::{Toast, ToastLevel, ToastManager};
+pub use undo_redo::{Action, UndoRedoManager};
 pub use vim_macros::{MacroAction, MacroRecorder, MarkRegistry};
 pub use vim_mode::{EditMode, ModeIndicator, Selection, VimMode};
 pub use welcome::WelcomeScreen;
