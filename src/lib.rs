@@ -42,6 +42,7 @@ pub mod macros;
 pub mod marks;
 pub mod mouse;
 pub mod multicursor;
+pub mod nerd_fonts;
 pub mod performance;
 pub mod recent_files;
 pub mod resizable;
@@ -113,6 +114,7 @@ pub use bookmarks::{Bookmark, BookmarkManager};
 pub use batch_ops::{BatchHandler, BatchManager, BatchOperation, BatchResult, BatchStats, OpResult};
 pub use animations::{Animation, AnimationState, EasingFunction, TransitionManager};
 pub use canvas::{Canvas, Pixel, Shape};
+pub use nerd_fonts::{GitStatus, NerdFonts, UiIcon, supports_nerd_fonts};
 
 /// Current TOAD version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

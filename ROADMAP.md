@@ -194,7 +194,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Sparklines** - Inline graphs for metrics ✅ COMPLETED (Sparkline widget with Bars/Braille/Dots styles, min/max/avg, downsampling)
 - [x] **Canvas Drawing** - Custom graphics (charts, diagrams) ✅ COMPLETED (Canvas with line/rectangle/circle primitives, Bresenham algorithm, text rendering)
 - [x] **Box Drawing Characters** - Beautiful Unicode borders ✅ COMPLETED (BoxChars with Light/Heavy/Double/Rounded/ASCII styles, BoxBuilder, draw utilities)
-- [ ] **Nerd Font Icons** - Icon support (file types, status indicators)
+- [x] **Nerd Font Icons** - Icon support (file types, status indicators) ✅ COMPLETED (NerdFonts with 60+ file types, folder icons, git status, 50+ UI icons, language icons, terminal detection)
 
 ### Graph & Data Visualization
 - [x] **Line Charts** - Time-series data ✅ COMPLETED (LineChart with 4 line styles, auto-scaling, sparkline rendering, min/max values)
@@ -238,7 +238,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ### File Management
 - [x] **Tree View** - Collapsible directory tree ✅ COMPLETED
 - [ ] **File Preview** - Quick file preview pane
-- [ ] **File Icons** - Type-based icons (Nerd Fonts)
+- [x] **File Icons** - Type-based icons (Nerd Fonts) ✅ COMPLETED (NerdFonts module with 60+ file type icons)
 - [x] **File Operations** - Copy/move/delete/rename ✅ COMPLETED (FileOps with copy/move/rename/delete, FileOpResult with error handling)
 - [x] **Bookmarks** - Quick navigation to locations ✅ COMPLETED (BookmarkManager with search, sorting, save/load)
 - [x] **Recent Files** - MRU list ✅ COMPLETED (RecentFiles with MRU tracking, search, frequency sorting, save/load persistence)
