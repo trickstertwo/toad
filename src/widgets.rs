@@ -2,6 +2,7 @@
 //!
 //! Reusable UI components following Ratatui patterns
 
+pub mod borders;
 pub mod dialog;
 pub mod filetree;
 pub mod help;
@@ -19,6 +20,7 @@ pub mod textarea;
 pub mod toast;
 pub mod welcome;
 
+pub use borders::{BorderSet, BorderStyle};
 pub use dialog::{ConfirmDialog, DialogOption};
 pub use filetree::{FileTree, FileTreeNode, FileTreeNodeType};
 pub use help::HelpScreen;

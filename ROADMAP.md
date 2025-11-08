@@ -194,7 +194,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Progress Animations** - Multi-stage task progress with time tracking and visual indicators ✅ COMPLETED
 - [x] **Sparklines** - Inline graphs for metrics (bar/line styles, min/max/avg markers, gradients) ✅ COMPLETED
 - [ ] **Canvas Drawing** - Custom graphics (charts, diagrams)
-- [ ] **Box Drawing Characters** - Beautiful Unicode borders
+- [x] **Box Drawing Characters** - Beautiful Unicode borders (7 styles: Plain, Thick, Double, Rounded, ASCII, Heavy, Dashed) ✅ COMPLETED
 - [ ] **Nerd Font Icons** - Icon support (file types, status indicators)
 
 ### Graph & Data Visualization
