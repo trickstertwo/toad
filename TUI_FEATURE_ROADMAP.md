@@ -58,10 +58,10 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 
 ### Advanced Widgets
 - [x] **List Widget** - Scrollable lists with selection ✅ COMPLETED (via CommandPalette)
-- [ ] **Table Widget** - Multi-column data with headers
+- [x] **Table Widget** - Multi-column data with headers ✅ COMPLETED
 - [x] **Scrollbar** - Visual scroll indicators ✅ COMPLETED
 - [x] **Input Field** - Single-line text input ✅ COMPLETED
-- [ ] **Textarea** - Multi-line text editing
+- [x] **Textarea** - Multi-line text editing ✅ COMPLETED
 - [x] **Progress Bars** - Task progress indicators ✅ COMPLETED
 - [x] **Gauge/Meter** - Visual metrics display ✅ COMPLETED (via ProgressBar)
 
