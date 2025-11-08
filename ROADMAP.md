@@ -172,16 +172,16 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Semantic Colors** - Context-aware coloring
 
 ### Advanced Search & Filter
-- [ ] **Regex Search** - Full regex support
-- [ ] **Multi-field Filters** - Complex query syntax
-- [ ] **Saved Filters** - Bookmark common searches
-- [ ] **Filter History** - Recent searches dropdown
+- [x] **Regex Search** - Full regex support ✅ COMPLETED (advanced_search.rs)
+- [x] **Multi-field Filters** - Complex query syntax ✅ COMPLETED (FilterCondition with 7 operators)
+- [x] **Saved Filters** - Bookmark common searches ✅ COMPLETED (SavedFilters with TOML persistence)
+- [x] **Filter History** - Recent searches dropdown ✅ COMPLETED (FilterHistory with VecDeque)
 
 ### Notifications
-- [ ] **Toast Notifications** - Non-blocking alerts
-- [ ] **Notification Queue** - Stack multiple notifications
-- [ ] **Notification Levels** - Info/warning/error styling
-- [ ] **Auto-dismiss** - Time-based removal
+- [x] **Toast Notifications** - Non-blocking alerts ✅ COMPLETED (toast.rs)
+- [x] **Notification Queue** - Stack multiple notifications ✅ COMPLETED (ToastManager)
+- [x] **Notification Levels** - Info/warning/error styling ✅ COMPLETED (ToastLevel enum)
+- [x] **Auto-dismiss** - Time-based removal ✅ COMPLETED (is_visible + cleanup)
 
 ---
 

@@ -17,6 +17,7 @@ pub mod llm;
 pub mod agent;
 
 // TUI modules
+pub mod advanced_search;
 pub mod app;
 pub mod autocomplete;
 pub mod clipboard;
@@ -47,6 +48,10 @@ pub use metrics::{Metrics, MetricsCollector};
 pub use stats::{ComparisonResult, StatisticalTest};
 
 // TUI re-exports
+pub use advanced_search::{
+    AdvancedSearchManager, AdvancedSearchMatch, FilterCondition, FilterHistory,
+    FilterHistoryEntry, FilterOperator, MultiFieldFilter, SavedFilters,
+};
 pub use app::App;
 pub use autocomplete::{AutocompleteManager, AutocompleteProvider, CommandProvider, Suggestion, WordProvider};
 pub use clipboard::Clipboard;
