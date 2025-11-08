@@ -90,9 +90,9 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **History Tracking** - Command/action history ✅ COMPLETED
 
 ### Basic Search
-- [ ] **Forward Search** - / to search
-- [ ] **Next/Previous** - n/N to navigate results
-- [ ] **Highlight Matches** - Visual search feedback
+- [x] **Forward Search** - / to search ✅ COMPLETED
+- [x] **Next/Previous** - n/N to navigate results ✅ COMPLETED
+- [x] **Highlight Matches** - Visual search feedback ✅ COMPLETED
 
 ### Logging & Debugging
 - [x] **File Logging** - Debug logs to toad.log ✅ COMPLETED
