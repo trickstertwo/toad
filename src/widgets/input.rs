@@ -28,7 +28,7 @@ impl InputField {
     pub fn new() -> Self {
         Self {
             value: String::new(),
-            placeholder: "Ask me anything or type a command...".to_string(),
+            placeholder: "Enter @ to mention files or / for commands".to_string(),
             cursor_position: 0,
             is_focused: false,
         }

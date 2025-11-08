@@ -54,28 +54,31 @@ fn render_trust_dialog(app: &App, frame: &mut Frame, area: Rect) {
 
 /// Render the main interface
 fn render_main(app: &App, frame: &mut Frame, area: Rect) {
-    // Create the main layout following the mockup:
-    // 1. System info header (model, plugins, project)
-    // 2. Main content area
+    // Create the main layout:
+    // 1. Main content area
+    // 2. Metadata line (path + model info)
     // 3. Horizontal separator
     // 4. Input field
-    // 5. Keyboard shortcuts bar
+    // 5. Horizontal separator
+    // 6. Keyboard shortcuts bar
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3), // System info header
             Constraint::Min(0),    // Main content area
+            Constraint::Length(1), // Metadata line
             Constraint::Length(1), // Horizontal separator
             Constraint::Length(1), // Input field
+            Constraint::Length(1), // Horizontal separator
             Constraint::Length(1), // Keyboard shortcuts bar
         ])
         .split(area);
 
-    render_system_info(app, frame, chunks[0]);
-    render_main_content(app, frame, chunks[1]);
+    render_main_content(app, frame, chunks[0]);
+    render_metadata_line(app, frame, chunks[1]);
     render_separator(frame, chunks[2]);
     app.input_field().render(frame, chunks[3]);
-    render_shortcuts_bar(frame, chunks[4]);
+    render_separator(frame, chunks[4]);
+    render_shortcuts_bar(frame, chunks[5]);
 }
 
 /// Render the main content area
@@ -134,40 +137,35 @@ fn render_main_content(_app: &App, frame: &mut Frame, area: Rect) {
     frame.render_widget(paragraph, area);
 }
 
-/// Render the system info header
-fn render_system_info(app: &App, frame: &mut Frame, area: Rect) {
-    let info_block = Block::default()
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
-        .style(Style::default().bg(ToadTheme::BLACK));
-
-    // Left side: Model + Runtime
-    // Right side: Plugins + Project path
-    let model_info = "Sonnet 4.5 · Rust TUI";
-    let plugin_info = format!("Active Plugins: {} installed", app.plugin_count());
+/// Render the metadata line (path on left, model info on right)
+fn render_metadata_line(app: &App, frame: &mut Frame, area: Rect) {
     let project_path = app.working_directory().to_string_lossy();
+    let model_info = "claude-sonnet-4.5 (1x)";
 
-    let info_text = vec![
-        Line::from(vec![
-            Span::styled(
-                model_info,
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled("  │  ", Style::default().fg(ToadTheme::DARK_GRAY)),
-            Span::styled(&plugin_info, Style::default().fg(ToadTheme::GRAY)),
-        ]),
-        Line::from(Span::styled(
-            format!("Project: {}", project_path),
+    // Calculate spacing to push model info to the right
+    let path_len = project_path.len();
+    let model_len = model_info.len();
+    let total_len = path_len + model_len;
+    let padding = if total_len < area.width as usize {
+        " ".repeat(area.width as usize - total_len)
+    } else {
+        " ".to_string()
+    };
+
+    let metadata_line = Line::from(vec![
+        Span::styled(" ", Style::default()),
+        Span::styled(
+            project_path.to_string(),
             Style::default().fg(ToadTheme::GRAY),
-        )),
-    ];
+        ),
+        Span::styled(padding, Style::default()),
+        Span::styled(
+            model_info,
+            Style::default().fg(ToadTheme::GRAY),
+        ),
+    ]);
 
-    let paragraph = Paragraph::new(info_text)
-        .block(info_block)
-        .alignment(Alignment::Left);
-
+    let paragraph = Paragraph::new(metadata_line);
     frame.render_widget(paragraph, area);
 }
 
@@ -185,29 +183,27 @@ fn render_separator(frame: &mut Frame, area: Rect) {
 /// Render keyboard shortcuts bar
 fn render_shortcuts_bar(frame: &mut Frame, area: Rect) {
     let shortcuts = [
-        ("Ctrl+C", "quit"),
-        ("?", "help"),
-        ("/", "commands"),
-        ("Ctrl+P", "palette"),
-        ("Tab", "autocomplete"),
+        ("Ctrl+c", "Exit"),
+        ("Ctrl+r", "Expand recent"),
+        ("?", "Help"),
+        ("/", "Commands"),
+        ("Ctrl+p", "Palette"),
     ];
 
-    let mut spans = Vec::new();
+    let mut spans = vec![Span::styled(" ", Style::default())];
     for (i, (key, desc)) in shortcuts.iter().enumerate() {
         if i > 0 {
-            spans.push(Span::styled("  |  ", Style::default().fg(ToadTheme::DARK_GRAY)));
+            spans.push(Span::styled(" · ", Style::default().fg(ToadTheme::GRAY)));
         }
         spans.push(Span::styled(
             *key,
-            Style::default()
-                .fg(ToadTheme::TOAD_GREEN)
-                .add_modifier(Modifier::BOLD),
+            Style::default().fg(ToadTheme::GRAY),
         ));
         spans.push(Span::styled(" ", Style::default()));
         spans.push(Span::styled(*desc, Style::default().fg(ToadTheme::GRAY)));
     }
 
     let shortcuts_line = Line::from(spans);
-    let shortcuts_paragraph = Paragraph::new(shortcuts_line).alignment(Alignment::Center);
+    let shortcuts_paragraph = Paragraph::new(shortcuts_line).alignment(Alignment::Left);
     frame.render_widget(shortcuts_paragraph, area);
 }
