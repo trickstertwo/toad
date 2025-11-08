@@ -26,7 +26,7 @@ pub use input_prompt::InputPrompt;
 pub use modal::{Modal, ModalType};
 pub use palette::{CommandPalette, PaletteCommand};
 pub use progress::{MultiStageProgress, ProgressBar};
-pub use split::{SplitDirection, SplitPane, SplitPaneError, SplitSize};
+pub use split::{PaneBorderStyle, SplitDirection, SplitPane, SplitPaneError, SplitSize};
 pub use table::{ColumnAlignment, DataTable, TableColumn};
 pub use textarea::Textarea;
 pub use toast::{Toast, ToastLevel, ToastManager};

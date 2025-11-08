@@ -44,8 +44,8 @@ use crate::theme::ToadTheme;
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect},
-    style::Style,
-    widgets::Block,
+    style::{Color, Style},
+    widgets::{Block, BorderType},
 };
 use thiserror::Error;
 
@@ -146,6 +146,117 @@ impl SplitSize {
 /// // Focus pane 1
 /// split.set_focused_pane(1).unwrap();
 /// ```
+/// Border style configuration for focus indication
+///
+/// # Examples
+///
+/// ```
+/// use toad::widgets::PaneBorderStyle;
+///
+/// let style = PaneBorderStyle::default();
+/// assert_eq!(style.show_borders(), true);
+/// ```
+#[derive(Debug, Clone)]
+pub struct PaneBorderStyle {
+    /// Whether to show borders
+    show_borders: bool,
+    /// Border type for focused pane
+    focused_border_type: BorderType,
+    /// Border type for unfocused pane
+    unfocused_border_type: BorderType,
+    /// Border color for focused pane
+    focused_border_color: Color,
+    /// Border color for unfocused pane
+    unfocused_border_color: Color,
+}
+
+impl Default for PaneBorderStyle {
+    fn default() -> Self {
+        Self {
+            show_borders: true,
+            focused_border_type: BorderType::Thick,
+            unfocused_border_type: BorderType::Plain,
+            focused_border_color: Color::Green,
+            unfocused_border_color: Color::DarkGray,
+        }
+    }
+}
+
+impl PaneBorderStyle {
+    /// Create a new border style with defaults
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::widgets::PaneBorderStyle;
+    ///
+    /// let style = PaneBorderStyle::new();
+    /// ```
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Check if borders should be shown
+    pub fn show_borders(&self) -> bool {
+        self.show_borders
+    }
+
+    /// Set whether to show borders
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::widgets::PaneBorderStyle;
+    ///
+    /// let mut style = PaneBorderStyle::new();
+    /// style.set_show_borders(false);
+    /// assert!(!style.show_borders());
+    /// ```
+    pub fn set_show_borders(&mut self, show: bool) {
+        self.show_borders = show;
+    }
+
+    /// Get focused border type
+    pub fn focused_border_type(&self) -> BorderType {
+        self.focused_border_type
+    }
+
+    /// Set focused border type
+    pub fn set_focused_border_type(&mut self, border_type: BorderType) {
+        self.focused_border_type = border_type;
+    }
+
+    /// Get unfocused border type
+    pub fn unfocused_border_type(&self) -> BorderType {
+        self.unfocused_border_type
+    }
+
+    /// Set unfocused border type
+    pub fn set_unfocused_border_type(&mut self, border_type: BorderType) {
+        self.unfocused_border_type = border_type;
+    }
+
+    /// Get focused border color
+    pub fn focused_border_color(&self) -> Color {
+        self.focused_border_color
+    }
+
+    /// Set focused border color
+    pub fn set_focused_border_color(&mut self, color: Color) {
+        self.focused_border_color = color;
+    }
+
+    /// Get unfocused border color
+    pub fn unfocused_border_color(&self) -> Color {
+        self.unfocused_border_color
+    }
+
+    /// Set unfocused border color
+    pub fn set_unfocused_border_color(&mut self, color: Color) {
+        self.unfocused_border_color = color;
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SplitPane {
     direction: SplitDirection,
@@ -154,6 +265,7 @@ pub struct SplitPane {
     focused_pane: usize,
     show_separator: bool,
     min_size: u16,
+    border_style: PaneBorderStyle,
 }
 
 impl SplitPane {
@@ -177,6 +289,7 @@ impl SplitPane {
             focused_pane: 0,
             show_separator: true,
             min_size: 10,
+            border_style: PaneBorderStyle::default(),
         }
     }
 
@@ -243,6 +356,69 @@ impl SplitPane {
     /// ```
     pub fn with_min_size(mut self, min: u16) -> Self {
         self.min_size = min;
+        self
+    }
+
+    /// Set custom border style
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::widgets::{SplitPane, SplitDirection, PaneBorderStyle};
+    ///
+    /// let style = PaneBorderStyle::new();
+    /// let split = SplitPane::new(SplitDirection::Horizontal)
+    ///     .with_border_style(style);
+    /// ```
+    pub fn with_border_style(mut self, style: PaneBorderStyle) -> Self {
+        self.border_style = style;
+        self
+    }
+
+    /// Set whether to show borders
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::widgets::{SplitPane, SplitDirection};
+    ///
+    /// let split = SplitPane::new(SplitDirection::Horizontal)
+    ///     .with_borders(false);
+    /// ```
+    pub fn with_borders(mut self, show: bool) -> Self {
+        self.border_style.set_show_borders(show);
+        self
+    }
+
+    /// Set focused border color
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::widgets::{SplitPane, SplitDirection};
+    /// use ratatui::style::Color;
+    ///
+    /// let split = SplitPane::new(SplitDirection::Horizontal)
+    ///     .with_focused_color(Color::Cyan);
+    /// ```
+    pub fn with_focused_color(mut self, color: Color) -> Self {
+        self.border_style.set_focused_border_color(color);
+        self
+    }
+
+    /// Set unfocused border color
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::widgets::{SplitPane, SplitDirection};
+    /// use ratatui::style::Color;
+    ///
+    /// let split = SplitPane::new(SplitDirection::Horizontal)
+    ///     .with_unfocused_color(Color::Gray);
+    /// ```
+    pub fn with_unfocused_color(mut self, color: Color) -> Self {
+        self.border_style.set_unfocused_border_color(color);
         self
     }
 
@@ -330,6 +506,26 @@ impl SplitPane {
     /// ```
     pub fn toggle_focus(&mut self) {
         self.focused_pane = if self.focused_pane == 0 { 1 } else { 0 };
+    }
+
+    /// Get the border style configuration
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::widgets::{SplitPane, SplitDirection};
+    ///
+    /// let split = SplitPane::new(SplitDirection::Horizontal);
+    /// let style = split.border_style();
+    /// assert!(style.show_borders());
+    /// ```
+    pub fn border_style(&self) -> &PaneBorderStyle {
+        &self.border_style
+    }
+
+    /// Get mutable border style configuration
+    pub fn border_style_mut(&mut self) -> &mut PaneBorderStyle {
+        &mut self.border_style
     }
 
     /// Resize the split pane

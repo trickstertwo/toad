@@ -68,7 +68,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ### Multi-Panel Layouts
 - [x] **Split Panes** - Resizable horizontal/vertical splits ✅ COMPLETED
 - [x] **Panel Focus System** - Tab/Shift+Tab to switch focus ✅ COMPLETED
-- [ ] **Panel Borders** - Visual indication of focused panel
+- [x] **Panel Borders** - Visual indication of focused panel ✅ COMPLETED
 - [ ] **Dynamic Layout** - Panels can be shown/hidden
 
 ### Modal System
