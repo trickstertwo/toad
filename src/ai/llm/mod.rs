@@ -11,11 +11,17 @@ use std::env;
 
 pub mod anthropic;
 pub mod errors;
+pub mod github;
+pub mod ollama;
+pub mod provider;
 pub mod rate_limiter;
 pub mod streaming;
 
 pub use anthropic::AnthropicClient;
 pub use errors::LLMError;
+pub use github::GitHubClient;
+pub use ollama::OllamaClient;
+pub use provider::{LLMProvider, ProviderConfig, ProviderType};
 pub use rate_limiter::{RateLimitConfig, RateLimitStatus, RateLimiter};
 pub use streaming::{MessageStream, StreamAccumulator, StreamEvent};
 

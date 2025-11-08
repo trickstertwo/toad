@@ -4,6 +4,7 @@ mod tui;
 
 pub use tui::{AiConfig, Config, EditorConfig, SessionConfig, UiConfig};
 
+use crate::ai::llm::{ProviderConfig, ProviderType};
 use serde::{Deserialize, Serialize};
 
 /// Feature flags for experimental A/B testing
@@ -215,8 +216,8 @@ pub struct ToadConfig {
     /// Feature flags for A/B testing
     pub features: FeatureFlags,
 
-    /// Model to use (e.g., "claude-sonnet-4", "gpt-4", etc.)
-    pub model: String,
+    /// LLM provider configuration (Anthropic, GitHub, Ollama)
+    pub provider: ProviderConfig,
 
     /// Maximum tokens for context
     pub max_context_tokens: usize,
@@ -232,7 +233,7 @@ impl Default for ToadConfig {
     fn default() -> Self {
         Self {
             features: FeatureFlags::default(),
-            model: "claude-sonnet-4".to_string(),
+            provider: ProviderConfig::default(),
             max_context_tokens: 200_000,
             task_timeout_secs: 600, // 10 minutes
             verbose: false,
@@ -264,6 +265,30 @@ impl ToadConfig {
             task_timeout_secs: 300,
             ..Default::default()
         }
+    }
+
+    /// Set provider configuration
+    pub fn with_provider(mut self, provider: ProviderConfig) -> Self {
+        self.provider = provider;
+        self
+    }
+
+    /// Use Anthropic provider
+    pub fn with_anthropic(mut self, model: impl Into<String>) -> Self {
+        self.provider = ProviderConfig::anthropic(model);
+        self
+    }
+
+    /// Use GitHub Models provider
+    pub fn with_github(mut self, model: impl Into<String>) -> Self {
+        self.provider = ProviderConfig::github(model);
+        self
+    }
+
+    /// Use Ollama (local) provider
+    pub fn with_ollama(mut self, model: impl Into<String>) -> Self {
+        self.provider = ProviderConfig::ollama(model);
+        self
     }
 }
 
@@ -299,6 +324,21 @@ mod tests {
         let config = ToadConfig::default();
         let json = serde_json::to_string(&config).unwrap();
         let deserialized: ToadConfig = serde_json::from_str(&json).unwrap();
-        assert_eq!(config.model, deserialized.model);
+        assert_eq!(config.provider.model, deserialized.provider.model);
+    }
+
+    #[test]
+    fn test_config_with_providers() {
+        let config = ToadConfig::default()
+            .with_anthropic("claude-sonnet-4-5-20250929");
+        assert_eq!(config.provider.provider, ProviderType::Anthropic);
+
+        let config = ToadConfig::default()
+            .with_github("gpt-4o");
+        assert_eq!(config.provider.provider, ProviderType::GitHub);
+
+        let config = ToadConfig::default()
+            .with_ollama("llama2");
+        assert_eq!(config.provider.provider, ProviderType::Ollama);
     }
 }

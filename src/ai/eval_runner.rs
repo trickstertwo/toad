@@ -229,10 +229,9 @@ async fn run_tasks_with_progress(
 async fn run_single_task(task: &Task, config: &ToadConfig) -> anyhow::Result<TaskResult> {
     use crate::ai::metrics::MetricsCollector;
 
-    // Create LLM client
-    let api_key = std::env::var("ANTHROPIC_API_KEY")
-        .map_err(|_| anyhow::anyhow!("ANTHROPIC_API_KEY environment variable not set"))?;
-    let llm_client = Box::new(AnthropicClient::new(api_key).with_model(config.model.clone()));
+    // Create LLM client using provider factory
+    use crate::ai::llm::LLMProvider;
+    let llm_client = LLMProvider::create(&config.provider)?;
 
     // Create tool registry
     let tool_registry = ToolRegistry::m1_baseline();
