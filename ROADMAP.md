@@ -198,9 +198,9 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Nerd Font Icons** - Icon support (file types, git status, status indicators, 20+ file types) ✅ COMPLETED
 
 ### Graph & Data Visualization
-- [ ] **Line Charts** - Time-series data
-- [ ] **Bar Charts** - Comparison data
-- [ ] **Scatter Plots** - Distribution visualization
+- [x] **Line Charts** - Time-series data ✅ COMPLETED
+- [x] **Bar Charts** - Comparison data ✅ COMPLETED
+- [x] **Scatter Plots** - Distribution visualization ✅ COMPLETED
 - [ ] **Live Graphs** - Real-time updating charts
 - [ ] **Git Graph** - Branch visualization (lazygit-style)
 
