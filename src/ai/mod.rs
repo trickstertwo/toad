@@ -4,6 +4,7 @@
 //! evaluation frameworks, and tooling.
 
 pub mod agent;
+pub mod context;
 pub mod eval_commands;
 pub mod eval_runner;
 pub mod evaluation;
@@ -14,6 +15,7 @@ pub mod tools;
 
 // Re-exports
 pub use agent::{Agent, AgentResult, PromptBuilder};
+pub use context::{AstCache, AstContext, AstParser, FileContext, Import, Language, Symbol, SymbolKind};
 pub use eval_commands::{
     CompareArgs, EvalArgs, EvalCommand, ParseError as EvalParseError, ShowConfigArgs,
     parse_eval_command,
