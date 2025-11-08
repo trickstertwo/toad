@@ -219,13 +219,13 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Aliases** - Custom command shortcuts
 - [ ] **Scripts/Plugins** - Extensibility (WASM, Lua, or native)
 
-### Smart Features (50% Complete)
+### Smart Features (100% Complete) ✅
 - [x] **Context Menus** - Right-click or keybind for actions ✅ COMPLETED
 - [x] **Quick Actions** - Frequently used commands surfaced ✅ COMPLETED
-- [ ] **Smart Suggestions** - Context-aware hints
+- [x] **Smart Suggestions** - Context-aware hints ✅ COMPLETED
 - [x] **Undo/Redo** - u/Ctrl+r for actions ✅ COMPLETED
-- [ ] **Session Management** - Save/restore entire sessions
-- [ ] **Workspace Switching** - Multiple project contexts
+- [x] **Session Management** - Save/restore entire sessions ✅ COMPLETED
+- [x] **Workspace Switching** - Multiple project contexts ✅ COMPLETED
 
 ### Git Integration (for coding terminal)
 - [ ] **Git Status Panel** - Live repository status
