@@ -191,7 +191,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Animations & Transitions** - Smooth panel transitions
 - [x] **Loading Spinners** - Aesthetic async indicators ✅ COMPLETED (Spinner with 8 styles: Dots, Line, Bars, Bounce, Arrows, SimpleDots, Binary, Clock)
 - [x] **Progress Animations** - Multi-stage task progress ✅ COMPLETED (MultiStageProgress widget with stage tracking, overall progress)
-- [ ] **Sparklines** - Inline graphs for metrics
+- [x] **Sparklines** - Inline graphs for metrics ✅ COMPLETED (Sparkline widget with Bars/Braille/Dots styles, min/max/avg, downsampling)
 - [ ] **Canvas Drawing** - Custom graphics (charts, diagrams)
 - [x] **Box Drawing Characters** - Beautiful Unicode borders ✅ COMPLETED (BoxChars with Light/Heavy/Double/Rounded/ASCII styles, BoxBuilder, draw utilities)
 - [ ] **Nerd Font Icons** - Icon support (file types, status indicators)
@@ -214,7 +214,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ### Power User Features
 - [ ] **Custom Keybindings** - Fully remappable keys
 - [ ] **Key Sequences** - Multi-key commands (like vim)
-- [ ] **Command Mode** - : for ex-style commands
+- [x] **Command Mode** - : for ex-style commands ✅ COMPLETED (CommandMode with buffer/cursor/history, CommandRegistry with handlers/aliases/suggestions)
 - [ ] **Aliases** - Custom command shortcuts
 - [ ] **Scripts/Plugins** - Extensibility (WASM, Lua, or native)
 
@@ -223,7 +223,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Quick Actions** - Frequently used commands surfaced
 - [ ] **Smart Suggestions** - Context-aware hints
 - [x] **Undo/Redo** - u/Ctrl+r for actions ✅ COMPLETED (UndoStack with Action trait, HistoryNavigator, dirty tracking)
-- [ ] **Session Management** - Save/restore entire sessions
+- [x] **Session Management** - Save/restore entire sessions ✅ COMPLETED (Session with save/load, recent files, working directory, vim mode)
 - [ ] **Workspace Switching** - Multiple project contexts
 
 ### Git Integration (for coding terminal)

@@ -24,6 +24,7 @@ pub mod autocomplete;
 pub mod background_tasks;
 pub mod box_drawing;
 pub mod clipboard;
+pub mod command_mode;
 pub mod diff;
 pub mod event;
 pub mod fuzzy;
@@ -67,6 +68,7 @@ pub use autocomplete::{AutocompleteManager, AutocompleteProvider, CommandProvide
 pub use background_tasks::{BackgroundTask, BackgroundTaskManager, TaskId, TaskStatus};
 pub use box_drawing::{BoxBuilder, BoxChars, BoxStyle};
 pub use clipboard::Clipboard;
+pub use command_mode::{Command, CommandMode, CommandRegistry, CommandHandler, CommandResult};
 pub use diff::{
     ChunkHeader, DiffHunk, DiffLine, DiffLineType, DiffParser, DiffStats, FileDiff,
 };
