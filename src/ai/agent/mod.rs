@@ -96,15 +96,13 @@ impl Agent {
                     let tool_results = self.execute_tools(&response.tool_uses, metrics).await?;
 
                     // Add assistant message with tool uses
-                    conversation.push(Message::assistant(format!(
-                        "{}Tool uses: {}",
+                    conversation.push(Message::assistant(
                         if response.content.is_empty() {
-                            ""
+                            format!("Tool uses: {}", tool_results)
                         } else {
-                            &format!("{}\n\n", response.content)
-                        },
-                        tool_results
-                    )));
+                            format!("{}\n\nTool uses: {}", response.content, tool_results)
+                        }
+                    ));
                 }
                 StopReason::EndTurn | StopReason::MaxTokens | StopReason::StopSequence => {
                     // Task complete or hit limit
