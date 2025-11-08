@@ -4,7 +4,7 @@
 //! that handles state transitions based on events.
 
 use crate::event::Event;
-use crate::widgets::{ConfirmDialog, InputField};
+use crate::widgets::{ConfirmDialog, HelpScreen, InputField};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::env;
 use std::path::PathBuf;
@@ -49,6 +49,12 @@ pub struct App {
 
     /// Number of installed plugins
     plugin_count: usize,
+
+    /// Help screen widget
+    help_screen: HelpScreen,
+
+    /// Whether to show the help overlay
+    show_help: bool,
 }
 
 impl Default for App {
@@ -67,6 +73,8 @@ impl Default for App {
             welcome_shown: false,
             input_field,
             plugin_count: 0,
+            help_screen: HelpScreen::new(),
+            show_help: false,
         }
     }
 }
@@ -125,6 +133,16 @@ impl App {
     /// Get plugin count
     pub fn plugin_count(&self) -> usize {
         self.plugin_count
+    }
+
+    /// Get the help screen
+    pub fn help_screen(&self) -> &HelpScreen {
+        &self.help_screen
+    }
+
+    /// Check if help should be shown
+    pub fn show_help(&self) -> bool {
+        self.show_help
     }
 
     /// Update application state based on an event (Update in Elm Architecture)
@@ -216,6 +234,18 @@ impl App {
 
     /// Handle keys in main interface
     fn handle_main_key(&mut self, key: KeyEvent) -> crate::Result<()> {
+        // If help is shown, intercept keys for help navigation
+        if self.show_help {
+            match (key.code, key.modifiers) {
+                // Esc or ? closes help
+                (KeyCode::Esc, _) | (KeyCode::Char('?'), _) => {
+                    self.show_help = false;
+                }
+                _ => {}
+            }
+            return Ok(());
+        }
+
         match (key.code, key.modifiers) {
             // Quit on Ctrl+C (not q anymore, since we're typing)
             (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
@@ -225,11 +255,15 @@ impl App {
             (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
                 self.should_quit = true;
             }
+            // Toggle help screen with '?' (shift+/)
+            (KeyCode::Char('?'), _) => {
+                self.show_help = !self.show_help;
+            }
             // Enter submits the command
             (KeyCode::Enter, _) => {
                 let input = self.input_field.value().to_string();
                 if !input.is_empty() {
-                    self.status_message = format!("Submitted: {}", input);
+                    self.process_command(&input);
                     self.input_field.clear();
                 }
             }
@@ -269,6 +303,30 @@ impl App {
             _ => {}
         }
         Ok(())
+    }
+
+    /// Process commands entered by the user
+    fn process_command(&mut self, input: &str) {
+        if let Some(command) = input.strip_prefix('/') {
+            match command {
+                "help" => {
+                    self.show_help = true;
+                    self.status_message = "Showing help screen".to_string();
+                }
+                "commands" => {
+                    self.status_message = "Available commands: /help, /commands, /clear".to_string();
+                }
+                "clear" => {
+                    self.status_message = "Screen cleared".to_string();
+                }
+                _ => {
+                    self.status_message = format!("Unknown command: /{}", command);
+                }
+            }
+        } else {
+            // Regular query/request
+            self.status_message = format!("Processing: {}", input);
+        }
     }
 
     /// Create the trust dialog for the current directory

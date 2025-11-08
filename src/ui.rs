@@ -79,6 +79,11 @@ fn render_main(app: &App, frame: &mut Frame, area: Rect) {
     app.input_field().render(frame, chunks[3]);
     render_separator(frame, chunks[4]);
     render_shortcuts_bar(frame, chunks[5]);
+
+    // Render help overlay if requested
+    if app.show_help() {
+        app.help_screen().render(frame, area);
+    }
 }
 
 /// Render the main content area
