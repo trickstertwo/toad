@@ -30,6 +30,7 @@ pub mod split;
 pub mod table;
 pub mod textarea;
 pub mod toast;
+pub mod vim_mode;
 pub mod welcome;
 
 pub use animation::{Animation, AnimationState, EasingFunction};
@@ -60,4 +61,5 @@ pub use split::{PaneBorderStyle, SplitDirection, SplitPane, SplitPaneError, Spli
 pub use table::{ColumnAlignment, DataTable, TableColumn};
 pub use textarea::Textarea;
 pub use toast::{Toast, ToastLevel, ToastManager};
+pub use vim_mode::{EditMode, ModeIndicator, Selection, VimMode};
 pub use welcome::WelcomeScreen;
