@@ -9,6 +9,7 @@
 pub mod app;
 pub mod clipboard;
 pub mod config;
+pub mod errors;
 pub mod event;
 pub mod history;
 pub mod keybinds;
@@ -24,6 +25,7 @@ pub mod widgets;
 pub use app::App;
 pub use clipboard::Clipboard;
 pub use config::Config;
+pub use errors::{ErrorEntry, ErrorHandler, ErrorSeverity};
 pub use event::Event;
 pub use history::History;
 pub use keybinds::{KeyBinding, KeyBindings};
