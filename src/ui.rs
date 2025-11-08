@@ -16,9 +16,9 @@ use ratatui::{
 
 /// Render the application UI (View in Elm Architecture)
 ///
-/// This is a pure function that takes the application state
-/// and renders it to the terminal frame.
-pub fn render(app: &App, frame: &mut Frame) {
+/// This function takes the application state and renders it to the terminal frame.
+/// Note: Requires mutable reference for stateful widgets (List, CommandPalette).
+pub fn render(app: &mut App, frame: &mut Frame) {
     let area = frame.area();
 
     match app.screen() {
@@ -35,13 +35,13 @@ pub fn render(app: &App, frame: &mut Frame) {
 }
 
 /// Render the welcome screen
-fn render_welcome(_app: &App, frame: &mut Frame, area: Rect) {
+fn render_welcome(_app: &mut App, frame: &mut Frame, area: Rect) {
     let welcome = WelcomeScreen::new().with_tips(true);
     welcome.render(frame, area);
 }
 
 /// Render the trust dialog screen
-fn render_trust_dialog(app: &App, frame: &mut Frame, area: Rect) {
+fn render_trust_dialog(app: &mut App, frame: &mut Frame, area: Rect) {
     // Render a semi-transparent background
     let background = Block::default().style(Style::default().bg(ToadTheme::BLACK));
     frame.render_widget(background, area);
@@ -53,7 +53,7 @@ fn render_trust_dialog(app: &App, frame: &mut Frame, area: Rect) {
 }
 
 /// Render the main interface
-fn render_main(app: &App, frame: &mut Frame, area: Rect) {
+fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
     // Create the main layout:
     // 1. Main content area
     // 2. Metadata line (path + model info)
@@ -80,14 +80,16 @@ fn render_main(app: &App, frame: &mut Frame, area: Rect) {
     render_separator(frame, chunks[4]);
     render_shortcuts_bar(frame, chunks[5]);
 
-    // Render help overlay if requested
+    // Render overlays (help and command palette)
     if app.show_help() {
         app.help_screen().render(frame, area);
+    } else if app.show_palette() {
+        app.command_palette_mut().render(frame, area);
     }
 }
 
 /// Render the main content area
-fn render_main_content(_app: &App, frame: &mut Frame, area: Rect) {
+fn render_main_content(_app: &mut App, frame: &mut Frame, area: Rect) {
     let content_block = Block::default()
         .borders(Borders::ALL)
         .border_style(Style::default().fg(ToadTheme::BORDER))
@@ -143,7 +145,7 @@ fn render_main_content(_app: &App, frame: &mut Frame, area: Rect) {
 }
 
 /// Render the metadata line (path on left, model info on right)
-fn render_metadata_line(app: &App, frame: &mut Frame, area: Rect) {
+fn render_metadata_line(app: &mut App, frame: &mut Frame, area: Rect) {
     let project_path = app.working_directory().to_string_lossy();
     let model_info = "claude-sonnet-4.5 (1x)";
 

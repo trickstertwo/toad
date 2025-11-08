@@ -4,7 +4,7 @@
 //! that handles state transitions based on events.
 
 use crate::event::Event;
-use crate::widgets::{ConfirmDialog, HelpScreen, InputField};
+use crate::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::env;
 use std::path::PathBuf;
@@ -55,6 +55,12 @@ pub struct App {
 
     /// Whether to show the help overlay
     show_help: bool,
+
+    /// Command palette widget
+    command_palette: CommandPalette,
+
+    /// Whether to show the command palette
+    show_palette: bool,
 }
 
 impl Default for App {
@@ -75,6 +81,8 @@ impl Default for App {
             plugin_count: 0,
             help_screen: HelpScreen::new(),
             show_help: false,
+            command_palette: CommandPalette::new(),
+            show_palette: false,
         }
     }
 }
@@ -143,6 +151,16 @@ impl App {
     /// Check if help should be shown
     pub fn show_help(&self) -> bool {
         self.show_help
+    }
+
+    /// Get mutable command palette
+    pub fn command_palette_mut(&mut self) -> &mut CommandPalette {
+        &mut self.command_palette
+    }
+
+    /// Check if command palette should be shown
+    pub fn show_palette(&self) -> bool {
+        self.show_palette
     }
 
     /// Update application state based on an event (Update in Elm Architecture)
@@ -246,6 +264,51 @@ impl App {
             return Ok(());
         }
 
+        // If command palette is shown, intercept keys for palette navigation
+        if self.show_palette {
+            match (key.code, key.modifiers) {
+                // Esc closes palette
+                (KeyCode::Esc, _) => {
+                    self.show_palette = false;
+                    self.command_palette.clear_query();
+                }
+                // Ctrl+P also toggles off
+                (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
+                    self.show_palette = false;
+                    self.command_palette.clear_query();
+                }
+                // Up/Down navigate
+                (KeyCode::Up, _) => {
+                    self.command_palette.select_previous();
+                }
+                (KeyCode::Down, _) => {
+                    self.command_palette.select_next();
+                }
+                // Enter executes selected command
+                (KeyCode::Enter, _) => {
+                    if let Some(cmd_id) = self.command_palette.selected_command() {
+                        self.execute_palette_command(&cmd_id);
+                        self.show_palette = false;
+                        self.command_palette.clear_query();
+                    }
+                }
+                // Backspace deletes character
+                (KeyCode::Backspace, _) => {
+                    self.command_palette.delete_char();
+                }
+                // Ctrl+U clears query
+                (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
+                    self.command_palette.clear_query();
+                }
+                // Regular character input for search
+                (KeyCode::Char(c), KeyModifiers::NONE) | (KeyCode::Char(c), KeyModifiers::SHIFT) => {
+                    self.command_palette.insert_char(c);
+                }
+                _ => {}
+            }
+            return Ok(());
+        }
+
         match (key.code, key.modifiers) {
             // Quit on Ctrl+C (not q anymore, since we're typing)
             (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
@@ -254,6 +317,10 @@ impl App {
             // Ctrl+D to quit
             (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
                 self.should_quit = true;
+            }
+            // Ctrl+P opens command palette
+            (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
+                self.show_palette = true;
             }
             // Toggle help screen with '?' (shift+/)
             (KeyCode::Char('?'), _) => {
@@ -326,6 +393,40 @@ impl App {
         } else {
             // Regular query/request
             self.status_message = format!("Processing: {}", input);
+        }
+    }
+
+    /// Execute a command from the command palette
+    fn execute_palette_command(&mut self, cmd_id: &str) {
+        match cmd_id {
+            "help" => {
+                self.show_help = true;
+                self.status_message = "Opened help screen".to_string();
+            }
+            "clear" => {
+                self.status_message = "Screen cleared".to_string();
+            }
+            "quit" => {
+                self.should_quit = true;
+            }
+            "theme_toggle" => {
+                self.status_message = "Theme toggled (coming soon)".to_string();
+            }
+            "open_file" => {
+                self.status_message = "Open file (coming soon)".to_string();
+            }
+            "search_files" => {
+                self.status_message = "Search files (coming soon)".to_string();
+            }
+            "git_status" => {
+                self.status_message = "Git status (coming soon)".to_string();
+            }
+            "recent_files" => {
+                self.status_message = "Recent files (coming soon)".to_string();
+            }
+            _ => {
+                self.status_message = format!("Unknown command: {}", cmd_id);
+            }
         }
     }
 

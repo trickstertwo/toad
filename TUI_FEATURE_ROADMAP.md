@@ -44,7 +44,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 
 ### Navigation
 - [x] **Single View Navigation** - Arrow keys navigation ✅ COMPLETED
-- [ ] **Basic Help Screen** - List of keybindings
+- [x] **Basic Help Screen** - List of keybindings ✅ COMPLETED
 - [x] **Quit Command** - q/Esc to exit ✅ COMPLETED
 
 ### Welcome & Onboarding
@@ -57,10 +57,10 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 ## 🟡 MEDIUM TIER - Enhanced Usability
 
 ### Advanced Widgets
-- [ ] **List Widget** - Scrollable lists with selection
+- [x] **List Widget** - Scrollable lists with selection ✅ COMPLETED (via CommandPalette)
 - [ ] **Table Widget** - Multi-column data with headers
 - [ ] **Scrollbar** - Visual scroll indicators
-- [ ] **Input Field** - Single-line text input
+- [x] **Input Field** - Single-line text input ✅ COMPLETED
 - [ ] **Textarea** - Multi-line text editing
 - [ ] **Progress Bars** - Task progress indicators
 - [ ] **Gauge/Meter** - Visual metrics display
@@ -125,7 +125,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Theme Hot-Reload** - Live theme switching
 
 ### Advanced Input
-- [ ] **Command Palette** - Ctrl+P fuzzy command search
+- [x] **Command Palette** - Ctrl+P fuzzy command search ✅ COMPLETED
 - [ ] **Autocomplete** - Tab completion for inputs
 - [ ] **Input Validation** - Real-time validation feedback
 - [ ] **Multi-cursor Support** - Edit multiple locations

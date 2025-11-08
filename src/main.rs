@@ -48,7 +48,7 @@ fn run() -> Result<()> {
     while !app.should_quit() {
         // View: Render the current state
         tui.draw(|frame| {
-            toad::ui::render(&app, frame);
+            toad::ui::render(&mut app, frame);
         })?;
 
         // Wait for event (blocking)
