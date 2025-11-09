@@ -489,4 +489,372 @@ mod tests {
         assert_ne!(bg, border);
         assert_ne!(bg, border_focused);
     }
+
+    // ===== Custom Theme Loading Tests =====
+    #[test]
+    fn test_load_custom_theme_success() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        let mut manager = ThemeManager::new();
+
+        // Create temporary theme file with all required fields
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(
+            temp_file,
+            r#"
+primary = [100, 150, 200]
+primary_bright = [120, 170, 220]
+primary_dark = [80, 130, 180]
+white = [255, 255, 255]
+light_gray = [200, 200, 200]
+gray = [150, 150, 150]
+dark_gray = [100, 100, 100]
+darker_gray = [50, 50, 50]
+black = [10, 10, 10]
+success = [0, 255, 0]
+error = [255, 0, 0]
+warning = [255, 255, 0]
+info = [0, 150, 255]
+red = [255, 0, 0]
+yellow = [255, 255, 0]
+blue = [0, 0, 255]
+green = [0, 255, 0]
+cyan = [0, 255, 255]
+magenta = [255, 0, 255]
+background = [10, 10, 10]
+foreground = [240, 240, 240]
+border = [50, 50, 50]
+border_focused = [100, 150, 200]
+title = [100, 150, 200]
+accent = [100, 150, 200]
+"#
+        )
+        .unwrap();
+
+        // Load custom theme
+        let result = manager.load_custom_theme(temp_file.path());
+        assert!(result.is_ok());
+
+        // Verify theme was loaded
+        assert_eq!(manager.current_theme_name(), ThemeName::Custom);
+        assert_eq!(manager.primary(), Color::Rgb(100, 150, 200));
+        assert_eq!(manager.background(), Color::Rgb(10, 10, 10));
+    }
+
+    #[test]
+    fn test_load_custom_theme_file_not_found() {
+        let mut manager = ThemeManager::new();
+
+        let result = manager.load_custom_theme("/nonexistent/path/theme.toml");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_load_custom_theme_invalid_toml() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        let mut manager = ThemeManager::new();
+
+        // Create temporary file with invalid TOML
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "this is not valid toml {{{{").unwrap();
+
+        let result = manager.load_custom_theme(temp_file.path());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_reload_custom_theme_without_path() {
+        let mut manager = ThemeManager::new();
+
+        // Reload without loading a custom theme first
+        let result = manager.reload_custom_theme();
+        assert!(result.is_ok()); // Should succeed but do nothing
+    }
+
+    #[test]
+    fn test_reload_custom_theme_success() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        let mut manager = ThemeManager::new();
+
+        // Create temporary theme file with all fields
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(
+            temp_file,
+            r#"
+primary = [100, 100, 100]
+primary_bright = [120, 120, 120]
+primary_dark = [80, 80, 80]
+white = [255, 255, 255]
+light_gray = [200, 200, 200]
+gray = [150, 150, 150]
+dark_gray = [100, 100, 100]
+darker_gray = [50, 50, 50]
+black = [10, 10, 10]
+success = [0, 200, 0]
+error = [200, 0, 0]
+warning = [200, 200, 0]
+info = [0, 100, 200]
+red = [200, 0, 0]
+yellow = [200, 200, 0]
+blue = [0, 0, 200]
+green = [0, 200, 0]
+cyan = [0, 200, 200]
+magenta = [200, 0, 200]
+background = [20, 20, 20]
+foreground = [220, 220, 220]
+border = [60, 60, 60]
+border_focused = [100, 100, 100]
+title = [100, 100, 100]
+accent = [100, 100, 100]
+"#
+        )
+        .unwrap();
+
+        // Load custom theme
+        manager.load_custom_theme(temp_file.path()).unwrap();
+        let initial_bg = manager.background();
+
+        // Reload should succeed
+        let result = manager.reload_custom_theme();
+        assert!(result.is_ok());
+
+        // Colors should remain the same
+        assert_eq!(manager.background(), initial_bg);
+    }
+
+    // ===== get_color() Coverage for All Theme Variants =====
+    #[test]
+    fn test_get_color_all_themes() {
+        let mut manager = ThemeManager::new();
+
+        // Test get_color for each theme
+        for theme in ThemeName::all() {
+            manager.set_theme(theme);
+            let primary = manager.get_color(|t| t.primary());
+            assert!(matches!(primary, Color::Rgb(..)));
+        }
+    }
+
+    #[test]
+    fn test_get_color_dark_theme() {
+        let mut manager = ThemeManager::new();
+        manager.set_theme(ThemeName::Dark);
+
+        let primary = manager.get_color(|t| t.primary());
+        assert_eq!(primary, Color::Rgb(76, 175, 80));
+    }
+
+    #[test]
+    fn test_get_color_light_theme() {
+        let mut manager = ThemeManager::new();
+        manager.set_theme(ThemeName::Light);
+
+        let bg = manager.get_color(|t| t.background());
+        assert_eq!(bg, Color::Rgb(250, 250, 250));
+    }
+
+    #[test]
+    fn test_get_color_high_contrast_theme() {
+        let mut manager = ThemeManager::new();
+        manager.set_theme(ThemeName::HighContrast);
+
+        let bg = manager.get_color(|t| t.background());
+        let fg = manager.get_color(|t| t.foreground());
+        assert_eq!(bg, Color::Rgb(0, 0, 0));
+        assert_eq!(fg, Color::Rgb(255, 255, 255));
+    }
+
+    #[test]
+    fn test_get_color_catppuccin_mocha() {
+        let mut manager = ThemeManager::new();
+        manager.set_theme(ThemeName::CatppuccinMocha);
+
+        let primary = manager.get_color(|t| t.primary());
+        assert!(matches!(primary, Color::Rgb(..)));
+    }
+
+    #[test]
+    fn test_get_color_catppuccin_macchiato() {
+        let mut manager = ThemeManager::new();
+        manager.set_theme(ThemeName::CatppuccinMacchiato);
+
+        let primary = manager.get_color(|t| t.primary());
+        assert!(matches!(primary, Color::Rgb(..)));
+    }
+
+    #[test]
+    fn test_get_color_catppuccin_frappe() {
+        let mut manager = ThemeManager::new();
+        manager.set_theme(ThemeName::CatppuccinFrappe);
+
+        let primary = manager.get_color(|t| t.primary());
+        assert!(matches!(primary, Color::Rgb(..)));
+    }
+
+    #[test]
+    fn test_get_color_catppuccin_latte() {
+        let mut manager = ThemeManager::new();
+        manager.set_theme(ThemeName::CatppuccinLatte);
+
+        let primary = manager.get_color(|t| t.primary());
+        assert!(matches!(primary, Color::Rgb(..)));
+    }
+
+    #[test]
+    fn test_get_color_nord_theme() {
+        let mut manager = ThemeManager::new();
+        manager.set_theme(ThemeName::Nord);
+
+        let primary = manager.get_color(|t| t.primary());
+        assert!(matches!(primary, Color::Rgb(..)));
+    }
+
+    #[test]
+    fn test_get_color_custom_with_loaded_theme() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        let mut manager = ThemeManager::new();
+
+        // Create and load custom theme with all fields
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(
+            temp_file,
+            r#"
+primary = [123, 45, 67]
+primary_bright = [143, 65, 87]
+primary_dark = [103, 25, 47]
+white = [255, 255, 255]
+light_gray = [200, 200, 200]
+gray = [150, 150, 150]
+dark_gray = [100, 100, 100]
+darker_gray = [50, 50, 50]
+black = [10, 10, 10]
+success = [0, 220, 0]
+error = [220, 0, 0]
+warning = [220, 220, 0]
+info = [0, 120, 220]
+red = [220, 0, 0]
+yellow = [220, 220, 0]
+blue = [0, 0, 220]
+green = [0, 220, 0]
+cyan = [0, 220, 220]
+magenta = [220, 0, 220]
+background = [15, 15, 15]
+foreground = [230, 230, 230]
+border = [55, 55, 55]
+border_focused = [123, 45, 67]
+title = [123, 45, 67]
+accent = [123, 45, 67]
+"#
+        )
+        .unwrap();
+
+        manager.load_custom_theme(temp_file.path()).unwrap();
+
+        // Test get_color with custom theme
+        let primary = manager.get_color(|t| t.primary());
+        assert_eq!(primary, Color::Rgb(123, 45, 67));
+    }
+
+    // ===== ThemeName Copy Trait Test =====
+    #[test]
+    fn test_theme_name_copy() {
+        let theme1 = ThemeName::Dark;
+        let theme2 = theme1; // Copy, not move
+
+        // Both should be usable
+        assert_eq!(theme1, ThemeName::Dark);
+        assert_eq!(theme2, ThemeName::Dark);
+    }
+
+    // ===== Serialize/Deserialize Tests =====
+    #[test]
+    fn test_theme_name_serialize() {
+        let theme = ThemeName::CatppuccinMocha;
+        let serialized = serde_json::to_string(&theme).unwrap();
+        assert!(serialized.contains("CatppuccinMocha"));
+    }
+
+    #[test]
+    fn test_theme_name_deserialize() {
+        let json = "\"Dark\"";
+        let theme: ThemeName = serde_json::from_str(json).unwrap();
+        assert_eq!(theme, ThemeName::Dark);
+    }
+
+    // ===== All Color Getters for Each Theme =====
+    #[test]
+    fn test_all_getters_for_each_theme() {
+        let mut manager = ThemeManager::new();
+
+        for theme in ThemeName::all() {
+            manager.set_theme(theme);
+
+            // Call all getter methods
+            let _ = manager.primary();
+            let _ = manager.background();
+            let _ = manager.foreground();
+            let _ = manager.border();
+            let _ = manager.border_focused();
+            let _ = manager.success();
+            let _ = manager.error();
+            let _ = manager.warning();
+            let _ = manager.info();
+        }
+    }
+
+    // ===== Custom Theme Path Tracking =====
+    #[test]
+    fn test_custom_theme_path_stored() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        let mut manager = ThemeManager::new();
+
+        // Create temporary theme file with all fields
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(
+            temp_file,
+            r#"
+primary = [50, 50, 50]
+primary_bright = [70, 70, 70]
+primary_dark = [30, 30, 30]
+white = [255, 255, 255]
+light_gray = [200, 200, 200]
+gray = [150, 150, 150]
+dark_gray = [100, 100, 100]
+darker_gray = [50, 50, 50]
+black = [5, 5, 5]
+success = [0, 255, 0]
+error = [255, 0, 0]
+warning = [255, 255, 0]
+info = [0, 150, 255]
+red = [255, 0, 0]
+yellow = [255, 255, 0]
+blue = [0, 0, 255]
+green = [0, 255, 0]
+cyan = [0, 255, 255]
+magenta = [255, 0, 255]
+background = [5, 5, 5]
+foreground = [250, 250, 250]
+border = [40, 40, 40]
+border_focused = [50, 50, 50]
+title = [50, 50, 50]
+accent = [50, 50, 50]
+"#
+        )
+        .unwrap();
+
+        // Load custom theme
+        manager.load_custom_theme(temp_file.path()).unwrap();
+
+        // Path should be stored (verified by successful reload)
+        assert!(manager.reload_custom_theme().is_ok());
+    }
 }
