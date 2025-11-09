@@ -5,12 +5,11 @@
 
 use ratatui::{
     Frame,
-    buffer::Buffer,
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
     widgets::{
-        Block, Borders, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Widget, Wrap,
+        Block, Borders, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Wrap,
     },
 };
 use serde::{Deserialize, Serialize};
@@ -171,11 +170,10 @@ impl ChatPanel {
 
     /// Append to the last streaming message
     pub fn append_streaming(&mut self, text: &str) {
-        if let Some(last) = self.messages.last_mut() {
-            if last.streaming {
+        if let Some(last) = self.messages.last_mut()
+            && last.streaming {
                 last.append(text);
             }
-        }
     }
 
     /// Finish the current streaming message

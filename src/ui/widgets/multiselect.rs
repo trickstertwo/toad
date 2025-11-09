@@ -16,7 +16,6 @@ use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState},
 };
 use serde::{Deserialize, Serialize};
@@ -26,20 +25,17 @@ use crate::ui::theme::ToadTheme;
 
 /// Selection mode for multi-select
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum SelectionMode {
     /// Single selection only
     Single,
     /// Multiple selection allowed
+    #[default]
     Multiple,
     /// Range selection (shift+click)
     Range,
 }
 
-impl Default for SelectionMode {
-    fn default() -> Self {
-        SelectionMode::Multiple
-    }
-}
 
 /// Multi-select widget state
 #[derive(Debug, Clone)]
@@ -72,7 +68,7 @@ impl<T> MultiSelect<T> {
     /// ```
     pub fn new(items: Vec<T>) -> Self {
         Self {
-            cursor: if items.is_empty() { 0 } else { 0 },
+            cursor: 0,
             items,
             selected: HashSet::new(),
             mode: SelectionMode::Multiple,

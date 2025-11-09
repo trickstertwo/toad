@@ -248,7 +248,7 @@ impl<A: Action> UndoStack<A> {
     }
 
     /// Begin a group of actions (all will be undone together)
-    pub fn begin_group(&mut self) -> GroupGuard<A> {
+    pub fn begin_group(&mut self) -> GroupGuard<'_, A> {
         GroupGuard {
             stack: self,
             actions: Vec::new(),

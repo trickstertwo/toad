@@ -386,11 +386,10 @@ impl DiffParser {
                 }
             } else if line.starts_with("@@ ") {
                 // Save previous hunk if any
-                if let Some(hunk) = current_hunk.take() {
-                    if let Some(file) = current_file.as_mut() {
+                if let Some(hunk) = current_hunk.take()
+                    && let Some(file) = current_file.as_mut() {
                         file.add_hunk(hunk);
                     }
-                }
 
                 // Create default file if we don't have one (for hunks without file headers)
                 if current_file.is_none() {

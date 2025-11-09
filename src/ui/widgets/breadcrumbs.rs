@@ -70,7 +70,7 @@ impl Breadcrumbs {
         let segments = path
             .split('/')
             .filter(|s| !s.is_empty())
-            .map(|s| BreadcrumbSegment::new(s))
+            .map(BreadcrumbSegment::new)
             .collect();
 
         Self {

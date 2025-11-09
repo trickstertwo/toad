@@ -7,10 +7,12 @@ use std::time::{Duration, Instant};
 
 /// Target FPS configuration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum TargetFPS {
     /// 30 FPS (balanced for slower terminals)
     Fps30,
     /// 60 FPS (smooth, recommended)
+    #[default]
     Fps60,
     /// 120 FPS (ultra-smooth for high-refresh displays)
     Fps120,
@@ -50,11 +52,6 @@ impl TargetFPS {
     }
 }
 
-impl Default for TargetFPS {
-    fn default() -> Self {
-        TargetFPS::Fps60
-    }
-}
 
 /// Frame rate limiter for controlling render rate
 #[derive(Debug)]
@@ -81,8 +78,8 @@ impl FrameLimiter {
 
     /// End frame and sleep if needed to match target FPS
     pub fn end_frame(&mut self) {
-        if let Some(target_micros) = self.target_fps.frame_time_micros() {
-            if let Some(start) = self.last_frame_start {
+        if let Some(target_micros) = self.target_fps.frame_time_micros()
+            && let Some(start) = self.last_frame_start {
                 let elapsed = start.elapsed();
                 let target_duration = Duration::from_micros(target_micros);
 
@@ -91,7 +88,6 @@ impl FrameLimiter {
                     std::thread::sleep(sleep_duration);
                 }
             }
-        }
     }
 
     /// Set target FPS

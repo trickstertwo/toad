@@ -9,6 +9,12 @@ use tokio::time::{Duration, timeout};
 
 pub struct BashTool;
 
+impl Default for BashTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BashTool {
     pub fn new() -> Self {
         Self
@@ -68,7 +74,7 @@ impl Tool for BashTool {
             #[cfg(not(target_os = "windows"))]
             let mut cmd = {
                 let mut c = Command::new("sh");
-                c.args(&["-c", command]);
+                c.args(["-c", command]);
                 c
             };
 

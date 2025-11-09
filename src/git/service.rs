@@ -125,7 +125,7 @@ impl GitService {
     pub async fn status(&self) -> Result<Vec<FileChange>> {
         let output = Command::new("git")
             .current_dir(&self.repo_path)
-            .args(&["status", "--porcelain", "--untracked-files=all"])
+            .args(["status", "--porcelain", "--untracked-files=all"])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
@@ -195,7 +195,7 @@ impl GitService {
     pub async fn current_branch(&self) -> Result<String> {
         let output = Command::new("git")
             .current_dir(&self.repo_path)
-            .args(&["branch", "--show-current"])
+            .args(["branch", "--show-current"])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
@@ -220,7 +220,7 @@ impl GitService {
     pub async fn ahead_behind(&self) -> Result<(usize, usize)> {
         let output = Command::new("git")
             .current_dir(&self.repo_path)
-            .args(&["rev-list", "--left-right", "--count", "HEAD...@{upstream}"])
+            .args(["rev-list", "--left-right", "--count", "HEAD...@{upstream}"])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
@@ -233,7 +233,7 @@ impl GitService {
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let parts: Vec<&str> = stdout.trim().split_whitespace().collect();
+        let parts: Vec<&str> = stdout.split_whitespace().collect();
 
         if parts.len() != 2 {
             return Ok((0, 0));
@@ -249,7 +249,7 @@ impl GitService {
     pub async fn list_branches(&self) -> Result<Vec<BranchInfo>> {
         let output = Command::new("git")
             .current_dir(&self.repo_path)
-            .args(&["branch", "-vv"])
+            .args(["branch", "-vv"])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
@@ -342,7 +342,7 @@ impl GitService {
     pub async fn stage(&self, path: impl AsRef<Path>) -> Result<()> {
         let output = Command::new("git")
             .current_dir(&self.repo_path)
-            .args(&["add", path.as_ref().to_str().unwrap_or("")])
+            .args(["add", path.as_ref().to_str().unwrap_or("")])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
@@ -362,7 +362,7 @@ impl GitService {
         // Try modern git restore first (Git 2.23+), fall back to reset
         let output = Command::new("git")
             .current_dir(&self.repo_path)
-            .args(&["restore", "--staged", path.as_ref().to_str().unwrap_or("")])
+            .args(["restore", "--staged", path.as_ref().to_str().unwrap_or("")])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
@@ -373,7 +373,7 @@ impl GitService {
             // Fall back to git reset for older git versions or when file is newly added
             let output = Command::new("git")
                 .current_dir(&self.repo_path)
-                .args(&["rm", "--cached", path.as_ref().to_str().unwrap_or("")])
+                .args(["rm", "--cached", path.as_ref().to_str().unwrap_or("")])
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .output()
@@ -393,7 +393,7 @@ impl GitService {
     pub async fn commit(&self, message: &str) -> Result<String> {
         let output = Command::new("git")
             .current_dir(&self.repo_path)
-            .args(&["commit", "-m", message])
+            .args(["commit", "-m", message])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
@@ -449,21 +449,21 @@ mod tests {
     async fn init_git_repo(path: &Path) {
         Command::new("git")
             .current_dir(path)
-            .args(&["init"])
+            .args(["init"])
             .output()
             .await
             .unwrap();
 
         Command::new("git")
             .current_dir(path)
-            .args(&["config", "user.email", "test@example.com"])
+            .args(["config", "user.email", "test@example.com"])
             .output()
             .await
             .unwrap();
 
         Command::new("git")
             .current_dir(path)
-            .args(&["config", "user.name", "Test User"])
+            .args(["config", "user.name", "Test User"])
             .output()
             .await
             .unwrap();
@@ -531,14 +531,14 @@ mod tests {
 
         Command::new("git")
             .current_dir(temp_dir.path())
-            .args(&["add", "initial.txt"])
+            .args(["add", "initial.txt"])
             .output()
             .await
             .unwrap();
 
         Command::new("git")
             .current_dir(temp_dir.path())
-            .args(&["commit", "-m", "initial"])
+            .args(["commit", "-m", "initial"])
             .output()
             .await
             .unwrap();

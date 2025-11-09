@@ -14,7 +14,7 @@
 use ratatui::{
     Frame,
     layout::Rect,
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
 };
@@ -24,8 +24,10 @@ use crate::ui::theme::ToadTheme;
 
 /// Line chart style
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum LineStyle {
     /// Solid line
+    #[default]
     Solid,
     /// Dotted line
     Dotted,
@@ -35,11 +37,6 @@ pub enum LineStyle {
     Stepped,
 }
 
-impl Default for LineStyle {
-    fn default() -> Self {
-        LineStyle::Solid
-    }
-}
 
 /// Line chart for time-series data
 #[derive(Debug, Clone)]
@@ -265,18 +262,15 @@ impl LineChart {
 
 /// Bar chart orientation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum BarOrientation {
     /// Vertical bars (default)
+    #[default]
     Vertical,
     /// Horizontal bars
     Horizontal,
 }
 
-impl Default for BarOrientation {
-    fn default() -> Self {
-        BarOrientation::Vertical
-    }
-}
 
 /// Bar chart for comparison data
 #[derive(Debug, Clone)]

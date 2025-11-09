@@ -413,8 +413,8 @@ impl App {
 
     /// Cancel running evaluation
     pub fn cancel_evaluation(&mut self) {
-        if let Some(ref mut eval_state) = self.evaluation_state {
-            if let Some(handle) = eval_state.handle.take() {
+        if let Some(ref mut eval_state) = self.evaluation_state
+            && let Some(handle) = eval_state.handle.take() {
                 // Spawn a task to cancel the evaluation
                 tokio::spawn(async move {
                     handle.cancel().await;
@@ -423,7 +423,6 @@ impl App {
                 self.toast_info("Evaluation cancelled");
                 self.screen = AppScreen::Main;
             }
-        }
     }
 
     /// Update application state based on an event (Update in Elm Architecture)
@@ -555,11 +554,10 @@ impl App {
             }
             // Number keys select directly
             (KeyCode::Char(c @ '1'..='3'), _) => {
-                if let Some(dialog) = &mut self.trust_dialog {
-                    if dialog.select_by_key(c).is_some() {
+                if let Some(dialog) = &mut self.trust_dialog
+                    && dialog.select_by_key(c).is_some() {
                         self.confirm_trust_selection();
                     }
-                }
             }
             // Enter confirms selection
             (KeyCode::Enter, _) => {

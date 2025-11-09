@@ -5,11 +5,10 @@
 
 use ratatui::{
     Frame,
-    buffer::Buffer,
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Gauge, Paragraph, Widget},
+    widgets::{Block, Borders, Paragraph},
 };
 use serde::{Deserialize, Serialize};
 
@@ -215,7 +214,7 @@ impl TokenCounter {
         } else if cost >= 0.001 {
             format!("${:.4}", cost)
         } else {
-            format!("$< 0.001")
+            "$< 0.001".to_string()
         }
     }
 

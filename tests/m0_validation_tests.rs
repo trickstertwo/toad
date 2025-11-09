@@ -5,11 +5,10 @@
 
 #[cfg(test)]
 mod m0_validation_tests {
-    use std::path::PathBuf;
     use tempfile::TempDir;
+    use toad::ai::evaluation::{task_loader, ExperimentManager, ExperimentStatus};
     use toad::config::{FeatureFlags, ToadConfig};
-    use toad::evaluation::{EvaluationHarness, ExperimentManager, ExperimentStatus, task_loader};
-    use toad::stats::ComparisonResult;
+    use toad::{ComparisonResult, EvaluationHarness};
 
     /// Test the complete experimental workflow
     #[tokio::test]
@@ -179,7 +178,7 @@ mod m0_validation_tests {
     #[test]
     fn test_dataset_manager_sources() {
         use tempfile::TempDir;
-        use toad::evaluation::{DatasetManager, DatasetSource};
+        use toad::ai::evaluation::{DatasetManager, DatasetSource};
 
         let temp_dir = TempDir::new().unwrap();
         let manager = DatasetManager::new(temp_dir.path().to_path_buf());
@@ -207,7 +206,7 @@ mod m0_validation_tests {
     /// Test metrics collection completeness
     #[test]
     fn test_metrics_completeness() {
-        use toad::metrics::{Metrics, MetricsCollector, QualityMetrics};
+        use toad::ai::metrics::{Metrics, MetricsCollector, QualityMetrics};
 
         let mut collector = MetricsCollector::new();
         collector.start();
@@ -256,8 +255,8 @@ mod m0_validation_tests {
     /// Test statistical decision criteria
     #[test]
     fn test_statistical_decision_criteria() {
-        use toad::evaluation::{EvaluationResults, TaskResult};
-        use toad::stats::{ComparisonResult, Recommendation};
+        use toad::ai::evaluation::{EvaluationResults, TaskResult};
+        use toad::ai::stats::{ComparisonResult, Recommendation};
 
         fn create_results(name: &str, solved: Vec<bool>, costs: Vec<f64>) -> EvaluationResults {
             let results: Vec<TaskResult> = solved
@@ -362,7 +361,7 @@ mod m0_validation_tests {
             let entry = entry.unwrap();
             if entry.path().extension().and_then(|s| s.to_str()) == Some("json") {
                 let content = std::fs::read_to_string(entry.path()).unwrap();
-                let _: toad::evaluation::EvaluationResults =
+                let _: toad::ai::evaluation::EvaluationResults =
                     serde_json::from_str(&content).unwrap();
             }
         }

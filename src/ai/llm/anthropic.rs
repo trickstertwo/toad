@@ -53,11 +53,10 @@ impl LLMClient for AnthropicClient {
         });
 
         // Add tools if provided
-        if let Some(tools_list) = tools {
-            if !tools_list.is_empty() {
+        if let Some(tools_list) = tools
+            && !tools_list.is_empty() {
                 body["tools"] = json!(tools_list);
             }
-        }
 
         // Make API request
         let response = self

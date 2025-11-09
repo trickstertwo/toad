@@ -321,7 +321,7 @@ impl SyntaxHighlighter {
                     let color = match highlight.0 {
                         0 => self.theme.color_for("keyword"),
                         1 | 2 => self.theme.color_for("keyword.control"),
-                        3 | 4 | 5 => self.theme.color_for("function"),
+                        3..=5 => self.theme.color_for("function"),
                         6 | 7 => self.theme.color_for("type"),
                         8 | 9 => self.theme.color_for("string"),
                         10 | 11 => self.theme.color_for("number"),

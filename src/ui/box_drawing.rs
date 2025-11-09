@@ -239,8 +239,10 @@ impl fmt::Display for BoxChars {
 
 /// Box drawing style presets
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum BoxStyle {
     /// Light lines (thin)
+    #[default]
     Light,
     /// Heavy lines (thick)
     Heavy,
@@ -287,11 +289,6 @@ impl BoxStyle {
     }
 }
 
-impl Default for BoxStyle {
-    fn default() -> Self {
-        BoxStyle::Light
-    }
-}
 
 impl fmt::Display for BoxStyle {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -617,7 +614,7 @@ mod tests {
         let builder = BoxBuilder::new(BoxStyle::Light, 10, 3);
         let lines = builder.build(&["Test"]);
 
-        assert!(lines.len() > 0);
+        assert!(!lines.is_empty());
         assert!(lines[0].contains('┌'));
         assert!(lines[lines.len() - 1].contains('└'));
     }
@@ -703,7 +700,7 @@ mod tests {
     fn test_box_builder_default() {
         let default = BoxBuilder::default();
         let lines = default.build(&["Test"]);
-        assert!(lines.len() > 0);
+        assert!(!lines.is_empty());
     }
 
     #[test]

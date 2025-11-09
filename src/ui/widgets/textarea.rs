@@ -224,11 +224,10 @@ impl Textarea {
 
     /// Clamp cursor column to line length
     fn clamp_cursor_col(&mut self) {
-        if let Some(line) = self.lines.get(self.cursor_row) {
-            if self.cursor_col > line.len() {
+        if let Some(line) = self.lines.get(self.cursor_row)
+            && self.cursor_col > line.len() {
                 self.cursor_col = line.len();
             }
-        }
     }
 
     /// Ensure cursor is visible in the viewport

@@ -177,16 +177,15 @@ impl GitGraphService {
 /// Extract branch hint from commit message (e.g., "[feature]", "feat:", etc.)
 fn extract_branch_hint(message: &str) -> String {
     // Look for bracketed tags first (e.g., "[feature] Add login")
-    if let Some(start) = message.find('[') {
-        if let Some(end_offset) = message[start + 1..].find(']') {
+    if let Some(start) = message.find('[')
+        && let Some(end_offset) = message[start + 1..].find(']') {
             return message[start + 1..start + 1 + end_offset].to_lowercase();
         }
-    }
 
     // Look for conventional commit prefixes (e.g., "feat: Add feature")
     if let Some(colon_pos) = message.find(':') {
         let prefix = &message[..colon_pos];
-        if prefix.len() < 20 && prefix.len() > 0 {
+        if prefix.len() < 20 && !prefix.is_empty() {
             return prefix.to_lowercase();
         }
     }
@@ -205,21 +204,21 @@ mod tests {
     async fn init_git_repo(path: &std::path::Path) {
         Command::new("git")
             .current_dir(path)
-            .args(&["init"])
+            .args(["init"])
             .output()
             .await
             .unwrap();
 
         Command::new("git")
             .current_dir(path)
-            .args(&["config", "user.email", "test@example.com"])
+            .args(["config", "user.email", "test@example.com"])
             .output()
             .await
             .unwrap();
 
         Command::new("git")
             .current_dir(path)
-            .args(&["config", "user.name", "Test User"])
+            .args(["config", "user.name", "Test User"])
             .output()
             .await
             .unwrap();
@@ -227,7 +226,7 @@ mod tests {
         // Disable GPG signing for tests
         Command::new("git")
             .current_dir(path)
-            .args(&["config", "commit.gpgsign", "false"])
+            .args(["config", "commit.gpgsign", "false"])
             .output()
             .await
             .unwrap();
@@ -241,7 +240,7 @@ mod tests {
 
         let add_output = Command::new("git")
             .current_dir(path)
-            .args(&["add", file])
+            .args(["add", file])
             .output()
             .await
             .unwrap();
@@ -250,7 +249,7 @@ mod tests {
 
         let commit_output = Command::new("git")
             .current_dir(path)
-            .args(&["commit", "-m", message])
+            .args(["commit", "-m", message])
             .output()
             .await
             .unwrap();

@@ -1,6 +1,6 @@
-///! Theming system for TOAD
-///!
-///! Provides multiple color schemes, built-in themes, and custom theme support
+//! Theming system for TOAD
+//!
+//! Provides multiple color schemes, built-in themes, and custom theme support
 pub mod builtin;
 pub mod catppuccin;
 pub mod manager;

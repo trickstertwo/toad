@@ -16,7 +16,6 @@ use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Wrap},
 };
 use serde::{Deserialize, Serialize};
@@ -409,7 +408,7 @@ impl FloatingWindowManager {
     /// Close focused window
     pub fn close_focused(&mut self) -> Option<FloatingWindow> {
         self.focused.and_then(|idx| {
-            if self.windows.get(idx).map_or(false, |w| w.is_closable()) {
+            if self.windows.get(idx).is_some_and(|w| w.is_closable()) {
                 self.remove_window(idx)
             } else {
                 None

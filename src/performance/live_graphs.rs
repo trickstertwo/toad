@@ -157,13 +157,11 @@ impl LiveGraph {
     /// ```
     pub fn add_data_point(&mut self, value: f64) {
         // Check update frequency
-        if let UpdateFrequency::Interval(interval) = self.update_frequency {
-            if let Some(last) = self.last_update {
-                if last.elapsed() < interval {
+        if let UpdateFrequency::Interval(interval) = self.update_frequency
+            && let Some(last) = self.last_update
+                && last.elapsed() < interval {
                     return; // Skip this update
                 }
-            }
-        }
 
         let point = DataPoint::new(value);
         self.data.push_back(point);

@@ -8,7 +8,6 @@ use toad::ai::{ComparisonResult, EvaluationHarness};
 use toad::config::{FeatureFlags, ToadConfig};
 use toad::core::{App, Tui};
 use tracing::{Level, info};
-use tracing_subscriber;
 
 #[derive(Parser)]
 #[command(name = "toad")]

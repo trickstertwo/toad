@@ -113,7 +113,7 @@ impl CustomKeybindings {
         let binding = KeyBinding::new(code, modifiers);
         self.bindings
             .entry(context)
-            .or_insert_with(HashMap::new)
+            .or_default()
             .insert(binding, action.into());
     }
 
@@ -168,11 +168,10 @@ impl CustomKeybindings {
         let actual_binding = self.remappings.get(binding).unwrap_or(binding);
 
         // Check context-specific bindings
-        if let Some(context_bindings) = self.bindings.get(&context) {
-            if let Some(action) = context_bindings.get(actual_binding) {
+        if let Some(context_bindings) = self.bindings.get(&context)
+            && let Some(action) = context_bindings.get(actual_binding) {
                 return Some(action);
             }
-        }
 
         // Fall back to global bindings
         if let Some(global_bindings) = self.bindings.get(&KeybindingContext::Global) {
@@ -405,7 +404,7 @@ impl CustomKeybindings {
         for (context, ctx_bindings) in other.bindings {
             self.bindings
                 .entry(context)
-                .or_insert_with(HashMap::new)
+                .or_default()
                 .extend(ctx_bindings);
         }
         self.descriptions.extend(other.descriptions);

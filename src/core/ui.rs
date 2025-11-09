@@ -252,8 +252,8 @@ fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
                 ),
             ]));
 
-            if let Some(step) = progress.current_step {
-                if let Some(max_steps) = progress.max_steps {
+            if let Some(step) = progress.current_step
+                && let Some(max_steps) = progress.max_steps {
                     lines.push(Line::from(vec![
                         Span::styled("Agent Step: ", Style::default().fg(ToadTheme::GRAY)),
                         Span::styled(
@@ -262,7 +262,6 @@ fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
                         ),
                     ]));
                 }
-            }
 
             if let Some(tool) = &progress.last_tool {
                 lines.push(Line::from(vec![
