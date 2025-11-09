@@ -117,7 +117,7 @@ impl ModelInfo {
 /// Model selector widget
 pub struct ModelSelector {
     /// Available models
-    models: Vec<ModelInfo>,
+    pub(super) models: Vec<ModelInfo>,
     /// Currently selected index
     selected: usize,
     /// List state for rendering

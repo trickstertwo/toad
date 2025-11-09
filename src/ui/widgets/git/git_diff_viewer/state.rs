@@ -151,7 +151,7 @@ impl DiffLine {
 #[derive(Debug, Clone)]
 pub struct GitDiffViewer {
     /// Parsed diff lines
-    lines: Vec<DiffLine>,
+    pub(super) lines: Vec<DiffLine>,
     /// Title of the viewer
     title: String,
     /// Show line numbers
@@ -314,7 +314,7 @@ impl GitDiffViewer {
 
     /// Parse hunk header to extract starting line numbers
     /// Returns (old_start, new_start)
-    fn parse_hunk_header(line: &str) -> Option<(usize, usize)> {
+    pub(super) fn parse_hunk_header(line: &str) -> Option<(usize, usize)> {
         // @@ -1,4 +1,5 @@
         if !line.starts_with("@@ -") {
             return None;

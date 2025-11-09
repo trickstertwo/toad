@@ -82,7 +82,7 @@ pub struct InputDialog {
     placeholder: String,
     help_text: String,
     value: String,
-    cursor_position: usize,
+    pub(super) cursor_position: usize,
     state: InputDialogState,
     validator: Option<ValidatorFn>,
     validation_error: Option<String>,

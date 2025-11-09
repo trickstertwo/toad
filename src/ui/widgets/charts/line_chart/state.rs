@@ -155,17 +155,17 @@ pub struct LineChart {
     /// Data series to display
     series: Vec<DataSeries>,
     /// Chart title
-    title: Option<String>,
+    pub(super) title: Option<String>,
     /// X-axis label
-    x_label: Option<String>,
+    pub(super) x_label: Option<String>,
     /// Y-axis label
-    y_label: Option<String>,
+    pub(super) y_label: Option<String>,
     /// Show legend
-    show_legend: bool,
+    pub(super) show_legend: bool,
     /// Show grid
-    show_grid: bool,
+    pub(super) show_grid: bool,
     /// Manual Y-axis bounds (min, max)
-    y_bounds: Option<(f64, f64)>,
+    pub(super) y_bounds: Option<(f64, f64)>,
 }
 
 impl LineChart {
