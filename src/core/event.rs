@@ -354,4 +354,307 @@ mod tests {
         assert_eq!(last.current_task, 100);
         assert_eq!(first.current_task < last.current_task, true);
     }
+
+    // ===== Missing Event Variant Tests =====
+    #[test]
+    fn test_event_mouse_variant() {
+        use crossterm::event::{MouseButton, MouseEventKind};
+        let mouse_event = crossterm::event::MouseEvent {
+            kind: MouseEventKind::Down(MouseButton::Left),
+            column: 10,
+            row: 5,
+            modifiers: KeyModifiers::NONE,
+        };
+        let event = Event::Mouse(mouse_event);
+
+        match event {
+            Event::Mouse(m) => {
+                assert_eq!(m.column, 10);
+                assert_eq!(m.row, 5);
+            }
+            _ => panic!("Event should be Mouse variant"),
+        }
+    }
+
+    #[test]
+    fn test_event_start_evaluation_variant() {
+        use crate::ai::eval_commands::EvalArgs;
+        use crate::ai::evaluation::DatasetSource;
+        let eval_args = EvalArgs {
+            count: Some(10),
+            dataset: DatasetSource::Verified,
+            milestone: 1,
+            output: None,
+        };
+        let event = Event::StartEvaluation(eval_args.clone());
+
+        match event {
+            Event::StartEvaluation(args) => {
+                assert_eq!(args.count, Some(10));
+                assert_eq!(args.milestone, 1);
+            }
+            _ => panic!("Event should be StartEvaluation variant"),
+        }
+    }
+
+    #[test]
+    fn test_event_start_comparison_variant() {
+        use crate::ai::eval_commands::CompareArgs;
+        use crate::ai::evaluation::DatasetSource;
+        let compare_args = CompareArgs {
+            count: Some(20),
+            dataset: DatasetSource::Verified,
+            baseline: 1,
+            test: 2,
+            output: None,
+        };
+        let event = Event::StartComparison(compare_args.clone());
+
+        match event {
+            Event::StartComparison(args) => {
+                assert_eq!(args.count, Some(20));
+                assert_eq!(args.baseline, 1);
+                assert_eq!(args.test, 2);
+            }
+            _ => panic!("Event should be StartComparison variant"),
+        }
+    }
+
+    #[test]
+    fn test_event_evaluation_progress_variant() {
+        let progress = EvaluationProgress {
+            current_task: 5,
+            total_tasks: 10,
+            task_id: "task_789".to_string(),
+            current_step: Some(10),
+            max_steps: Some(25),
+            last_tool: Some("Grep".to_string()),
+            total_tokens: 3000,
+            total_cost: 0.15,
+            message: Some("Searching files".to_string()),
+            last_result: None,
+        };
+        let event = Event::EvaluationProgress(progress.clone());
+
+        match event {
+            Event::EvaluationProgress(p) => {
+                assert_eq!(p.current_task, 5);
+                assert_eq!(p.total_tasks, 10);
+                assert_eq!(p.task_id, "task_789");
+            }
+            _ => panic!("Event should be EvaluationProgress variant"),
+        }
+    }
+
+    #[test]
+    fn test_event_evaluation_complete_variant() {
+        use crate::ai::evaluation::EvaluationResults;
+        use std::collections::HashMap;
+        use chrono::Utc;
+
+        let results = EvaluationResults {
+            config_name: "M1".to_string(),
+            results: vec![],
+            accuracy: 0.8,
+            avg_cost_usd: 0.25,
+            avg_duration_ms: 1205.0,
+            total_tasks: 10,
+            tasks_solved: 8,
+            by_complexity: HashMap::new(),
+            timestamp: Utc::now(),
+        };
+        let event = Event::EvaluationComplete(results);
+
+        match event {
+            Event::EvaluationComplete(r) => {
+                assert_eq!(r.total_tasks, 10);
+                assert_eq!(r.tasks_solved, 8);
+                assert_eq!(r.accuracy, 0.8);
+            }
+            _ => panic!("Event should be EvaluationComplete variant"),
+        }
+    }
+
+    // ===== Event Clone Tests for All Variants =====
+    #[test]
+    fn test_event_key_clone() {
+        let key_event = KeyEvent::new(KeyCode::Enter, KeyModifiers::CONTROL);
+        let event1 = Event::Key(key_event);
+        let event2 = event1.clone();
+
+        match (event1, event2) {
+            (Event::Key(k1), Event::Key(k2)) => {
+                assert_eq!(k1.code, k2.code);
+                assert_eq!(k1.modifiers, k2.modifiers);
+            }
+            _ => panic!("Both should be Key events"),
+        }
+    }
+
+    #[test]
+    fn test_event_resize_clone() {
+        let event1 = Event::Resize(200, 100);
+        let event2 = event1.clone();
+
+        match (event1, event2) {
+            (Event::Resize(w1, h1), Event::Resize(w2, h2)) => {
+                assert_eq!(w1, w2);
+                assert_eq!(h1, h2);
+            }
+            _ => panic!("Both should be Resize events"),
+        }
+    }
+
+    #[test]
+    fn test_event_evaluation_error_clone() {
+        let event1 = Event::EvaluationError("Connection failed".to_string());
+        let event2 = event1.clone();
+
+        match (event1, event2) {
+            (Event::EvaluationError(e1), Event::EvaluationError(e2)) => {
+                assert_eq!(e1, e2);
+            }
+            _ => panic!("Both should be EvaluationError events"),
+        }
+    }
+
+    // ===== Event Debug Format Tests =====
+    #[test]
+    fn test_all_event_variants_debug() {
+        let events = vec![
+            Event::Tick,
+            Event::Quit,
+            Event::CancelEvaluation,
+            Event::Resize(80, 24),
+            Event::Key(KeyEvent::new(KeyCode::Char('a'), KeyModifiers::NONE)),
+            Event::EvaluationError("Test error".to_string()),
+        ];
+
+        for event in events {
+            let debug_str = format!("{:?}", event);
+            assert!(!debug_str.is_empty());
+        }
+    }
+
+    // ===== EvaluationProgress Field Combination Tests =====
+    #[test]
+    fn test_evaluation_progress_all_none_optionals() {
+        let progress = EvaluationProgress {
+            current_task: 1,
+            total_tasks: 1,
+            task_id: "minimal".to_string(),
+            current_step: None,
+            max_steps: None,
+            last_tool: None,
+            total_tokens: 0,
+            total_cost: 0.0,
+            message: None,
+            last_result: None,
+        };
+
+        assert!(progress.current_step.is_none());
+        assert!(progress.max_steps.is_none());
+        assert!(progress.last_tool.is_none());
+        assert!(progress.message.is_none());
+        assert!(progress.last_result.is_none());
+    }
+
+    #[test]
+    fn test_evaluation_progress_all_some_optionals() {
+        let progress = EvaluationProgress {
+            current_task: 5,
+            total_tasks: 10,
+            task_id: "full".to_string(),
+            current_step: Some(15),
+            max_steps: Some(25),
+            last_tool: Some("List".to_string()),
+            total_tokens: 5000,
+            total_cost: 0.25,
+            message: Some("All fields populated".to_string()),
+            last_result: None,
+        };
+
+        assert!(progress.current_step.is_some());
+        assert!(progress.max_steps.is_some());
+        assert!(progress.last_tool.is_some());
+        assert!(progress.message.is_some());
+        assert_eq!(progress.current_step.unwrap(), 15);
+    }
+
+    #[test]
+    fn test_evaluation_progress_zero_cost() {
+        let progress = EvaluationProgress {
+            current_task: 1,
+            total_tasks: 1,
+            task_id: "free".to_string(),
+            current_step: None,
+            max_steps: None,
+            last_tool: None,
+            total_tokens: 0,
+            total_cost: 0.0,
+            message: None,
+            last_result: None,
+        };
+
+        assert_eq!(progress.total_cost, 0.0);
+        assert_eq!(progress.total_tokens, 0);
+    }
+
+    #[test]
+    fn test_evaluation_progress_decimal_cost() {
+        let progress = EvaluationProgress {
+            current_task: 1,
+            total_tasks: 1,
+            task_id: "precise".to_string(),
+            current_step: None,
+            max_steps: None,
+            last_tool: None,
+            total_tokens: 1234,
+            total_cost: 0.123456,
+            message: None,
+            last_result: None,
+        };
+
+        assert_eq!(progress.total_cost, 0.123456);
+    }
+
+    // ===== EventHandler Edge Cases =====
+    #[test]
+    fn test_event_handler_zero_tick_rate() {
+        let handler = EventHandler::new(Duration::from_millis(0));
+        assert_eq!(handler.tick_rate, Duration::from_millis(0));
+    }
+
+    #[test]
+    fn test_event_handler_large_tick_rate() {
+        let handler = EventHandler::new(Duration::from_secs(3600)); // 1 hour
+        assert_eq!(handler.tick_rate, Duration::from_secs(3600));
+    }
+
+    // ===== Event Variant Matching Exhaustiveness =====
+    #[test]
+    fn test_event_match_all_variants() {
+        // Ensure all Event variants can be matched
+        let events: Vec<Event> = vec![
+            Event::Tick,
+            Event::Quit,
+            Event::CancelEvaluation,
+        ];
+
+        for event in events {
+            match event {
+                Event::Tick => {}
+                Event::Key(_) => {}
+                Event::Mouse(_) => {}
+                Event::Resize(_, _) => {}
+                Event::Quit => {}
+                Event::StartEvaluation(_) => {}
+                Event::StartComparison(_) => {}
+                Event::EvaluationProgress(_) => {}
+                Event::EvaluationComplete(_) => {}
+                Event::EvaluationError(_) => {}
+                Event::CancelEvaluation => {}
+            }
+        }
+    }
 }
