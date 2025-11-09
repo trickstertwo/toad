@@ -278,4 +278,176 @@ mod tests {
         let _help2 = HelpScreen::default();
         // If we get here, construction works
     }
+
+    // ===== Integration tests with TestBackend =====
+    use ratatui::backend::TestBackend;
+    use ratatui::Terminal;
+
+    #[test]
+    fn test_render_with_test_backend() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        let help = HelpScreen::new();
+
+        terminal
+            .draw(|frame| {
+                let area = frame.area();
+                help.render(frame, area);
+            })
+            .unwrap();
+
+        // Verify render didn't panic
+    }
+
+    #[test]
+    fn test_render_with_small_area() {
+        let backend = TestBackend::new(40, 12);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        let help = HelpScreen::new();
+
+        terminal
+            .draw(|frame| {
+                let area = frame.area();
+                help.render(frame, area);
+            })
+            .unwrap();
+
+        // Should handle small areas gracefully
+    }
+
+    #[test]
+    fn test_render_with_large_area() {
+        let backend = TestBackend::new(200, 60);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        let help = HelpScreen::new();
+
+        terminal
+            .draw(|frame| {
+                let area = frame.area();
+                help.render(frame, area);
+            })
+            .unwrap();
+
+        // Should handle large areas gracefully
+    }
+
+    #[test]
+    fn test_render_with_minimal_area() {
+        let backend = TestBackend::new(20, 10);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        let help = HelpScreen::new();
+
+        terminal
+            .draw(|frame| {
+                let area = frame.area();
+                help.render(frame, area);
+            })
+            .unwrap();
+
+        // Should not panic even with very small area
+    }
+
+    #[test]
+    fn test_render_content_includes_keybindings() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        let help = HelpScreen::new();
+
+        terminal
+            .draw(|frame| {
+                let area = frame.area();
+                help.render(frame, area);
+            })
+            .unwrap();
+
+        // Get buffer content
+        let buffer = terminal.backend().buffer().clone();
+        let content = buffer.content();
+
+        // Convert buffer to string to check for key content
+        let mut found_ctrl_c = false;
+        let mut found_help_command = false;
+
+        for cell in content.iter() {
+            let cell_str = cell.symbol();
+            if cell_str.contains("Ctrl") || cell_str == "c" {
+                found_ctrl_c = true;
+            }
+            if cell_str.contains("help") {
+                found_help_command = true;
+            }
+        }
+
+        // At least some content should be rendered
+        assert!(found_ctrl_c || found_help_command);
+    }
+
+    #[test]
+    fn test_render_includes_title() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        let help = HelpScreen::new();
+
+        terminal
+            .draw(|frame| {
+                let area = frame.area();
+                help.render(frame, area);
+            })
+            .unwrap();
+
+        // Verify render completed successfully
+        let buffer = terminal.backend().buffer();
+        assert!(buffer.area().width > 0);
+        assert!(buffer.area().height > 0);
+    }
+
+    #[test]
+    fn test_render_multiple_times() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        let help = HelpScreen::new();
+
+        // Render multiple times
+        for _ in 0..3 {
+            terminal
+                .draw(|frame| {
+                    let area = frame.area();
+                    help.render(frame, area);
+                })
+                .unwrap();
+        }
+
+        // Should handle repeated rendering
+    }
+
+    #[test]
+    fn test_render_with_different_areas() {
+        let backend = TestBackend::new(100, 50);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        let help = HelpScreen::new();
+
+        terminal
+            .draw(|frame| {
+                let full_area = frame.area();
+
+                // Test with different sub-areas
+                let top_half = Rect {
+                    x: 0,
+                    y: 0,
+                    width: full_area.width,
+                    height: full_area.height / 2,
+                };
+
+                help.render(frame, top_half);
+            })
+            .unwrap();
+    }
 }

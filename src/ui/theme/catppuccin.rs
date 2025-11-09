@@ -661,4 +661,157 @@ mod tests {
             }
         }
     }
+
+    // ===== Mocha rainbow colors =====
+    #[test]
+    fn test_mocha_rainbow_colors() {
+        let theme = CatppuccinMocha;
+        assert_eq!(theme.red(), Color::Rgb(243, 139, 168));
+        assert_eq!(theme.yellow(), Color::Rgb(249, 226, 175));
+        assert_eq!(theme.blue(), Color::Rgb(137, 180, 250));
+        assert_eq!(theme.green(), Color::Rgb(166, 227, 161));
+        assert_eq!(theme.cyan(), Color::Rgb(148, 226, 213));
+        assert_eq!(theme.magenta(), Color::Rgb(245, 194, 231));
+    }
+
+    // ===== Macchiato comprehensive coverage =====
+    #[test]
+    fn test_macchiato_semantic_colors() {
+        let theme = CatppuccinMacchiato;
+        assert_eq!(theme.success(), Color::Rgb(166, 218, 149));
+        assert_eq!(theme.error(), Color::Rgb(237, 135, 150));
+        assert_eq!(theme.warning(), Color::Rgb(238, 212, 159));
+        assert_eq!(theme.info(), Color::Rgb(138, 173, 244));
+    }
+
+    #[test]
+    fn test_macchiato_rainbow_colors() {
+        let theme = CatppuccinMacchiato;
+        assert_eq!(theme.red(), Color::Rgb(237, 135, 150));
+        assert_eq!(theme.yellow(), Color::Rgb(238, 212, 159));
+        assert_eq!(theme.blue(), Color::Rgb(138, 173, 244));
+        assert_eq!(theme.green(), Color::Rgb(166, 218, 149));
+        assert_eq!(theme.cyan(), Color::Rgb(139, 213, 202));
+        assert_eq!(theme.magenta(), Color::Rgb(245, 169, 227));
+    }
+
+    #[test]
+    fn test_macchiato_title_and_accent() {
+        let theme = CatppuccinMacchiato;
+        assert_eq!(theme.title(), Color::Rgb(202, 211, 245));
+        assert_eq!(theme.accent(), Color::Rgb(166, 218, 149));
+    }
+
+    // ===== Frappe comprehensive coverage =====
+    #[test]
+    fn test_frappe_semantic_colors() {
+        let theme = CatppuccinFrappe;
+        assert_eq!(theme.success(), Color::Rgb(166, 209, 137));
+        assert_eq!(theme.error(), Color::Rgb(231, 130, 132));
+        assert_eq!(theme.warning(), Color::Rgb(229, 200, 144));
+        assert_eq!(theme.info(), Color::Rgb(140, 170, 238));
+    }
+
+    #[test]
+    fn test_frappe_rainbow_colors() {
+        let theme = CatppuccinFrappe;
+        assert_eq!(theme.red(), Color::Rgb(231, 130, 132));
+        assert_eq!(theme.yellow(), Color::Rgb(229, 200, 144));
+        assert_eq!(theme.blue(), Color::Rgb(140, 170, 238));
+        assert_eq!(theme.green(), Color::Rgb(166, 209, 137));
+        assert_eq!(theme.cyan(), Color::Rgb(129, 200, 190));
+        assert_eq!(theme.magenta(), Color::Rgb(244, 184, 228));
+    }
+
+    #[test]
+    fn test_frappe_title_and_accent() {
+        let theme = CatppuccinFrappe;
+        assert_eq!(theme.title(), Color::Rgb(198, 208, 245));
+        assert_eq!(theme.accent(), Color::Rgb(166, 209, 137));
+    }
+
+    // ===== Latte comprehensive coverage =====
+    #[test]
+    fn test_latte_rainbow_colors() {
+        let theme = CatppuccinLatte;
+        assert_eq!(theme.red(), Color::Rgb(210, 15, 57));
+        assert_eq!(theme.yellow(), Color::Rgb(223, 142, 29));
+        assert_eq!(theme.blue(), Color::Rgb(30, 102, 245));
+        assert_eq!(theme.green(), Color::Rgb(64, 160, 43));
+        assert_eq!(theme.cyan(), Color::Rgb(23, 146, 153));
+        assert_eq!(theme.magenta(), Color::Rgb(234, 118, 203));
+    }
+
+    #[test]
+    fn test_latte_title_and_accent() {
+        let theme = CatppuccinLatte;
+        assert_eq!(theme.title(), Color::Rgb(76, 79, 105));
+        assert_eq!(theme.accent(), Color::Rgb(64, 160, 43));
+    }
+
+    // ===== Color consistency tests =====
+    #[test]
+    fn test_all_themes_primary_matches_accent() {
+        let mocha = CatppuccinMocha;
+        let macchiato = CatppuccinMacchiato;
+        let frappe = CatppuccinFrappe;
+        let latte = CatppuccinLatte;
+
+        assert_eq!(mocha.primary(), mocha.accent());
+        assert_eq!(macchiato.primary(), macchiato.accent());
+        assert_eq!(frappe.primary(), frappe.accent());
+        assert_eq!(latte.primary(), latte.accent());
+    }
+
+    #[test]
+    fn test_all_themes_success_uses_green() {
+        let mocha = CatppuccinMocha;
+        let macchiato = CatppuccinMacchiato;
+        let frappe = CatppuccinFrappe;
+        let latte = CatppuccinLatte;
+
+        assert_eq!(mocha.success(), mocha.green());
+        assert_eq!(macchiato.success(), macchiato.green());
+        assert_eq!(frappe.success(), frappe.green());
+        assert_eq!(latte.success(), latte.green());
+    }
+
+    #[test]
+    fn test_all_themes_error_uses_red() {
+        let mocha = CatppuccinMocha;
+        let macchiato = CatppuccinMacchiato;
+        let frappe = CatppuccinFrappe;
+        let latte = CatppuccinLatte;
+
+        assert_eq!(mocha.error(), mocha.red());
+        assert_eq!(macchiato.error(), macchiato.red());
+        assert_eq!(frappe.error(), frappe.red());
+        assert_eq!(latte.error(), latte.red());
+    }
+
+    #[test]
+    fn test_all_themes_warning_uses_yellow() {
+        let mocha = CatppuccinMocha;
+        let macchiato = CatppuccinMacchiato;
+        let frappe = CatppuccinFrappe;
+        let latte = CatppuccinLatte;
+
+        assert_eq!(mocha.warning(), mocha.yellow());
+        assert_eq!(macchiato.warning(), macchiato.yellow());
+        assert_eq!(frappe.warning(), frappe.yellow());
+        assert_eq!(latte.warning(), latte.yellow());
+    }
+
+    #[test]
+    fn test_all_themes_info_uses_blue() {
+        let mocha = CatppuccinMocha;
+        let macchiato = CatppuccinMacchiato;
+        let frappe = CatppuccinFrappe;
+        let latte = CatppuccinLatte;
+
+        assert_eq!(mocha.info(), mocha.blue());
+        assert_eq!(macchiato.info(), macchiato.blue());
+        assert_eq!(frappe.info(), frappe.blue());
+        assert_eq!(latte.info(), latte.blue());
+    }
 }
