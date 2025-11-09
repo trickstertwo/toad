@@ -1,10 +1,10 @@
 /// Configuration module for TOAD
 /// Contains both M0 (evaluation framework) and TUI configurations
-mod tui;
+mod tui_config;
 pub mod accessibility;
 
 pub use accessibility::AccessibilityConfig;
-pub use tui::{AiConfig, Config, EditorConfig, SessionConfig, UiConfig};
+pub use tui_config::{AiConfig, Config, EditorConfig, SessionConfig, UiConfig};
 
 use crate::ai::llm::{ProviderConfig, ProviderType};
 use serde::{Deserialize, Serialize};
