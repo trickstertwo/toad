@@ -11,13 +11,13 @@
 
 - [x] **M0: Infrastructure & Evaluation** (100% - 45 tests)
 - [x] **M1: Simple Baseline** (100% - 96 tests)
-- [x] **M2: Context + Smart Tests** (100% - 80 tests) ✅
+- [x] **M2: Context + Smart Tests** (100% - 82 tests) ✅ FULLY WIRED
 - [ ] **M3: Multi-Model Racing** (0% - TRAE +4.2 points)
 - [ ] **M4: Cascading Routing** (12 tests ready - DavaJ 70% cost reduction)
 - [ ] **M5: Production Ready** (0%)
 
-**Current Status:** ✅ M1 + M2 100% Complete, M4 Routing Infrastructure Ready
-**Total Tests:** 1657 passing (1639 base + 6 RunTestsTool + 12 routing)
+**Current Status:** ✅ M1 + M2 100% Complete & TRULY INTEGRATED (AST context + smart tests)
+**Total Tests:** 1659 passing (1639 base + 6 RunTestsTool + 12 routing + 2 M2 config)
 
 ---
 
@@ -169,8 +169,8 @@ cargo run --release -- eval --count 50 --milestone 1
 
 ## ✅ Milestone 2: Context + Smart Test Selection
 
-**Status:** 100% IMPLEMENTATION COMPLETE (80 tests passing) ✅
-**Commits:** 11 commits (f05ae9f → current)
+**Status:** 100% IMPLEMENTATION COMPLETE (82 tests passing) ✅
+**Commits:** 12+ commits (f05ae9f → current)
 **Prerequisites:** M1 baseline measured
 **Target:** +5% accuracy vs M1 (60-65%)
 
@@ -212,8 +212,11 @@ cargo run --release -- eval --count 50 --milestone 1
 - [x] ExtractorRegistry for auto-detection (11 tests)
 - [x] ContextBuilder with fluent API (8 tests)
 - [x] Integration with PromptBuilder (1 test)
-- [x] **Wire to Agent** - ✅ COMPLETE (eval_runner.rs:233-257)
-- [x] Tests (54/15 target ✅ infrastructure complete)
+- [x] **Wire to Agent** - ✅ COMPLETE
+  - eval_runner.rs:233-257 (TUI evaluation)
+  - evaluation/mod.rs:329-379 (CLI evaluation harness)
+  - Both paths use context_ast feature flag correctly
+- [x] Tests (54/15 target ✅ infrastructure complete, +2 M2 config tests)
 
 ### Smart Test Selection (Feature: smart_test_selection) - ✅ IMPLEMENTED
 - [x] Test file discovery (3 tests)

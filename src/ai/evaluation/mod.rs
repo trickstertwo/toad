@@ -325,14 +325,58 @@ impl EvaluationHarness {
             ToolRegistry::m1_with_features(&config.features)
         };
 
+        // Build AST context if M2 feature enabled
+        let custom_prompt = if config.features.context_ast {
+            use crate::ai::context::ContextBuilder;
+            use crate::ai::agent::PromptBuilder;
+
+            tracing::info!("M2: Building AST context for task {}", task.id);
+
+            // Try to build context from current directory (task workspace)
+            // In real evaluation, this would be the cloned repo directory
+            match ContextBuilder::new() {
+                Ok(mut builder) => {
+                    match builder.add_directory(".", &["py", "js", "ts", "tsx", "rs"]).await {
+                        Ok(builder) => {
+                            let context = builder.build();
+                            tracing::info!(
+                                "M2: Built AST context with {} files, {} symbols",
+                                context.file_contexts.len(),
+                                context.total_symbols
+                            );
+                            Some(PromptBuilder::new()
+                                .with_task(task)
+                                .with_ast_context(context)
+                                .build())
+                        }
+                        Err(e) => {
+                            // Log warning but continue without AST context
+                            tracing::warn!("M2: Failed to add directory to AST context: {}", e);
+                            None
+                        }
+                    }
+                }
+                Err(e) => {
+                    tracing::warn!("M2: Failed to create AST context builder: {}", e);
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
         // Create agent
         let agent = Agent::new(llm_client, tool_registry);
 
         // Create metrics collector
         let mut metrics_collector = MetricsCollector::new();
 
-        // Execute task
-        let agent_result = agent.execute_task(task, &mut metrics_collector).await?;
+        // Execute task with AST-enhanced prompt if available (M2)
+        let agent_result = if let Some(prompt) = custom_prompt {
+            agent.execute_task_with_prompt(task, Some(prompt), &mut metrics_collector).await?
+        } else {
+            agent.execute_task(task, &mut metrics_collector).await?
+        };
 
         // Build task result
         let final_metrics = metrics_collector.finish();
@@ -467,6 +511,36 @@ mod tests {
         assert!(config.features.prompt_caching);
         assert!(config.features.tree_sitter_validation);
         assert!(!config.features.context_ast);
+    }
+
+    #[test]
+    fn test_m2_config_has_required_features() {
+        use crate::config::FeatureFlags;
+
+        let m2_features = FeatureFlags::milestone_2();
+
+        // M2 MUST have these enabled
+        assert!(m2_features.context_ast, "M2 must have AST context enabled (+2-5 points)");
+        assert!(m2_features.smart_test_selection, "M2 must have smart test selection enabled (+3-5 points)");
+
+        // M2 should inherit M1 features
+        assert!(m2_features.prompt_caching, "M2 should have prompt caching from M1");
+        assert!(m2_features.tree_sitter_validation, "M2 should have tree-sitter validation from M1");
+
+        // M2 should NOT have M3+ features
+        assert!(!m2_features.routing_multi_model, "M2 should not have multi-model routing (that's M3)");
+        assert!(!m2_features.routing_cascade, "M2 should not have cascading routing (that's M4)");
+    }
+
+    #[test]
+    fn test_m2_baseline_config_uses_features() {
+        let config = ToadConfig::for_milestone(2);
+
+        // Verify M2 config has AST context and smart test selection
+        assert!(config.features.context_ast);
+        assert!(config.features.smart_test_selection);
+        assert!(config.features.prompt_caching);
+        assert!(config.features.tree_sitter_validation);
     }
 
     #[test]
