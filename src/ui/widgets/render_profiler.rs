@@ -102,7 +102,7 @@ impl ComponentStats {
     }
 
     /// Update stats with new render time
-    fn update(&mut self, duration: Duration) {
+    pub(crate) fn update(&mut self, duration: Duration) {
         self.total_time += duration;
         self.render_count += 1;
         self.min_time = self.min_time.min(duration);
@@ -338,7 +338,7 @@ impl RenderProfiler {
     pub fn slowest_component(&self) -> Option<(&str, ComponentStats)> {
         self.components
             .iter()
-            .max_by(|a, b| a.1.average_ms().partial_cmp(&b.1.average_ms()).unwrap())
+            .max_by(|a, b| a.1.average_ms().total_cmp(&b.1.average_ms()))
             .map(|(name, stats)| (name.as_str(), *stats))
     }
 
@@ -420,7 +420,7 @@ impl RenderProfiler {
         // Sort components
         let mut items: Vec<_> = self.components.iter().collect();
         if self.sort_by_time {
-            items.sort_by(|a, b| b.1.average_ms().partial_cmp(&a.1.average_ms()).unwrap());
+            items.sort_by(|a, b| b.1.average_ms().total_cmp(&a.1.average_ms()));
         } else {
             items.sort_by_key(|&(name, _)| name);
         }
@@ -543,7 +543,7 @@ mod tests {
         assert_eq!(profiler.component_count(), 1);
         let stats = profiler.get_stats("Test");
         assert!(stats.is_some());
-        assert_eq!(stats.unwrap().render_count, 1);
+        assert_eq!(stats.expect("stats should exist").render_count, 1);
     }
 
     #[test]
@@ -556,7 +556,7 @@ mod tests {
             profiler.end_component();
         }
 
-        let stats = profiler.get_stats("Widget").unwrap();
+        let stats = profiler.get_stats("Widget").expect("Widget stats should exist");
         assert_eq!(stats.render_count, 3);
     }
 
@@ -607,7 +607,7 @@ mod tests {
         thread::sleep(Duration::from_millis(10));
         profiler.end_component();
 
-        let (name, _) = profiler.slowest_component().unwrap();
+        let (name, _) = profiler.slowest_component().expect("should have slowest component");
         assert_eq!(name, "Slow");
     }
 
@@ -691,5 +691,122 @@ mod tests {
         assert!(!profiler.sort_by_time);
         assert_eq!(profiler.warning_threshold_ms, 5.0);
         assert_eq!(profiler.critical_threshold_ms, 10.0);
+    }
+
+    // Edge case tests for robustness
+
+    #[test]
+    fn test_slowest_component_empty() {
+        // Empty profiler should return None, not panic
+        let profiler = RenderProfiler::new();
+        assert!(profiler.slowest_component().is_none());
+    }
+
+    #[test]
+    fn test_slowest_component_single() {
+        // Single component should be returned
+        let mut profiler = RenderProfiler::new();
+        profiler.start_component("Only");
+        profiler.end_component();
+
+        let (name, _) = profiler.slowest_component().expect("should have one component");
+        assert_eq!(name, "Only");
+    }
+
+    #[test]
+    fn test_slowest_component_multiple_same_time() {
+        // When multiple components have same time, should not panic
+        let mut profiler = RenderProfiler::new();
+
+        profiler.start_component("A");
+        profiler.end_component();
+
+        profiler.start_component("B");
+        profiler.end_component();
+
+        // Should return one of them without panicking
+        let result = profiler.slowest_component();
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_sort_by_time_multiple_components() {
+        // Test sorting doesn't panic with multiple components
+        let mut profiler = RenderProfiler::new().with_sort_by_time(true);
+
+        profiler.start_component("Fast");
+        profiler.end_component();
+
+        profiler.start_component("Medium");
+        thread::sleep(Duration::from_millis(2));
+        profiler.end_component();
+
+        profiler.start_component("Slow");
+        thread::sleep(Duration::from_millis(5));
+        profiler.end_component();
+
+        let lines = profiler.render_lines();
+        // Should render without panicking
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_component_stats_zero_renders() {
+        // Zero renders should return 0.0 average, not NaN
+        let stats = ComponentStats::new();
+        assert_eq!(stats.average_ms(), 0.0);
+        assert!(!stats.average_ms().is_nan());
+    }
+
+    #[test]
+    fn test_component_stats_single_render() {
+        let mut stats = ComponentStats::new();
+        stats.update(Duration::from_millis(10));
+
+        assert_eq!(stats.render_count, 1);
+        assert!(stats.average_ms() > 0.0);
+        assert!(!stats.average_ms().is_nan());
+    }
+
+    #[test]
+    fn test_component_stats_multiple_renders() {
+        let mut stats = ComponentStats::new();
+        stats.update(Duration::from_millis(5));
+        stats.update(Duration::from_millis(15));
+        stats.update(Duration::from_millis(10));
+
+        assert_eq!(stats.render_count, 3);
+        assert!((stats.average_ms() - 10.0).abs() < 1.0); // ~10ms average
+        assert!(!stats.average_ms().is_nan());
+    }
+
+    #[test]
+    fn test_component_stats_very_short_duration() {
+        // Test with nanosecond-level durations
+        let mut stats = ComponentStats::new();
+        stats.update(Duration::from_nanos(100));
+
+        assert_eq!(stats.render_count, 1);
+        assert!(stats.average_ms() >= 0.0);
+        assert!(!stats.average_ms().is_nan());
+    }
+
+    #[test]
+    fn test_total_cmp_handles_edge_cases() {
+        // Verify total_cmp is used correctly (doesn't panic on equal values)
+        let mut profiler = RenderProfiler::new().with_sort_by_time(true);
+
+        // Add many components with potentially equal times
+        for i in 0..10 {
+            profiler.start_component(&format!("Component{}", i));
+            profiler.end_component();
+        }
+
+        // Should not panic during sorting
+        let lines = profiler.render_lines();
+        assert!(!lines.is_empty());
+
+        // Should not panic finding slowest
+        let _ = profiler.slowest_component();
     }
 }

@@ -384,3 +384,211 @@ impl FileTree {
         items
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_file_node_creation() {
+        let path = PathBuf::from("/test/file.txt");
+        let node = FileTreeNode::file(path.clone(), "file.txt".to_string(), 1);
+
+        assert_eq!(node.path, path);
+        assert_eq!(node.name, "file.txt");
+        assert_eq!(node.node_type, FileTreeNodeType::File);
+        assert_eq!(node.depth, 1);
+        assert!(!node.is_expanded);
+        assert!(node.children.is_empty());
+    }
+
+    #[test]
+    fn test_directory_node_creation() {
+        let path = PathBuf::from("/test/dir");
+        let node = FileTreeNode::directory(path.clone(), "dir".to_string(), 0);
+
+        assert_eq!(node.path, path);
+        assert_eq!(node.name, "dir");
+        assert_eq!(node.node_type, FileTreeNodeType::Directory);
+        assert_eq!(node.depth, 0);
+        assert!(!node.is_expanded);
+        assert!(node.children.is_empty());
+    }
+
+    #[test]
+    fn test_directory_toggle() {
+        let mut node = FileTreeNode::directory(PathBuf::from("/test"), "test".to_string(), 0);
+
+        assert!(!node.is_expanded);
+        node.toggle();
+        assert!(node.is_expanded);
+        node.toggle();
+        assert!(!node.is_expanded);
+    }
+
+    #[test]
+    fn test_file_toggle_does_nothing() {
+        let mut node = FileTreeNode::file(PathBuf::from("/test.txt"), "test.txt".to_string(), 0);
+
+        assert!(!node.is_expanded);
+        node.toggle();
+        assert!(!node.is_expanded); // Should remain false for files
+    }
+
+    #[test]
+    fn test_load_children_on_file_returns_ok() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let file_path = temp_dir.path().join("test.txt");
+        fs::write(&file_path, "content").expect("Failed to write test file");
+
+        let mut node = FileTreeNode::file(file_path, "test.txt".to_string(), 0);
+        let result = node.load_children();
+
+        assert!(result.is_ok());
+        assert!(node.children.is_empty()); // Files don't have children
+    }
+
+    #[test]
+    fn test_load_children_empty_directory() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+
+        let result = node.load_children();
+        assert!(result.is_ok());
+        assert!(node.children.is_empty());
+    }
+
+    #[test]
+    fn test_load_children_with_files() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+
+        // Create some test files
+        fs::write(temp_dir.path().join("file1.txt"), "content").expect("Failed to write file");
+        fs::write(temp_dir.path().join("file2.txt"), "content").expect("Failed to write file");
+
+        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children().expect("Failed to load children");
+
+        assert_eq!(node.children.len(), 2);
+        assert!(node.children.iter().all(|c| c.node_type == FileTreeNodeType::File));
+        assert!(node.children.iter().all(|c| c.depth == 1));
+    }
+
+    #[test]
+    fn test_load_children_with_directories() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+
+        // Create subdirectories
+        fs::create_dir(temp_dir.path().join("dir1")).expect("Failed to create dir");
+        fs::create_dir(temp_dir.path().join("dir2")).expect("Failed to create dir");
+
+        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children().expect("Failed to load children");
+
+        assert_eq!(node.children.len(), 2);
+        assert!(node.children.iter().all(|c| c.node_type == FileTreeNodeType::Directory));
+    }
+
+    #[test]
+    fn test_load_children_mixed_content() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+
+        // Create mixed content
+        fs::create_dir(temp_dir.path().join("dir1")).expect("Failed to create dir");
+        fs::write(temp_dir.path().join("file1.txt"), "content").expect("Failed to write file");
+        fs::create_dir(temp_dir.path().join("dir2")).expect("Failed to create dir");
+        fs::write(temp_dir.path().join("file2.txt"), "content").expect("Failed to write file");
+
+        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children().expect("Failed to load children");
+
+        assert_eq!(node.children.len(), 4);
+        // Directories should come first
+        assert_eq!(node.children[0].node_type, FileTreeNodeType::Directory);
+        assert_eq!(node.children[1].node_type, FileTreeNodeType::Directory);
+        assert_eq!(node.children[2].node_type, FileTreeNodeType::File);
+        assert_eq!(node.children[3].node_type, FileTreeNodeType::File);
+    }
+
+    #[test]
+    fn test_load_children_alphabetical_sorting() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+
+        // Create files in non-alphabetical order
+        fs::write(temp_dir.path().join("zebra.txt"), "content").expect("Failed to write file");
+        fs::write(temp_dir.path().join("apple.txt"), "content").expect("Failed to write file");
+        fs::write(temp_dir.path().join("mango.txt"), "content").expect("Failed to write file");
+
+        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children().expect("Failed to load children");
+
+        assert_eq!(node.children[0].name, "apple.txt");
+        assert_eq!(node.children[1].name, "mango.txt");
+        assert_eq!(node.children[2].name, "zebra.txt");
+    }
+
+    #[test]
+    fn test_load_children_skips_hidden_files() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+
+        // Create hidden and visible files
+        fs::write(temp_dir.path().join(".hidden"), "content").expect("Failed to write file");
+        fs::write(temp_dir.path().join("visible.txt"), "content").expect("Failed to write file");
+
+        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children().expect("Failed to load children");
+
+        assert_eq!(node.children.len(), 1);
+        assert_eq!(node.children[0].name, "visible.txt");
+    }
+
+    #[test]
+    fn test_load_children_skips_target_directory() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+
+        // Create target and regular directories
+        fs::create_dir(temp_dir.path().join("target")).expect("Failed to create dir");
+        fs::create_dir(temp_dir.path().join("src")).expect("Failed to create dir");
+
+        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children().expect("Failed to load children");
+
+        assert_eq!(node.children.len(), 1);
+        assert_eq!(node.children[0].name, "src");
+    }
+
+    #[test]
+    fn test_load_children_skips_node_modules() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+
+        // Create node_modules and regular directory
+        fs::create_dir(temp_dir.path().join("node_modules")).expect("Failed to create dir");
+        fs::create_dir(temp_dir.path().join("lib")).expect("Failed to create dir");
+
+        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children().expect("Failed to load children");
+
+        assert_eq!(node.children.len(), 1);
+        assert_eq!(node.children[0].name, "lib");
+    }
+
+    #[test]
+    fn test_file_tree_with_title() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let tree = FileTree::new(temp_dir.path().to_path_buf())
+            .expect("Failed to create tree")
+            .with_title("Custom Title");
+
+        assert_eq!(tree.title, "Custom Title");
+    }
+
+    #[test]
+    fn test_file_tree_default_title() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let tree = FileTree::new(temp_dir.path().to_path_buf()).expect("Failed to create tree");
+
+        assert_eq!(tree.title, "File Tree");
+    }
+}

@@ -1132,4 +1132,269 @@ diff --git a/test.txt b/test.txt
         assert_eq!(DiffLineType::Context.bg_color(), None);
         assert_eq!(DiffLineType::NoNewline.bg_color(), None);
     }
+    // ============ ADDITIONAL FUNCTIONAL TESTS FROM INTEGRATION ============
+
+    #[test]
+    fn test_diff_line_new() {
+        let line = DiffLine::new("+added", DiffLineType::Addition, None, Some(42));
+        assert_eq!(line.text, "+added");
+        assert_eq!(line.line_type, DiffLineType::Addition);
+        assert_eq!(line.old_line_no, None);
+        assert_eq!(line.new_line_no, Some(42));
+    }
+
+    #[test]
+    fn test_diff_viewer_default() {
+        let viewer = GitDiffViewer::default();
+        assert_eq!(viewer.line_count(), 0);
+        assert!(viewer.show_line_numbers);
+        assert!(viewer.syntax_highlighting);
+        assert!(!viewer.compact);
+    }
+
+    #[test]
+    fn test_diff_viewer_empty_diff() {
+        let mut viewer = GitDiffViewer::new();
+        viewer.set_diff("");
+        assert_eq!(viewer.line_count(), 0);
+
+        let (additions, deletions, context) = viewer.stats();
+        assert_eq!(additions, 0);
+        assert_eq!(deletions, 0);
+        assert_eq!(context, 0);
+    }
+
+    #[test]
+    fn test_diff_viewer_set_diff_for_file() {
+        let diff = r#"diff --git a/file1.txt b/file1.txt
++line in file1
+diff --git a/file2.txt b/file2.txt
++line in file2
+-removed from file2
+"#;
+
+        let mut viewer = GitDiffViewer::new();
+        viewer.set_diff_for_file(diff, "file2.txt");
+
+        // Should only have lines from file2.txt
+        assert_eq!(viewer.line_count(), 3); // header, +line, -line
+
+        let (additions, deletions, _) = viewer.stats();
+        assert_eq!(additions, 1);
+        assert_eq!(deletions, 1);
+    }
+
+    #[test]
+    fn test_diff_viewer_set_diff_for_nonexistent_file() {
+        let diff = r#"diff --git a/file1.txt b/file1.txt
++line in file1
+"#;
+
+        let mut viewer = GitDiffViewer::new();
+        viewer.set_diff_for_file(diff, "nonexistent.txt");
+
+        // Should be empty (file not found)
+        assert_eq!(viewer.line_count(), 0);
+    }
+
+    #[test]
+    fn test_diff_viewer_only_additions() {
+        let diff = r#"diff --git a/file.txt b/file.txt
++line1
++line2
++line3
+"#;
+
+        let mut viewer = GitDiffViewer::new();
+        viewer.set_diff(diff);
+
+        let (additions, deletions, context) = viewer.stats();
+        assert_eq!(additions, 3);
+        assert_eq!(deletions, 0);
+        assert_eq!(context, 0);
+    }
+
+    #[test]
+    fn test_diff_viewer_only_deletions() {
+        let diff = r#"diff --git a/file.txt b/file.txt
+-line1
+-line2
+-line3
+"#;
+
+        let mut viewer = GitDiffViewer::new();
+        viewer.set_diff(diff);
+
+        let (additions, deletions, context) = viewer.stats();
+        assert_eq!(additions, 0);
+        assert_eq!(deletions, 3);
+        assert_eq!(context, 0);
+    }
+
+    #[test]
+    fn test_diff_viewer_multiple_files() {
+        let diff = r#"diff --git a/file1.txt b/file1.txt
++line in file1
+diff --git a/file2.txt b/file2.txt
++line in file2
+-removed from file2
+"#;
+
+        let mut viewer = GitDiffViewer::new();
+        viewer.set_diff(diff);
+
+        assert_eq!(viewer.line_count(), 5);
+
+        let (additions, deletions, _) = viewer.stats();
+        assert_eq!(additions, 2);
+        assert_eq!(deletions, 1);
+    }
+
+    #[test]
+    fn test_diff_viewer_multiple_hunks() {
+        let diff = r#"diff --git a/file.txt b/file.txt
+@@ -1,3 +1,4 @@
+ line1
++added line
+ line2
+@@ -10,2 +11,3 @@
+ line10
++another addition
+ line11
+"#;
+
+        let mut viewer = GitDiffViewer::new();
+        viewer.set_diff(diff);
+
+        let (additions, deletions, context) = viewer.stats();
+        assert_eq!(additions, 2);
+        assert_eq!(deletions, 0);
+        assert_eq!(context, 4);
+    }
+
+    #[test]
+    fn test_diff_viewer_very_long_line() {
+        let long_line = "+".to_string() + &"x".repeat(10000);
+        let diff = format!("diff --git a/file b/file\n{}", long_line);
+
+        let mut viewer = GitDiffViewer::new();
+        viewer.set_diff(&diff);
+
+        assert_eq!(viewer.line_count(), 2);
+        let (additions, _, _) = viewer.stats();
+        assert_eq!(additions, 1);
+    }
+
+    #[test]
+    fn test_diff_viewer_clear_resets_file_filter() {
+        let mut viewer = GitDiffViewer::new();
+        viewer.set_diff_for_file("diff --git a/file.txt b/file.txt\n+line", "file.txt");
+
+        assert!(viewer.current_file.is_some());
+
+        viewer.clear();
+        assert!(viewer.current_file.is_none());
+        assert_eq!(viewer.line_count(), 0);
+    }
+
+    #[test]
+    fn test_diff_viewer_line_number_tracking() {
+        let diff = r#"diff --git a/file.txt b/file.txt
+@@ -5,4 +5,5 @@
+ context1
+ context2
++addition
+-deletion
+ context3
+"#;
+
+        let mut viewer = GitDiffViewer::new();
+        viewer.set_diff(diff);
+
+        // Check that line numbers are tracked correctly
+        // Hunk starts at line 5 in both old and new
+        let lines = &viewer.lines;
+
+        // Find the context lines and check their numbers
+        let context_lines: Vec<_> = lines
+            .iter()
+            .filter(|l| l.line_type == DiffLineType::Context)
+            .collect();
+
+        assert_eq!(context_lines.len(), 3);
+        assert_eq!(context_lines[0].old_line_no, Some(5));
+        assert_eq!(context_lines[0].new_line_no, Some(5));
+    }
+
+    #[test]
+    fn test_diff_viewer_stats_empty() {
+        let viewer = GitDiffViewer::new();
+        let (additions, deletions, context) = viewer.stats();
+        assert_eq!(additions, 0);
+        assert_eq!(deletions, 0);
+        assert_eq!(context, 0);
+    }
+
+    #[test]
+    fn test_diff_line_context_has_both_line_nos() {
+        let line = DiffLine::new(" unchanged", DiffLineType::Context, Some(5), Some(7));
+        assert_eq!(line.old_line_no, Some(5));
+        assert_eq!(line.new_line_no, Some(7));
+    }
+
+    #[test]
+    fn test_diff_line_deletion_has_old_line_no() {
+        let line = DiffLine::new("-removed", DiffLineType::Deletion, Some(10), None);
+        assert_eq!(line.old_line_no, Some(10));
+        assert_eq!(line.new_line_no, None);
+    }
+
+    #[test]
+    fn test_diff_line_type_all_variants_color() {
+        // Ensure all line types have defined colors
+        assert_eq!(DiffLineType::FileHeader.color(), Color::Yellow);
+        assert_eq!(DiffLineType::Index.color(), Color::DarkGray);
+        assert_eq!(DiffLineType::OldFile.color(), Color::Red);
+        assert_eq!(DiffLineType::NewFile.color(), Color::Green);
+        assert_eq!(DiffLineType::Hunk.color(), Color::Cyan);
+        assert_eq!(DiffLineType::Addition.color(), Color::Green);
+        assert_eq!(DiffLineType::Deletion.color(), Color::Red);
+        assert_eq!(DiffLineType::Context.color(), Color::White);
+        assert_eq!(DiffLineType::NoNewline.color(), Color::DarkGray);
+    }
+
+    #[test]
+    fn test_diff_line_type_bg_colors_all_variants() {
+        // Only additions and deletions have background colors
+        assert!(DiffLineType::Addition.bg_color().is_some());
+        assert!(DiffLineType::Deletion.bg_color().is_some());
+        assert!(DiffLineType::FileHeader.bg_color().is_none());
+        assert!(DiffLineType::Index.bg_color().is_none());
+        assert!(DiffLineType::OldFile.bg_color().is_none());
+        assert!(DiffLineType::NewFile.bg_color().is_none());
+        assert!(DiffLineType::Hunk.bg_color().is_none());
+        assert!(DiffLineType::Context.bg_color().is_none());
+        assert!(DiffLineType::NoNewline.bg_color().is_none());
+    }
+
+    #[test]
+    fn test_parse_hunk_header_edge_cases() {
+        // Single line change
+        assert_eq!(
+            GitDiffViewer::parse_hunk_header("@@ -1 +1 @@"),
+            Some((1, 1))
+        );
+
+        // Large line numbers
+        assert_eq!(
+            GitDiffViewer::parse_hunk_header("@@ -1234,56 +5678,90 @@"),
+            Some((1234, 5678))
+        );
+
+        // Malformed headers
+        assert_eq!(GitDiffViewer::parse_hunk_header("@@"), None);
+        assert_eq!(GitDiffViewer::parse_hunk_header("@@ -a,b +c,d @@"), None);
+        assert_eq!(GitDiffViewer::parse_hunk_header("not a hunk"), None);
+    }
+
 }

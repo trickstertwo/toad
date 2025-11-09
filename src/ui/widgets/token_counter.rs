@@ -429,4 +429,245 @@ mod tests {
         // Verify cost is approximately $0.525
         assert!((cost - 0.525).abs() < 0.001, "Expected ~$0.525, got ${:.3}", cost);
     }
+
+    // Comprehensive TokenUsage tests
+
+    #[test]
+    fn test_token_usage_reset() {
+        let mut usage = TokenUsage::new(1000, 500);
+        usage.cached_tokens = 200;
+
+        usage.reset();
+        assert_eq!(usage.input_tokens, 0);
+        assert_eq!(usage.output_tokens, 0);
+        assert_eq!(usage.cached_tokens, 0);
+        assert_eq!(usage.total(), 0);
+    }
+
+    #[test]
+    fn test_token_usage_with_cached() {
+        let mut usage = TokenUsage::new(1000, 500);
+        usage.cached_tokens = 300;
+
+        let other = TokenUsage {
+            input_tokens: 100,
+            output_tokens: 50,
+            cached_tokens: 150,
+        };
+
+        usage.add(&other);
+        assert_eq!(usage.input_tokens, 1100);
+        assert_eq!(usage.output_tokens, 550);
+        assert_eq!(usage.cached_tokens, 450);
+        assert_eq!(usage.total(), 1650); // Only counts input + output
+    }
+
+    #[test]
+    fn test_token_usage_zero_values() {
+        let usage = TokenUsage::new(0, 0);
+        assert_eq!(usage.total(), 0);
+
+        let mut other = TokenUsage::default();
+        other.add(&usage);
+        assert_eq!(other.total(), 0);
+    }
+
+    #[test]
+    fn test_token_usage_large_values() {
+        let usage = TokenUsage::new(10_000_000, 5_000_000);
+        assert_eq!(usage.total(), 15_000_000);
+        assert_eq!(usage.input_tokens, 10_000_000);
+        assert_eq!(usage.output_tokens, 5_000_000);
+    }
+
+    // Comprehensive CostModel tests
+
+    #[test]
+    fn test_cost_model_opus_pricing() {
+        let model = CostModel::claude_opus_4();
+        let usage = TokenUsage::new(1_000_000, 1_000_000);
+        let cost = model.calculate_cost(&usage);
+        assert_eq!(cost, 90.0); // 15.0 + 75.0
+    }
+
+    #[test]
+    fn test_cost_model_haiku_pricing() {
+        let model = CostModel::claude_haiku_4();
+        let usage = TokenUsage::new(1_000_000, 1_000_000);
+        let cost = model.calculate_cost(&usage);
+        assert_eq!(cost, 1.5); // 0.25 + 1.25
+    }
+
+    #[test]
+    fn test_cost_model_gpt4o_pricing() {
+        let model = CostModel::gpt_4o();
+        let usage = TokenUsage::new(1_000_000, 1_000_000);
+        let cost = model.calculate_cost(&usage);
+        assert_eq!(cost, 12.5); // 2.5 + 10.0
+    }
+
+    #[test]
+    fn test_cost_model_with_cached_tokens() {
+        let model = CostModel::claude_sonnet_4_5();
+        let mut usage = TokenUsage::new(1_000_000, 1_000_000);
+        usage.cached_tokens = 1_000_000;
+
+        let cost = model.calculate_cost(&usage);
+        // 3.0 (input) + 15.0 (output) + 0.3 (cached) = 18.3
+        assert!((cost - 18.3).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_cost_model_zero_usage() {
+        let model = CostModel::claude_sonnet_4_5();
+        let usage = TokenUsage::new(0, 0);
+        let cost = model.calculate_cost(&usage);
+        assert_eq!(cost, 0.0);
+    }
+
+    #[test]
+    fn test_cost_model_small_usage() {
+        let model = CostModel::claude_sonnet_4_5();
+        let usage = TokenUsage::new(1000, 500); // Very small usage
+        let cost = model.calculate_cost(&usage);
+        // 1000 * 3.0/1M + 500 * 15.0/1M = 0.003 + 0.0075 = 0.0105
+        assert!((cost - 0.0105).abs() < 0.0001);
+    }
+
+    // Comprehensive TokenCounter tests
+
+    #[test]
+    fn test_token_counter_toggle_details() {
+        let mut counter = TokenCounter::new();
+        assert!(counter.show_details);
+
+        counter.toggle_details();
+        assert!(!counter.show_details);
+
+        counter.toggle_details();
+        assert!(counter.show_details);
+    }
+
+    #[test]
+    fn test_token_counter_compact_mode() {
+        let counter = TokenCounter::new().with_compact(true);
+        assert!(counter.compact);
+
+        let counter = TokenCounter::new().with_compact(false);
+        assert!(!counter.compact);
+    }
+
+    #[test]
+    fn test_token_counter_set_cost_model() {
+        let mut counter = TokenCounter::new();
+        counter.set_cost_model(CostModel::claude_opus_4());
+        counter.add_usage(TokenUsage::new(1_000_000, 1_000_000));
+
+        let cost = counter.session_cost();
+        assert_eq!(cost, 90.0); // Opus pricing
+    }
+
+    #[test]
+    fn test_token_counter_reset_total() {
+        let mut counter = TokenCounter::new();
+        counter.add_usage(TokenUsage::new(1000, 500));
+        counter.add_usage(TokenUsage::new(500, 250));
+
+        assert_eq!(counter.total_usage.total(), 2250);
+
+        counter.reset_total();
+        assert_eq!(counter.total_usage.total(), 0);
+        assert_eq!(counter.session_usage.total(), 2250); // Session unchanged
+    }
+
+    #[test]
+    fn test_token_counter_multiple_add_usage() {
+        let mut counter = TokenCounter::new();
+
+        for _ in 0..10 {
+            counter.add_usage(TokenUsage::new(100, 50));
+        }
+
+        assert_eq!(counter.session_usage.total(), 1500);
+        assert_eq!(counter.total_usage.total(), 1500);
+    }
+
+    #[test]
+    fn test_token_counter_session_vs_total() {
+        let mut counter = TokenCounter::new();
+
+        counter.add_usage(TokenUsage::new(1000, 500));
+        assert_eq!(counter.session_usage.total(), 1500);
+        assert_eq!(counter.total_usage.total(), 1500);
+
+        counter.reset_session();
+        assert_eq!(counter.session_usage.total(), 0);
+        assert_eq!(counter.total_usage.total(), 1500);
+
+        counter.add_usage(TokenUsage::new(500, 250));
+        assert_eq!(counter.session_usage.total(), 750);
+        assert_eq!(counter.total_usage.total(), 2250);
+    }
+
+    // Format helper edge cases
+
+    #[test]
+    fn test_format_number_edge_cases() {
+        assert_eq!(TokenCounter::format_number(0), "0");
+        assert_eq!(TokenCounter::format_number(1), "1");
+        assert_eq!(TokenCounter::format_number(999), "999");
+        assert_eq!(TokenCounter::format_number(1_000), "1.0K");
+        assert_eq!(TokenCounter::format_number(1_234), "1.2K");
+        assert_eq!(TokenCounter::format_number(999_999), "1000.0K");
+        assert_eq!(TokenCounter::format_number(1_000_000), "1.0M");
+        assert_eq!(TokenCounter::format_number(1_234_567), "1.2M");
+        assert_eq!(TokenCounter::format_number(10_000_000), "10.0M");
+    }
+
+    #[test]
+    fn test_format_cost_edge_cases() {
+        assert_eq!(TokenCounter::format_cost(0.0), "$< 0.001");
+        assert_eq!(TokenCounter::format_cost(0.0001), "$< 0.001");
+        assert_eq!(TokenCounter::format_cost(0.0009), "$< 0.001");
+        assert_eq!(TokenCounter::format_cost(0.001), "$0.0010");
+        assert_eq!(TokenCounter::format_cost(0.0099), "$0.0099");
+        assert_eq!(TokenCounter::format_cost(0.01), "$0.010");
+        assert_eq!(TokenCounter::format_cost(0.999), "$0.999");
+        assert_eq!(TokenCounter::format_cost(1.0), "$1.00");
+        assert_eq!(TokenCounter::format_cost(99.99), "$99.99");
+        assert_eq!(TokenCounter::format_cost(100.0), "$100.00");
+    }
+
+    #[test]
+    fn test_budget_over_limit() {
+        let mut counter = TokenCounter::new().with_budget(0.5);
+        // Add usage that exceeds budget
+        counter.add_usage(TokenUsage::new(100_000, 50_000)); // ~$1.05
+
+        let cost = counter.session_cost();
+        assert!(cost > 0.5, "Cost should exceed budget");
+    }
+
+    #[test]
+    fn test_budget_exactly_at_limit() {
+        let mut counter = TokenCounter::new().with_budget(1.0);
+        // Exactly 1M tokens: 1M input @ $3/1M = $3.00 total
+        counter.add_usage(TokenUsage::new(1_000_000, 0));
+
+        let cost = counter.session_cost();
+        assert_eq!(cost, 3.0);
+    }
+
+    #[test]
+    fn test_budget_near_threshold() {
+        let mut counter = TokenCounter::new().with_budget(1.0);
+        // Add usage at 85% of budget (should trigger warning color)
+        // Need $0.85: solve for x where x*3/1M + y*15/1M = 0.85
+        // Simplify: use only input tokens: 0.85 = x * 3/1M → x = 283,333
+        counter.add_usage(TokenUsage::new(283_333, 0));
+
+        let cost = counter.session_cost();
+        assert!(cost >= 0.8, "Should be >= 80% of budget");
+        assert!(cost < 1.0, "Should be < 100% of budget");
+    }
 }
