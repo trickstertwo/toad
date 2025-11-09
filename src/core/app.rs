@@ -3597,5 +3597,87 @@ mod tests {
             assert!(app.input_field.value().contains(ch));
         }
     }
+
+    // ===== Search Mode Tests =====
+    #[test]
+    fn test_forward_slash_triggers_search_mode() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('/')));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("Search") || app.status_message.contains("search"));
+    }
+
+    #[test]
+    fn test_vim_n_key_next_search() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.vim_mode = true;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('n')));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("Next") || app.status_message.contains("search"));
+    }
+
+    #[test]
+    fn test_vim_shift_n_key_previous_search() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.vim_mode = true;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('N'), KeyModifiers::SHIFT));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("Previous") || app.status_message.contains("search"));
+    }
+
+    // ===== Evaluation Screen Tests =====
+    #[test]
+    fn test_evaluation_screen_esc_when_complete() {
+        let mut app = App::new();
+        app.screen = AppScreen::Evaluation;
+        // Set evaluation_state to None to simulate completed evaluation
+        app.evaluation_state = None;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Esc));
+        app.update(event).unwrap();
+
+        // Should return to Main screen
+        assert_eq!(app.screen, AppScreen::Main);
+    }
+
+    #[test]
+    fn test_evaluation_screen_q_when_complete() {
+        let mut app = App::new();
+        app.screen = AppScreen::Evaluation;
+        // Set evaluation_state to None to simulate completed evaluation
+        app.evaluation_state = None;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('q')));
+        app.update(event).unwrap();
+
+        // Should return to Main screen
+        assert_eq!(app.screen, AppScreen::Main);
+    }
+
+    #[test]
+    fn test_evaluation_screen_ctrl_c_when_complete() {
+        let mut app = App::new();
+        app.screen = AppScreen::Evaluation;
+        // Set evaluation_state to None to simulate completed evaluation
+        app.evaluation_state = None;
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        // Should return to Main screen
+        assert_eq!(app.screen, AppScreen::Main);
+    }
 }
 
