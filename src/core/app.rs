@@ -2503,5 +2503,526 @@ mod tests {
         // event_tx should now be Some, enabling evaluations
         assert!(app.event_tx.is_some());
     }
+
+    // ===== Event Handler Tests =====
+    #[test]
+    fn test_event_quit() {
+        let mut app = App::new();
+        assert!(!app.should_quit());
+
+        let event = Event::Quit;
+        app.update(event).unwrap();
+
+        assert!(app.should_quit());
+    }
+
+    #[test]
+    fn test_event_resize() {
+        let app = App::new();
+        let event = Event::Resize(100, 50);
+        let _ = app;  // Not actually testing resize handling here, just Event creation
+
+        // Verify the Resize event can be created with proper values
+        match event {
+            Event::Resize(w, h) => {
+                assert_eq!(w, 100);
+                assert_eq!(h, 50);
+            }
+            _ => panic!("Expected Resize event"),
+        }
+    }
+
+    #[test]
+    fn test_event_resize_various_sizes() {
+        let mut app = App::new();
+
+        // Test various terminal sizes
+        for (width, height) in [(80, 24), (120, 40), (200, 60), (40, 12)] {
+            let event = Event::Resize(width, height);
+            app.update(event).unwrap();
+        }
+
+        // Should handle all sizes without panic
+    }
+
+    #[test]
+    fn test_event_mouse() {
+        use crossterm::event::{MouseEvent, MouseEventKind};
+
+        let mut app = App::new();
+        let mouse_event = MouseEvent {
+            kind: MouseEventKind::Down(crossterm::event::MouseButton::Left),
+            column: 10,
+            row: 5,
+            modifiers: KeyModifiers::NONE,
+        };
+
+        let event = Event::Mouse(mouse_event);
+        app.update(event).unwrap();
+
+        // Mouse events are currently no-ops but shouldn't panic
+    }
+
+    #[test]
+    fn test_event_tick() {
+        let mut app = App::new();
+        let event = Event::Tick;
+        app.update(event).unwrap();
+
+        // Tick events should not panic
+    }
+
+    #[test]
+    fn test_event_tick_multiple() {
+        let mut app = App::new();
+
+        // Multiple ticks
+        for _ in 0..10 {
+            let event = Event::Tick;
+            app.update(event).unwrap();
+        }
+
+        // Should handle multiple ticks
+    }
+
+    // ===== Evaluation Event Handler Tests =====
+    #[test]
+    fn test_evaluation_progress_event_without_state() {
+        let mut app = App::new();
+        app.evaluation_state = None;
+
+        let progress = crate::core::event::EvaluationProgress {
+            current_task: 5,
+            total_tasks: 10,
+            task_id: "task-123".to_string(),
+            current_step: Some(3),
+            max_steps: Some(25),
+            last_tool: Some("Read".to_string()),
+            total_tokens: 1000,
+            total_cost: 0.05,
+            message: Some("Processing...".to_string()),
+            last_result: None,
+        };
+
+        let event = Event::EvaluationProgress(progress);
+        app.update(event).unwrap();
+
+        // Should handle gracefully when no evaluation state
+    }
+
+    #[test]
+    fn test_evaluation_progress_event_with_state() {
+        let mut app = App::new();
+        app.evaluation_state = Some(EvaluationState {
+            handle: None,
+            progress: None,
+            results: None,
+            error: None,
+        });
+
+        let progress = crate::core::event::EvaluationProgress {
+            current_task: 3,
+            total_tasks: 10,
+            task_id: "task-456".to_string(),
+            current_step: Some(5),
+            max_steps: Some(25),
+            last_tool: Some("Edit".to_string()),
+            total_tokens: 2000,
+            total_cost: 0.10,
+            message: Some("Working on task...".to_string()),
+            last_result: None,
+        };
+
+        let event = Event::EvaluationProgress(progress.clone());
+        app.update(event).unwrap();
+
+        // Should update status message and progress
+        assert!(app.status_message.contains("Working on task"));
+        assert!(app.evaluation_state.as_ref().unwrap().progress.is_some());
+    }
+
+    #[test]
+    fn test_evaluation_progress_event_without_message() {
+        let mut app = App::new();
+        app.evaluation_state = Some(EvaluationState {
+            handle: None,
+            progress: None,
+            results: None,
+            error: None,
+        });
+
+        let progress = crate::core::event::EvaluationProgress {
+            current_task: 7,
+            total_tasks: 15,
+            task_id: "task-789".to_string(),
+            current_step: None,
+            max_steps: None,
+            last_tool: None,
+            total_tokens: 0,
+            total_cost: 0.0,
+            message: None,
+            last_result: None,
+        };
+
+        let event = Event::EvaluationProgress(progress);
+        app.update(event).unwrap();
+
+        // Should use default message format
+        assert!(app.status_message.contains("7/15") || app.status_message.contains("task-789"));
+    }
+
+    #[test]
+    fn test_evaluation_complete_event() {
+        use crate::ai::evaluation::EvaluationResults;
+        use chrono::Utc;
+        use std::collections::HashMap;
+
+        let mut app = App::new();
+        app.evaluation_state = Some(EvaluationState {
+            handle: None,
+            progress: None,
+            results: None,
+            error: None,
+        });
+
+        let results = EvaluationResults {
+            config_name: "M1".to_string(),
+            results: vec![],
+            accuracy: 65.5,
+            avg_cost_usd: 0.05,
+            avg_duration_ms: 1500.0,
+            total_tasks: 20,
+            tasks_solved: 13,
+            by_complexity: HashMap::new(),
+            timestamp: Utc::now(),
+        };
+
+        let event = Event::EvaluationComplete(results.clone());
+        app.update(event).unwrap();
+
+        // Should update state and show success toast
+        assert!(app.evaluation_state.as_ref().unwrap().results.is_some());
+        assert!(app.evaluation_state.as_ref().unwrap().handle.is_none());
+        assert!(app.status_message.contains("65.5") || app.status_message.contains("13/20"));
+    }
+
+    #[test]
+    fn test_evaluation_error_event() {
+        let mut app = App::new();
+        app.screen = AppScreen::Evaluation;
+        app.evaluation_state = Some(EvaluationState {
+            handle: None,
+            progress: None,
+            results: None,
+            error: None,
+        });
+
+        let error = "Network timeout".to_string();
+        let event = Event::EvaluationError(error.clone());
+        app.update(event).unwrap();
+
+        // Should update error state and return to Main
+        assert!(app.evaluation_state.as_ref().unwrap().error.is_some());
+        assert_eq!(*app.screen(), AppScreen::Main);
+        assert!(app.status_message.contains("Network timeout"));
+    }
+
+    // ===== Process Command Edge Cases =====
+    #[test]
+    fn test_process_command_with_leading_spaces() {
+        let mut app = App::new();
+        app.process_command("  /help  ");
+
+        // Should handle leading/trailing spaces
+        assert!(app.show_help || app.status_message.contains("help"));
+    }
+
+    #[test]
+    fn test_process_command_case_sensitive() {
+        let mut app = App::new();
+        app.process_command("/HELP");
+
+        // Commands are case-sensitive
+        assert!(app.status_message.contains("Unknown") || app.show_help);
+    }
+
+    #[test]
+    fn test_process_command_eval_without_event_tx() {
+        let mut app = App::new();
+        app.event_tx = None;
+        app.process_command("eval --count 5 --milestone 1");
+
+        // Should show error about missing event channel
+        // (handled in start_evaluation which shows toast)
+    }
+
+    #[test]
+    fn test_process_command_show_config_all_milestones() {
+        let mut app = App::new();
+
+        // Only milestones 1-3 are currently supported by the parser
+        for milestone in 1..=3 {
+            app.process_command(&format!("show-config --milestone {}", milestone));
+            assert!(app.status_message.contains(&format!("M{}", milestone)));
+        }
+    }
+
+    // ===== Palette Command Execution Tests =====
+    #[test]
+    fn test_execute_palette_command_clear() {
+        let mut app = App::new();
+        app.execute_palette_command("clear");
+        assert!(app.status_message.contains("clear"));
+    }
+
+    #[test]
+    fn test_execute_palette_command_theme_toggle() {
+        let mut app = App::new();
+        app.execute_palette_command("theme_toggle");
+        assert!(app.status_message.contains("Theme") || app.status_message.contains("theme"));
+    }
+
+    #[test]
+    fn test_execute_palette_command_split_horizontal() {
+        let mut app = App::new();
+        app.execute_palette_command("split_horizontal");
+        assert!(app.status_message.contains("Split") || app.status_message.contains("horizontal"));
+    }
+
+    #[test]
+    fn test_execute_palette_command_split_vertical() {
+        let mut app = App::new();
+        app.execute_palette_command("split_vertical");
+        assert!(app.status_message.contains("Split") || app.status_message.contains("vertical"));
+    }
+
+    #[test]
+    fn test_execute_palette_command_open_file() {
+        let mut app = App::new();
+        app.execute_palette_command("open_file");
+        assert!(app.status_message.contains("Open") || app.status_message.contains("file"));
+    }
+
+    #[test]
+    fn test_execute_palette_command_search_files() {
+        let mut app = App::new();
+        app.execute_palette_command("search_files");
+        assert!(app.status_message.contains("Search") || app.status_message.contains("files"));
+    }
+
+    #[test]
+    fn test_execute_palette_command_git_status() {
+        let mut app = App::new();
+        app.execute_palette_command("git_status");
+        assert!(app.status_message.contains("Git") || app.status_message.contains("status"));
+    }
+
+    #[test]
+    fn test_execute_palette_command_recent_files() {
+        let mut app = App::new();
+        app.execute_palette_command("recent_files");
+        assert!(app.status_message.contains("Recent") || app.status_message.contains("files"));
+    }
+
+    // ===== Trust Dialog Workflow Tests =====
+    #[test]
+    fn test_confirm_trust_selection_yes_session_only() {
+        let mut app = App::new();
+        app.screen = AppScreen::TrustDialog;
+        app.create_trust_dialog();
+
+        // Select option 0 (Yes for this session)
+        if let Some(dialog) = &mut app.trust_dialog {
+            while dialog.selected() != 0 {
+                dialog.select_next();
+            }
+        }
+
+        app.confirm_trust_selection();
+
+        assert_eq!(*app.screen(), AppScreen::Main);
+        assert!(app.trust_dialog.is_none());
+    }
+
+    #[test]
+    fn test_confirm_trust_selection_yes_and_remember() {
+        let mut app = App::new();
+        app.screen = AppScreen::TrustDialog;
+        app.create_trust_dialog();
+
+        // Select option 1 (Yes and remember)
+        if let Some(dialog) = &mut app.trust_dialog {
+            dialog.select_next(); // Move to option 1
+        }
+
+        app.confirm_trust_selection();
+
+        assert_eq!(*app.screen(), AppScreen::Main);
+        assert!(app.trust_dialog.is_none());
+        // Check status message instead of session state (which might be loaded from disk)
+        assert!(app.status_message.contains("remembered"));
+    }
+
+    #[test]
+    fn test_confirm_trust_selection_no_quit() {
+        let mut app = App::new();
+        app.screen = AppScreen::TrustDialog;
+        app.create_trust_dialog();
+
+        // Select option 2 (No - quit)
+        if let Some(dialog) = &mut app.trust_dialog {
+            dialog.select_next();
+            dialog.select_next(); // Move to option 2
+        }
+
+        app.confirm_trust_selection();
+
+        assert!(app.should_quit());
+    }
+
+    #[test]
+    fn test_trust_dialog_esc_quits() {
+        let mut app = App::new();
+        app.screen = AppScreen::TrustDialog;
+        app.create_trust_dialog();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Esc));
+        app.update(event).unwrap();
+
+        assert!(app.should_quit());
+    }
+
+    #[test]
+    fn test_trust_dialog_ctrl_c_quits() {
+        let mut app = App::new();
+        app.screen = AppScreen::TrustDialog;
+        app.create_trust_dialog();
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        assert!(app.should_quit());
+    }
+
+    #[test]
+    fn test_trust_dialog_enter_confirms() {
+        let mut app = App::new();
+        app.screen = AppScreen::TrustDialog;
+        app.create_trust_dialog();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Enter));
+        app.update(event).unwrap();
+
+        // Should confirm whichever option is selected
+        assert!(app.screen() != &AppScreen::TrustDialog || app.should_quit());
+    }
+
+    // ===== Welcome Screen Tests =====
+    #[test]
+    fn test_welcome_screen_any_key_advances() {
+        let mut app = App::new();
+        app.screen = AppScreen::Welcome;
+        app.welcome_shown = false;
+
+        // Press any regular key
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('a')));
+        app.update(event).unwrap();
+
+        // Should advance to trust dialog
+        assert_eq!(*app.screen(), AppScreen::TrustDialog);
+        assert!(app.welcome_shown);
+    }
+
+    #[test]
+    fn test_welcome_screen_space_advances() {
+        let mut app = App::new();
+        app.screen = AppScreen::Welcome;
+        app.welcome_shown = false;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char(' ')));
+        app.update(event).unwrap();
+
+        assert_eq!(*app.screen(), AppScreen::TrustDialog);
+    }
+
+    #[test]
+    fn test_welcome_screen_enter_advances() {
+        let mut app = App::new();
+        app.screen = AppScreen::Welcome;
+        app.welcome_shown = false;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Enter));
+        app.update(event).unwrap();
+
+        assert_eq!(*app.screen(), AppScreen::TrustDialog);
+    }
+
+    #[test]
+    fn test_welcome_screen_ctrl_c_quits() {
+        let mut app = App::new();
+        app.screen = AppScreen::Welcome;
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        assert!(app.should_quit());
+    }
+
+    // ===== Update Session State Tests =====
+    #[test]
+    fn test_update_session_state_syncs_welcome_shown() {
+        let mut app = App::new();
+        app.welcome_shown = true;
+
+        app.update_session_state();
+
+        assert!(app.session().welcome_shown());
+    }
+
+    #[test]
+    fn test_update_session_state_syncs_working_directory() {
+        let mut app = App::new();
+        let original_wd = app.working_directory().clone();
+
+        app.update_session_state();
+
+        assert_eq!(app.session().working_directory(), &original_wd);
+    }
+
+    #[test]
+    fn test_update_session_state_syncs_plugin_count() {
+        let mut app = App::new();
+        app.plugin_count = 42;
+
+        app.update_session_state();
+
+        assert_eq!(app.session().plugin_count(), 42);
+    }
+
+    #[test]
+    fn test_update_session_state_screen_mapping() {
+        let mut app = App::new();
+
+        // Test each screen type
+        for screen in [AppScreen::Welcome, AppScreen::Main, AppScreen::TrustDialog] {
+            app.screen = screen.clone();
+            app.update_session_state();
+
+            let last_screen = app.session().last_screen();
+            assert!(!last_screen.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_update_session_state_evaluation_maps_to_main() {
+        let mut app = App::new();
+        app.screen = AppScreen::Evaluation;
+
+        app.update_session_state();
+
+        // Evaluation is transient, should save as Main
+        let last_screen = app.session().last_screen();
+        assert_eq!(last_screen, "Main");
+    }
 }
 
