@@ -381,4 +381,168 @@ mod tests {
         assert_eq!(spans[0].content, "A");
         assert_eq!(spans[1].content, "B");
     }
+
+    // ========================================================================
+    // EDGE CASE TESTS (Added for comprehensive coverage)
+    // ========================================================================
+
+    #[test]
+    fn test_status_section_very_long_text() {
+        let long_text = "x".repeat(1000);
+        let section = StatusSection::new(long_text.clone());
+        assert_eq!(section.text.len(), 1000);
+        assert_eq!(section.text, long_text);
+    }
+
+    #[test]
+    fn test_status_section_with_unicode() {
+        let section = StatusSection::new("🐸 日本語 Status");
+        assert!(section.text.contains('🐸'));
+        assert!(section.text.contains("日本語"));
+    }
+
+    #[test]
+    fn test_status_section_empty_text() {
+        let section = StatusSection::new("");
+        assert_eq!(section.text, "");
+        assert_eq!(section.level, StatusLevel::Normal);
+    }
+
+    #[test]
+    fn test_status_section_with_newlines() {
+        let section = StatusSection::new("Line1\nLine2\nLine3");
+        assert!(section.text.contains('\n'));
+        // Note: statusline typically doesn't handle newlines specially
+    }
+
+    #[test]
+    fn test_statusline_many_sections() {
+        let mut statusline = Statusline::new();
+
+        // Add 50 sections to left
+        for i in 0..50 {
+            statusline.add_left(StatusSection::new(format!("Section {}", i)));
+        }
+
+        assert_eq!(statusline.left.len(), 50);
+    }
+
+    #[test]
+    fn test_statusline_default_implementation() {
+        let default_statusline = Statusline::default();
+        let new_statusline = Statusline::new();
+
+        assert_eq!(default_statusline.left.len(), new_statusline.left.len());
+        assert_eq!(default_statusline.separator, new_statusline.separator);
+    }
+
+    #[test]
+    fn test_statusline_separator_with_unicode() {
+        let mut statusline = Statusline::new();
+        statusline.set_separator(" 🐸 ");
+        assert_eq!(statusline.separator, " 🐸 ");
+    }
+
+    #[test]
+    fn test_statusline_separator_empty() {
+        let mut statusline = Statusline::new();
+        statusline.set_separator("");
+        assert_eq!(statusline.separator, "");
+    }
+
+    #[test]
+    fn test_status_section_highlight_default() {
+        let section = StatusSection::new("Test");
+        assert!(!section.highlight, "Highlight should be false by default");
+    }
+
+    #[test]
+    fn test_status_section_level_default() {
+        let section = StatusSection::new("Test");
+        assert_eq!(section.level, StatusLevel::Normal, "Level should be Normal by default");
+    }
+
+    #[test]
+    fn test_status_level_all_variants() {
+        // Ensure all status level variants work
+        let levels = vec![
+            StatusLevel::Normal,
+            StatusLevel::Info,
+            StatusLevel::Warning,
+            StatusLevel::Error,
+            StatusLevel::Success,
+        ];
+
+        for level in levels {
+            // Should not panic
+            let _color = level.color();
+        }
+    }
+
+    #[test]
+    fn test_section_alignment_all_variants() {
+        // Ensure all alignment variants work
+        let alignments = vec![
+            SectionAlignment::Left,
+            SectionAlignment::Center,
+            SectionAlignment::Right,
+        ];
+
+        let mut statusline = Statusline::new();
+        for alignment in alignments {
+            statusline.clear_alignment(alignment);
+            assert_eq!(statusline.sections(alignment).len(), 0);
+        }
+    }
+
+    #[test]
+    fn test_statusline_mixed_levels() {
+        let mut statusline = Statusline::new();
+
+        statusline.add_left(StatusSection::new("Normal").with_level(StatusLevel::Normal));
+        statusline.add_left(StatusSection::new("Info").with_level(StatusLevel::Info));
+        statusline.add_left(StatusSection::new("Warning").with_level(StatusLevel::Warning));
+        statusline.add_left(StatusSection::new("Error").with_level(StatusLevel::Error));
+        statusline.add_left(StatusSection::new("Success").with_level(StatusLevel::Success));
+
+        assert_eq!(statusline.left.len(), 5);
+        assert_eq!(statusline.left[0].level, StatusLevel::Normal);
+        assert_eq!(statusline.left[1].level, StatusLevel::Info);
+        assert_eq!(statusline.left[2].level, StatusLevel::Warning);
+        assert_eq!(statusline.left[3].level, StatusLevel::Error);
+        assert_eq!(statusline.left[4].level, StatusLevel::Success);
+    }
+
+    #[test]
+    fn test_build_line_single_section() {
+        let statusline = Statusline::new();
+        let sections = vec![StatusSection::new("Single")];
+
+        let spans = statusline.build_line(&sections, true);
+
+        // Single section = no separator needed
+        assert_eq!(spans.len(), 1);
+        assert_eq!(spans[0].content, "Single");
+    }
+
+    #[test]
+    fn test_build_line_empty_sections() {
+        let statusline = Statusline::new();
+        let sections = vec![];
+
+        let spans = statusline.build_line(&sections, true);
+
+        assert_eq!(spans.len(), 0, "Empty sections should produce empty spans");
+    }
+
+    #[test]
+    fn test_statusline_clear_preserves_separator() {
+        let mut statusline = Statusline::new();
+        statusline.set_separator(" | ");
+
+        statusline.add_left(StatusSection::new("Test"));
+        statusline.clear();
+
+        assert_eq!(statusline.separator, " | ", "Clear should preserve separator");
+    }
 }
