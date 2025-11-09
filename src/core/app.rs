@@ -3024,5 +3024,578 @@ mod tests {
         let last_screen = app.session().last_screen();
         assert_eq!(last_screen, "Main");
     }
+
+    // ===== Command Palette Key Handler Tests =====
+    #[test]
+    fn test_command_palette_up_arrow() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Up));
+        app.update(event).unwrap();
+
+        // Should handle up arrow (selects previous in palette)
+    }
+
+    #[test]
+    fn test_command_palette_down_arrow() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Down));
+        app.update(event).unwrap();
+
+        // Should handle down arrow (selects next in palette)
+    }
+
+    #[test]
+    fn test_command_palette_backspace_key_handler() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+        app.command_palette.insert_char('a');
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Backspace));
+        app.update(event).unwrap();
+
+        // Should delete character from palette query
+    }
+
+    #[test]
+    fn test_command_palette_ctrl_u_clears() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+        app.command_palette.insert_char('t');
+        app.command_palette.insert_char('e');
+        app.command_palette.insert_char('s');
+        app.command_palette.insert_char('t');
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        // Should clear palette query
+        assert_eq!(app.command_palette.query(), "");
+    }
+
+    #[test]
+    fn test_command_palette_character_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('t')));
+        app.update(event).unwrap();
+
+        assert!(app.command_palette.query().contains('t'));
+    }
+
+    #[test]
+    fn test_command_palette_enter_executes_command() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+        // Palette should have commands available
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Enter));
+        app.update(event).unwrap();
+
+        // Should execute selected command and close palette
+        // (actual behavior depends on selected command)
+    }
+
+    // ===== Page Navigation Key Tests =====
+    #[test]
+    fn test_page_up_key() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::PageUp));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("Page up"));
+    }
+
+    #[test]
+    fn test_page_down_key() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::PageDown));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("Page down"));
+    }
+
+    #[test]
+    fn test_ctrl_d_page_down_when_not_in_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("Page down"));
+    }
+
+    #[test]
+    fn test_ctrl_u_key_clears_input_when_focused() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(true);
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+        app.input_field.insert_char('s');
+        app.input_field.insert_char('t');
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        assert_eq!(app.input_field.value(), "");
+    }
+
+    #[test]
+    fn test_ctrl_u_page_up_when_not_in_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("Page up"));
+    }
+
+    // ===== Help Toggle Tests =====
+    #[test]
+    fn test_question_mark_toggles_help() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        let initial_state = app.show_help;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('?')));
+        app.update(event).unwrap();
+
+        assert_eq!(app.show_help, !initial_state);
+    }
+
+    #[test]
+    fn test_question_mark_toggles_help_twice() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        let initial_state = app.show_help;
+
+        // Toggle on
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('?')));
+        app.update(event.clone()).unwrap();
+        assert_eq!(app.show_help, !initial_state);
+
+        // Toggle off
+        app.update(event).unwrap();
+        assert_eq!(app.show_help, initial_state);
+    }
+
+    // ===== Command Palette Toggle Tests =====
+    #[test]
+    fn test_ctrl_p_opens_palette() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = false;
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        assert!(app.show_palette);
+    }
+
+    // ===== Tab Switching Tests =====
+    #[test]
+    fn test_tab_switches_when_not_focused() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Tab));
+        app.update(event).unwrap();
+
+        // Should switch tabs (status message updated)
+        assert!(app.status_message.contains("tab") || app.status_message.contains("Tab"));
+    }
+
+    #[test]
+    fn test_tab_switches_panel_when_focused() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(true);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Tab));
+        app.update(event).unwrap();
+
+        // Should switch layout panel
+        assert!(app.status_message.contains("panel") || app.status_message.contains("Panel"));
+    }
+
+    #[test]
+    fn test_backtab_switches_previous_tab() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::BackTab));
+        app.update(event).unwrap();
+
+        // Should switch to previous tab
+        assert!(app.status_message.contains("tab") || app.status_message.contains("Tab"));
+    }
+
+    #[test]
+    fn test_backtab_switches_previous_panel_when_focused() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(true);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::BackTab));
+        app.update(event).unwrap();
+
+        // Should switch to previous panel
+        assert!(app.status_message.contains("panel") || app.status_message.contains("Panel"));
+    }
+
+    #[test]
+    fn test_ctrl_number_switches_tab() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        for num in '1'..='9' {
+            let event = Event::Key(KeyEvent::new(KeyCode::Char(num), KeyModifiers::CONTROL));
+            app.update(event).unwrap();
+
+            // Should try to switch to tab (may not exist)
+            assert!(app.status_message.contains("tab") || app.status_message.contains("Tab"));
+        }
+    }
+
+    // ===== Input Field Navigation Tests =====
+    #[test]
+    fn test_left_arrow_moves_cursor() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+        app.input_field.insert_char('s');
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Left));
+        app.update(event).unwrap();
+
+        // Cursor moved left - verify by inserting a character
+        app.input_field.insert_char('X');
+        assert_eq!(app.input_field.value(), "teXs");
+    }
+
+    #[test]
+    fn test_right_arrow_moves_cursor() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+        app.input_field.move_cursor_left();
+        app.input_field.move_cursor_left();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Right));
+        app.update(event).unwrap();
+
+        // Cursor moved right - verify by inserting a character
+        app.input_field.insert_char('X');
+        assert_eq!(app.input_field.value(), "tXe");
+    }
+
+    #[test]
+    fn test_home_key_moves_to_start() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+        app.input_field.insert_char('s');
+        app.input_field.insert_char('t');
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Home));
+        app.update(event).unwrap();
+
+        // Cursor at start - verify by inserting a character
+        app.input_field.insert_char('X');
+        assert_eq!(app.input_field.value(), "Xtest");
+    }
+
+    #[test]
+    fn test_end_key_moves_to_end() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+        app.input_field.insert_char('s');
+        app.input_field.insert_char('t');
+        app.input_field.move_cursor_start();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::End));
+        app.update(event).unwrap();
+
+        // Cursor at end - verify by inserting a character
+        app.input_field.insert_char('X');
+        assert_eq!(app.input_field.value(), "testX");
+    }
+
+    #[test]
+    fn test_ctrl_a_moves_to_start() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+        app.input_field.insert_char('s');
+        app.input_field.insert_char('t');
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('a'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        // Cursor at start - verify by inserting a character
+        app.input_field.insert_char('X');
+        assert_eq!(app.input_field.value(), "Xtest");
+    }
+
+    #[test]
+    fn test_ctrl_e_moves_to_end() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+        app.input_field.insert_char('s');
+        app.input_field.insert_char('t');
+        app.input_field.move_cursor_start();
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('e'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        // Cursor at end - verify by inserting a character
+        app.input_field.insert_char('X');
+        assert_eq!(app.input_field.value(), "testX");
+    }
+
+    #[test]
+    fn test_backspace_deletes_character() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.screen = AppScreen::Main;  // Ensure we're in Main screen
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Backspace));
+        app.update(event).unwrap();
+
+        assert_eq!(app.input_field.value(), "t");
+    }
+
+    #[test]
+    fn test_enter_processes_command() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('/');
+        app.input_field.insert_char('h');
+        app.input_field.insert_char('e');
+        app.input_field.insert_char('l');
+        app.input_field.insert_char('p');
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Enter));
+        app.update(event).unwrap();
+
+        // Should process command and clear input
+        assert_eq!(app.input_field.value(), "");
+        assert!(app.show_help);
+    }
+
+    #[test]
+    fn test_enter_ignores_empty_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Enter));
+        app.update(event).unwrap();
+
+        // Should not process empty input
+        assert_eq!(app.input_field.value(), "");
+    }
+
+    // ===== Vim Mode Navigation Tests =====
+    #[test]
+    fn test_vim_h_key_when_enabled() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.vim_mode = true;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('h')));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("left") || app.status_message.contains("Vim"));
+    }
+
+    #[test]
+    fn test_vim_j_key_when_enabled() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.vim_mode = true;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('j')));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("down") || app.status_message.contains("Vim"));
+    }
+
+    #[test]
+    fn test_vim_k_key_when_enabled() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.vim_mode = true;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('k')));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("up") || app.status_message.contains("Vim"));
+    }
+
+    #[test]
+    fn test_vim_l_key_when_enabled() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.vim_mode = true;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('l')));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("right") || app.status_message.contains("Vim"));
+    }
+
+    #[test]
+    fn test_vim_g_key_when_enabled() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.vim_mode = true;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('g')));
+        app.update(event).unwrap();
+
+        // Should trigger vim 'g' command
+        assert!(app.status_message.contains("top") || app.status_message.contains("Vim"));
+    }
+
+    #[test]
+    fn test_vim_shift_g_when_enabled() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.vim_mode = true;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('G'), KeyModifiers::SHIFT));
+        app.update(event).unwrap();
+
+        // Should trigger vim 'G' command (go to bottom)
+        assert!(app.status_message.contains("bottom") || app.status_message.contains("Vim"));
+    }
+
+    #[test]
+    fn test_vim_keys_disabled_when_vim_mode_off() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.vim_mode = false;
+        app.input_field.set_focused(false);
+
+        // Vim keys should insert as regular characters when vim mode is off
+        for key in ['h', 'j', 'k', 'l'] {
+            let initial_len = app.input_field.value().len();
+            let event = Event::Key(KeyEvent::from(KeyCode::Char(key)));
+            app.update(event).unwrap();
+
+            // Character should be inserted (not vim navigation)
+            assert_eq!(app.input_field.value().len(), initial_len + 1);
+        }
+    }
+
+    #[test]
+    fn test_vim_keys_insert_when_input_focused() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.vim_mode = true;
+        app.input_field.set_focused(true);
+
+        // Even with vim mode on, keys should insert when input is focused
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('h')));
+        app.update(event).unwrap();
+
+        assert!(app.input_field.value().contains('h'));
+    }
+
+    // ===== Number Key Tab Switching Tests =====
+    #[test]
+    fn test_number_keys_switch_tabs_when_not_in_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(false);
+
+        for num in '1'..='9' {
+            let event = Event::Key(KeyEvent::from(KeyCode::Char(num)));
+            app.update(event).unwrap();
+
+            // Should try to switch to tab
+            assert!(app.status_message.contains("Tab") || app.status_message.contains("tab"));
+        }
+    }
+
+    #[test]
+    fn test_alt_number_switches_tabs() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        for num in '1'..='9' {
+            let event = Event::Key(KeyEvent::new(KeyCode::Char(num), KeyModifiers::ALT));
+            app.update(event).unwrap();
+
+            // Should switch to tab via Alt+Number
+            assert!(app.status_message.contains("Tab") || app.status_message.contains("tab"));
+        }
+    }
+
+    // ===== Character Input Tests =====
+    #[test]
+    fn test_regular_character_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        for ch in ['a', 'b', 'c', '1', '2', '!', '@'] {
+            app.input_field.clear();
+            let event = Event::Key(KeyEvent::from(KeyCode::Char(ch)));
+            app.update(event).unwrap();
+
+            assert!(app.input_field.value().contains(ch));
+        }
+    }
+
+    #[test]
+    fn test_shift_character_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        for ch in ['A', 'B', 'Z', '!', '@', '#'] {
+            app.input_field.clear();
+            let event = Event::Key(KeyEvent::new(KeyCode::Char(ch), KeyModifiers::SHIFT));
+            app.update(event).unwrap();
+
+            assert!(app.input_field.value().contains(ch));
+        }
+    }
 }
 
