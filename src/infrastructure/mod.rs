@@ -3,6 +3,7 @@
 //! Contains infrastructure and utility modules including async operations,
 //! error handling, input handling, and file operations.
 
+pub mod advanced_mouse;
 pub mod async_ops;
 pub mod background_tasks;
 pub mod batch_ops;
@@ -21,6 +22,7 @@ pub mod terminal_capabilities;
 pub mod text_truncation;
 pub mod validation;
 
+pub use advanced_mouse::{AdvancedMouseHandler, MouseButton, MouseGesture};
 pub use async_ops::{AsyncOperation, AsyncOperationManager, OperationId, OperationStatus};
 pub use background_tasks::{BackgroundTask, BackgroundTaskManager, TaskId, TaskStatus};
 pub use batch_ops::{

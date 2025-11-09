@@ -70,6 +70,7 @@ pub mod undo_redo;
 pub mod vim_macros;
 pub mod vim_mode;
 pub mod welcome;
+pub mod window_switcher;
 pub mod workspace;
 
 pub use accept_reject_panel::{AcceptRejectPanel, ChangeState, ProposedChange};
@@ -140,4 +141,5 @@ pub use undo_redo::{Action, UndoRedoManager};
 pub use vim_macros::{MacroAction, MacroRecorder, MarkRegistry};
 pub use vim_mode::{EditMode, Selection, VimMode};
 pub use welcome::WelcomeScreen;
+pub use window_switcher::{SwitcherMode, WindowSwitcher};
 pub use workspace::{Workspace, WorkspaceManager};

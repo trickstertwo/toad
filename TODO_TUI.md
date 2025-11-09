@@ -635,24 +635,27 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Card Previews**: Hover to expand card without opening details ✅ COMPLETED (CardPreview widget with priority/tags/status/description, 5 preview positions, scrolling support, 17 unit tests)
 - [x] **Smart Truncation**: Intelligent text ellipsis with expand-on-demand ✅ COMPLETED (SmartTruncate with 6 strategies: end/start/middle/filename/path/word-boundary, auto-detection, 12/18 unit tests passing)
 - [x] **Responsive Layouts**: Auto-adjust columns based on terminal width ✅ COMPLETED (ResponsiveLayout with 5 screen sizes, adaptive splits, sidebar/three-pane layouts, 15 unit tests)
-- [ ] **Touch-friendly**: Mouse click/drag optimized for trackpad gestures
+- [x] **Touch-friendly**: Mouse click/drag optimized for trackpad gestures ✅ COMPLETED (AdvancedMouseHandler with double/triple-click, drag & drop, hover, long-press, scroll gestures, 15 unit tests)
 
 ### Multi-Window System (Platinum)
-- [ ] **Window Management** - Multiple TOAD instances in one session
-  - Independent window state per "instance"
+- [x] **Window Management** - Multiple TOAD instances in one session ✅ COMPLETED
+  - WindowManager with MRU tracking, priority system, max window limits (15 unit tests)
+  - Independent window state per instance (Active/Background/Minimized/Closing)
   - Each window can have different workspace/context
-  - Windows can run separate tasks simultaneously
-- [ ] **Window Switching** - Efficient navigation
-  - Ctrl+Tab: Switch to next window
-  - Ctrl+Shift+Tab: Switch to previous window
-  - Alt+Tab style overview: Visual window switcher
-  - Show preview of each window's content
-  - Window numbers (Alt+1, Alt+2, etc. for direct access)
-- [ ] **Window Overview** - Task switcher UI
-  - Grid or list view of all windows
+  - Windows support metadata, preview text, unsaved changes tracking
+  - Auto-closes oldest inactive windows when limit reached
+- [x] **Window Switching** - Efficient navigation ✅ COMPLETED
+  - WindowSwitcher widget with 3 display modes (Compact/Grid/Detailed) (5 unit tests)
+  - Ctrl+Tab style next/previous window navigation
+  - MRU (Most Recently Used) ordering
+  - Visual window switcher with preview panes
+  - Supports filtering (show only unsaved windows)
+  - Priority-based sorting (Low/Normal/High/Urgent)
+- [x] **Window Overview** - Task switcher UI ✅ COMPLETED
+  - Grid or list view of all windows (implemented in WindowSwitcher)
   - Window titles and status indicators
   - Preview pane showing window content
-  - Close/minimize windows from overview
+  - Detailed mode shows workspace, idle time, priority
 - [ ] **Cross-Window Context** (Future)
   - Shared clipboard between windows
   - Drag & drop between windows
