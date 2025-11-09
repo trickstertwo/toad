@@ -273,6 +273,7 @@ impl ToadConfig {
             1 => FeatureFlags::milestone_1(),
             2 => FeatureFlags::milestone_2(),
             3 => FeatureFlags::milestone_3(),
+            4 => FeatureFlags::milestone_4(),
             _ => FeatureFlags::default(),
         };
 

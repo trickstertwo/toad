@@ -269,30 +269,58 @@ impl EvaluationHarness {
     /// Run a single task with the agent
     async fn run_task(&self, task: &Task, config: &ToadConfig) -> Result<TaskResult> {
         use crate::ai::agent::Agent;
-        use crate::ai::llm::{AnthropicClient, get_api_key};
+        use crate::ai::llm::{AnthropicClient, LLMProvider, get_api_key};
         use crate::ai::metrics::MetricsCollector;
+        use crate::ai::routing::{CascadingRouter, Router};
         use crate::ai::tools::ToolRegistry;
         use anyhow::Context;
 
         tracing::info!("Running task: {}", task.id);
 
-        // Get API key
-        let api_key = get_api_key()
-            .context("Failed to get API key. Set ANTHROPIC_API_KEY environment variable")?;
+        // Get API key (may be optional for local-only cascading)
+        let api_key = get_api_key().ok();
 
-        // Create LLM client with feature flags
-        let mut llm_client = AnthropicClient::new(api_key).with_model("claude-sonnet-4-20250514");
+        // Create LLM client based on routing strategy
+        let llm_client: Box<dyn crate::ai::llm::LLMClient> = if config.features.routing_cascade {
+            // M4: Use cascading router (cheap local → expensive cloud)
+            tracing::info!("M4 Cascading routing enabled for task {}", task.id);
 
-        // Enable prompt caching if configured (90% cost reduction)
-        if config.features.prompt_caching {
-            llm_client = llm_client.with_prompt_caching(true);
-        }
+            let router = if let Some(key) = api_key.clone() {
+                CascadingRouter::with_api_key(key)
+            } else {
+                tracing::warn!("No API key, using local-only routing");
+                CascadingRouter::new()
+            };
+
+            // Route to appropriate model based on task difficulty
+            let provider_config = router.route(task)?;
+
+            // Create client with prompt caching if configured
+            LLMProvider::create_with_features(
+                &provider_config,
+                config.features.prompt_caching,
+            )?
+        } else {
+            // M1/M2/M3: Use direct Anthropic client
+            let api_key = api_key
+                .context("Failed to get API key. Set ANTHROPIC_API_KEY environment variable")?;
+
+            let mut llm_client = AnthropicClient::new(api_key)
+                .with_model("claude-sonnet-4-20250514");
+
+            // Enable prompt caching if configured (90% cost reduction)
+            if config.features.prompt_caching {
+                llm_client = llm_client.with_prompt_caching(true);
+            }
+
+            Box::new(llm_client)
+        };
 
         // Create tool registry with feature flags (tree-sitter validation, etc.)
         let tool_registry = ToolRegistry::m1_with_features(&config.features);
 
         // Create agent
-        let agent = Agent::new(Box::new(llm_client), tool_registry);
+        let agent = Agent::new(llm_client, tool_registry);
 
         // Create metrics collector
         let mut metrics_collector = MetricsCollector::new();
@@ -433,5 +461,39 @@ mod tests {
         assert!(config.features.prompt_caching);
         assert!(config.features.tree_sitter_validation);
         assert!(!config.features.context_ast);
+    }
+
+    #[test]
+    fn test_m4_config_has_cascading_routing() {
+        use crate::config::FeatureFlags;
+
+        let m4_features = FeatureFlags::milestone_4();
+
+        // M4 MUST have cascading routing enabled
+        assert!(m4_features.routing_cascade, "M4 must have cascading routing enabled (70% cost reduction)");
+
+        // M4 should also have M3 features
+        assert!(m4_features.routing_multi_model, "M4 should have multi-model routing from M3");
+        assert!(m4_features.context_ast, "M4 should have AST context from M2");
+        assert!(m4_features.smart_test_selection, "M4 should have smart test selection from M2");
+
+        // M4 adds embeddings and failure memory
+        assert!(m4_features.context_embeddings, "M4 should have embeddings for better context");
+        assert!(m4_features.failure_memory, "M4 should have failure memory");
+
+        // Core optimizations still enabled
+        assert!(m4_features.prompt_caching);
+        assert!(m4_features.tree_sitter_validation);
+    }
+
+    #[test]
+    fn test_m4_baseline_config_uses_features() {
+        let config = ToadConfig::for_milestone(4);
+
+        // Verify M4 config has cascading routing
+        assert!(config.features.routing_cascade);
+        assert!(config.features.routing_multi_model);
+        assert!(config.features.context_embeddings);
+        assert!(config.features.failure_memory);
     }
 }
