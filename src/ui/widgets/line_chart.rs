@@ -612,4 +612,280 @@ mod tests {
         assert!(chart.show_grid);
         assert_eq!(chart.y_bounds, Some((0.0, 100.0)));
     }
+
+    // ============ COMPREHENSIVE EDGE CASE TESTS ============
+
+    #[test]
+    fn test_data_series_with_very_large_dataset() {
+        let data: Vec<f64> = (0..10000).map(|i| i as f64).collect();
+        let series = DataSeries::new("Large", data);
+        assert_eq!(series.data.len(), 10000);
+        assert_eq!(series.min(), Some(0.0));
+        assert_eq!(series.max(), Some(9999.0));
+    }
+
+    #[test]
+    fn test_data_series_with_negative_values() {
+        let series = DataSeries::new("Negative", vec![-10.0, -5.0, 0.0, 5.0, 10.0]);
+        assert_eq!(series.min(), Some(-10.0));
+        assert_eq!(series.max(), Some(10.0));
+    }
+
+    #[test]
+    fn test_data_series_with_single_value() {
+        let series = DataSeries::new("Single", vec![42.0]);
+        assert_eq!(series.min(), Some(42.0));
+        assert_eq!(series.max(), Some(42.0));
+        assert_eq!(series.data.len(), 1);
+    }
+
+    #[test]
+    fn test_data_series_with_all_same_values() {
+        let series = DataSeries::new("Flat", vec![5.0, 5.0, 5.0, 5.0]);
+        assert_eq!(series.min(), Some(5.0));
+        assert_eq!(series.max(), Some(5.0));
+    }
+
+    #[test]
+    fn test_data_series_with_extreme_values() {
+        let series = DataSeries::new("Extreme", vec![f64::MIN, f64::MAX]);
+        assert_eq!(series.min(), Some(f64::MIN));
+        assert_eq!(series.max(), Some(f64::MAX));
+    }
+
+    #[test]
+    fn test_data_series_with_very_small_values() {
+        let series = DataSeries::new("Small", vec![0.0001, 0.0002, 0.0003]);
+        assert_eq!(series.min(), Some(0.0001));
+        assert_eq!(series.max(), Some(0.0003));
+    }
+
+    #[test]
+    fn test_data_series_with_unicode_name() {
+        let series = DataSeries::new("温度 🌡️", vec![20.0, 25.0, 30.0]);
+        assert!(series.name.contains("温度"));
+        assert!(series.name.contains("🌡️"));
+    }
+
+    #[test]
+    fn test_data_series_with_very_long_name() {
+        let long_name = "A".repeat(1000);
+        let series = DataSeries::new(long_name.clone(), vec![1.0]);
+        assert_eq!(series.name, long_name);
+    }
+
+    #[test]
+    fn test_data_series_with_empty_name() {
+        let series = DataSeries::new("", vec![1.0]);
+        assert_eq!(series.name, "");
+    }
+
+    #[test]
+    fn test_data_series_clone() {
+        let original = DataSeries::new("Test", vec![1.0, 2.0, 3.0])
+            .with_color(Color::Red)
+            .with_markers(true);
+        let cloned = original.clone();
+
+        assert_eq!(original.name, cloned.name);
+        assert_eq!(original.data, cloned.data);
+        assert_eq!(original.color, cloned.color);
+        assert_eq!(original.show_markers, cloned.show_markers);
+    }
+
+    #[test]
+    fn test_line_chart_with_many_series() {
+        let mut chart = LineChart::new();
+        for i in 0..50 {
+            chart = chart.add_series(DataSeries::new(format!("Series {}", i), vec![i as f64]));
+        }
+        assert_eq!(chart.series_count(), 50);
+    }
+
+    #[test]
+    fn test_line_chart_with_unicode_title() {
+        let chart = LineChart::new().with_title("グラフ 📊 Graph");
+        assert!(chart.title.as_ref().unwrap().contains("グラフ"));
+        assert!(chart.title.as_ref().unwrap().contains("📊"));
+    }
+
+    #[test]
+    fn test_line_chart_with_very_long_title() {
+        let long_title = "B".repeat(1000);
+        let chart = LineChart::new().with_title(long_title.clone());
+        assert_eq!(chart.title, Some(long_title));
+    }
+
+    #[test]
+    fn test_line_chart_with_unicode_labels() {
+        let chart = LineChart::new()
+            .with_x_label("時間 ⏰")
+            .with_y_label("値 📈");
+        assert!(chart.x_label.as_ref().unwrap().contains("時間"));
+        assert!(chart.y_label.as_ref().unwrap().contains("値"));
+    }
+
+    #[test]
+    fn test_line_chart_with_empty_labels() {
+        let chart = LineChart::new().with_x_label("").with_y_label("");
+        assert_eq!(chart.x_label, Some("".to_string()));
+        assert_eq!(chart.y_label, Some("".to_string()));
+    }
+
+    #[test]
+    fn test_line_chart_with_negative_bounds() {
+        let chart = LineChart::new().with_y_bounds(-100.0, -50.0);
+        assert_eq!(chart.y_bounds, Some((-100.0, -50.0)));
+    }
+
+    #[test]
+    fn test_line_chart_with_inverted_bounds() {
+        // Max < Min (inverted)
+        let chart = LineChart::new().with_y_bounds(100.0, 0.0);
+        assert_eq!(chart.y_bounds, Some((100.0, 0.0)));
+    }
+
+    #[test]
+    fn test_line_chart_with_same_bounds() {
+        let chart = LineChart::new().with_y_bounds(50.0, 50.0);
+        assert_eq!(chart.y_bounds, Some((50.0, 50.0)));
+    }
+
+    #[test]
+    fn test_line_chart_calculate_bounds_with_mixed_series() {
+        let chart = LineChart::new()
+            .add_series(DataSeries::new("Positive", vec![10.0, 20.0, 30.0]))
+            .add_series(DataSeries::new("Negative", vec![-10.0, -20.0, -30.0]))
+            .add_series(DataSeries::new("Mixed", vec![-5.0, 0.0, 5.0]));
+
+        let (min, max) = chart.calculate_y_bounds();
+        assert!(min < -30.0); // With padding
+        assert!(max > 30.0); // With padding
+    }
+
+    #[test]
+    fn test_line_chart_render_lines_with_small_dimensions() {
+        let chart = LineChart::new().add_series(DataSeries::new("Data", vec![1.0, 2.0, 3.0]));
+
+        // Very small rendering area
+        let lines = chart.render_lines(5, 3);
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_line_chart_render_lines_with_large_dimensions() {
+        let chart = LineChart::new().add_series(DataSeries::new("Data", vec![1.0, 2.0, 3.0]));
+
+        // Very large rendering area
+        let lines = chart.render_lines(1000, 500);
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_line_chart_render_lines_with_zero_dimensions() {
+        let chart = LineChart::new().add_series(DataSeries::new("Data", vec![1.0, 2.0, 3.0]));
+
+        // Should not panic with zero dimensions
+        let _lines = chart.render_lines(0, 0);
+        // Just verify it doesn't crash - output behavior may vary
+    }
+
+    #[test]
+    fn test_line_chart_with_no_series() {
+        let chart = LineChart::new()
+            .with_title("Empty Chart")
+            .with_legend(true)
+            .with_grid(true);
+
+        assert_eq!(chart.series_count(), 0);
+        let lines = chart.render_lines(40, 20);
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_line_chart_series_count_incremental() {
+        let chart = LineChart::new();
+        assert_eq!(chart.series_count(), 0);
+
+        let chart = chart.add_series(DataSeries::new("A", vec![1.0]));
+        assert_eq!(chart.series_count(), 1);
+
+        let chart = chart.add_series(DataSeries::new("B", vec![2.0]));
+        assert_eq!(chart.series_count(), 2);
+    }
+
+    #[test]
+    fn test_line_chart_toggle_legend() {
+        let chart = LineChart::new();
+        assert!(chart.show_legend); // Default true
+
+        let chart = chart.with_legend(false);
+        assert!(!chart.show_legend);
+
+        let chart = chart.with_legend(true);
+        assert!(chart.show_legend);
+    }
+
+    #[test]
+    fn test_line_chart_toggle_grid() {
+        let chart = LineChart::new();
+        assert!(!chart.show_grid); // Default false
+
+        let chart = chart.with_grid(true);
+        assert!(chart.show_grid);
+
+        let chart = chart.with_grid(false);
+        assert!(!chart.show_grid);
+    }
+
+    #[test]
+    fn test_line_chart_with_all_features_enabled() {
+        let chart = LineChart::new()
+            .with_title("Full Featured Chart")
+            .with_x_label("X Axis")
+            .with_y_label("Y Axis")
+            .with_legend(true)
+            .with_grid(true)
+            .with_y_bounds(0.0, 100.0)
+            .add_series(
+                DataSeries::new("Series 1", vec![10.0, 20.0, 30.0])
+                    .with_color(Color::Red)
+                    .with_markers(true),
+            )
+            .add_series(
+                DataSeries::new("Series 2", vec![15.0, 25.0, 35.0])
+                    .with_color(Color::Blue)
+                    .with_markers(false),
+            );
+
+        assert_eq!(chart.series_count(), 2);
+        assert!(chart.show_legend);
+        assert!(chart.show_grid);
+        assert!(chart.title.is_some());
+        assert!(chart.x_label.is_some());
+        assert!(chart.y_label.is_some());
+        assert!(chart.y_bounds.is_some());
+    }
+
+    #[test]
+    fn test_data_series_with_decimal_precision() {
+        let series = DataSeries::new(
+            "Precision",
+            vec![1.123456789, 2.987654321, 3.141592653],
+        );
+        assert_eq!(series.min(), Some(1.123456789));
+        assert_eq!(series.max(), Some(3.141592653));
+    }
+
+    #[test]
+    fn test_line_chart_multiple_adds() {
+        let chart = LineChart::new()
+            .add_series(DataSeries::new("A", vec![1.0]))
+            .add_series(DataSeries::new("B", vec![2.0]))
+            .add_series(DataSeries::new("C", vec![3.0]))
+            .add_series(DataSeries::new("D", vec![4.0]))
+            .add_series(DataSeries::new("E", vec![5.0]));
+
+        assert_eq!(chart.series_count(), 5);
+    }
 }
