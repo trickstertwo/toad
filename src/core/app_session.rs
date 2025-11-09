@@ -29,7 +29,7 @@ impl App {
     /// // ... modify app state ...
     /// app.update_session_state();
     /// ```
-    fn update_session_state(&mut self) {
+    pub(crate) fn update_session_state(&mut self) {
         self.session.set_welcome_shown(self.welcome_shown);
         self.session
             .set_working_directory(self.working_directory.clone());
