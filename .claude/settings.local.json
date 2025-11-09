@@ -9,7 +9,9 @@
       "Bash(awk:*)",
       "Bash(sort:*)",
       "Bash(Select-String -Pattern \"(PASS|FAIL|coverage:)\")",
-      "Bash(Select-Object -Last 50)"
+      "Bash(Select-Object -Last 50)",
+      "Bash(test:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
