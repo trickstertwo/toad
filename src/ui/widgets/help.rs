@@ -169,3 +169,113 @@ impl Default for HelpScreen {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_help_screen_new() {
+        let help = HelpScreen::new();
+        // Should construct successfully
+        assert!(format!("{:?}", help).contains("HelpScreen"));
+    }
+
+    #[test]
+    fn test_help_screen_default() {
+        let help = HelpScreen::default();
+        assert!(format!("{:?}", help).contains("HelpScreen"));
+    }
+
+    #[test]
+    fn test_help_screen_debug() {
+        let help = HelpScreen::new();
+        let debug_str = format!("{:?}", help);
+        assert_eq!(debug_str, "HelpScreen");
+    }
+
+    #[test]
+    fn test_keybinding_line_formatting() {
+        let help = HelpScreen::new();
+        let line = help.keybinding_line("Ctrl+c", "Quit application");
+
+        // Verify the line contains the key and description
+        let line_str = format!("{:?}", line);
+        assert!(line_str.contains("Ctrl+c"));
+        assert!(line_str.contains("Quit application"));
+    }
+
+    #[test]
+    fn test_keybinding_line_with_short_key() {
+        let help = HelpScreen::new();
+        let line = help.keybinding_line("?", "Toggle help");
+
+        let line_str = format!("{:?}", line);
+        assert!(line_str.contains("?"));
+        assert!(line_str.contains("Toggle help"));
+    }
+
+    #[test]
+    fn test_keybinding_line_with_long_key() {
+        let help = HelpScreen::new();
+        let line = help.keybinding_line("Ctrl+Shift+Alt+X", "Complex keybinding");
+
+        let line_str = format!("{:?}", line);
+        assert!(line_str.contains("Ctrl+Shift+Alt+X"));
+        assert!(line_str.contains("Complex keybinding"));
+    }
+
+    #[test]
+    fn test_keybinding_line_with_empty_description() {
+        let help = HelpScreen::new();
+        let line = help.keybinding_line("Enter", "");
+
+        let line_str = format!("{:?}", line);
+        assert!(line_str.contains("Enter"));
+    }
+
+    #[test]
+    fn test_keybinding_line_with_unicode() {
+        let help = HelpScreen::new();
+        let line = help.keybinding_line("→", "Navigate right 🐸");
+
+        let line_str = format!("{:?}", line);
+        assert!(line_str.contains("→"));
+        assert!(line_str.contains("🐸"));
+    }
+
+    #[test]
+    fn test_keybinding_line_with_special_chars() {
+        let help = HelpScreen::new();
+        let line = help.keybinding_line("Ctrl+/", "Search & find");
+
+        let line_str = format!("{:?}", line);
+        assert!(line_str.contains("Ctrl+/"));
+        assert!(line_str.contains("find"));
+    }
+
+    #[test]
+    fn test_keybinding_line_multiple_calls() {
+        let help = HelpScreen::new();
+
+        let line1 = help.keybinding_line("a", "Action A");
+        let line2 = help.keybinding_line("b", "Action B");
+
+        let str1 = format!("{:?}", line1);
+        let str2 = format!("{:?}", line2);
+
+        assert!(str1.contains("Action A"));
+        assert!(str2.contains("Action B"));
+        assert_ne!(str1, str2);
+    }
+
+    // Note: render() method requires ratatui::Frame which is difficult to unit test
+    // It should be tested via integration or E2E tests
+    #[test]
+    fn test_help_screen_exists() {
+        // Smoke test to ensure the struct can be instantiated
+        let _help = HelpScreen::new();
+        let _help2 = HelpScreen::default();
+        // If we get here, construction works
+    }
+}
