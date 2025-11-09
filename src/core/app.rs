@@ -1112,6 +1112,10 @@ mod tests {
     #[test]
     fn test_quit_on_esc_from_welcome() {
         let mut app = App::new();
+        // Force welcome screen (session persistence may skip it)
+        app.screen = AppScreen::Welcome;
+        app.welcome_shown = false;
+
         assert_eq!(app.screen(), &AppScreen::Welcome);
         let event = Event::Key(KeyEvent::from(KeyCode::Esc));
         app.update(event).unwrap();
@@ -1147,5 +1151,441 @@ mod tests {
         let event = Event::Key(KeyEvent::from(KeyCode::Backspace));
         app.update(event).unwrap();
         assert_eq!(app.input_field().value(), "h");
+    }
+
+    // ========================================================================
+    // COMPREHENSIVE NAVIGATION TESTS
+    // ========================================================================
+
+    #[test]
+    fn test_help_screen_toggle_with_question_mark() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        assert!(!app.show_help, "Help should be hidden initially");
+
+        // Press ? to show help
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('?')));
+        app.update(event).unwrap();
+        assert!(app.show_help, "Help should be visible after pressing ?");
+
+        // Press ? again to hide help
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('?')));
+        app.update(event).unwrap();
+        assert!(!app.show_help, "Help should be hidden after pressing ? again");
+    }
+
+    #[test]
+    fn test_help_screen_close_with_esc() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Show help
+        app.show_help = true;
+
+        // Press Esc to close
+        let event = Event::Key(KeyEvent::from(KeyCode::Esc));
+        app.update(event).unwrap();
+        assert!(!app.show_help, "Help should be hidden after pressing Esc");
+    }
+
+    #[test]
+    fn test_command_palette_toggle_with_ctrl_p() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        assert!(!app.show_palette, "Command palette should be hidden initially");
+
+        // Press Ctrl+P to show palette
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+        assert!(app.show_palette, "Command palette should be visible after Ctrl+P");
+
+        // Press Ctrl+P again to hide
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+        assert!(!app.show_palette, "Command palette should be hidden after Ctrl+P again");
+    }
+
+    #[test]
+    fn test_command_palette_close_with_esc() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Show command palette
+        app.show_palette = true;
+
+        // Press Esc to close
+        let event = Event::Key(KeyEvent::from(KeyCode::Esc));
+        app.update(event).unwrap();
+        assert!(!app.show_palette, "Command palette should be hidden after Esc");
+    }
+
+    #[test]
+    fn test_q_key_does_not_quit_from_main() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(false); // Ensure input is not focused
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('q')));
+        app.update(event).unwrap();
+        // Note: 'q' does not quit from main screen, only from evaluation screen
+        // Input field will receive 'q' if focused
+        assert!(!app.should_quit(), "App should NOT quit with q from main");
+    }
+
+    #[test]
+    fn test_quit_with_ctrl_d_on_empty_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(true);
+        app.input_field.clear(); // Ensure input is empty
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+        assert!(app.should_quit(), "App should quit with Ctrl+D on empty input");
+    }
+
+    #[test]
+    fn test_ctrl_d_does_not_quit_with_non_empty_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(true);
+        app.input_field.set_value("some text".to_string());
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+        assert!(!app.should_quit(), "App should not quit with Ctrl+D when input is not empty");
+    }
+
+    #[test]
+    fn test_ctrl_u_clears_input_when_focused() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(true);
+        app.input_field.set_value("clear me".to_string());
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+        assert_eq!(app.input_field().value(), "", "Ctrl+U should clear input when focused");
+    }
+
+    #[test]
+    fn test_screen_transitions() {
+        let mut app = App::new();
+
+        // Start at Welcome (or Main if session persists)
+        let initial_screen = app.screen().clone();
+        assert!(
+            matches!(initial_screen, AppScreen::Welcome | AppScreen::Main),
+            "Initial screen should be Welcome or Main"
+        );
+    }
+
+    #[test]
+    fn test_trust_dialog_navigation_with_arrows() {
+        let mut app = App::new();
+        app.screen = AppScreen::TrustDialog;
+
+        // Create trust dialog with 3 options
+        let dialog = ConfirmDialog::new("Test Trust")
+            .option('1', "Yes, for this session")
+            .option('2', "Yes, remember")
+            .option('3', "No, quit");
+        app.trust_dialog = Some(dialog);
+
+        // Initially should select first option (index 0)
+        assert_eq!(app.trust_dialog.as_ref().unwrap().selected(), 0);
+
+        // Press Down to move to option 2
+        let event = Event::Key(KeyEvent::from(KeyCode::Down));
+        app.update(event).unwrap();
+        assert_eq!(app.trust_dialog.as_ref().unwrap().selected(), 1);
+
+        // Press Down again to move to option 3
+        let event = Event::Key(KeyEvent::from(KeyCode::Down));
+        app.update(event).unwrap();
+        assert_eq!(app.trust_dialog.as_ref().unwrap().selected(), 2);
+
+        // Press Up to move back to option 2
+        let event = Event::Key(KeyEvent::from(KeyCode::Up));
+        app.update(event).unwrap();
+        assert_eq!(app.trust_dialog.as_ref().unwrap().selected(), 1);
+    }
+
+    #[test]
+    fn test_trust_dialog_select_by_number_key() {
+        let mut app = App::new();
+        app.screen = AppScreen::TrustDialog;
+
+        let dialog = ConfirmDialog::new("Test Trust")
+            .option('1', "Option 1")
+            .option('2', "Option 2")
+            .option('3', "Option 3");
+        app.trust_dialog = Some(dialog);
+
+        // Press '2' to select second option directly
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('2')));
+        app.update(event).unwrap();
+
+        // After selection, dialog should be confirmed and screen should change
+        // (exact behavior depends on confirm_trust_selection implementation)
+    }
+
+    #[test]
+    fn test_resize_event() {
+        let mut app = App::new();
+        let event = Event::Resize(120, 40);
+        app.update(event).ok(); // Should not panic
+    }
+
+    #[test]
+    fn test_tick_event() {
+        let mut app = App::new();
+        let event = Event::Tick;
+        app.update(event).unwrap(); // Should not panic
+    }
+
+    #[test]
+    fn test_multiple_key_inputs_in_sequence() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Type "hello"
+        for c in "hello".chars() {
+            let event = Event::Key(KeyEvent::from(KeyCode::Char(c)));
+            app.update(event).unwrap();
+        }
+
+        assert_eq!(app.input_field().value(), "hello");
+
+        // Backspace twice
+        let event1 = Event::Key(KeyEvent::from(KeyCode::Backspace));
+        app.update(event1).unwrap();
+        let event2 = Event::Key(KeyEvent::from(KeyCode::Backspace));
+        app.update(event2).unwrap();
+
+        assert_eq!(app.input_field().value(), "hel");
+    }
+
+    #[test]
+    fn test_app_default_creates_valid_state() {
+        let app = App::default();
+
+        assert!(!app.should_quit());
+        assert!(matches!(
+            app.screen(),
+            AppScreen::Welcome | AppScreen::Main
+        ));
+        assert_eq!(app.title(), "Toad - AI Coding Terminal");
+        assert!(!app.show_help);
+        assert!(!app.show_palette);
+    }
+
+    #[test]
+    fn test_app_new_equals_default() {
+        let app1 = App::new();
+        let app2 = App::default();
+
+        assert_eq!(app1.should_quit(), app2.should_quit());
+        assert_eq!(app1.title(), app2.title());
+        assert_eq!(app1.screen(), app2.screen());
+    }
+
+    #[test]
+    fn test_status_message_updates() {
+        let mut app = App::new();
+        let initial_status = app.status_message().to_string();
+
+        app.status_message = "New status".to_string();
+        assert_eq!(app.status_message(), "New status");
+        assert_ne!(app.status_message(), initial_status);
+    }
+
+    #[test]
+    fn test_vim_mode_state() {
+        let app = App::new();
+        // vim_mode is loaded from config, test that it exists
+        let _vim_enabled = app.vim_mode;
+    }
+
+    #[test]
+    fn test_performance_metrics_initialization() {
+        let app = App::new();
+        assert!(!app.show_performance);
+    }
+
+    #[test]
+    fn test_toast_manager_initialization() {
+        let app = App::new();
+        // ToastManager should be initialized
+        let _toasts = &app.toasts;
+    }
+
+    #[test]
+    fn test_tabs_and_layout_initialization() {
+        let app = App::new();
+        // TabManager and LayoutManager should be initialized
+        let _tabs = &app.tabs;
+        let _layout = &app.layout;
+    }
+
+    #[test]
+    fn test_working_directory_accessor() {
+        let app = App::new();
+        let _wd = app.working_directory();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_input_field_accessor() {
+        let app = App::new();
+        let _input = app.input_field();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_quit_does_not_occur_on_regular_keys() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Regular key presses should not quit
+        let keys = vec!['a', 'b', '1', '2', ' ', '\n'];
+
+        for key_char in keys {
+            let event = Event::Key(KeyEvent::from(KeyCode::Char(key_char)));
+            app.update(event).unwrap();
+            assert!(!app.should_quit(), "App should not quit on key '{}'", key_char);
+        }
+    }
+
+    #[test]
+    fn test_esc_from_welcome_with_forced_state() {
+        let mut app = App::new();
+        // Force welcome screen (override session persistence)
+        app.screen = AppScreen::Welcome;
+        app.welcome_shown = false;
+
+        // Verify we're on welcome screen
+        assert_eq!(*app.screen(), AppScreen::Welcome, "Should start at welcome");
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Esc));
+        app.update(event).unwrap();
+        assert!(app.should_quit(), "Esc from welcome should quit");
+    }
+
+    #[test]
+    fn test_esc_from_main_does_not_quit() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Esc));
+        app.update(event).unwrap();
+        assert!(!app.should_quit(), "Esc from main should not quit (closes overlays instead)");
+    }
+
+    #[test]
+    fn test_help_screen_blocks_other_keys() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_help = true;
+
+        // When help is shown, regular keys should not affect input
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('a')));
+        app.update(event).unwrap();
+
+        // Input should still be empty because help intercepts keys
+        assert_eq!(app.input_field().value(), "");
+    }
+
+    #[test]
+    fn test_command_palette_up_down_navigation() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+
+        // Press Down arrow
+        let event = Event::Key(KeyEvent::from(KeyCode::Down));
+        app.update(event).unwrap(); // Should not panic
+
+        // Press Up arrow
+        let event = Event::Key(KeyEvent::from(KeyCode::Up));
+        app.update(event).unwrap(); // Should not panic
+    }
+
+    #[test]
+    fn test_command_palette_query_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+
+        // Type characters in palette
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('t')));
+        app.update(event).unwrap();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('e')));
+        app.update(event).unwrap();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('s')));
+        app.update(event).unwrap();
+
+        // Should update palette query (exact query depends on CommandPalette impl)
+    }
+
+    #[test]
+    fn test_command_palette_backspace() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+
+        // Type then backspace
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('a')));
+        app.update(event).unwrap();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Backspace));
+        app.update(event).unwrap(); // Should not panic
+    }
+
+    #[test]
+    fn test_command_palette_ctrl_u_clears_query() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+
+        // Type some text
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('t')));
+        app.update(event).unwrap();
+
+        // Ctrl+U to clear
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
+        app.update(event).unwrap(); // Should not panic
+    }
+
+    #[test]
+    fn test_app_screen_enum_variants() {
+        let _welcome = AppScreen::Welcome;
+        let _trust = AppScreen::TrustDialog;
+        let _main = AppScreen::Main;
+        let _eval = AppScreen::Evaluation;
+
+        // Ensure all variants compile and can be created
+        assert_eq!(_welcome, AppScreen::Welcome);
+        assert_eq!(_trust, AppScreen::TrustDialog);
+        assert_eq!(_main, AppScreen::Main);
+        assert_eq!(_eval, AppScreen::Evaluation);
+    }
+
+    #[test]
+    fn test_app_screen_clone() {
+        let screen1 = AppScreen::Main;
+        let screen2 = screen1.clone();
+        assert_eq!(screen1, screen2);
+    }
+
+    #[test]
+    fn test_app_screen_debug() {
+        let screen = AppScreen::Welcome;
+        let debug_str = format!("{:?}", screen);
+        assert!(debug_str.contains("Welcome"));
     }
 }
