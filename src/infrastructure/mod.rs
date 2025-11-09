@@ -8,6 +8,7 @@ pub mod advanced_mouse;
 pub mod async_ops;
 pub mod background_tasks;
 pub mod batch_ops;
+pub mod builtin_automation;
 pub mod calendar_integration;
 pub mod clipboard;
 pub mod communication_integrations;
@@ -28,6 +29,7 @@ pub mod keyboard_shortcuts;
 pub mod keybinds;
 pub mod mouse;
 pub mod project_management;
+pub mod team_collaboration;
 pub mod terminal_capabilities;
 pub mod text_truncation;
 pub mod time_tracking;
@@ -42,6 +44,10 @@ pub use async_ops::{AsyncOperation, AsyncOperationManager, OperationId, Operatio
 pub use background_tasks::{BackgroundTask, BackgroundTaskManager, TaskId, TaskStatus};
 pub use batch_ops::{
     BatchHandler, BatchManager, BatchOperation, BatchResult, BatchStats, OpResult,
+};
+pub use builtin_automation::{
+    AutomationAction, AutomationManager, AutomationRule, BulkActionResult, BulkActionType,
+    RecurrencePattern, RecurringTask, TaskTemplate, TriggerCondition,
 };
 pub use calendar_integration::{
     CalendarEvent, CalendarExporter, EventPriority, EventStatus, Recurrence,
@@ -82,6 +88,10 @@ pub use keybinds::{KeyBinding, KeyBindings};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
 pub use project_management::{
     Project, ProjectManager, ProjectStatus, ProjectTemplate, Workspace,
+};
+pub use team_collaboration::{
+    Activity, ActivityType, BoardMember, CollaborationManager, Notification, NotificationType,
+    Permission, Watcher,
 };
 pub use terminal_capabilities::{ColorSupport, FeatureLevel, TerminalCapabilities};
 pub use text_truncation::{SmartTruncate, TruncationStrategy};
