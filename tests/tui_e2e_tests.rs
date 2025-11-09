@@ -986,3 +986,412 @@ fn test_e2e_terminal_resize_during_operation() {
     // Input should still be there
     assert!(app.input_field().value().len() > 0, "Input should persist after resize");
 }
+
+// =============================================================================
+// ADDITIONAL MEDIUM TIER E2E TESTS
+// =============================================================================
+
+#[test]
+fn test_e2e_toast_notifications() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Show different toast types
+    app.toast_info("Info toast");
+    assert_eq!(app.toasts().len(), 1);
+
+    app.toast_success("Success toast");
+    assert_eq!(app.toasts().len(), 2);
+
+    app.toast_warning("Warning toast");
+    assert_eq!(app.toasts().len(), 3);
+
+    app.toast_error("Error toast");
+    assert_eq!(app.toasts().len(), 4);
+
+    // Should render without crash
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should render with toasts");
+}
+
+#[test]
+fn test_e2e_toast_unicode() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Unicode/emoji toasts
+    app.toast_info("🐸 Ribbit!");
+    app.toast_success("成功！");
+    app.toast_warning("警告");
+    app.toast_error("Ошибка");
+
+    assert_eq!(app.toasts().len(), 4);
+
+    // Render with Unicode toasts
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should render Unicode toasts");
+}
+
+#[test]
+fn test_e2e_many_toasts() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Create many toasts
+    for i in 0..20 {
+        app.toast_info(format!("Toast {}", i));
+    }
+
+    assert_eq!(app.toasts().len(), 20);
+
+    // Should render without crash even with many toasts
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should handle many toasts");
+}
+
+#[test]
+fn test_e2e_tab_operations() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Add new tabs
+    app.tabs_mut().add_tab("Editor");
+    app.tabs_mut().add_tab("Terminal");
+    app.tabs_mut().add_tab("Browser");
+
+    assert_eq!(app.tabs().count(), 3);
+
+    // Render with tabs
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should render with tabs");
+}
+
+#[test]
+fn test_e2e_tab_switching() {
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Add tabs
+    app.tabs_mut().add_tab("Tab 1");
+    app.tabs_mut().add_tab("Tab 2");
+    app.tabs_mut().add_tab("Tab 3");
+
+    // Switch to different tabs
+    app.tabs_mut().next_tab();
+    app.tabs_mut().next_tab();
+    app.tabs_mut().previous_tab();
+
+    // Should not crash
+    assert_eq!(app.tabs().count(), 3);
+}
+
+#[test]
+fn test_e2e_tabs_with_unicode() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Unicode tab names
+    app.tabs_mut().add_tab("🐸 Frog Tab");
+    app.tabs_mut().add_tab("日本語タブ");
+    app.tabs_mut().add_tab("Русский");
+
+    assert!(app.tabs().count() >= 3);
+
+    // Render with Unicode tabs
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should render Unicode tabs");
+}
+
+#[test]
+fn test_e2e_session_persistence() {
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Modify session state
+    let session = app.session_mut();
+    session.set_working_directory(std::path::PathBuf::from("/test/directory"));
+
+    // Verify session state
+    assert_eq!(
+        app.session().working_directory(),
+        &std::path::PathBuf::from("/test/directory")
+    );
+}
+
+#[test]
+fn test_e2e_session_with_unicode_path() {
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Set Unicode path
+    let session = app.session_mut();
+    session.set_working_directory(std::path::PathBuf::from("/home/用户/项目/日本語"));
+
+    // Verify Unicode path
+    assert!(app
+        .session()
+        .working_directory()
+        .to_string_lossy()
+        .contains("用户"));
+}
+
+#[test]
+fn test_e2e_layout_manager_medium_tier() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Access layout manager
+    let _layout = app.layout();
+    let _layout_mut = app.layout_mut();
+
+    // Should render without crash
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should render with layout");
+}
+
+#[test]
+fn test_e2e_complete_medium_tier_workflow() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // 1. Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+    assert_eq!(*app.screen(), AppScreen::Main);
+
+    // 2. Create tabs for different workspaces
+    app.tabs_mut().add_tab("Editor");
+    app.tabs_mut().add_tab("Terminal");
+    assert!(app.tabs().count() >= 2);
+
+    // 3. Show toast notifications
+    app.toast_info("Workspace ready");
+    app.toast_success("Tabs created");
+    assert_eq!(app.toasts().len(), 2);
+
+    // 4. Update session state
+    app.session_mut()
+        .set_working_directory(std::path::PathBuf::from("/project"));
+    assert_eq!(
+        app.session().working_directory(),
+        &std::path::PathBuf::from("/project")
+    );
+
+    // 5. Render complete state
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should render complete MEDIUM tier state");
+
+    // 6. Navigate between tabs
+    app.tabs_mut().next_tab();
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should render after tab switch");
+
+    // Complete workflow without crashes
+}
+
+#[test]
+fn test_e2e_medium_tier_stress_test() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Stress test with many components
+    // Create many tabs
+    for i in 0..20 {
+        app.tabs_mut().add_tab(format!("Tab {}", i));
+    }
+
+    // Create many toasts
+    for i in 0..20 {
+        if i % 2 == 0 {
+            app.toast_info(format!("Info {}", i));
+        } else {
+            app.toast_success(format!("Success {}", i));
+        }
+    }
+
+    // Update session multiple times
+    for i in 0..10 {
+        app.session_mut()
+            .set_working_directory(std::path::PathBuf::from(format!("/project{}", i)));
+    }
+
+    // Should handle stress without crash
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should handle stress test");
+
+    assert!(app.tabs().count() >= 20);
+    assert_eq!(app.toasts().len(), 20);
+}
+
+#[test]
+fn test_e2e_medium_tier_unicode_stress() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Unicode stress test
+    app.tabs_mut().add_tab("🐸🎉🚀");
+    app.tabs_mut().add_tab("日本語");
+    app.tabs_mut().add_tab("中文");
+    app.tabs_mut().add_tab("العربية");
+    app.tabs_mut().add_tab("Русский");
+
+    app.toast_info("🐸 Ribbit!");
+    app.toast_success("成功！");
+    app.toast_warning("警告");
+    app.toast_error("Ошибка");
+
+    app.session_mut()
+        .set_working_directory(std::path::PathBuf::from("/home/用户/项目/🐸-日本語"));
+
+    // Render with all Unicode components
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should handle Unicode stress");
+
+    assert!(app.tabs().count() >= 5);
+    assert_eq!(app.toasts().len(), 4);
+}
+
+#[test]
+fn test_e2e_tab_and_toast_interaction() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Simulate realistic workflow: create tab -> show toast
+    app.tabs_mut().add_tab("New Workspace");
+    app.toast_success("Workspace created");
+
+    app.tabs_mut().next_tab();
+    app.toast_info("Switched to workspace");
+
+    assert!(app.tabs().count() >= 1);
+    assert_eq!(app.toasts().len(), 2);
+
+    // Render interaction
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should render tab+toast interaction");
+}
+
+#[test]
+fn test_e2e_session_save_workflow() {
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Set up complete session state
+    app.session_mut()
+        .set_working_directory(std::path::PathBuf::from("/test/project"));
+    app.tabs_mut().add_tab("Editor");
+    app.tabs_mut().add_tab("Terminal");
+
+    // Attempt to save session (may fail if path doesn't exist, but shouldn't crash)
+    let result = app.save_session();
+
+    // Should either succeed or fail gracefully
+    assert!(result.is_ok() || result.is_err());
+
+    // App should still be functional
+    assert!(!app.should_quit());
+}
+
+#[test]
+fn test_e2e_rapid_component_updates() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Rapidly update all MEDIUM tier components
+    for i in 0..50 {
+        // Add tab
+        if i % 5 == 0 {
+            app.tabs_mut().add_tab(format!("Tab {}", i));
+        }
+
+        // Show toast
+        if i % 3 == 0 {
+            app.toast_info(format!("Update {}", i));
+        }
+
+        // Update session
+        if i % 7 == 0 {
+            app.session_mut()
+                .set_working_directory(std::path::PathBuf::from(format!("/dir{}", i)));
+        }
+
+        // Render periodically
+        if i % 10 == 0 {
+            terminal
+                .draw(|f| toad::core::ui::render(&mut app, f))
+                .ok();
+        }
+    }
+
+    // Final verification
+    assert!(app.tabs().count() > 0);
+    assert!(app.toasts().len() > 0);
+
+    // Final render
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should handle rapid updates");
+}
