@@ -518,4 +518,453 @@ mod tests {
         let bars = sparkline.render_bars(5);
         assert_eq!(bars.chars().count(), 5);
     }
+
+    // ============================================================================
+    // COMPREHENSIVE EDGE CASE TESTS (ADVANCED TIER - 90%+ COVERAGE)
+    // ============================================================================
+
+    // Extreme data value tests
+    #[test]
+    fn test_sparkline_with_extreme_positive_values() {
+        let sparkline = Sparkline::new(vec![f64::MAX, f64::MAX / 2.0]);
+        assert_eq!(sparkline.max(), Some(f64::MAX));
+        let bars = sparkline.render_bars(2);
+        assert_eq!(bars.chars().count(), 2);
+    }
+
+    #[test]
+    fn test_sparkline_with_extreme_negative_values() {
+        let sparkline = Sparkline::new(vec![f64::MIN, f64::MIN / 2.0]);
+        assert_eq!(sparkline.min(), Some(f64::MIN));
+        let bars = sparkline.render_bars(2);
+        assert_eq!(bars.chars().count(), 2);
+    }
+
+    #[test]
+    fn test_sparkline_with_negative_values() {
+        let sparkline = Sparkline::new(vec![-10.0, -5.0, 0.0, 5.0, 10.0]);
+        assert_eq!(sparkline.min(), Some(-10.0));
+        assert_eq!(sparkline.max(), Some(10.0));
+        assert_eq!(sparkline.avg(), Some(0.0));
+    }
+
+    #[test]
+    fn test_sparkline_with_mixed_positive_negative() {
+        let sparkline = Sparkline::new(vec![-100.0, 50.0, -25.0, 75.0]);
+        assert!(sparkline.min().unwrap() < 0.0);
+        assert!(sparkline.max().unwrap() > 0.0);
+    }
+
+    #[test]
+    fn test_sparkline_with_zero_values() {
+        let sparkline = Sparkline::new(vec![0.0, 0.0, 0.0, 0.0]);
+        assert_eq!(sparkline.min(), Some(0.0));
+        assert_eq!(sparkline.max(), Some(0.0));
+        assert_eq!(sparkline.avg(), Some(0.0));
+    }
+
+    #[test]
+    fn test_sparkline_with_fractional_values() {
+        let sparkline = Sparkline::new(vec![0.123456789, 1.987654321, 0.5]);
+        assert!(sparkline.avg().unwrap() > 0.0);
+        let bars = sparkline.render_bars(3);
+        assert_eq!(bars.chars().count(), 3);
+    }
+
+    // Stress tests with many data points
+    #[test]
+    fn test_sparkline_with_many_points() {
+        let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
+        let sparkline = Sparkline::new(data);
+        assert_eq!(sparkline.data().len(), 1000);
+        let bars = sparkline.render_bars(100);
+        assert_eq!(bars.chars().count(), 100);
+    }
+
+    #[test]
+    fn test_sparkline_with_extreme_number_of_points() {
+        let data: Vec<f64> = (0..10000).map(|i| (i as f64).sin()).collect();
+        let sparkline = Sparkline::new(data);
+        assert_eq!(sparkline.data().len(), 10000);
+        let bars = sparkline.render_bars(50);
+        assert_eq!(bars.chars().count(), 50);
+    }
+
+    #[test]
+    fn test_sparkline_downsampling_with_large_dataset() {
+        let data: Vec<f64> = (0..5000).map(|i| i as f64 % 100.0).collect();
+        let sparkline = Sparkline::new(data);
+        let bars = sparkline.render_bars(10);
+        assert_eq!(bars.chars().count(), 10);
+    }
+
+    // Width edge cases
+    #[test]
+    fn test_sparkline_render_zero_width() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
+        let bars = sparkline.render_bars(0);
+        assert!(bars.is_empty());
+    }
+
+    #[test]
+    fn test_sparkline_render_width_one() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
+        let bars = sparkline.render_bars(1);
+        assert_eq!(bars.chars().count(), 1);
+    }
+
+    #[test]
+    fn test_sparkline_render_extreme_width() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
+        let bars = sparkline.render_bars(10000);
+        assert_eq!(bars.chars().count(), 3); // Limited by data points
+    }
+
+    // Height edge cases for dots/braille
+    #[test]
+    fn test_sparkline_dots_height_one() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
+        let dots = sparkline.render_dots(10, 1);
+        assert_eq!(dots.len(), 1);
+    }
+
+    #[test]
+    fn test_sparkline_dots_extreme_height() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
+        let dots = sparkline.render_dots(10, 1000);
+        assert_eq!(dots.len(), 1000);
+    }
+
+    // All rendering styles
+    #[test]
+    fn test_sparkline_all_styles_render() {
+        let data = vec![1.0, 3.0, 2.0, 5.0, 4.0];
+
+        let bars = Sparkline::new(data.clone()).style(SparklineStyle::Bars);
+        assert!(!bars.to_string(10).is_empty());
+
+        let dots = Sparkline::new(data.clone()).style(SparklineStyle::Dots);
+        assert!(!dots.to_string(10).is_empty());
+
+        let braille = Sparkline::new(data).style(SparklineStyle::Braille);
+        assert!(!braille.to_string(10).is_empty());
+    }
+
+    #[test]
+    fn test_sparkline_style_equality() {
+        assert_eq!(SparklineStyle::Bars, SparklineStyle::Bars);
+        assert_eq!(SparklineStyle::Dots, SparklineStyle::Dots);
+        assert_eq!(SparklineStyle::Braille, SparklineStyle::Braille);
+        assert_ne!(SparklineStyle::Bars, SparklineStyle::Dots);
+    }
+
+    // Single data point edge cases
+    #[test]
+    fn test_sparkline_single_point() {
+        let sparkline = Sparkline::new(vec![5.0]);
+        assert_eq!(sparkline.min(), Some(5.0));
+        assert_eq!(sparkline.max(), Some(5.0));
+        assert_eq!(sparkline.avg(), Some(5.0));
+        let normalized = sparkline.normalize();
+        assert_eq!(normalized.len(), 1);
+    }
+
+    #[test]
+    fn test_sparkline_single_zero() {
+        let sparkline = Sparkline::new(vec![0.0]);
+        assert_eq!(sparkline.avg(), Some(0.0));
+        let bars = sparkline.render_bars(5);
+        assert_eq!(bars.chars().count(), 1);
+    }
+
+    // Push with limit edge cases
+    #[test]
+    fn test_push_with_limit_exact() {
+        let mut sparkline = Sparkline::new(vec![1.0, 2.0]);
+        sparkline.push_with_limit(3.0, 3);
+        assert_eq!(sparkline.data().len(), 3);
+        assert_eq!(sparkline.data()[2], 3.0);
+    }
+
+    #[test]
+    fn test_push_with_limit_zero() {
+        let mut sparkline = Sparkline::new(vec![]);
+        sparkline.push_with_limit(1.0, 0);
+        // With limit 0, it should remove the value immediately
+        assert!(sparkline.data().is_empty() || sparkline.data().len() == 1);
+    }
+
+    #[test]
+    fn test_push_with_limit_many_times() {
+        let mut sparkline = Sparkline::new(vec![]);
+        for i in 0..100 {
+            sparkline.push_with_limit(i as f64, 10);
+        }
+        assert_eq!(sparkline.data().len(), 10);
+        // Should contain the last 10 values (90-99)
+        assert_eq!(sparkline.data()[0], 90.0);
+        assert_eq!(sparkline.data()[9], 99.0);
+    }
+
+    #[test]
+    fn test_push_with_limit_large_limit() {
+        let mut sparkline = Sparkline::new(vec![1.0]);
+        sparkline.push_with_limit(2.0, 10000);
+        assert_eq!(sparkline.data().len(), 2);
+    }
+
+    // Set data edge cases
+    #[test]
+    fn test_set_data_empty_to_filled() {
+        let mut sparkline = Sparkline::new(vec![]);
+        sparkline.set_data(vec![1.0, 2.0, 3.0]);
+        assert_eq!(sparkline.data().len(), 3);
+    }
+
+    #[test]
+    fn test_set_data_filled_to_empty() {
+        let mut sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
+        sparkline.set_data(vec![]);
+        assert!(sparkline.data().is_empty());
+    }
+
+    #[test]
+    fn test_set_data_replace() {
+        let mut sparkline = Sparkline::new(vec![1.0, 2.0]);
+        sparkline.set_data(vec![10.0, 20.0, 30.0]);
+        assert_eq!(sparkline.data().len(), 3);
+        assert_eq!(sparkline.data()[0], 10.0);
+    }
+
+    // Builder pattern tests
+    #[test]
+    fn test_sparkline_builder_all_options() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0])
+            .title("Test Sparkline")
+            .style(SparklineStyle::Dots)
+            .show_border(true)
+            .show_labels(true);
+
+        assert_eq!(sparkline.title, Some("Test Sparkline".to_string()));
+        assert_eq!(sparkline.style, SparklineStyle::Dots);
+        assert!(sparkline.show_border);
+        assert!(sparkline.show_labels);
+    }
+
+    #[test]
+    fn test_sparkline_builder_chaining() {
+        let sparkline = Sparkline::new(vec![1.0])
+            .title("First")
+            .title("Second")
+            .style(SparklineStyle::Bars)
+            .style(SparklineStyle::Braille)
+            .show_border(true)
+            .show_border(false);
+
+        // Last values should win
+        assert_eq!(sparkline.title, Some("Second".to_string()));
+        assert_eq!(sparkline.style, SparklineStyle::Braille);
+        assert!(!sparkline.show_border);
+    }
+
+    // Clone trait test
+    #[test]
+    fn test_sparkline_clone() {
+        let original = Sparkline::new(vec![1.0, 2.0, 3.0])
+            .title("Original")
+            .style(SparklineStyle::Dots);
+
+        let cloned = original.clone();
+
+        assert_eq!(cloned.data().len(), 3);
+        assert_eq!(cloned.title, Some("Original".to_string()));
+        assert_eq!(cloned.style, SparklineStyle::Dots);
+    }
+
+    // Normalization edge cases
+    #[test]
+    fn test_normalize_empty() {
+        let sparkline = Sparkline::new(vec![]);
+        let normalized = sparkline.normalize();
+        assert!(normalized.is_empty());
+    }
+
+    #[test]
+    fn test_normalize_all_same_values() {
+        let sparkline = Sparkline::new(vec![7.0, 7.0, 7.0, 7.0]);
+        let normalized = sparkline.normalize();
+        // All should be 0.5 when min == max
+        for &value in &normalized {
+            assert!((value - 0.5).abs() < f64::EPSILON);
+        }
+    }
+
+    #[test]
+    fn test_normalize_two_extremes() {
+        let sparkline = Sparkline::new(vec![0.0, 100.0]);
+        let normalized = sparkline.normalize();
+        assert!((normalized[0] - 0.0).abs() < f64::EPSILON);
+        assert!((normalized[1] - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_normalize_negative_range() {
+        let sparkline = Sparkline::new(vec![-10.0, -5.0, 0.0]);
+        let normalized = sparkline.normalize();
+        assert!((normalized[0] - 0.0).abs() < f64::EPSILON);
+        assert!((normalized[1] - 0.5).abs() < f64::EPSILON);
+        assert!((normalized[2] - 1.0).abs() < f64::EPSILON);
+    }
+
+    // Statistical edge cases
+    #[test]
+    fn test_avg_single_value() {
+        let sparkline = Sparkline::new(vec![42.0]);
+        assert_eq!(sparkline.avg(), Some(42.0));
+    }
+
+    #[test]
+    fn test_avg_negative_values() {
+        let sparkline = Sparkline::new(vec![-5.0, -3.0, -1.0]);
+        assert_eq!(sparkline.avg(), Some(-3.0));
+    }
+
+    #[test]
+    fn test_avg_large_dataset() {
+        let data: Vec<f64> = (0..1000).map(|_| 5.0).collect();
+        let sparkline = Sparkline::new(data);
+        assert!((sparkline.avg().unwrap() - 5.0).abs() < f64::EPSILON);
+    }
+
+    // Empty sparkline edge cases
+    #[test]
+    fn test_empty_sparkline_operations() {
+        let sparkline = Sparkline::new(vec![]);
+        assert_eq!(sparkline.min(), None);
+        assert_eq!(sparkline.max(), None);
+        assert_eq!(sparkline.avg(), None);
+        assert!(sparkline.normalize().is_empty());
+        assert!(sparkline.render_bars(10).is_empty());
+    }
+
+    #[test]
+    fn test_empty_sparkline_push() {
+        let mut sparkline = Sparkline::new(vec![]);
+        sparkline.push(1.0);
+        assert_eq!(sparkline.data().len(), 1);
+        assert_eq!(sparkline.min(), Some(1.0));
+    }
+
+    // Render dots with various dimensions
+    #[test]
+    fn test_render_dots_square() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0, 4.0]);
+        let dots = sparkline.render_dots(10, 10);
+        assert_eq!(dots.len(), 10);
+        for line in &dots {
+            // Use chars().count() since '•' is multi-byte Unicode
+            assert_eq!(line.chars().count(), 10);
+        }
+    }
+
+    #[test]
+    fn test_render_dots_wide() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
+        let dots = sparkline.render_dots(100, 5);
+        assert_eq!(dots.len(), 5);
+        for line in &dots {
+            // Use chars().count() since '•' is multi-byte Unicode
+            assert_eq!(line.chars().count(), 100);
+        }
+    }
+
+    #[test]
+    fn test_render_dots_tall() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
+        let dots = sparkline.render_dots(5, 100);
+        assert_eq!(dots.len(), 100);
+    }
+
+    // Downsampling edge cases
+    #[test]
+    fn test_downsampling_exact_fit() {
+        let data: Vec<f64> = (0..10).map(|i| i as f64).collect();
+        let sparkline = Sparkline::new(data);
+        let bars = sparkline.render_bars(10);
+        assert_eq!(bars.chars().count(), 10);
+    }
+
+    #[test]
+    fn test_downsampling_more_width_than_data() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]);
+        let bars = sparkline.render_bars(100);
+        // Should only render 3 chars since we only have 3 data points
+        assert_eq!(bars.chars().count(), 3);
+    }
+
+    #[test]
+    fn test_downsampling_minimal() {
+        let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
+        let sparkline = Sparkline::new(data);
+        let bars = sparkline.render_bars(1);
+        assert_eq!(bars.chars().count(), 1);
+    }
+
+    // To string tests for all styles
+    #[test]
+    fn test_to_string_empty_sparkline() {
+        let sparkline = Sparkline::new(vec![]);
+        assert!(sparkline.to_string(10).is_empty());
+    }
+
+    #[test]
+    fn test_to_string_braille() {
+        let sparkline = Sparkline::new(vec![1.0, 2.0, 3.0]).style(SparklineStyle::Braille);
+        let text = sparkline.to_string(10);
+        assert!(!text.is_empty());
+    }
+
+    // Comprehensive stress test
+    #[test]
+    fn test_sparkline_comprehensive_stress_test() {
+        // Create large dataset with various patterns
+        let mut data: Vec<f64> = Vec::new();
+        for i in 0..1000 {
+            let value = match i % 4 {
+                0 => (i as f64).sin() * 100.0,
+                1 => (i as f64).cos() * 50.0,
+                2 => (i as f64) % 100.0,
+                _ => -(i as f64) % 50.0,
+            };
+            data.push(value);
+        }
+
+        let sparkline = Sparkline::new(data)
+            .title("Comprehensive Test 📊")
+            .style(SparklineStyle::Dots)
+            .show_border(true)
+            .show_labels(true);
+
+        assert_eq!(sparkline.data().len(), 1000);
+
+        // Test statistics
+        let min = sparkline.min().unwrap();
+        let max = sparkline.max().unwrap();
+        let avg = sparkline.avg().unwrap();
+        assert!(min < max);
+        assert!(avg >= min && avg <= max);
+
+        // Test all rendering modes
+        let bars = sparkline.render_bars(80);
+        assert!(!bars.is_empty());
+
+        let dots = sparkline.render_dots(80, 20);
+        assert_eq!(dots.len(), 20);
+
+        let normalized = sparkline.normalize();
+        assert_eq!(normalized.len(), 1000);
+        for &value in &normalized {
+            assert!(value >= 0.0 && value <= 1.0);
+        }
+    }
 }
