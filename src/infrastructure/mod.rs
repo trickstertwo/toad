@@ -10,6 +10,7 @@ pub mod background_tasks;
 pub mod batch_ops;
 pub mod builtin_automation;
 pub mod calendar_integration;
+pub mod card_comments;
 pub mod clipboard;
 pub mod communication_integrations;
 pub mod custom_keybindings;
@@ -29,6 +30,7 @@ pub mod keyboard_shortcuts;
 pub mod keybinds;
 pub mod mouse;
 pub mod project_management;
+pub mod rich_task_cards;
 pub mod team_collaboration;
 pub mod terminal_capabilities;
 pub mod text_truncation;
@@ -51,6 +53,9 @@ pub use builtin_automation::{
 };
 pub use calendar_integration::{
     CalendarEvent, CalendarExporter, EventPriority, EventStatus, Recurrence,
+};
+pub use card_comments::{
+    ActivityLogEntry, Comment, CommentManager, EditHistory, Reaction, ReactionEntry,
 };
 pub use clipboard::Clipboard;
 pub use communication_integrations::{
@@ -88,6 +93,10 @@ pub use keybinds::{KeyBinding, KeyBindings};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
 pub use project_management::{
     Project, ProjectManager, ProjectStatus, ProjectTemplate, Workspace,
+};
+pub use rich_task_cards::{
+    Assignee, CustomField, CustomFieldType, EffortEstimate, Priority, RichTaskCard,
+    RichTaskCardManager, Subtask, Tag,
 };
 pub use team_collaboration::{
     Activity, ActivityType, BoardMember, CollaborationManager, Notification, NotificationType,
