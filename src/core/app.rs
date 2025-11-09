@@ -28,7 +28,7 @@ pub struct App {
     title: String,
 
     /// Current working directory
-    working_directory: PathBuf,
+    pub(crate) working_directory: PathBuf,
 
     /// Trust dialog state (if applicable)
     pub(crate) trust_dialog: Option<ConfirmDialog>,
@@ -40,7 +40,7 @@ pub struct App {
     pub(crate) input_field: InputField,
 
     /// Number of installed plugins
-    plugin_count: usize,
+    pub(crate) plugin_count: usize,
 
     /// Help screen widget
     help_screen: HelpScreen,
@@ -55,10 +55,10 @@ pub struct App {
     pub(crate) show_palette: bool,
 
     /// Application configuration
-    config: Config,
+    pub(crate) config: Config,
 
     /// Session state for persistence
-    session: SessionState,
+    pub(crate) session: SessionState,
 
     /// Tab manager for multiple workspaces
     pub(crate) tabs: TabManager,
@@ -479,39 +479,6 @@ impl App {
     /// Update session state from current app state
     ///
     /// Synchronizes the session state with the current application state.
-    fn update_session_state(&mut self) {
-        self.session.set_welcome_shown(self.welcome_shown);
-        self.session
-            .set_working_directory(self.working_directory.clone());
-        self.session.set_plugin_count(self.plugin_count);
-
-        // Convert current screen to string for session
-        let screen_str = match self.screen {
-            AppScreen::Welcome => "Welcome",
-            AppScreen::TrustDialog => "TrustDialog",
-            AppScreen::Main => "Main",
-            AppScreen::Evaluation => "Main", // Save as Main since Evaluation is transient
-        };
-        self.session.set_last_screen(screen_str.to_string());
-    }
-
-    /// Save session state to disk
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use toad::App;
-    ///
-    /// let mut app = App::new();
-    /// app.save_session().unwrap();
-    /// ```
-    pub fn save_session(&mut self) -> crate::Result<()> {
-        if self.config.session.persist_session && self.config.session.auto_save {
-            self.update_session_state();
-            self.session.auto_save()?;
-        }
-        Ok(())
-    }
 
     /// Get reference to session state
     pub fn session(&self) -> &SessionState {
