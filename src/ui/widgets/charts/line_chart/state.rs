@@ -153,7 +153,7 @@ impl DataSeries {
 #[derive(Debug, Clone)]
 pub struct LineChart {
     /// Data series to display
-    series: Vec<DataSeries>,
+    pub(super) series: Vec<DataSeries>,
     /// Chart title
     pub(super) title: Option<String>,
     /// X-axis label
@@ -314,7 +314,7 @@ impl LineChart {
     }
 
     /// Get Y-axis bounds (min, max)
-    fn calculate_y_bounds(&self) -> (f64, f64) {
+    pub(super) fn calculate_y_bounds(&self) -> (f64, f64) {
         if let Some(bounds) = self.y_bounds {
             return bounds;
         }

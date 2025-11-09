@@ -111,7 +111,7 @@ impl DiffLine {
     }
 
     /// Parse line type from diff line
-    fn parse_type(line: &str) -> DiffLineType {
+    pub(super) fn parse_type(line: &str) -> DiffLineType {
         if line.starts_with("diff --git") {
             DiffLineType::FileHeader
         } else if line.starts_with("index ") {
@@ -153,15 +153,15 @@ pub struct GitDiffViewer {
     /// Parsed diff lines
     pub(super) lines: Vec<DiffLine>,
     /// Title of the viewer
-    title: String,
+    pub(super) title: String,
     /// Show line numbers
-    show_line_numbers: bool,
+    pub(super) show_line_numbers: bool,
     /// Enable syntax highlighting
-    syntax_highlighting: bool,
+    pub(super) syntax_highlighting: bool,
     /// Compact mode (less padding)
-    compact: bool,
+    pub(super) compact: bool,
     /// Current file being viewed (if filtering by file)
-    current_file: Option<String>,
+    pub(super) current_file: Option<String>,
 }
 
 impl Default for GitDiffViewer {

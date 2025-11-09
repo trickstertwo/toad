@@ -78,15 +78,15 @@ type ValidatorFn = fn(&str) -> Result<(), String>;
 /// ```
 #[derive(Debug, Clone)]
 pub struct InputDialog {
-    title: String,
-    placeholder: String,
-    help_text: String,
-    value: String,
+    pub(super) title: String,
+    pub(super) placeholder: String,
+    pub(super) help_text: String,
+    pub(super) value: String,
     pub(super) cursor_position: usize,
-    state: InputDialogState,
-    validator: Option<ValidatorFn>,
-    validation_error: Option<String>,
-    max_length: Option<usize>,
+    pub(super) state: InputDialogState,
+    pub(super) validator: Option<ValidatorFn>,
+    pub(super) validation_error: Option<String>,
+    pub(super) max_length: Option<usize>,
 }
 
 impl InputDialog {

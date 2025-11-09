@@ -119,13 +119,13 @@ pub struct ModelSelector {
     /// Available models
     pub(super) models: Vec<ModelInfo>,
     /// Currently selected index
-    selected: usize,
+    pub(super) selected: usize,
     /// List state for rendering
-    list_state: ListState,
+    pub(super) list_state: ListState,
     /// Show detailed info
-    show_details: bool,
+    pub(super) show_details: bool,
     /// Filter by capability
-    filter: Option<String>,
+    pub(super) filter: Option<String>,
 }
 
 impl Default for ModelSelector {
