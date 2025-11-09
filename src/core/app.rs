@@ -16,13 +16,13 @@ use std::path::PathBuf;
 #[derive(Debug)]
 pub struct App {
     /// Current screen being displayed
-    screen: AppScreen,
+    pub(crate) screen: AppScreen,
 
     /// Whether the application should quit
-    should_quit: bool,
+    pub(crate) should_quit: bool,
 
     /// Status bar message
-    status_message: String,
+    pub(crate) status_message: String,
 
     /// Application title
     title: String,
@@ -31,13 +31,13 @@ pub struct App {
     working_directory: PathBuf,
 
     /// Trust dialog state (if applicable)
-    trust_dialog: Option<ConfirmDialog>,
+    pub(crate) trust_dialog: Option<ConfirmDialog>,
 
     /// Whether the user has seen the welcome screen
-    welcome_shown: bool,
+    pub(crate) welcome_shown: bool,
 
     /// Input field for user commands/queries
-    input_field: InputField,
+    pub(crate) input_field: InputField,
 
     /// Number of installed plugins
     plugin_count: usize,
@@ -46,13 +46,13 @@ pub struct App {
     help_screen: HelpScreen,
 
     /// Whether to show the help overlay
-    show_help: bool,
+    pub(crate) show_help: bool,
 
     /// Command palette widget
-    command_palette: CommandPalette,
+    pub(crate) command_palette: CommandPalette,
 
     /// Whether to show the command palette
-    show_palette: bool,
+    pub(crate) show_palette: bool,
 
     /// Application configuration
     config: Config,
@@ -61,13 +61,13 @@ pub struct App {
     session: SessionState,
 
     /// Tab manager for multiple workspaces
-    tabs: TabManager,
+    pub(crate) tabs: TabManager,
 
     /// Layout manager for split panes
-    layout: LayoutManager,
+    pub(crate) layout: LayoutManager,
 
     /// Vim mode enabled
-    vim_mode: bool,
+    pub(crate) vim_mode: bool,
 
     /// Performance metrics
     performance: PerformanceMetrics,
@@ -82,7 +82,7 @@ pub struct App {
     event_tx: Option<tokio::sync::mpsc::UnboundedSender<Event>>,
 
     /// Current evaluation state
-    evaluation_state: Option<EvaluationState>,
+    pub(crate) evaluation_state: Option<EvaluationState>,
 }
 
 impl Default for App {
@@ -484,388 +484,9 @@ impl App {
         }
     }
 
-    /// Handle keys on the welcome screen
-    fn handle_welcome_key(&mut self, key: KeyEvent) -> crate::Result<()> {
-        match (key.code, key.modifiers) {
-            // Quit on Escape or Ctrl+C
-            (KeyCode::Esc, _) | (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
-                self.should_quit = true;
-            }
-            // Any other key advances to trust dialog
-            _ => {
-                self.welcome_shown = true;
-                self.screen = AppScreen::TrustDialog;
-                self.create_trust_dialog();
-                self.status_message = "Confirm folder trust to continue".to_string();
-            }
-        }
-        Ok(())
-    }
-
-    /// Handle keys in the trust dialog
-    fn handle_trust_dialog_key(&mut self, key: KeyEvent) -> crate::Result<()> {
-        match (key.code, key.modifiers) {
-            // Escape cancels
-            (KeyCode::Esc, _) => {
-                self.should_quit = true;
-            }
-            // Ctrl+C quits
-            (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
-                self.should_quit = true;
-            }
-            // Arrow keys navigate
-            (KeyCode::Up, _) => {
-                if let Some(dialog) = &mut self.trust_dialog {
-                    dialog.select_previous();
-                }
-            }
-            (KeyCode::Down, _) => {
-                if let Some(dialog) = &mut self.trust_dialog {
-                    dialog.select_next();
-                }
-            }
-            // Number keys select directly
-            (KeyCode::Char(c @ '1'..='3'), _) => {
-                if let Some(dialog) = &mut self.trust_dialog
-                    && dialog.select_by_key(c).is_some() {
-                        self.confirm_trust_selection();
-                    }
-            }
-            // Enter confirms selection
-            (KeyCode::Enter, _) => {
-                self.confirm_trust_selection();
-            }
-            _ => {}
-        }
-        Ok(())
-    }
-
-    /// Handle keys in main interface
-    fn handle_main_key(&mut self, key: KeyEvent) -> crate::Result<()> {
-        // If help is shown, intercept keys for help navigation
-        if self.show_help {
-            match (key.code, key.modifiers) {
-                // Esc or ? closes help
-                (KeyCode::Esc, _) | (KeyCode::Char('?'), _) => {
-                    self.show_help = false;
-                }
-                _ => {}
-            }
-            return Ok(());
-        }
-
-        // If command palette is shown, intercept keys for palette navigation
-        if self.show_palette {
-            match (key.code, key.modifiers) {
-                // Esc closes palette
-                (KeyCode::Esc, _) => {
-                    self.show_palette = false;
-                    self.command_palette.clear_query();
-                }
-                // Ctrl+P also toggles off
-                (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
-                    self.show_palette = false;
-                    self.command_palette.clear_query();
-                }
-                // Up/Down navigate
-                (KeyCode::Up, _) => {
-                    self.command_palette.select_previous();
-                }
-                (KeyCode::Down, _) => {
-                    self.command_palette.select_next();
-                }
-                // Enter executes selected command
-                (KeyCode::Enter, _) => {
-                    if let Some(cmd_id) = self.command_palette.selected_command() {
-                        self.execute_palette_command(&cmd_id);
-                        self.show_palette = false;
-                        self.command_palette.clear_query();
-                    }
-                }
-                // Backspace deletes character
-                (KeyCode::Backspace, _) => {
-                    self.command_palette.delete_char();
-                }
-                // Ctrl+U clears query
-                (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
-                    self.command_palette.clear_query();
-                }
-                // Regular character input for search
-                (KeyCode::Char(c), KeyModifiers::NONE)
-                | (KeyCode::Char(c), KeyModifiers::SHIFT) => {
-                    self.command_palette.insert_char(c);
-                }
-                _ => {}
-            }
-            return Ok(());
-        }
-
-        match (key.code, key.modifiers) {
-            // Quit on Ctrl+C
-            (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
-                self.should_quit = true;
-            }
-            // Ctrl+D for page down (Vim-style), or quit if input is focused and empty
-            (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
-                if self.input_field.is_focused() && self.input_field.value().is_empty() {
-                    self.should_quit = true;
-                } else if !self.input_field.is_focused() {
-                    self.status_message = "Page down".to_string();
-                    // TODO: Implement page down for scrollable content
-                }
-            }
-            // Ctrl+U for page up (Vim-style) or clear input if focused
-            (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
-                if self.input_field.is_focused() {
-                    self.input_field.clear();
-                } else {
-                    self.status_message = "Page up".to_string();
-                    // TODO: Implement page up for scrollable content
-                }
-            }
-            // Ctrl+P opens command palette
-            (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
-                self.show_palette = true;
-            }
-            // Toggle help screen with '?' (shift+/)
-            (KeyCode::Char('?'), _) => {
-                self.show_help = !self.show_help;
-            }
-            // Tab cycling: Tab for next tab, Shift+Tab for previous tab
-            (KeyCode::Tab, KeyModifiers::NONE) => {
-                // If input field is not focused, use tab for workspace switching
-                if !self.input_field.is_focused() {
-                    self.tabs.next_tab();
-                    self.status_message = format!(
-                        "Switched to tab: {}",
-                        self.tabs
-                            .active_tab()
-                            .map(|t| &t.title)
-                            .unwrap_or(&"".to_string())
-                    );
-                } else {
-                    // If input is focused, use tab for layout panel switching
-                    self.layout.focus_next();
-                    self.status_message = format!("Focused panel {}", self.layout.focused());
-                }
-            }
-            (KeyCode::BackTab, _) => {
-                // BackTab is Shift+Tab
-                if !self.input_field.is_focused() {
-                    self.tabs.previous_tab();
-                    self.status_message = format!(
-                        "Switched to tab: {}",
-                        self.tabs
-                            .active_tab()
-                            .map(|t| &t.title)
-                            .unwrap_or(&"".to_string())
-                    );
-                } else {
-                    self.layout.focus_previous();
-                    self.status_message = format!("Focused panel {}", self.layout.focused());
-                }
-            }
-            // Ctrl+Number keys (1-9) for direct tab switching
-            (KeyCode::Char(c @ '1'..='9'), KeyModifiers::CONTROL) => {
-                let number = c.to_digit(10).unwrap() as usize;
-                if self.tabs.switch_to_index(number - 1) {
-                    self.status_message = format!(
-                        "Switched to tab {}: {}",
-                        number,
-                        self.tabs
-                            .active_tab()
-                            .map(|t| &t.title)
-                            .unwrap_or(&"".to_string())
-                    );
-                } else {
-                    self.status_message = format!("Tab {} does not exist", number);
-                }
-            }
-            // Enter submits the command
-            (KeyCode::Enter, _) => {
-                let input = self.input_field.value().to_string();
-                if !input.is_empty() {
-                    self.process_command(&input);
-                    self.input_field.clear();
-                }
-            }
-            // Backspace deletes character
-            (KeyCode::Backspace, _) => {
-                self.input_field.delete_char();
-            }
-            // Arrow keys move cursor
-            (KeyCode::Left, _) => {
-                self.input_field.move_cursor_left();
-            }
-            (KeyCode::Right, _) => {
-                self.input_field.move_cursor_right();
-            }
-            // Home/End
-            (KeyCode::Home, _) => {
-                self.input_field.move_cursor_start();
-            }
-            (KeyCode::End, _) => {
-                self.input_field.move_cursor_end();
-            }
-            // Ctrl+A / Ctrl+E (Emacs-style)
-            (KeyCode::Char('a'), KeyModifiers::CONTROL) => {
-                self.input_field.move_cursor_start();
-            }
-            (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
-                self.input_field.move_cursor_end();
-            }
-            // Page Up/Down keys
-            (KeyCode::PageUp, _) => {
-                self.status_message = "Page up".to_string();
-                // TODO: Implement page up for scrollable content
-            }
-            (KeyCode::PageDown, _) => {
-                self.status_message = "Page down".to_string();
-                // TODO: Implement page down for scrollable content
-            }
-            // Vim-style navigation (when not in input field and vim mode enabled)
-            (KeyCode::Char('h'), KeyModifiers::NONE)
-                if self.vim_mode && !self.input_field.is_focused() =>
-            {
-                self.status_message = "Vim: move left".to_string();
-                // TODO: Implement vim-style left navigation
-            }
-            (KeyCode::Char('j'), KeyModifiers::NONE)
-                if self.vim_mode && !self.input_field.is_focused() =>
-            {
-                self.status_message = "Vim: move down".to_string();
-                // TODO: Implement vim-style down navigation
-            }
-            (KeyCode::Char('k'), KeyModifiers::NONE)
-                if self.vim_mode && !self.input_field.is_focused() =>
-            {
-                self.status_message = "Vim: move up".to_string();
-                // TODO: Implement vim-style up navigation
-            }
-            (KeyCode::Char('l'), KeyModifiers::NONE)
-                if self.vim_mode && !self.input_field.is_focused() =>
-            {
-                self.status_message = "Vim: move right".to_string();
-                // TODO: Implement vim-style right navigation
-            }
-            // g for jump to top (Vim-style)
-            (KeyCode::Char('g'), KeyModifiers::NONE)
-                if self.vim_mode && !self.input_field.is_focused() =>
-            {
-                self.status_message = "Vim: jump to top".to_string();
-                // TODO: Implement jump to top
-            }
-            // G for jump to bottom (Vim-style)
-            (KeyCode::Char('G'), KeyModifiers::SHIFT)
-                if self.vim_mode && !self.input_field.is_focused() =>
-            {
-                self.status_message = "Vim: jump to bottom".to_string();
-                // TODO: Implement jump to bottom
-            }
-            // Forward slash for search
-            (KeyCode::Char('/'), KeyModifiers::NONE) if !self.input_field.is_focused() => {
-                self.status_message = "Search mode (coming soon)".to_string();
-                // TODO: Implement search mode
-            }
-            // n for next search result
-            (KeyCode::Char('n'), KeyModifiers::NONE)
-                if self.vim_mode && !self.input_field.is_focused() =>
-            {
-                self.status_message = "Next search result (coming soon)".to_string();
-                // TODO: Implement next search
-            }
-            // N for previous search result
-            (KeyCode::Char('N'), KeyModifiers::SHIFT)
-                if self.vim_mode && !self.input_field.is_focused() =>
-            {
-                self.status_message = "Previous search result (coming soon)".to_string();
-                // TODO: Implement previous search
-            }
-            // Number keys for tab switching (when not in input field)
-            (KeyCode::Char(c @ '1'..='9'), KeyModifiers::NONE)
-                if !self.input_field.is_focused() =>
-            {
-                let tab_num = c.to_digit(10).unwrap() as usize;
-                if self.tabs.switch_to_index(tab_num - 1) {
-                    self.status_message = format!(
-                        "Switched to tab {}: {}",
-                        tab_num,
-                        self.tabs
-                            .active_tab()
-                            .map(|t| &t.title)
-                            .unwrap_or(&"".to_string())
-                    );
-                } else {
-                    self.status_message = format!("Tab {} does not exist", tab_num);
-                }
-            }
-            // Alt+Number for tab switching (works even in input field)
-            (KeyCode::Char(c @ '1'..='9'), KeyModifiers::ALT) => {
-                let tab_num = c.to_digit(10).unwrap() as usize;
-                if self.tabs.switch_to_index(tab_num - 1) {
-                    self.status_message = format!(
-                        "Switched to tab {}: {}",
-                        tab_num,
-                        self.tabs
-                            .active_tab()
-                            .map(|t| &t.title)
-                            .unwrap_or(&"".to_string())
-                    );
-                } else {
-                    self.status_message = format!("Tab {} does not exist", tab_num);
-                }
-            }
-            // Regular character input
-            (KeyCode::Char(c), KeyModifiers::NONE) | (KeyCode::Char(c), KeyModifiers::SHIFT) => {
-                self.input_field.insert_char(c);
-            }
-            _ => {}
-        }
-        Ok(())
-    }
-
-    /// Handle keys during evaluation screen
-    fn handle_evaluation_key(&mut self, key: KeyEvent) -> crate::Result<()> {
-        match (key.code, key.modifiers) {
-            // Escape or Ctrl+C cancels running evaluation
-            (KeyCode::Esc, _) | (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
-                // Check if evaluation is still running
-                let is_running = self
-                    .evaluation_state
-                    .as_ref()
-                    .and_then(|s| s.handle.as_ref())
-                    .map(|h| h.is_running())
-                    .unwrap_or(false);
-
-                if is_running {
-                    // Cancel the running evaluation
-                    self.cancel_evaluation();
-                } else {
-                    // Evaluation is complete, just go back to main
-                    self.screen = AppScreen::Main;
-                }
-            }
-            // 'q' to go back to main screen (only if evaluation is complete)
-            (KeyCode::Char('q'), KeyModifiers::NONE) => {
-                let is_running = self
-                    .evaluation_state
-                    .as_ref()
-                    .and_then(|s| s.handle.as_ref())
-                    .map(|h| h.is_running())
-                    .unwrap_or(false);
-
-                if !is_running {
-                    self.screen = AppScreen::Main;
-                }
-            }
-            // Other keys are ignored during evaluation
-            _ => {}
-        }
-        Ok(())
-    }
 
     /// Process commands entered by the user
-    fn process_command(&mut self, input: &str) {
+    pub(crate) fn process_command(&mut self, input: &str) {
         if let Some(command) = input.strip_prefix('/') {
             match command {
                 "help" => {
@@ -922,7 +543,7 @@ impl App {
     }
 
     /// Execute a command from the command palette
-    fn execute_palette_command(&mut self, cmd_id: &str) {
+    pub(crate) fn execute_palette_command(&mut self, cmd_id: &str) {
         match cmd_id {
             "help" => {
                 self.show_help = true;
@@ -965,7 +586,7 @@ impl App {
     }
 
     /// Create the trust dialog for the current directory
-    fn create_trust_dialog(&mut self) {
+    pub(crate) fn create_trust_dialog(&mut self) {
         let dir_path = self.working_directory.to_string_lossy().to_string();
 
         self.trust_dialog = Some(
@@ -982,7 +603,7 @@ impl App {
     }
 
     /// Confirm the trust dialog selection and advance
-    fn confirm_trust_selection(&mut self) {
+    pub(crate) fn confirm_trust_selection(&mut self) {
         if let Some(dialog) = &self.trust_dialog {
             let selected = dialog.selected();
 
