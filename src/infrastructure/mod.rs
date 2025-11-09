@@ -17,7 +17,9 @@ pub mod diff;
 pub mod errors;
 pub mod fallback_mode;
 pub mod file_ops;
+pub mod filtering_search;
 pub mod history;
+pub mod import_export;
 pub mod key_sequences;
 pub mod keyboard_recorder;
 pub mod keyboard_shortcuts;
@@ -53,7 +55,15 @@ pub use diff::{ChunkHeader, DiffHunk, DiffLine, DiffLineType, DiffParser, DiffSt
 pub use errors::{ErrorEntry, ErrorHandler, ErrorSeverity};
 pub use fallback_mode::{BoxChars, FallbackMode};
 pub use file_ops::{FileOpResult, FileOps};
+pub use filtering_search::{
+    Filter, FilterCondition, FilterField, FilterManager, FilterOperator, LogicalOperator,
+    QuickFilter, SearchParser,
+};
 pub use history::History;
+pub use import_export::{
+    BackupManager, BoardData, ExportFormat, ExportResult, Exporter, ImportFormat, ImportResult,
+    Importer, Snapshot, TaskData,
+};
 pub use key_sequences::{KeySequence, KeySequenceManager};
 pub use keyboard_recorder::{KeyboardRecorder, RecorderState, RecordedKey};
 pub use keyboard_shortcuts::{Shortcut, ShortcutAction, ShortcutCategory, ShortcutRegistry};
