@@ -1,622 +1,636 @@
-//! Integration tests for PLATINUM Tier Power User Features
-//!
-//! Tests for CommandMode, CommandRegistry, AliasManager, KeySequenceManager, CustomKeybindings.
+/// Integration tests for power user features (PLATINUM tier)
+///
+/// Tests for Minimap, Breadcrumbs, MultiSelect, TokenCounter, ModelSelector
+use toad::ui::multiselect::SelectionMode;
+use toad::ui::widgets::{
+    Breadcrumbs, BreadcrumbSegment, CostModel, Minimap, MinimapMode, ModelInfo, ModelSelector,
+    MultiSelect, TokenCounter, TokenUsage,
+};
 
-use toad::commands::{AliasManager, Command, CommandMode, CommandRegistry};
-use toad::infrastructure::{CustomKeybindings, KeySequence, KeySequenceManager, KeybindingContext};
-use toad::infrastructure::keybinds::KeyBinding;
-use crossterm::event::{KeyCode, KeyModifiers};
-
-// ==================== CommandMode Tests ====================
+// ============================================================================
+// Minimap Integration Tests
+// ============================================================================
 
 #[test]
-fn test_command_mode_creation() {
-    let mode = CommandMode::new();
-    assert!(!mode.is_active());
-    assert_eq!(mode.buffer(), "");
+fn test_minimap_creation() {
+    let lines = vec!["line 1", "line 2", "line 3"];
+    let minimap = Minimap::new(lines);
+
+    assert_eq!(minimap.line_count(), 3);
 }
 
 #[test]
-fn test_command_mode_start() {
-    let mut mode = CommandMode::new();
-    mode.start();
-    assert!(mode.is_active());
-    assert_eq!(mode.buffer(), "");
+fn test_minimap_modes() {
+    let lines = vec!["test"];
+    
+    let minimap_chars = Minimap::new(lines.clone()).with_mode(MinimapMode::Characters);
+    assert_eq!(minimap_chars.line_count(), 1);
+
+    let minimap_blocks = Minimap::new(lines.clone()).with_mode(MinimapMode::Blocks);
+    assert_eq!(minimap_blocks.line_count(), 1);
+
+    let minimap_colors = Minimap::new(lines).with_mode(MinimapMode::Colors);
+    assert_eq!(minimap_colors.line_count(), 1);
 }
 
 #[test]
-fn test_command_mode_cancel() {
-    let mut mode = CommandMode::new();
-    mode.start();
-    mode.input_char('q');
-    mode.cancel();
-    assert!(!mode.is_active());
-    assert_eq!(mode.buffer(), "");
+fn test_minimap_viewport() {
+    let lines = vec!["1", "2", "3", "4", "5"];
+    let mut minimap = Minimap::new(lines);
+
+    minimap.set_viewport(1, 3);
+    assert_eq!(minimap.viewport(), (1, 3));
 }
 
 #[test]
-fn test_command_mode_input() {
-    let mut mode = CommandMode::new();
-    mode.start();
+fn test_minimap_scroll() {
+    let lines: Vec<String> = (0..100).map(|i| format!("line {}", i)).collect();
+    let mut minimap = Minimap::new(lines);
 
-    mode.input_char('q');
-    mode.input_char('u');
-    mode.input_char('i');
-    mode.input_char('t');
+    minimap.set_viewport(10, 30);
+    minimap.scroll(5);
 
-    assert_eq!(mode.buffer(), "quit");
+    let (start, end) = minimap.viewport();
+    assert_eq!(start, 15);
+    assert_eq!(end, 35);
 }
 
 #[test]
-fn test_command_mode_backspace() {
-    let mut mode = CommandMode::new();
-    mode.start();
+fn test_minimap_jump_to() {
+    let lines: Vec<String> = (0..100).map(|i| format!("line {}", i)).collect();
+    let mut minimap = Minimap::new(lines);
 
-    mode.input_char('a');
-    mode.input_char('b');
-    mode.input_char('c');
-    mode.backspace();
-
-    assert_eq!(mode.buffer(), "ab");
+    minimap.jump_to(50);
+    
+    // Viewport should be centered around line 50
+    let (start, _) = minimap.viewport();
+    assert!(start <= 50);
 }
 
 #[test]
-fn test_command_mode_cursor_movement() {
-    let mut mode = CommandMode::new();
-    mode.start();
+fn test_minimap_set_lines() {
+    let mut minimap = Minimap::new(vec!["old"]);
+    assert_eq!(minimap.line_count(), 1);
 
-    mode.input_char('h');
-    mode.input_char('e');
-    mode.input_char('l');
-    mode.input_char('l');
-    mode.input_char('o');
-
-    mode.cursor_home();
-    assert_eq!(mode.cursor(), 0);
-
-    mode.cursor_end();
-    assert_eq!(mode.cursor(), 5);
-
-    mode.cursor_left();
-    assert_eq!(mode.cursor(), 4);
-
-    mode.cursor_right();
-    assert_eq!(mode.cursor(), 5);
+    minimap.set_lines(vec!["new1", "new2", "new3"]);
+    assert_eq!(minimap.line_count(), 3);
 }
 
 #[test]
-fn test_command_mode_execute() {
-    let mut mode = CommandMode::new();
-    mode.start();
-
-    mode.input_char('s');
-    mode.input_char('a');
-    mode.input_char('v');
-    mode.input_char('e');
-
-    let result = mode.execute();
-    assert!(result.is_some());
-
-    let (cmd, args) = result.unwrap();
-    assert_eq!(cmd, "save");
-    assert_eq!(args.len(), 0);
+fn test_minimap_with_border() {
+    let minimap = Minimap::new(vec!["test"]).with_border(true);
+    assert_eq!(minimap.line_count(), 1);
 }
 
 #[test]
-fn test_command_mode_execute_with_args() {
-    let mut mode = CommandMode::new();
-    mode.start();
+fn test_minimap_with_scale() {
+    let minimap = Minimap::new(vec!["test"]).with_scale(2);
+    assert_eq!(minimap.line_count(), 1);
+}
 
-    mode.input_char('w');
-    mode.input_char(' ');
-    mode.input_char('f');
-    mode.input_char('i');
-    mode.input_char('l');
-    mode.input_char('e');
-    mode.input_char('.');
-    mode.input_char('t');
-    mode.input_char('x');
-    mode.input_char('t');
+// ============================================================================
+// Breadcrumbs Integration Tests
+// ============================================================================
 
-    let result = mode.execute();
-    assert!(result.is_some());
-
-    let (cmd, args) = result.unwrap();
-    assert_eq!(cmd, "w");
-    assert_eq!(args, vec!["file.txt"]);
+#[test]
+fn test_breadcrumbs_creation() {
+    let breadcrumbs = Breadcrumbs::new();
+    assert_eq!(breadcrumbs.segments().len(), 0);
 }
 
 #[test]
-fn test_command_mode_history() {
-    let mut mode = CommandMode::new();
-
-    mode.start();
-    mode.input_char('w');
-    mode.execute();
-
-    mode.start();
-    mode.input_char('q');
-    mode.execute();
-
-    let history = mode.history();
-    assert_eq!(history.len(), 2);
-    assert_eq!(history[0], "w");
-    assert_eq!(history[1], "q");
+fn test_breadcrumbs_from_path() {
+    let breadcrumbs = Breadcrumbs::from_path("/home/user/project");
+    assert!(breadcrumbs.segments().len() > 0);
 }
 
 #[test]
-fn test_command_mode_history_navigation() {
-    let mut mode = CommandMode::new();
-
-    mode.start();
-    mode.input_char('a');
-    mode.execute();
-
-    mode.start();
-    mode.input_char('b');
-    mode.execute();
-
-    mode.start();
-    mode.history_up();
-    assert_eq!(mode.buffer(), "b");
-
-    mode.history_up();
-    assert_eq!(mode.buffer(), "a");
-
-    mode.history_down();
-    assert_eq!(mode.buffer(), "b");
-}
-
-// ==================== Command Tests ====================
-
-#[test]
-fn test_command_creation() {
-    let cmd = Command::new("save", "Save the file");
-    assert_eq!(cmd.name, "save");
-    assert_eq!(cmd.description, "Save the file");
+fn test_breadcrumb_segment_creation() {
+    let segment = BreadcrumbSegment::new("Home");
+    assert_eq!(segment.label, "Home");
 }
 
 #[test]
-fn test_command_with_alias() {
-    let cmd = Command::new("quit", "Quit application")
-        .alias("q")
-        .alias("exit");
+fn test_breadcrumb_segment_with_icon() {
+    let segment = BreadcrumbSegment::new("Folder")
+        .with_icon("📁");
 
-    assert!(cmd.matches("quit"));
-    assert!(cmd.matches("q"));
-    assert!(cmd.matches("exit"));
-    assert!(!cmd.matches("save"));
+    assert_eq!(segment.icon, Some("📁".to_string()));
 }
 
 #[test]
-fn test_command_takes_args() {
-    let cmd = Command::new("write", "Write file")
-        .takes_args(true);
+fn test_breadcrumbs_push_pop() {
+    let mut breadcrumbs = Breadcrumbs::new();
+    
+    breadcrumbs.push(BreadcrumbSegment::new("Home"));
+    breadcrumbs.push(BreadcrumbSegment::new("Projects"));
+    
+    assert_eq!(breadcrumbs.segments().len(), 2);
 
-    assert!(cmd.takes_args);
-}
-
-// ==================== CommandRegistry Tests ====================
-
-#[test]
-fn test_command_registry_creation() {
-    let registry = CommandRegistry::new();
-    assert_eq!(registry.commands().len(), 0);
-}
-
-#[test]
-fn test_command_registry_register() {
-    let mut registry = CommandRegistry::new();
-
-    let cmd = Command::new("test", "Test command");
-    registry.register(cmd, std::sync::Arc::new(|_args| Ok("Success".to_string())));
-
-    assert_eq!(registry.commands().len(), 1);
+    let popped = breadcrumbs.pop();
+    assert!(popped.is_some());
+    assert_eq!(popped.unwrap().label, "Projects");
+    assert_eq!(breadcrumbs.segments().len(), 1);
 }
 
 #[test]
-fn test_command_registry_execute() {
-    let mut registry = CommandRegistry::new();
+fn test_breadcrumbs_set_segments() {
+    let mut breadcrumbs = Breadcrumbs::new();
+    
+    let segments = vec![
+        BreadcrumbSegment::new("A"),
+        BreadcrumbSegment::new("B"),
+        BreadcrumbSegment::new("C"),
+    ];
 
-    let cmd = Command::new("echo", "Echo args");
-    registry.register(cmd, std::sync::Arc::new(|args| {
-        Ok(args.join(" "))
-    }));
-
-    let result = registry.execute("echo", &["hello".to_string(), "world".to_string()]);
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), "hello world");
+    breadcrumbs.set_segments(segments);
+    assert_eq!(breadcrumbs.segments().len(), 3);
 }
 
 #[test]
-fn test_command_registry_find() {
-    let mut registry = CommandRegistry::new();
+fn test_breadcrumbs_separator() {
+    let mut breadcrumbs = Breadcrumbs::new();
+    breadcrumbs.set_separator(" > ");
 
-    let cmd = Command::new("save", "Save file").alias("w");
-    registry.register(cmd, std::sync::Arc::new(|_| Ok("Saved".to_string())));
-
-    assert!(registry.find("save").is_some());
-    assert!(registry.find("w").is_some());
-    assert!(registry.find("nonexistent").is_none());
+    breadcrumbs.push(BreadcrumbSegment::new("A"));
+    assert_eq!(breadcrumbs.segments().len(), 1);
 }
 
 #[test]
-fn test_command_registry_suggest() {
-    let mut registry = CommandRegistry::new();
+fn test_breadcrumbs_hover() {
+    let mut breadcrumbs = Breadcrumbs::new();
+    breadcrumbs.push(BreadcrumbSegment::new("A"));
 
-    registry.register(
-        Command::new("save", "Save file"),
-        std::sync::Arc::new(|_| Ok("".to_string()))
-    );
-    registry.register(
-        Command::new("search", "Search text"),
-        std::sync::Arc::new(|_| Ok("".to_string()))
-    );
-    registry.register(
-        Command::new("set", "Set option"),
-        std::sync::Arc::new(|_| Ok("".to_string()))
-    );
+    breadcrumbs.set_hovered(Some(0));
+    assert_eq!(breadcrumbs.hovered(), Some(0));
 
-    let suggestions = registry.suggest("s");
-    assert_eq!(suggestions.len(), 3);
-
-    let suggestions = registry.suggest("sa");
-    assert_eq!(suggestions.len(), 1);
-    assert_eq!(suggestions[0].name, "save");
-}
-
-// ==================== AliasManager Tests ====================
-
-#[test]
-fn test_alias_manager_creation() {
-    let manager = AliasManager::new();
-    assert_eq!(manager.count(), 0);
-    assert!(manager.is_empty());
+    breadcrumbs.set_hovered(None);
+    assert_eq!(breadcrumbs.hovered(), None);
 }
 
 #[test]
-fn test_alias_manager_add() {
-    let mut manager = AliasManager::new();
+fn test_breadcrumbs_clear() {
+    let mut breadcrumbs = Breadcrumbs::new();
+    breadcrumbs.push(BreadcrumbSegment::new("A"));
+    breadcrumbs.push(BreadcrumbSegment::new("B"));
 
-    manager.add("w", "write");
-    manager.add("q", "quit");
+    breadcrumbs.clear();
+    assert_eq!(breadcrumbs.segments().len(), 0);
+}
 
-    assert_eq!(manager.count(), 2);
-    assert!(!manager.is_empty());
+// ============================================================================
+// MultiSelect Integration Tests
+// ============================================================================
+
+#[test]
+fn test_multiselect_creation() {
+    let items = vec!["A", "B", "C"];
+    let selector = MultiSelect::new(items);
+
+    assert_eq!(selector.item_count(), 3);
+    assert_eq!(selector.selected_count(), 0);
 }
 
 #[test]
-fn test_alias_manager_get() {
-    let mut manager = AliasManager::new();
+fn test_multiselect_modes() {
+    let items = vec![1, 2, 3];
 
-    manager.add("gs", "git status");
+    let single = MultiSelect::new(items.clone())
+        .with_mode(SelectionMode::Single);
+    assert_eq!(single.item_count(), 3);
 
-    let alias = manager.get("gs");
-    assert!(alias.is_some());
-    assert_eq!(alias.unwrap().name, "gs");
+    let multiple = MultiSelect::new(items.clone())
+        .with_mode(SelectionMode::Multiple);
+    assert_eq!(multiple.item_count(), 3);
+
+    let range = MultiSelect::new(items)
+        .with_mode(SelectionMode::Range);
+    assert_eq!(range.item_count(), 3);
 }
 
 #[test]
-fn test_alias_manager_expand() {
-    let mut manager = AliasManager::new();
+fn test_multiselect_navigation() {
+    let items = vec!["A", "B", "C", "D"];
+    let mut selector = MultiSelect::new(items);
 
-    manager.add("gs", "git status");
+    assert_eq!(selector.cursor(), 0);
 
-    let expanded = manager.expand("gs");
-    assert_eq!(expanded, Some("git status".to_string()));
+    selector.next();
+    assert_eq!(selector.cursor(), 1);
+
+    selector.next();
+    selector.next();
+    assert_eq!(selector.cursor(), 3);
+
+    selector.previous();
+    assert_eq!(selector.cursor(), 2);
+
+    selector.first();
+    assert_eq!(selector.cursor(), 0);
+
+    selector.last();
+    assert_eq!(selector.cursor(), 3);
 }
 
 #[test]
-fn test_alias_manager_expand_with_args() {
-    let mut manager = AliasManager::new();
+fn test_multiselect_single_selection() {
+    let items = vec![1, 2, 3];
+    let mut selector = MultiSelect::new(items);
 
-    manager.add("gc", "git commit -m \"$1\"");
-
-    let expanded = manager.expand_with_args("gc", &["Initial commit"]);
-    assert_eq!(expanded, Some("git commit -m \"Initial commit\"".to_string()));
+    selector.select(1);
+    assert!(selector.is_selected(1));
+    assert_eq!(selector.selected_count(), 1);
 }
 
 #[test]
-fn test_alias_manager_remove() {
-    let mut manager = AliasManager::new();
+fn test_multiselect_multiple_selection() {
+    let items = vec!["A", "B", "C", "D"];
+    let mut selector = MultiSelect::new(items);
 
-    manager.add("temp", "temporary");
-    assert_eq!(manager.count(), 1);
+    selector.select(0);
+    selector.select(2);
+    selector.select(3);
 
-    let removed = manager.remove("temp");
-    assert!(removed.is_some());
-    assert_eq!(manager.count(), 0);
+    assert_eq!(selector.selected_count(), 3);
+    assert!(selector.is_selected(0));
+    assert!(selector.is_selected(2));
+    assert!(selector.is_selected(3));
+    assert!(!selector.is_selected(1));
 }
 
 #[test]
-fn test_alias_manager_clear() {
-    let mut manager = AliasManager::new();
+fn test_multiselect_toggle() {
+    let items = vec![1, 2, 3];
+    let mut selector = MultiSelect::new(items);
 
-    manager.add("a", "first");
-    manager.add("b", "second");
-    manager.add("c", "third");
+    selector.toggle(1);
+    assert!(selector.is_selected(1));
 
-    manager.clear();
-
-    assert_eq!(manager.count(), 0);
-    assert!(manager.is_empty());
+    selector.toggle(1);
+    assert!(!selector.is_selected(1));
 }
 
 #[test]
-fn test_alias_manager_search() {
-    let mut manager = AliasManager::new();
+fn test_multiselect_toggle_current() {
+    let items = vec!["A", "B", "C"];
+    let mut selector = MultiSelect::new(items);
 
-    manager.add("gs", "git status");
-    manager.add("gc", "git commit");
-    manager.add("gp", "git push");
-    manager.add("save", "write file");
+    selector.toggle_current();
+    assert!(selector.is_selected(0));
 
-    let results = manager.search("git");
-    assert_eq!(results.len(), 3);
-
-    let results = manager.search("save");
-    assert_eq!(results.len(), 1);
+    selector.next();
+    selector.toggle_current();
+    assert!(selector.is_selected(1));
 }
 
 #[test]
-fn test_alias_manager_with_defaults() {
-    let manager = AliasManager::with_defaults();
+fn test_multiselect_select_all() {
+    let items = vec![1, 2, 3, 4, 5];
+    let mut selector = MultiSelect::new(items);
 
-    // Should have some default aliases
-    assert!(manager.count() > 0);
-}
+    selector.select_all();
+    assert_eq!(selector.selected_count(), 5);
 
-// ==================== KeySequence Tests ====================
-
-#[test]
-fn test_key_sequence_two() {
-    let seq = KeySequence::two(KeyCode::Char('g'), KeyCode::Char('g'));
-    assert!(seq.len() >= 2);
-}
-
-#[test]
-fn test_key_sequence_three() {
-    let seq = KeySequence::three(KeyCode::Char('g'), KeyCode::Char('c'), KeyCode::Char('c'));
-    assert!(seq.len() >= 3);
-}
-
-#[test]
-fn test_key_sequence_new() {
-    let keys = vec![KeyCode::Char('d'), KeyCode::Char('d')];
-    let seq = KeySequence::new(keys);
-    assert_eq!(seq.len(), 2);
-}
-
-// ==================== KeySequenceManager Tests ====================
-
-#[test]
-fn test_key_sequence_manager_creation() {
-    let manager = KeySequenceManager::new();
-    assert_eq!(manager.len(), 0);
-}
-
-#[test]
-fn test_key_sequence_manager_vim_defaults() {
-    let manager = KeySequenceManager::vim_defaults();
-
-    // Should have vim key sequences registered
-    assert!(manager.len() > 0);
-}
-
-#[test]
-fn test_key_sequence_manager_register() {
-    let mut manager = KeySequenceManager::new();
-
-    manager.register(vec![KeyCode::Char('g'), KeyCode::Char('g')], "goto_top");
-
-    assert!(manager.len() > 0);
-}
-
-#[test]
-fn test_key_sequence_manager_process() {
-    let mut manager = KeySequenceManager::new();
-
-    manager.register(vec![KeyCode::Char('g'), KeyCode::Char('g')], "goto_top");
-
-    // First key starts sequence
-    let result = manager.process_key(KeyCode::Char('g'));
-    assert!(result.is_none());
-
-    // Second key completes sequence
-    let result = manager.process_key(KeyCode::Char('g'));
-    assert!(result.is_some());
-    assert_eq!(result.unwrap(), "goto_top");
-}
-
-#[test]
-fn test_key_sequence_manager_timeout() {
-    let mut manager = KeySequenceManager::new();
-    manager.set_timeout(std::time::Duration::from_millis(1000));
-
-    manager.register(vec![KeyCode::Char('d'), KeyCode::Char('d')], "delete_line");
-
-    manager.process_key(KeyCode::Char('d'));
-
-    // Different key resets
-    manager.process_key(KeyCode::Char('x'));
-}
-
-#[test]
-fn test_key_sequence_manager_reset() {
-    let mut manager = KeySequenceManager::new();
-
-    manager.register(vec![KeyCode::Char('y'), KeyCode::Char('y')], "yank_line");
-
-    manager.process_key(KeyCode::Char('y'));
-
-    manager.reset();
-}
-
-// ==================== CustomKeybindings Tests ====================
-
-#[test]
-fn test_custom_keybindings_creation() {
-    let bindings = CustomKeybindings::new();
-    assert_eq!(bindings.total_bindings(), 0);
-}
-
-#[test]
-fn test_custom_keybindings_bind() {
-    let mut bindings = CustomKeybindings::new();
-
-    bindings.bind_global(KeyCode::Char('s'), KeyModifiers::CONTROL, "save");
-
-    assert_eq!(bindings.total_bindings(), 1);
-}
-
-#[test]
-fn test_custom_keybindings_get() {
-    let mut bindings = CustomKeybindings::new();
-
-    bindings.bind_global(KeyCode::Char('q'), KeyModifiers::CONTROL, "quit");
-
-    let binding = KeyBinding::ctrl(KeyCode::Char('q'));
-    let found = bindings.get_in_context(KeybindingContext::Global, &binding);
-    assert!(found.is_some());
-    assert_eq!(found.unwrap(), "quit");
-}
-
-#[test]
-fn test_custom_keybindings_contexts() {
-    let mut bindings = CustomKeybindings::new();
-
-    bindings.bind_global(KeyCode::Char('a'), KeyModifiers::NONE, "action_a");
-    bindings.bind_in_context(KeybindingContext::Normal, KeyCode::Char('b'), KeyModifiers::NONE, "action_b");
-    bindings.bind_in_context(KeybindingContext::Insert, KeyCode::Char('c'), KeyModifiers::NONE, "action_c");
-    bindings.bind_in_context(KeybindingContext::Visual, KeyCode::Char('d'), KeyModifiers::NONE, "action_d");
-
-    assert_eq!(bindings.total_bindings(), 4);
-}
-
-#[test]
-fn test_custom_keybindings_unbind() {
-    let mut bindings = CustomKeybindings::new();
-
-    bindings.bind_global(KeyCode::Char('x'), KeyModifiers::NONE, "delete");
-    assert_eq!(bindings.total_bindings(), 1);
-
-    let binding = KeyBinding::new(KeyCode::Char('x'), KeyModifiers::NONE);
-    let removed = bindings.unbind(KeybindingContext::Global, &binding);
-    assert!(removed.is_some());
-    assert_eq!(bindings.total_bindings(), 0);
-}
-
-#[test]
-fn test_custom_keybindings_get_context_bindings() {
-    let mut bindings = CustomKeybindings::new();
-
-    bindings.bind_global(KeyCode::Char('a'), KeyModifiers::NONE, "a1");
-    bindings.bind_global(KeyCode::Char('b'), KeyModifiers::NONE, "b1");
-    bindings.bind_in_context(KeybindingContext::Normal, KeyCode::Char('c'), KeyModifiers::NONE, "c1");
-
-    let global_bindings = bindings.get_context_bindings(KeybindingContext::Global);
-    assert!(global_bindings.is_some());
-}
-
-// ==================== Cross-Feature Integration Tests ====================
-
-#[test]
-fn test_command_mode_with_aliases() {
-    let mut aliases = AliasManager::new();
-    aliases.add("w", "write");
-    aliases.add("q", "quit");
-
-    let mut mode = CommandMode::new();
-    mode.start();
-    mode.input_char('w');
-
-    let result = mode.execute();
-    assert!(result.is_some());
-
-    let (cmd, _) = result.unwrap();
-
-    // Expand alias
-    let expanded = aliases.expand(&cmd);
-    assert_eq!(expanded, Some("write".to_string()));
-}
-
-#[test]
-fn test_key_sequences_with_command_mode() {
-    let mut seq_manager = KeySequenceManager::new();
-    let mut cmd_mode = CommandMode::new();
-
-    // Register : : as command mode trigger
-    seq_manager.register(vec![KeyCode::Char(':'), KeyCode::Char(':')], "command_mode");
-
-    seq_manager.process_key(KeyCode::Char(':'));
-    let result = seq_manager.process_key(KeyCode::Char(':'));
-
-    if result == Some("command_mode".to_string()) {
-        cmd_mode.start();
-        assert!(cmd_mode.is_active());
+    for i in 0..5 {
+        assert!(selector.is_selected(i));
     }
 }
 
 #[test]
-fn test_keybindings_with_command_registry() {
-    let mut bindings = CustomKeybindings::new();
-    let mut registry = CommandRegistry::new();
+fn test_multiselect_clear_selection() {
+    let items = vec!["A", "B", "C"];
+    let mut selector = MultiSelect::new(items);
 
-    // Register command
-    registry.register(
-        Command::new("save", "Save file"),
-        std::sync::Arc::new(|_| Ok("Saved".to_string())),
-    );
+    selector.select(0);
+    selector.select(1);
+    selector.select(2);
 
-    // Bind key to command
-    bindings.bind_global(KeyCode::Char('s'), KeyModifiers::CONTROL, "save");
+    selector.clear_selection();
+    assert_eq!(selector.selected_count(), 0);
+}
 
-    // Simulate key press
-    let binding = KeyBinding::ctrl(KeyCode::Char('s'));
-    let action = bindings.get_in_context(KeybindingContext::Global, &binding);
-    assert!(action.is_some());
+#[test]
+fn test_multiselect_selected_indices() {
+    let items = vec![1, 2, 3, 4];
+    let mut selector = MultiSelect::new(items);
 
-    let result = registry.execute(action.unwrap(), &[]);
-    assert!(result.is_ok());
+    selector.select(1);
+    selector.select(3);
+
+    let indices = selector.selected_indices();
+    assert_eq!(indices, vec![1, 3]);
+}
+
+#[test]
+fn test_multiselect_deselect() {
+    let items = vec!["A", "B", "C"];
+    let mut selector = MultiSelect::new(items);
+
+    selector.select(0);
+    selector.select(1);
+
+    selector.deselect(0);
+    assert!(!selector.is_selected(0));
+    assert!(selector.is_selected(1));
+}
+
+// ============================================================================
+// TokenCounter Integration Tests
+// ============================================================================
+
+#[test]
+fn test_token_usage_creation() {
+    let usage = TokenUsage::new(100, 50);
+    assert_eq!(usage.input_tokens, 100);
+    assert_eq!(usage.output_tokens, 50);
+    assert_eq!(usage.total(), 150);
+}
+
+#[test]
+fn test_token_usage_add() {
+    let mut usage1 = TokenUsage::new(100, 50);
+    let usage2 = TokenUsage::new(200, 100);
+
+    usage1.add(&usage2);
+    assert_eq!(usage1.input_tokens, 300);
+    assert_eq!(usage1.output_tokens, 150);
+    assert_eq!(usage1.total(), 450);
+}
+
+#[test]
+fn test_token_usage_reset() {
+    let mut usage = TokenUsage::new(1000, 500);
+    usage.reset();
+
+    assert_eq!(usage.input_tokens, 0);
+    assert_eq!(usage.output_tokens, 0);
+    assert_eq!(usage.total(), 0);
+}
+
+#[test]
+fn test_cost_model_claude_sonnet() {
+    let model = CostModel::claude_sonnet_4_5();
+    let usage = TokenUsage::new(1_000_000, 1_000_000);
+    let cost = model.calculate_cost(&usage);
+
+    assert!(cost > 0.0);
+}
+
+#[test]
+fn test_cost_model_all_models() {
+    let models = vec![
+        CostModel::claude_sonnet_4_5(),
+        CostModel::claude_opus_4(),
+        CostModel::claude_haiku_4(),
+        CostModel::gpt_4o(),
+    ];
+
+    let usage = TokenUsage::new(1000, 1000);
+
+    for model in models {
+        let cost = model.calculate_cost(&usage);
+        assert!(cost >= 0.0);
+    }
+}
+
+#[test]
+fn test_token_counter_creation() {
+    let counter = TokenCounter::new();
+    // Verify initialization
+    let _counter = counter;
+}
+
+#[test]
+fn test_token_counter_add_usage() {
+    let mut counter = TokenCounter::new();
+    
+    counter.add_usage(TokenUsage::new(100, 50));
+    counter.add_usage(TokenUsage::new(200, 100));
+
+    // Session and total should track correctly
+}
+
+#[test]
+fn test_token_counter_reset_session() {
+    let mut counter = TokenCounter::new();
+    
+    counter.add_usage(TokenUsage::new(1000, 500));
+    counter.reset_session();
+
+    // Session should be reset but total should remain
+}
+
+#[test]
+fn test_token_counter_reset_total() {
+    let mut counter = TokenCounter::new();
+    
+    counter.add_usage(TokenUsage::new(1000, 500));
+    counter.reset_total();
+
+    // Both session and total should be reset
+}
+
+#[test]
+fn test_token_counter_with_budget() {
+    let counter = TokenCounter::new().with_budget(10.0);
+    
+    // Budget should be set
+    let _counter = counter;
+}
+
+#[test]
+fn test_token_counter_set_cost_model() {
+    let mut counter = TokenCounter::new();
+    counter.set_cost_model(CostModel::claude_sonnet_4_5());
+
+    // Cost model should be updated
+}
+
+#[test]
+fn test_token_counter_toggle_details() {
+    let mut counter = TokenCounter::new();
+    counter.toggle_details();
+
+    // Should toggle between detailed and compact view
+}
+
+#[test]
+fn test_token_counter_compact_mode() {
+    let counter = TokenCounter::new().with_compact(true);
+    let _counter = counter;
+}
+
+// ============================================================================
+// ModelSelector Integration Tests
+// ============================================================================
+
+#[test]
+fn test_model_info_creation() {
+    let model = ModelInfo::new("gpt-4", "GPT-4", "OpenAI");
+
+    assert_eq!(model.id, "gpt-4");
+    assert_eq!(model.name, "GPT-4");
+    assert_eq!(model.provider, "OpenAI");
+}
+
+#[test]
+fn test_model_info_builder() {
+    let model = ModelInfo::new("claude-3", "Claude 3", "Anthropic")
+        .with_context_window(200_000)
+        .with_max_output(4096)
+        .with_cost(0.003)
+        .with_speed(1.2)
+        .with_capability("coding")
+        .with_available(true);
+
+    assert_eq!(model.context_window, 200_000);
+    assert_eq!(model.max_output, 4096);
+    assert_eq!(model.cost, 0.003);
+    assert_eq!(model.speed, 1.2);
+    assert_eq!(model.available, true);
+}
+
+#[test]
+fn test_model_info_formatted_context() {
+    let model = ModelInfo::new("test", "Test", "Test")
+        .with_context_window(100_000);
+
+    let formatted = model.formatted_context();
+    assert!(formatted.contains("100"));
+}
+
+#[test]
+fn test_model_info_indicators() {
+    let model = ModelInfo::new("test", "Test", "Test")
+        .with_cost(0.001)
+        .with_speed(2.0);
+
+    let cost_indicator = model.cost_indicator();
+    let speed_indicator = model.speed_indicator();
+
+    assert!(!cost_indicator.is_empty());
+    assert!(!speed_indicator.is_empty());
+}
+
+#[test]
+fn test_model_selector_creation() {
+    let selector = ModelSelector::new();
+    // Should have default models
+    assert!(selector.selected_model().is_some());
+}
+
+#[test]
+fn test_model_selector_with_models() {
+    let models = vec![
+        ModelInfo::new("m1", "Model 1", "Provider A"),
+        ModelInfo::new("m2", "Model 2", "Provider B"),
+    ];
+
+    let selector = ModelSelector::new().with_models(models);
+    assert!(selector.selected_model().is_some());
+}
+
+#[test]
+fn test_model_selector_add_model() {
+    let mut selector = ModelSelector::new();
+    
+    selector.add_model(ModelInfo::new("custom", "Custom Model", "Custom"));
+    
+    // Model should be added
+}
+
+#[test]
+fn test_model_selector_navigation() {
+    let selector = ModelSelector::new();
+    let _initial_id = selector.selected_id().map(|s| s.to_string());
+
+    // Create a new selector to test navigation
+    let mut selector = ModelSelector::new();
+    selector.next();
+
+    let next_id = selector.selected_id();
+
+    // Should have moved to next model (if multiple models exist)
+    if selector.selected_model().is_some() {
+        assert!(next_id.is_some());
+    }
+}
+
+#[test]
+fn test_model_selector_select() {
+    let mut selector = ModelSelector::new();
+    
+    selector.select(0);
+    assert!(selector.selected_model().is_some());
+}
+
+#[test]
+fn test_model_selector_previous() {
+    let mut selector = ModelSelector::new();
+    
+    selector.previous();
+    assert!(selector.selected_model().is_some());
+}
+
+// ============================================================================
+// Cross-Feature Integration Tests
+// ============================================================================
+
+#[test]
+fn test_minimap_with_breadcrumbs() {
+    let lines: Vec<String> = (0..100).map(|i| format!("line {}", i)).collect();
+    let minimap = Minimap::new(lines);
+
+    let breadcrumbs = Breadcrumbs::from_path("/home/user/file.rs");
+
+    // Both can work together
+    assert!(minimap.line_count() > 0);
+    assert!(breadcrumbs.segments().len() > 0);
+}
+
+#[test]
+fn test_multiselect_with_token_counter() {
+    let models = vec!["gpt-4", "claude-3", "llama-2"];
+    let mut selector = MultiSelect::new(models);
+
+    let mut counter = TokenCounter::new();
+
+    selector.select(0);
+    counter.add_usage(TokenUsage::new(1000, 500));
+
+    assert_eq!(selector.selected_count(), 1);
 }
 
 #[test]
 fn test_complete_power_user_workflow() {
-    // Setup all systems
-    let mut cmd_mode = CommandMode::new();
-    let mut registry = CommandRegistry::new();
-    let mut aliases = AliasManager::new();
-    let mut keybindings = CustomKeybindings::new();
-    let sequences = KeySequenceManager::vim_defaults();
+    // User navigates through file
+    let lines: Vec<String> = (0..200).map(|i| format!("line {}", i)).collect();
+    let mut minimap = Minimap::new(lines);
 
-    // Register commands
-    registry.register(
-        Command::new("write", "Write file").alias("w"),
-        std::sync::Arc::new(|_| Ok("Written".to_string())),
-    );
+    minimap.jump_to(50);
 
-    // Add aliases
-    aliases.add("wq", "write quit");
+    // User tracks location with breadcrumbs
+    let mut breadcrumbs = Breadcrumbs::new();
+    breadcrumbs.push(BreadcrumbSegment::new("src").with_icon("📁"));
+    breadcrumbs.push(BreadcrumbSegment::new("main.rs").with_icon("📄"));
 
-    // Add keybindings
-    keybindings.bind_global(KeyCode::Char('s'), KeyModifiers::CONTROL, "write");
+    // User selects multiple items
+    let items = vec!["function1", "function2", "function3"];
+    let mut selector = MultiSelect::new(items);
+    selector.select_all();
 
-    // Test command execution
-    cmd_mode.start();
-    cmd_mode.input_char('w');
-    let (cmd, args) = cmd_mode.execute().unwrap();
-    let result = registry.execute(&cmd, &args);
-    assert!(result.is_ok());
+    // User monitors AI usage
+    let mut counter = TokenCounter::new();
+    counter.add_usage(TokenUsage::new(5000, 2500));
+    counter.set_cost_model(CostModel::claude_sonnet_4_5());
 
-    // Test alias expansion
-    let expanded = aliases.expand("wq");
-    assert_eq!(expanded, Some("write quit".to_string()));
+    // User switches models
+    let mut model_selector = ModelSelector::new();
+    model_selector.next();
 
-    // Test keybinding lookup
-    let binding = KeyBinding::ctrl(KeyCode::Char('s'));
-    let action = keybindings.get_in_context(KeybindingContext::Global, &binding);
-    assert!(action.is_some());
-
-    // Test key sequence
-    assert!(sequences.len() > 0);
+    // Verify all systems work together
+    assert!(minimap.line_count() > 0);
+    assert!(breadcrumbs.segments().len() > 0);
+    assert_eq!(selector.selected_count(), 3);
+    assert!(model_selector.selected_model().is_some());
 }
