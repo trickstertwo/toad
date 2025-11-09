@@ -5,6 +5,8 @@
 pub mod animations;
 pub mod box_drawing;
 pub mod canvas;
+pub mod enhanced_borders;
+pub mod gradient;
 pub mod logo;
 pub mod nerd_fonts;
 pub mod responsive_layout;
@@ -16,6 +18,8 @@ pub mod widgets;
 pub use animations::{Animation, AnimationState, EasingFunction, TransitionManager};
 pub use box_drawing::{BoxBuilder, BoxChars, BoxStyle};
 pub use canvas::{Canvas, Pixel, Shape};
+pub use enhanced_borders::{BorderEffect, BorderStyles, BorderThickness, CornerStyle, EnhancedBorder};
+pub use gradient::{ColorStop, Gradient, GradientDirection, GradientType, Gradients};
 pub use nerd_fonts::{GitStatus, NerdFonts, UiIcon, supports_nerd_fonts};
 pub use responsive_layout::{ResponsiveLayout, ScreenSize};
 pub use syntax::{HighlightTheme, HighlightedSpan, Language, SyntaxHighlighter};

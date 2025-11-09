@@ -621,16 +621,18 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
   - **Quick Move**: m + column number to move card
   - **Archive**: x to archive completed cards
 
-- [ ] **Visual Polish** (Best-in-class aesthetics)
-  - **Smooth Animations**: Card drag, column collapse, view transitions
-  - **Board Backgrounds**: Gradients, patterns, or uploaded images
-  - **Dark/Light Themes**: Auto-switch based on terminal theme
-  - **Emoji Support**: 🎯 🔥 ✨ in card titles and tags
-  - **Nerd Font Icons**: Beautiful file type, priority, and status icons
+- [x] **Visual Polish** (Best-in-class aesthetics) ✅ PARTIALLY COMPLETED
+  - [x] **Gradient Rendering**: Linear/radial gradients with color interpolation ✅ (Gradient module with 6 predefined gradients, fallback support, 16 unit tests)
+  - [x] **Enhanced Borders**: Gradient borders, shadows, rounded corners, glow effects ✅ (EnhancedBorder with 4 effects, 3 thicknesses, 7 predefined styles, 17 unit tests)
+  - [x] **Smooth Animations**: Card drag, column collapse, view transitions ✅ (Animation module already exists)
+  - [ ] **Board Backgrounds**: Gradients, patterns, or uploaded images (gradient support ready, integration pending)
+  - [x] **Dark/Light Themes**: Auto-switch based on terminal theme ✅ (Theme system already exists)
+  - **Emoji Support**: 🎯 🔥 ✨ in card titles and tags (already supported in Rust/Ratatui)
+  - [x] **Nerd Font Icons**: Beautiful file type, priority, and status icons ✅ (NerdFonts module already exists)
 
 #### Mobile-First Features (Adapted for TUI)
 - [x] **Compact Mode**: Condensed view for smaller terminals ✅ COMPLETED (ResponsiveLayout with automatic compact mode detection, force_compact flag, screen size detection)
-- [ ] **Card Previews**: Hover to expand card without opening details
+- [x] **Card Previews**: Hover to expand card without opening details ✅ COMPLETED (CardPreview widget with priority/tags/status/description, 5 preview positions, scrolling support, 17 unit tests)
 - [x] **Smart Truncation**: Intelligent text ellipsis with expand-on-demand ✅ COMPLETED (SmartTruncate with 6 strategies: end/start/middle/filename/path/word-boundary, auto-detection, 12/18 unit tests passing)
 - [x] **Responsive Layouts**: Auto-adjust columns based on terminal width ✅ COMPLETED (ResponsiveLayout with 5 screen sizes, adaptive splits, sidebar/three-pane layouts, 15 unit tests)
 - [ ] **Touch-friendly**: Mouse click/drag optimized for trackpad gestures
@@ -674,8 +676,8 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [ ] **Windows Support** - Full functionality on Windows
 - [ ] **macOS Support** - Native experience
 - [ ] **Linux Support** - Distro-agnostic
-- [ ] **Terminal Detection** - Adapt to terminal capabilities
-- [ ] **Fallback Modes** - Degrade gracefully on limited terminals
+- [x] **Terminal Detection** - Adapt to terminal capabilities ✅ COMPLETED (TerminalCapabilities with color/Unicode/mouse detection, 4 feature levels, 6 unit tests)
+- [x] **Fallback Modes** - Degrade gracefully on limited terminals ✅ COMPLETED (FallbackMode with color/border/icon fallbacks, 12 unit tests)
 
 ### Documentation & Onboarding
 - [x] **Interactive Tutorial** - First-run walkthrough ✅ COMPLETED (InteractiveTutorial widget with step-by-step guide, progress tracking, hints, 6 default steps, 11 unit tests)

@@ -11,11 +11,13 @@ pub mod custom_keybindings;
 pub mod data_portability;
 pub mod diff;
 pub mod errors;
+pub mod fallback_mode;
 pub mod file_ops;
 pub mod history;
 pub mod key_sequences;
 pub mod keybinds;
 pub mod mouse;
+pub mod terminal_capabilities;
 pub mod text_truncation;
 pub mod validation;
 
@@ -29,11 +31,13 @@ pub use custom_keybindings::{ContextualBinding, CustomKeybindings, KeybindingCon
 pub use data_portability::{DataExporter, DataFormat, DataImporter};
 pub use diff::{ChunkHeader, DiffHunk, DiffLine, DiffLineType, DiffParser, DiffStats, FileDiff};
 pub use errors::{ErrorEntry, ErrorHandler, ErrorSeverity};
+pub use fallback_mode::{BoxChars, FallbackMode};
 pub use file_ops::{FileOpResult, FileOps};
 pub use history::History;
 pub use key_sequences::{KeySequence, KeySequenceManager};
 pub use keybinds::{KeyBinding, KeyBindings};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
+pub use terminal_capabilities::{ColorSupport, FeatureLevel, TerminalCapabilities};
 pub use text_truncation::{SmartTruncate, TruncationStrategy};
 pub use validation::{
     CompositeValidator, InputValidator, LengthValidator, NotEmptyValidator, RegexValidator,
