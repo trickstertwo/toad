@@ -353,7 +353,8 @@ mod tests {
 
     #[test]
     fn test_render_content_includes_keybindings() {
-        let backend = TestBackend::new(80, 24);
+        // Use larger terminal to ensure content is visible
+        let backend = TestBackend::new(120, 40);
         let mut terminal = Terminal::new(backend).unwrap();
 
         let help = HelpScreen::new();
@@ -369,22 +370,21 @@ mod tests {
         let buffer = terminal.backend().buffer().clone();
         let content = buffer.content();
 
-        // Convert buffer to string to check for key content
-        let mut found_ctrl_c = false;
-        let mut found_help_command = false;
-
+        // Build complete text by concatenating adjacent cells
+        let mut rendered_text = String::new();
         for cell in content.iter() {
-            let cell_str = cell.symbol();
-            if cell_str.contains("Ctrl") || cell_str == "c" {
-                found_ctrl_c = true;
-            }
-            if cell_str.contains("help") {
-                found_help_command = true;
-            }
+            rendered_text.push_str(cell.symbol());
         }
 
-        // At least some content should be rendered
-        assert!(found_ctrl_c || found_help_command);
+        let lower_text = rendered_text.to_lowercase();
+
+        // Check for key content in the complete rendered text
+        let found_ctrl = lower_text.contains("ctrl");
+        let found_help = lower_text.contains("help");
+
+        // Both should be found in the rendered content
+        assert!(found_ctrl, "Should find 'Ctrl' in keybindings");
+        assert!(found_help, "Should find 'help' in keybindings or help text");
     }
 
     #[test]

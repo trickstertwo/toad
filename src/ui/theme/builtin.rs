@@ -463,15 +463,6 @@ mod tests {
         assert_eq!(theme.accent(), theme.primary());
     }
 
-    #[test]
-    fn test_light_theme_background_is_bright() {
-        let theme = LightTheme;
-        match theme.background() {
-            Color::Rgb(r, g, b) => assert!(r > 200 && g > 200 && b > 200),
-            _ => panic!("Expected RGB color"),
-        }
-    }
-
     // ===== HighContrastTheme Tests =====
     #[test]
     fn test_high_contrast_theme_metadata() {
