@@ -178,10 +178,7 @@ mod tests {
     #[test]
     fn test_event_tick_variant() {
         let event = Event::Tick;
-        match event {
-            Event::Tick => {} // Success
-            _ => panic!("Event should be Tick variant"),
-        }
+        assert!(matches!(event, Event::Tick));
     }
 
     #[test]
@@ -189,12 +186,9 @@ mod tests {
         let key_event = KeyEvent::new(KeyCode::Char('a'), KeyModifiers::NONE);
         let event = Event::Key(key_event);
 
-        match event {
-            Event::Key(k) => {
-                assert_eq!(k.code, KeyCode::Char('a'));
-                assert_eq!(k.modifiers, KeyModifiers::NONE);
-            }
-            _ => panic!("Event should be Key variant"),
+        if let Event::Key(k) = event {
+            assert_eq!(k.code, KeyCode::Char('a'));
+            assert_eq!(k.modifiers, KeyModifiers::NONE);
         }
     }
 
@@ -202,31 +196,22 @@ mod tests {
     fn test_event_resize_variant() {
         let event = Event::Resize(100, 50);
 
-        match event {
-            Event::Resize(width, height) => {
-                assert_eq!(width, 100);
-                assert_eq!(height, 50);
-            }
-            _ => panic!("Event should be Resize variant"),
+        if let Event::Resize(width, height) = event {
+            assert_eq!(width, 100);
+            assert_eq!(height, 50);
         }
     }
 
     #[test]
     fn test_event_quit_variant() {
         let event = Event::Quit;
-        match event {
-            Event::Quit => {} // Success
-            _ => panic!("Event should be Quit variant"),
-        }
+        assert!(matches!(event, Event::Quit));
     }
 
     #[test]
     fn test_event_cancel_evaluation_variant() {
         let event = Event::CancelEvaluation;
-        match event {
-            Event::CancelEvaluation => {} // Success
-            _ => panic!("Event should be CancelEvaluation variant"),
-        }
+        assert!(matches!(event, Event::CancelEvaluation));
     }
 
     #[test]
@@ -234,11 +219,8 @@ mod tests {
         let error_msg = "Failed to load dataset".to_string();
         let event = Event::EvaluationError(error_msg.clone());
 
-        match event {
-            Event::EvaluationError(msg) => {
-                assert_eq!(msg, "Failed to load dataset");
-            }
-            _ => panic!("Event should be EvaluationError variant"),
+        if let Event::EvaluationError(msg) = event {
+            assert_eq!(msg, "Failed to load dataset");
         }
     }
 
@@ -254,10 +236,9 @@ mod tests {
         let event1 = Event::Quit;
         let event2 = event1.clone();
 
-        match (event1, event2) {
-            (Event::Quit, Event::Quit) => {} // Both should be Quit
-            _ => panic!("Clone should preserve event type"),
-        }
+        // Both should be Quit
+        assert!(matches!(event1, Event::Quit));
+        assert!(matches!(event2, Event::Quit));
     }
 
     #[test]
@@ -367,12 +348,9 @@ mod tests {
         };
         let event = Event::Mouse(mouse_event);
 
-        match event {
-            Event::Mouse(m) => {
-                assert_eq!(m.column, 10);
-                assert_eq!(m.row, 5);
-            }
-            _ => panic!("Event should be Mouse variant"),
+        if let Event::Mouse(m) = event {
+            assert_eq!(m.column, 10);
+            assert_eq!(m.row, 5);
         }
     }
 
@@ -388,12 +366,9 @@ mod tests {
         };
         let event = Event::StartEvaluation(eval_args.clone());
 
-        match event {
-            Event::StartEvaluation(args) => {
-                assert_eq!(args.count, Some(10));
-                assert_eq!(args.milestone, 1);
-            }
-            _ => panic!("Event should be StartEvaluation variant"),
+        if let Event::StartEvaluation(args) = event {
+            assert_eq!(args.count, Some(10));
+            assert_eq!(args.milestone, 1);
         }
     }
 
@@ -410,13 +385,10 @@ mod tests {
         };
         let event = Event::StartComparison(compare_args.clone());
 
-        match event {
-            Event::StartComparison(args) => {
-                assert_eq!(args.count, Some(20));
-                assert_eq!(args.baseline, 1);
-                assert_eq!(args.test, 2);
-            }
-            _ => panic!("Event should be StartComparison variant"),
+        if let Event::StartComparison(args) = event {
+            assert_eq!(args.count, Some(20));
+            assert_eq!(args.baseline, 1);
+            assert_eq!(args.test, 2);
         }
     }
 
@@ -436,13 +408,10 @@ mod tests {
         };
         let event = Event::EvaluationProgress(progress.clone());
 
-        match event {
-            Event::EvaluationProgress(p) => {
-                assert_eq!(p.current_task, 5);
-                assert_eq!(p.total_tasks, 10);
-                assert_eq!(p.task_id, "task_789");
-            }
-            _ => panic!("Event should be EvaluationProgress variant"),
+        if let Event::EvaluationProgress(p) = event {
+            assert_eq!(p.current_task, 5);
+            assert_eq!(p.total_tasks, 10);
+            assert_eq!(p.task_id, "task_789");
         }
     }
 
@@ -465,13 +434,10 @@ mod tests {
         };
         let event = Event::EvaluationComplete(results);
 
-        match event {
-            Event::EvaluationComplete(r) => {
-                assert_eq!(r.total_tasks, 10);
-                assert_eq!(r.tasks_solved, 8);
-                assert_eq!(r.accuracy, 0.8);
-            }
-            _ => panic!("Event should be EvaluationComplete variant"),
+        if let Event::EvaluationComplete(r) = event {
+            assert_eq!(r.total_tasks, 10);
+            assert_eq!(r.tasks_solved, 8);
+            assert_eq!(r.accuracy, 0.8);
         }
     }
 
@@ -482,12 +448,10 @@ mod tests {
         let event1 = Event::Key(key_event);
         let event2 = event1.clone();
 
-        match (event1, event2) {
-            (Event::Key(k1), Event::Key(k2)) => {
-                assert_eq!(k1.code, k2.code);
-                assert_eq!(k1.modifiers, k2.modifiers);
-            }
-            _ => panic!("Both should be Key events"),
+        // Extract and compare key events
+        if let (Event::Key(k1), Event::Key(k2)) = (event1, event2) {
+            assert_eq!(k1.code, k2.code);
+            assert_eq!(k1.modifiers, k2.modifiers);
         }
     }
 
@@ -496,12 +460,10 @@ mod tests {
         let event1 = Event::Resize(200, 100);
         let event2 = event1.clone();
 
-        match (event1, event2) {
-            (Event::Resize(w1, h1), Event::Resize(w2, h2)) => {
-                assert_eq!(w1, w2);
-                assert_eq!(h1, h2);
-            }
-            _ => panic!("Both should be Resize events"),
+        // Extract and compare resize events
+        if let (Event::Resize(w1, h1), Event::Resize(w2, h2)) = (event1, event2) {
+            assert_eq!(w1, w2);
+            assert_eq!(h1, h2);
         }
     }
 
@@ -510,11 +472,9 @@ mod tests {
         let event1 = Event::EvaluationError("Connection failed".to_string());
         let event2 = event1.clone();
 
-        match (event1, event2) {
-            (Event::EvaluationError(e1), Event::EvaluationError(e2)) => {
-                assert_eq!(e1, e2);
-            }
-            _ => panic!("Both should be EvaluationError events"),
+        // Extract and compare error messages
+        if let (Event::EvaluationError(e1), Event::EvaluationError(e2)) = (event1, event2) {
+            assert_eq!(e1, e2);
         }
     }
 
@@ -634,13 +594,65 @@ mod tests {
     // ===== Event Variant Matching Exhaustiveness =====
     #[test]
     fn test_event_match_all_variants() {
-        // Ensure all Event variants can be matched
+        use crate::ai::eval_commands::{CompareArgs, EvalArgs};
+        use crate::ai::evaluation::{DatasetSource, EvaluationResults};
+        use crossterm::event::{MouseButton, MouseEventKind};
+        use std::collections::HashMap;
+        use chrono::Utc;
+
+        // Create instances of all Event variants
         let events: Vec<Event> = vec![
             Event::Tick,
             Event::Quit,
             Event::CancelEvaluation,
+            Event::Key(KeyEvent::new(KeyCode::Char('a'), KeyModifiers::NONE)),
+            Event::Mouse(crossterm::event::MouseEvent {
+                kind: MouseEventKind::Down(MouseButton::Left),
+                column: 0,
+                row: 0,
+                modifiers: KeyModifiers::NONE,
+            }),
+            Event::Resize(80, 24),
+            Event::StartEvaluation(EvalArgs {
+                count: Some(1),
+                dataset: DatasetSource::Verified,
+                milestone: 1,
+                output: None,
+            }),
+            Event::StartComparison(CompareArgs {
+                count: Some(1),
+                dataset: DatasetSource::Verified,
+                baseline: 1,
+                test: 2,
+                output: None,
+            }),
+            Event::EvaluationProgress(EvaluationProgress {
+                current_task: 1,
+                total_tasks: 1,
+                task_id: "test".to_string(),
+                current_step: None,
+                max_steps: None,
+                last_tool: None,
+                total_tokens: 0,
+                total_cost: 0.0,
+                message: None,
+                last_result: None,
+            }),
+            Event::EvaluationComplete(EvaluationResults {
+                config_name: "test".to_string(),
+                results: vec![],
+                accuracy: 0.0,
+                avg_cost_usd: 0.0,
+                avg_duration_ms: 0.0,
+                total_tasks: 0,
+                tasks_solved: 0,
+                by_complexity: HashMap::new(),
+                timestamp: Utc::now(),
+            }),
+            Event::EvaluationError("test error".to_string()),
         ];
 
+        // Ensure all Event variants can be matched
         for event in events {
             match event {
                 Event::Tick => {}
