@@ -348,4 +348,227 @@ mod tests {
         assert_eq!(spinner.style(), SpinnerStyle::Dots);
         assert_eq!(spinner.current_frame(), 0);
     }
+
+    // Comprehensive SpinnerStyle tests
+
+    #[test]
+    fn test_spinner_style_frames_dots() {
+        let frames = SpinnerStyle::Dots.frames();
+        assert_eq!(frames.len(), 10);
+        assert_eq!(frames[0], "⠋");
+        assert_eq!(frames[9], "⠏");
+    }
+
+    #[test]
+    fn test_spinner_style_frames_line() {
+        let frames = SpinnerStyle::Line.frames();
+        assert_eq!(frames.len(), 4);
+        assert_eq!(frames, &["|", "/", "-", "\\"]);
+    }
+
+    #[test]
+    fn test_spinner_style_frames_bars() {
+        let frames = SpinnerStyle::Bars.frames();
+        assert_eq!(frames.len(), 14);
+        assert_eq!(frames[0], "▁");
+        assert_eq!(frames[7], "█");
+    }
+
+    #[test]
+    fn test_spinner_style_frames_binary() {
+        let frames = SpinnerStyle::Binary.frames();
+        assert_eq!(frames.len(), 2);
+        assert_eq!(frames, &["0", "1"]);
+    }
+
+    #[test]
+    fn test_spinner_style_default() {
+        assert_eq!(SpinnerStyle::default(), SpinnerStyle::Dots);
+    }
+
+    // Comprehensive Spinner tests
+
+    #[test]
+    fn test_spinner_multiple_ticks_full_rotation() {
+        let mut spinner = Spinner::new(SpinnerStyle::Binary); // 2 frames
+
+        spinner.tick();
+        assert_eq!(spinner.current_frame(), 1);
+
+        spinner.tick();
+        assert_eq!(spinner.current_frame(), 0); // Wrapped
+
+        spinner.tick();
+        assert_eq!(spinner.current_frame(), 1);
+    }
+
+    #[test]
+    fn test_spinner_tick_many_times() {
+        let mut spinner = Spinner::new(SpinnerStyle::Line); // 4 frames
+
+        for _ in 0..100 {
+            spinner.tick();
+        }
+
+        // After 100 ticks on 4 frames: 100 % 4 = 0
+        assert_eq!(spinner.current_frame(), 0);
+    }
+
+    #[test]
+    fn test_spinner_set_frame_exact_boundary() {
+        let mut spinner = Spinner::new(SpinnerStyle::Line); // 4 frames
+
+        // Set to exactly frame_count (should wrap to 0)
+        spinner.set_frame(4);
+        assert_eq!(spinner.current_frame(), 0);
+
+        // Set to frame_count - 1 (last valid frame)
+        spinner.set_frame(3);
+        assert_eq!(spinner.current_frame(), 3);
+    }
+
+    #[test]
+    fn test_spinner_set_frame_zero() {
+        let mut spinner = Spinner::new(SpinnerStyle::Dots);
+        spinner.tick();
+        spinner.tick();
+
+        spinner.set_frame(0);
+        assert_eq!(spinner.current_frame(), 0);
+    }
+
+    #[test]
+    fn test_spinner_set_frame_large_value() {
+        let mut spinner = Spinner::new(SpinnerStyle::Line); // 4 frames
+
+        spinner.set_frame(1000);
+        // 1000 % 4 = 0
+        assert_eq!(spinner.current_frame(), 0);
+
+        spinner.set_frame(1001);
+        // 1001 % 4 = 1
+        assert_eq!(spinner.current_frame(), 1);
+    }
+
+    #[test]
+    fn test_spinner_change_style_multiple_times() {
+        let mut spinner = Spinner::new(SpinnerStyle::Dots);
+        spinner.tick();
+        spinner.tick();
+
+        spinner.set_style(SpinnerStyle::Line);
+        assert_eq!(spinner.current_frame(), 0);
+
+        spinner.tick();
+        spinner.tick();
+        assert_eq!(spinner.current_frame(), 2);
+
+        spinner.set_style(SpinnerStyle::Binary);
+        assert_eq!(spinner.current_frame(), 0);
+    }
+
+    #[test]
+    fn test_spinner_all_styles_have_valid_frames() {
+        let styles = [
+            SpinnerStyle::Dots,
+            SpinnerStyle::Line,
+            SpinnerStyle::Bars,
+            SpinnerStyle::Bounce,
+            SpinnerStyle::Arrows,
+            SpinnerStyle::SimpleDots,
+            SpinnerStyle::Binary,
+            SpinnerStyle::Clock,
+        ];
+
+        for style in &styles {
+            let spinner = Spinner::new(*style);
+            assert_eq!(spinner.current_frame(), 0);
+            assert!(!spinner.current_symbol().is_empty());
+
+            let frames = style.frames();
+            assert!(frames.len() > 0);
+            assert_eq!(frames.len(), style.frame_count());
+        }
+    }
+
+    #[test]
+    fn test_spinner_label_content() {
+        let spinner = Spinner::new(SpinnerStyle::Dots).label("Loading...");
+        assert!(spinner.label.is_some());
+        assert_eq!(spinner.label.unwrap(), "Loading...");
+    }
+
+    #[test]
+    fn test_spinner_label_empty_string() {
+        let spinner = Spinner::new(SpinnerStyle::Dots).label("");
+        assert!(spinner.label.is_some());
+        assert_eq!(spinner.label.unwrap(), "");
+    }
+
+    #[test]
+    fn test_spinner_no_label() {
+        let spinner = Spinner::new(SpinnerStyle::Dots);
+        assert!(spinner.label.is_none());
+    }
+
+    #[test]
+    fn test_spinner_color_setting() {
+        use ratatui::style::Color;
+
+        let spinner = Spinner::new(SpinnerStyle::Dots).color(Color::Red);
+        assert_eq!(spinner.color, Color::Red);
+
+        let spinner = Spinner::new(SpinnerStyle::Dots).color(Color::Blue);
+        assert_eq!(spinner.color, Color::Blue);
+    }
+
+    #[test]
+    fn test_spinner_builder_chaining() {
+        use ratatui::style::Color;
+
+        let spinner = Spinner::new(SpinnerStyle::Arrows)
+            .label("Processing...")
+            .color(Color::Cyan);
+
+        assert_eq!(spinner.style(), SpinnerStyle::Arrows);
+        assert_eq!(spinner.label, Some("Processing...".to_string()));
+        assert_eq!(spinner.color, Color::Cyan);
+        assert_eq!(spinner.current_frame(), 0);
+    }
+
+    #[test]
+    fn test_spinner_symbols_cycle_correctly() {
+        let mut spinner = Spinner::new(SpinnerStyle::SimpleDots);
+        let frames = SpinnerStyle::SimpleDots.frames();
+
+        for (i, expected_frame) in frames.iter().enumerate() {
+            assert_eq!(spinner.current_symbol(), *expected_frame);
+            assert_eq!(spinner.current_frame(), i);
+            spinner.tick();
+        }
+
+        // Should wrap back to first frame
+        assert_eq!(spinner.current_frame(), 0);
+        assert_eq!(spinner.current_symbol(), frames[0]);
+    }
+
+    #[test]
+    fn test_spinner_reset_after_many_ticks() {
+        let mut spinner = Spinner::new(SpinnerStyle::Dots);
+
+        for _ in 0..50 {
+            spinner.tick();
+        }
+
+        spinner.reset();
+        assert_eq!(spinner.current_frame(), 0);
+        assert_eq!(spinner.current_symbol(), SpinnerStyle::Dots.frames()[0]);
+    }
+
+    #[test]
+    fn test_spinner_style_equality() {
+        assert_eq!(SpinnerStyle::Dots, SpinnerStyle::Dots);
+        assert_ne!(SpinnerStyle::Dots, SpinnerStyle::Line);
+        assert_ne!(SpinnerStyle::Bars, SpinnerStyle::Binary);
+    }
 }
