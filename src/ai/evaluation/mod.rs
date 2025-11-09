@@ -27,6 +27,29 @@ pub enum Complexity {
     Hard,
 }
 
+/// Metadata from multi-model racing (M3+)
+///
+/// Tracks which model won the race, costs incurred, and performance metrics.
+/// This is only populated when routing_multi_model feature flag is enabled.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RaceMetadata {
+    /// Name of the winning model
+    pub winner_model: String,
+
+    /// Total cost including winner + partial costs from cancelled models
+    pub total_cost_usd: f64,
+
+    /// Wasted cost from cancelled models (may be $0 if cancelled before billing)
+    pub wasted_cost_usd: f64,
+
+    /// Latency improvement vs slowest single model (milliseconds)
+    /// Negative if racing was actually slower due to overhead
+    pub latency_improvement_ms: i64,
+
+    /// Total race duration (wall clock time)
+    pub race_duration_ms: u64,
+}
+
 /// A single SWE-bench task
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Task {
@@ -114,6 +137,10 @@ pub struct TaskResult {
 
     /// Timestamp
     pub timestamp: DateTime<Utc>,
+
+    /// Racing metadata (M3+ only, when routing_multi_model enabled)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub race_metadata: Option<RaceMetadata>,
 }
 
 impl TaskResult {
@@ -131,6 +158,7 @@ impl TaskResult {
             error: None,
             metrics: Metrics::default(),
             timestamp: Utc::now(),
+            race_metadata: None,
         }
     }
 
@@ -300,8 +328,31 @@ impl EvaluationHarness {
                 &provider_config,
                 config.features.prompt_caching,
             )?
+        } else if config.features.routing_multi_model {
+            // M3: Use multi-model racing (TRAE approach)
+            use crate::ai::llm::RacingClient;
+
+            tracing::info!("M3 Multi-model racing enabled for task {}", task.id);
+
+            let api_key = api_key
+                .context("Failed to get API key for racing. Set ANTHROPIC_API_KEY environment variable")?;
+
+            // Create racing client from config
+            let racing_client = RacingClient::from_config(
+                api_key,
+                config.racing_models.clone(),
+                config.features.prompt_caching,
+            )?;
+
+            tracing::info!(
+                "M3: Racing {} models: {}",
+                config.racing_models.len(),
+                config.racing_models.join(", ")
+            );
+
+            Box::new(racing_client)
         } else {
-            // M1/M2/M3: Use direct Anthropic client
+            // M1/M2: Use direct Anthropic client
             let api_key = api_key
                 .context("Failed to get API key. Set ANTHROPIC_API_KEY environment variable")?;
 
@@ -575,5 +626,58 @@ mod tests {
         assert!(config.features.routing_multi_model);
         assert!(config.features.context_embeddings);
         assert!(config.features.failure_memory);
+    }
+
+    #[test]
+    fn test_m3_racing_models_configured() {
+        let config = ToadConfig::for_milestone(3);
+
+        // M3 should have racing models configured
+        assert!(config.racing_models.len() >= 2, "M3 needs at least 2 models to race");
+        assert!(config.features.routing_multi_model, "M3 must have routing_multi_model enabled");
+    }
+
+    #[test]
+    fn test_race_metadata_serialization() {
+        let metadata = RaceMetadata {
+            winner_model: "claude-sonnet-4-20250514".to_string(),
+            total_cost_usd: 0.05,
+            wasted_cost_usd: 0.01,
+            latency_improvement_ms: 500,
+            race_duration_ms: 1500,
+        };
+
+        let json = serde_json::to_string(&metadata).unwrap();
+        let deserialized: RaceMetadata = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(metadata.winner_model, deserialized.winner_model);
+        assert_eq!(metadata.total_cost_usd, deserialized.total_cost_usd);
+    }
+
+    #[test]
+    fn test_task_result_with_race_metadata() {
+        let mut result = TaskResult::new("test-task".to_string());
+
+        // Initially no race metadata
+        assert!(result.race_metadata.is_none());
+
+        // Add race metadata
+        result.race_metadata = Some(RaceMetadata {
+            winner_model: "model-1".to_string(),
+            total_cost_usd: 0.02,
+            wasted_cost_usd: 0.005,
+            latency_improvement_ms: 200,
+            race_duration_ms: 800,
+        });
+
+        // Serialize and verify race_metadata is included
+        let json = serde_json::to_string(&result).unwrap();
+        assert!(json.contains("race_metadata"));
+        assert!(json.contains("model-1"));
+
+        // Deserialize and verify
+        let deserialized: TaskResult = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.race_metadata.is_some());
+        assert_eq!(deserialized.race_metadata.unwrap().winner_model, "model-1");
     }
 }
