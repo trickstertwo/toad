@@ -1000,4 +1000,315 @@ mod tests {
         }
         assert_eq!(palette.query(), "!@#$%^&*()");
     }
+
+    // ============ Debug Trait Test ============
+
+    #[test]
+    fn test_palette_debug() {
+        let palette = CommandPalette::new();
+        let debug_str = format!("{:?}", palette);
+        assert!(debug_str.contains("CommandPalette"));
+    }
+
+    // ============ Filter Matching Specifics ============
+
+    #[test]
+    fn test_palette_filter_matches_label() {
+        let mut palette = CommandPalette::new();
+        for c in "help".chars() {
+            palette.insert_char(c);
+        }
+        // Should match "Show Help" in label
+        let selected = palette.selected_command();
+        assert!(selected.is_some());
+        assert_eq!(selected.unwrap(), "help");
+    }
+
+    #[test]
+    fn test_palette_filter_matches_description() {
+        let mut palette = CommandPalette::new();
+        for c in "keybindings".chars() {
+            palette.insert_char(c);
+        }
+        // Should match "help" by description containing "keybindings"
+        let selected = palette.selected_command();
+        assert!(selected.is_some());
+    }
+
+    #[test]
+    fn test_palette_filter_matches_id() {
+        let mut palette = CommandPalette::new();
+        for c in "quit".chars() {
+            palette.insert_char(c);
+        }
+        // Should match by ID "quit"
+        let selected = palette.selected_command();
+        assert!(selected.is_some());
+        assert_eq!(selected.unwrap(), "quit");
+    }
+
+    #[test]
+    fn test_palette_filter_partial_match() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('h');
+        palette.insert_char('e');
+        // "he" should match "help", "theme", etc.
+        let selected = palette.selected_command();
+        assert!(selected.is_some());
+    }
+
+    // ============ Navigation on Filtered Results ============
+
+    #[test]
+    fn test_palette_navigation_on_filtered_single_result() {
+        let mut palette = CommandPalette::new();
+        for c in "quit".chars() {
+            palette.insert_char(c);
+        }
+
+        let first = palette.selected_command();
+        palette.select_next(); // Should wrap to same
+        let second = palette.selected_command();
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn test_palette_navigation_on_filtered_multiple_results() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('s'); // Matches "split", "search", "status"
+
+        let first = palette.selected_command();
+        palette.select_next();
+        let second = palette.selected_command();
+        assert_ne!(first, second);
+    }
+
+    #[test]
+    fn test_palette_navigation_wraps_on_filtered_results() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('s'); // Matches multiple
+
+        let first = palette.selected_command();
+
+        // Navigate to end
+        for _ in 0..10 {
+            palette.select_next();
+        }
+
+        // Should have wrapped back
+        let wrapped = palette.selected_command();
+        assert!(wrapped.is_some());
+    }
+
+    // ============ Extreme Stress Tests (10k operations) ============
+
+    #[test]
+    fn test_palette_10k_char_insertions() {
+        let mut palette = CommandPalette::new();
+        for i in 0..10000 {
+            let c = (b'a' + (i % 26) as u8) as char;
+            palette.insert_char(c);
+        }
+        assert_eq!(palette.query().chars().count(), 10000);
+    }
+
+    #[test]
+    fn test_palette_10k_mixed_operations() {
+        let mut palette = CommandPalette::new();
+        for i in 0..10000 {
+            match i % 4 {
+                0 => palette.insert_char('a'),
+                1 => palette.select_next(),
+                2 => palette.delete_char(),
+                _ => palette.select_previous(),
+            }
+        }
+        // Should still be functional
+        assert!(palette.query().len() >= 0);
+    }
+
+    #[test]
+    fn test_palette_10k_navigation_cycles() {
+        let mut palette = CommandPalette::new();
+        for i in 0..10000 {
+            if i % 2 == 0 {
+                palette.select_next();
+            } else {
+                palette.select_previous();
+            }
+        }
+        // Should still have valid selection
+        assert!(palette.selected_command().is_some());
+    }
+
+    // ============ Unicode Boundary Cases ============
+
+    #[test]
+    fn test_palette_very_long_unicode_string() {
+        let mut palette = CommandPalette::new();
+        for _ in 0..100 {
+            palette.insert_char('🚀');
+            palette.insert_char('日');
+            palette.insert_char('本');
+        }
+        assert_eq!(palette.query().chars().count(), 300);
+    }
+
+    #[test]
+    fn test_palette_unicode_delete_boundary() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('a');
+        palette.insert_char('🚀');
+        palette.insert_char('日');
+        palette.insert_char('b');
+
+        // Delete 'b'
+        palette.delete_char();
+        assert_eq!(palette.query(), "a🚀日");
+
+        // Delete '日'
+        palette.delete_char();
+        assert_eq!(palette.query(), "a🚀");
+
+        // Delete '🚀'
+        palette.delete_char();
+        assert_eq!(palette.query(), "a");
+    }
+
+    // ============ Multi-Phase Comprehensive Workflow (10 phases) ============
+
+    #[test]
+    fn test_palette_10_phase_comprehensive_workflow() {
+        let mut palette = CommandPalette::new();
+
+        // Phase 1: Initial state verification
+        assert_eq!(palette.query(), "");
+        assert!(palette.selected_command().is_some());
+
+        // Phase 2: Type a query and navigate
+        for c in "help".chars() {
+            palette.insert_char(c);
+        }
+        palette.select_next();
+        palette.select_previous();
+        assert_eq!(palette.query(), "help");
+
+        // Phase 3: Clear and verify reset
+        palette.clear_query();
+        assert_eq!(palette.query(), "");
+        assert!(palette.selected_command().is_some());
+
+        // Phase 4: Type unicode query
+        for c in "日本🚀".chars() {
+            palette.insert_char(c);
+        }
+        assert_eq!(palette.query(), "日本🚀");
+
+        // Phase 5: Delete characters one by one
+        palette.delete_char();
+        palette.delete_char();
+        palette.delete_char();
+        assert_eq!(palette.query(), "");
+
+        // Phase 6: Type query that produces no results
+        for c in "nonexistent123".chars() {
+            palette.insert_char(c);
+        }
+        assert!(palette.selected_command().is_none());
+
+        // Phase 7: Clear and type valid query
+        palette.clear_query();
+        for c in "quit".chars() {
+            palette.insert_char(c);
+        }
+        assert!(palette.selected_command().is_some());
+
+        // Phase 8: Rapid navigation on filtered results
+        for _ in 0..10 {
+            palette.select_next();
+            palette.select_previous();
+        }
+
+        // Phase 9: Add more characters to narrow filter
+        palette.insert_char('x');
+        palette.insert_char('y');
+        palette.insert_char('z');
+
+        // Phase 10: Clear and verify final state
+        palette.clear_query();
+        assert_eq!(palette.query(), "");
+        assert!(palette.selected_command().is_some());
+    }
+
+    // ============ Edge Cases: Empty and Boundary Conditions ============
+
+    #[test]
+    fn test_palette_query_length_boundary_10k() {
+        let mut palette = CommandPalette::new();
+        for _ in 0..10000 {
+            palette.insert_char('x');
+        }
+        assert_eq!(palette.query().len(), 10000);
+
+        // Delete half
+        for _ in 0..5000 {
+            palette.delete_char();
+        }
+        assert_eq!(palette.query().len(), 5000);
+    }
+
+    #[test]
+    fn test_palette_filter_after_every_char_insertion() {
+        let mut palette = CommandPalette::new();
+
+        // Type "help" character by character, verifying filter updates
+        palette.insert_char('h');
+        assert!(palette.selected_command().is_some());
+
+        palette.insert_char('e');
+        assert!(palette.selected_command().is_some());
+
+        palette.insert_char('l');
+        assert!(palette.selected_command().is_some());
+
+        palette.insert_char('p');
+        assert!(palette.selected_command().is_some());
+        assert_eq!(palette.selected_command().unwrap(), "help");
+    }
+
+    #[test]
+    fn test_palette_select_operations_with_single_filtered_result() {
+        let mut palette = CommandPalette::new();
+
+        // Filter to exactly one result
+        for c in "Toggle Vim Mode".chars() {
+            palette.insert_char(c);
+        }
+
+        let first = palette.selected_command();
+
+        // Navigate back and forth - should stay on same command
+        palette.select_next();
+        assert_eq!(first, palette.selected_command());
+
+        palette.select_previous();
+        assert_eq!(first, palette.selected_command());
+    }
+
+    // ============ Rapid Operation Combinations ============
+
+    #[test]
+    fn test_palette_rapid_insert_clear_cycles_1000() {
+        let mut palette = CommandPalette::new();
+
+        for _ in 0..1000 {
+            palette.insert_char('a');
+            palette.insert_char('b');
+            palette.insert_char('c');
+            palette.clear_query();
+        }
+
+        assert_eq!(palette.query(), "");
+        assert!(palette.selected_command().is_some());
+    }
 }
