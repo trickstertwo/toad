@@ -11,6 +11,7 @@ pub mod batch_ops;
 pub mod calendar_integration;
 pub mod clipboard;
 pub mod custom_keybindings;
+pub mod custom_reports;
 pub mod data_portability;
 pub mod diff;
 pub mod errors;
@@ -22,6 +23,7 @@ pub mod keyboard_recorder;
 pub mod keyboard_shortcuts;
 pub mod keybinds;
 pub mod mouse;
+pub mod project_management;
 pub mod terminal_capabilities;
 pub mod text_truncation;
 pub mod time_tracking;
@@ -42,6 +44,10 @@ pub use calendar_integration::{
 };
 pub use clipboard::Clipboard;
 pub use custom_keybindings::{ContextualBinding, CustomKeybindings, KeybindingContext};
+pub use custom_reports::{
+    Report, ReportBuilder, ReportFilter, ReportFormat, ReportFrequency, ReportManager,
+    ReportRow, ReportTemplate, ReportType, ScheduledReport,
+};
 pub use data_portability::{DataExporter, DataFormat, DataImporter};
 pub use diff::{ChunkHeader, DiffHunk, DiffLine, DiffLineType, DiffParser, DiffStats, FileDiff};
 pub use errors::{ErrorEntry, ErrorHandler, ErrorSeverity};
@@ -53,6 +59,9 @@ pub use keyboard_recorder::{KeyboardRecorder, RecorderState, RecordedKey};
 pub use keyboard_shortcuts::{Shortcut, ShortcutAction, ShortcutCategory, ShortcutRegistry};
 pub use keybinds::{KeyBinding, KeyBindings};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
+pub use project_management::{
+    Project, ProjectManager, ProjectStatus, ProjectTemplate, Workspace,
+};
 pub use terminal_capabilities::{ColorSupport, FeatureLevel, TerminalCapabilities};
 pub use text_truncation::{SmartTruncate, TruncationStrategy};
 pub use time_tracking::{
