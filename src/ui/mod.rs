@@ -5,7 +5,7 @@
 pub mod animations;
 pub mod board_background;
 pub mod box_drawing;
-pub mod canvas;
+pub mod pixel_canvas;
 pub mod enhanced_borders;
 pub mod gradient;
 pub mod logo;
@@ -20,7 +20,7 @@ pub mod widgets;
 pub use animations::{Animation, AnimationState, EasingFunction, TransitionManager};
 pub use board_background::{BackgroundStyle, BoardBackground, BoardBackgrounds, PatternType};
 pub use box_drawing::{BoxBuilder, BoxChars, BoxStyle};
-pub use canvas::{Canvas, Pixel, Shape};
+pub use pixel_canvas::{Canvas, Pixel, Shape};
 pub use enhanced_borders::{BorderEffect, BorderStyles, BorderThickness, CornerStyle, EnhancedBorder};
 pub use gradient::{ColorStop, Gradient, GradientDirection, GradientType, Gradients};
 pub use multi_window::{Window, WindowId, WindowManager, WindowPriority, WindowState};
