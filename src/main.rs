@@ -1,14 +1,12 @@
 /// TOAD - Terminal-Oriented Autonomous Developer
 /// Milestone 0: Evaluation Framework
-
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use toad::config::{FeatureFlags, ToadConfig};
-use toad::evaluation::{EvaluationHarness, task_loader};
+use toad::evaluation::{task_loader, EvaluationHarness};
 use toad::stats::ComparisonResult;
 use tracing::{info, Level};
-use tracing_subscriber;
 
 #[derive(Parser)]
 #[command(name = "toad")]
@@ -90,19 +88,35 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // Initialize logging
-    let level = if cli.verbose { Level::DEBUG } else { Level::INFO };
-    tracing_subscriber::fmt()
-        .with_max_level(level)
-        .init();
+    let level = if cli.verbose {
+        Level::DEBUG
+    } else {
+        Level::INFO
+    };
+    tracing_subscriber::fmt().with_max_level(level).init();
 
-    info!("TOAD v{} - Terminal-Oriented Autonomous Developer", toad::VERSION);
+    info!(
+        "TOAD v{} - Terminal-Oriented Autonomous Developer",
+        toad::VERSION
+    );
 
     match cli.command {
-        Commands::Eval { dataset, count, milestone, output } => {
+        Commands::Eval {
+            dataset,
+            count,
+            milestone,
+            output,
+        } => {
             run_eval(dataset, count, milestone, output).await?;
         }
 
-        Commands::Compare { dataset, count, baseline, test, output } => {
+        Commands::Compare {
+            dataset,
+            count,
+            baseline,
+            test,
+            output,
+        } => {
             run_compare(dataset, count, baseline, test, output).await?;
         }
 
@@ -187,8 +201,16 @@ async fn run_compare(
     let config_a = ToadConfig::for_milestone(baseline_ms);
     let config_b = ToadConfig::for_milestone(test_ms);
 
-    info!("Config A (M{}): {}", baseline_ms, config_a.features.description());
-    info!("Config B (M{}): {}", test_ms, config_b.features.description());
+    info!(
+        "Config A (M{}): {}",
+        baseline_ms,
+        config_a.features.description()
+    );
+    info!(
+        "Config B (M{}): {}",
+        test_ms,
+        config_b.features.description()
+    );
 
     // Run comparison
     let harness = EvaluationHarness::new(tasks, output.clone());
@@ -246,12 +268,18 @@ fn show_config(milestone: Option<u8>) {
     println!("Intelligence Features:");
     println!("  Smart test selection:     {}", flags.smart_test_selection);
     println!("  Failure memory:           {}", flags.failure_memory);
-    println!("  Opportunistic planning:   {}", flags.opportunistic_planning);
+    println!(
+        "  Opportunistic planning:   {}",
+        flags.opportunistic_planning
+    );
     println!();
     println!("Optimizations:");
     println!("  Prompt caching:           {}", flags.prompt_caching);
     println!("  Semantic caching:         {}", flags.semantic_caching);
-    println!("  Tree-sitter validation:   {}", flags.tree_sitter_validation);
+    println!(
+        "  Tree-sitter validation:   {}",
+        flags.tree_sitter_validation
+    );
     println!();
     println!("Description: {}", flags.description());
 }

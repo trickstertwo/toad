@@ -4,7 +4,6 @@
 /// - Aider's successful prompting strategies
 /// - Claude's tool use best practices
 /// - SWE-bench task format
-
 use crate::evaluation::Task;
 
 pub struct PromptBuilder {
@@ -46,7 +45,10 @@ impl PromptBuilder {
         if let Some(task) = self.task {
             prompt.push_str("# Task\n\n");
             prompt.push_str(&format!("**Instance ID:** {}\n\n", task.id));
-            prompt.push_str(&format!("**Problem Statement:**\n{}\n\n", task.problem_statement));
+            prompt.push_str(&format!(
+                "**Problem Statement:**\n{}\n\n",
+                task.problem_statement
+            ));
 
             if let Some(hints) = task.hints {
                 if !hints.is_empty() {

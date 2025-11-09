@@ -1,0 +1,12 @@
+# Clippy Configuration for TOAD
+# Linting rules for code quality
+
+# Cognitive complexity threshold
+cognitive-complexity-threshold = 25
+
+# Avoid needless borrows
+avoid-breaking-exported-api = true
+
+# Allow some common patterns
+too-many-arguments-threshold = 8
+type-complexity-threshold = 500

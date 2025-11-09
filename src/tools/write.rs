@@ -1,5 +1,4 @@
 /// Write tool - writes content to a file
-
 use super::{Tool, ToolResult};
 use anyhow::{Context, Result};
 use serde_json::json;
@@ -7,6 +6,12 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub struct WriteTool;
+
+impl Default for WriteTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl WriteTool {
     pub fn new() -> Self {

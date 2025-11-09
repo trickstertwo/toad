@@ -1,12 +1,17 @@
 /// List tool - lists files in a directory
-
 use super::{Tool, ToolResult};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use serde_json::json;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub struct ListTool;
+
+impl Default for ListTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl ListTool {
     pub fn new() -> Self {
@@ -41,10 +46,7 @@ impl Tool for ListTool {
     }
 
     async fn execute(&self, args: HashMap<String, serde_json::Value>) -> Result<ToolResult> {
-        let path = args
-            .get("path")
-            .and_then(|v| v.as_str())
-            .unwrap_or(".");
+        let path = args.get("path").and_then(|v| v.as_str()).unwrap_or(".");
 
         let show_hidden = args
             .get("show_hidden")
@@ -82,10 +84,7 @@ impl Tool for ListTool {
 
                     let metadata = entry.metadata().await;
                     let is_dir = metadata.as_ref().map(|m| m.is_dir()).unwrap_or(false);
-                    let size = metadata
-                        .as_ref()
-                        .map(|m| m.len())
-                        .unwrap_or(0);
+                    let size = metadata.as_ref().map(|m| m.len()).unwrap_or(0);
 
                     let entry_type = if is_dir { "dir" } else { "file" };
                     items.push(format!("{:8} {:>10} {}", entry_type, size, name));
@@ -197,10 +196,7 @@ mod tests {
         assert!(!result.output.contains(".hidden"));
 
         // Test with show_hidden
-        args.insert(
-            "show_hidden".to_string(),
-            serde_json::Value::Bool(true),
-        );
+        args.insert("show_hidden".to_string(), serde_json::Value::Bool(true));
 
         let result = tool.execute(args).await.unwrap();
         assert!(result.success);

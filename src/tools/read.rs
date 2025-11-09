@@ -1,5 +1,4 @@
 /// Read tool - reads file contents
-
 use super::{Tool, ToolResult};
 use anyhow::{Context, Result};
 use serde_json::json;
@@ -7,6 +6,12 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub struct ReadTool;
+
+impl Default for ReadTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl ReadTool {
     pub fn new() -> Self {

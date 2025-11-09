@@ -1,5 +1,4 @@
 /// Grep tool - searches for patterns in files
-
 use super::{Tool, ToolResult};
 use anyhow::{Context, Result};
 use serde_json::json;
@@ -7,6 +6,12 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub struct GrepTool;
+
+impl Default for GrepTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl GrepTool {
     pub fn new() -> Self {
@@ -136,9 +141,9 @@ impl Tool for GrepTool {
             };
             let end = std::cmp::min(line_num + context_lines + 1, lines.len());
 
-            for i in start..end {
-                let prefix = if i == *line_num { ">" } else { " " };
-                output.push_str(&format!("{} {:4} | {}\n", prefix, i + 1, lines[i]));
+            for (idx, line) in lines.iter().enumerate().take(end).skip(start) {
+                let prefix = if idx == *line_num { ">" } else { " " };
+                output.push_str(&format!("{} {:4} | {}\n", prefix, idx + 1, line));
             }
 
             if matches.len() > 1 {
@@ -272,7 +277,9 @@ mod tests {
     async fn test_grep_tool_no_matches() {
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("test.txt");
-        tokio::fs::write(&file_path, "line 1\nline 2").await.unwrap();
+        tokio::fs::write(&file_path, "line 1\nline 2")
+            .await
+            .unwrap();
 
         let tool = GrepTool::new();
         let mut args = HashMap::new();

@@ -1,5 +1,4 @@
 /// Bash tool - executes shell commands
-
 use super::{Tool, ToolResult};
 use anyhow::{Context, Result};
 use serde_json::json;
@@ -9,6 +8,12 @@ use tokio::process::Command;
 use tokio::time::{timeout, Duration};
 
 pub struct BashTool;
+
+impl Default for BashTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl BashTool {
     pub fn new() -> Self {
@@ -69,7 +74,7 @@ impl Tool for BashTool {
             #[cfg(not(target_os = "windows"))]
             let mut cmd = {
                 let mut c = Command::new("sh");
-                c.args(&["-c", command]);
+                c.args(["-c", command]);
                 c
             };
 

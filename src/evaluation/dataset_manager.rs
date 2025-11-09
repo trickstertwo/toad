@@ -2,11 +2,10 @@
 ///
 /// This module handles downloading, caching, and managing SWE-bench datasets
 /// for evaluation.
-
-use super::{Task, Complexity};
+use super::Task;
 use anyhow::{Context, Result};
-use std::path::{Path, PathBuf};
 use std::fs;
+use std::path::PathBuf;
 
 /// SWE-bench dataset sources
 #[derive(Debug, Clone)]
@@ -72,8 +71,7 @@ impl DatasetManager {
 
     /// Initialize the cache directory
     pub fn init(&self) -> Result<()> {
-        fs::create_dir_all(&self.cache_dir)
-            .context("Failed to create cache directory")?;
+        fs::create_dir_all(&self.cache_dir).context("Failed to create cache directory")?;
         Ok(())
     }
 
@@ -131,11 +129,7 @@ impl DatasetManager {
     }
 
     /// Load a sample from a dataset source
-    pub fn load_sample(
-        &self,
-        source: DatasetSource,
-        count: usize,
-    ) -> Result<Vec<Task>> {
+    pub fn load_sample(&self, source: DatasetSource, count: usize) -> Result<Vec<Task>> {
         use super::task_loader::TaskLoader;
 
         let path = self.get_or_download(&source)?;
@@ -164,7 +158,8 @@ impl DatasetManager {
             source: source.clone(),
             cached: self.is_cached(source),
             cache_path: self.cache_path(source),
-            size: self.cache_path(source)
+            size: self
+                .cache_path(source)
                 .metadata()
                 .ok()
                 .map(|m| m.len())
@@ -209,12 +204,17 @@ mod tests {
         assert!(DatasetSource::Verified.huggingface_url().is_some());
         assert!(DatasetSource::Lite.huggingface_url().is_some());
         assert!(DatasetSource::Full.huggingface_url().is_some());
-        assert!(DatasetSource::Local(PathBuf::from("/tmp/test.json")).huggingface_url().is_none());
+        assert!(DatasetSource::Local(PathBuf::from("/tmp/test.json"))
+            .huggingface_url()
+            .is_none());
     }
 
     #[test]
     fn test_cache_filenames() {
-        assert_eq!(DatasetSource::Verified.cache_filename(), "swe_bench_verified.jsonl");
+        assert_eq!(
+            DatasetSource::Verified.cache_filename(),
+            "swe_bench_verified.jsonl"
+        );
         assert_eq!(DatasetSource::Lite.cache_filename(), "swe_bench_lite.jsonl");
         assert_eq!(DatasetSource::Full.cache_filename(), "swe_bench_full.jsonl");
     }

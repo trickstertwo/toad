@@ -1,7 +1,5 @@
 /// Statistical testing for A/B comparisons
-
 use crate::evaluation::EvaluationResults;
-use crate::metrics::Metrics;
 use serde::{Deserialize, Serialize};
 use statrs::distribution::{ContinuousCDF, StudentsT};
 use statrs::statistics::Statistics;
@@ -98,7 +96,9 @@ impl ComparisonResult {
             },
             duration_ms: results_b.avg_duration_ms - results_a.avg_duration_ms,
             duration_pct: if results_a.avg_duration_ms > 0.0 {
-                ((results_b.avg_duration_ms - results_a.avg_duration_ms) / results_a.avg_duration_ms) * 100.0
+                ((results_b.avg_duration_ms - results_a.avg_duration_ms)
+                    / results_a.avg_duration_ms)
+                    * 100.0
             } else {
                 0.0
             },
@@ -106,11 +106,15 @@ impl ComparisonResult {
         };
 
         // Extract metrics for statistical testing
-        let metrics_a: Vec<f64> = results_a.results.iter()
+        let metrics_a: Vec<f64> = results_a
+            .results
+            .iter()
             .map(|r| if r.solved { 1.0 } else { 0.0 })
             .collect();
 
-        let metrics_b: Vec<f64> = results_b.results.iter()
+        let metrics_b: Vec<f64> = results_b
+            .results
+            .iter()
             .map(|r| if r.solved { 1.0 } else { 0.0 })
             .collect();
 
@@ -237,12 +241,24 @@ impl ComparisonResult {
         println!("Config B: {}", self.config_b);
         println!();
         println!("Delta Metrics:");
-        println!("  Accuracy: {:+.2}% (p={:.4})", self.delta.accuracy, self.significance.accuracy_p_value);
-        println!("  Cost: {:+.4} USD ({:+.1}%)", self.delta.cost_usd, self.delta.cost_pct);
-        println!("  Duration: {:+.0} ms ({:+.1}%)", self.delta.duration_ms, self.delta.duration_pct);
+        println!(
+            "  Accuracy: {:+.2}% (p={:.4})",
+            self.delta.accuracy, self.significance.accuracy_p_value
+        );
+        println!(
+            "  Cost: {:+.4} USD ({:+.1}%)",
+            self.delta.cost_usd, self.delta.cost_pct
+        );
+        println!(
+            "  Duration: {:+.0} ms ({:+.1}%)",
+            self.delta.duration_ms, self.delta.duration_pct
+        );
         println!();
         println!("Statistical Significance:");
-        println!("  Accuracy significant: {} (p < 0.05)", self.significance.accuracy_significant);
+        println!(
+            "  Accuracy significant: {} (p < 0.05)",
+            self.significance.accuracy_significant
+        );
         println!("  Cost significant: {}", self.significance.cost_significant);
         println!();
         println!("Recommendation: {:?}", self.recommendation);
@@ -268,6 +284,7 @@ impl ComparisonResult {
 struct TTestResult {
     t_stat: f64,
     p_value: f64,
+    #[allow(dead_code)]
     degrees_of_freedom: f64,
 }
 
@@ -320,7 +337,9 @@ mod tests {
     use crate::evaluation::TaskResult;
 
     fn create_mock_results(name: &str, solved: Vec<bool>, costs: Vec<f64>) -> EvaluationResults {
-        let results: Vec<TaskResult> = solved.iter().zip(costs.iter())
+        let results: Vec<TaskResult> = solved
+            .iter()
+            .zip(costs.iter())
             .enumerate()
             .map(|(i, (s, c))| {
                 let mut result = TaskResult::new(format!("task-{}", i));
@@ -340,14 +359,20 @@ mod tests {
         // Test that comparison correctly computes deltas
         let results_a = create_mock_results(
             "baseline",
-            vec![true, false, true, false, true, false, true, false, true, false],
-            (0..10).map(|i| 0.01 + (i as f64 * 0.0001)).collect::<Vec<_>>(),
+            vec![
+                true, false, true, false, true, false, true, false, true, false,
+            ],
+            (0..10)
+                .map(|i| 0.01 + (i as f64 * 0.0001))
+                .collect::<Vec<_>>(),
         );
 
         let results_b = create_mock_results(
             "improved",
             vec![true, true, true, true, true, true, true, false, true, false],
-            (0..10).map(|i| 0.01 + (i as f64 * 0.0001)).collect::<Vec<_>>(),
+            (0..10)
+                .map(|i| 0.01 + (i as f64 * 0.0001))
+                .collect::<Vec<_>>(),
         );
 
         let comparison = ComparisonResult::compare(&results_a, &results_b);
@@ -356,7 +381,7 @@ mod tests {
         assert!(comparison.delta.accuracy > 0.0);
         // Check that cost delta is computed
         assert!(comparison.delta.cost_usd.abs() < 0.01); // Similar costs
-        // Check that we have statistical test results
+                                                         // Check that we have statistical test results
         assert!(comparison.significance.accuracy_p_value >= 0.0);
         assert!(comparison.significance.accuracy_p_value <= 1.0);
     }
@@ -366,13 +391,17 @@ mod tests {
         // Test rejection due to high cost with no benefit
         let results_a = create_mock_results(
             "baseline",
-            vec![true, false, true, false, true, false, true, false, true, false],
+            vec![
+                true, false, true, false, true, false, true, false, true, false,
+            ],
             vec![0.01; 10],
         );
 
         let results_b = create_mock_results(
             "expensive",
-            vec![true, false, true, false, true, false, true, false, true, false],
+            vec![
+                true, false, true, false, true, false, true, false, true, false,
+            ],
             vec![0.10; 10], // 10x cost
         );
 
@@ -397,7 +426,7 @@ mod tests {
     #[test]
     fn test_sample_size_check() {
         assert!(!StatisticalTest::check_sample_size(10, 0.2)); // Too small for small effect
-        assert!(StatisticalTest::check_sample_size(50, 0.2));  // OK for small effect
-        assert!(StatisticalTest::check_sample_size(20, 0.8));  // OK for large effect
+        assert!(StatisticalTest::check_sample_size(50, 0.2)); // OK for small effect
+        assert!(StatisticalTest::check_sample_size(20, 0.8)); // OK for large effect
     }
 }

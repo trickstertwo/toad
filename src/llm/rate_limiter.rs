@@ -4,7 +4,6 @@
 /// - 50 requests per minute (RPM)
 /// - 30,000 input tokens per minute (ITPM)
 /// - 8,000 output tokens per minute (OTPM)
-
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
@@ -74,7 +73,7 @@ impl RateLimiter {
     }
 
     /// Create rate limiter with default Claude Sonnet 4 limits
-    pub fn default() -> Self {
+    pub fn with_default_limits() -> Self {
         Self::new(RateLimitConfig::default())
     }
 

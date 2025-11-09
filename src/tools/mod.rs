@@ -2,26 +2,25 @@
 ///
 /// This module implements the basic tool execution framework for TOAD.
 /// All tools follow a simple interface: take input, return result.
-
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+pub mod bash;
+pub mod edit;
+pub mod git;
+pub mod grep;
+pub mod list;
 pub mod read;
 pub mod write;
-pub mod list;
-pub mod edit;
-pub mod bash;
-pub mod grep;
-pub mod git;
 
+pub use bash::BashTool;
+pub use edit::EditTool;
+pub use git::{GitDiffTool, GitStatusTool};
+pub use grep::GrepTool;
+pub use list::ListTool;
 pub use read::ReadTool;
 pub use write::WriteTool;
-pub use list::ListTool;
-pub use edit::EditTool;
-pub use bash::BashTool;
-pub use grep::GrepTool;
-pub use git::{GitDiffTool, GitStatusTool};
 
 /// Result of tool execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,8 +111,8 @@ impl ToolRegistry {
     }
 
     /// Get a tool by name
-    pub fn get(&self, name: &str) -> Option<&Box<dyn Tool>> {
-        self.tools.get(name)
+    pub fn get(&self, name: &str) -> Option<&dyn Tool> {
+        self.tools.get(name).map(|b| b.as_ref())
     }
 
     /// List all registered tools

@@ -1,0 +1,17 @@
+# Rustfmt Configuration for TOAD
+# Using only stable features for compatibility
+
+# Edition
+edition = "2021"
+
+# Line width
+max_width = 100
+
+# Indentation
+tab_spaces = 4
+
+# Use Unix newlines
+newline_style = "Unix"
+
+# Heuristics for formatting
+use_small_heuristics = "Default"

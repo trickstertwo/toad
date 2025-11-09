@@ -5,7 +5,6 @@
 /// - Network errors (timeouts, connectivity)
 /// - Parse errors (invalid responses)
 /// - Configuration errors (missing keys, invalid models)
-
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -59,7 +58,10 @@ impl LLMError {
             LLMError::RateLimit { .. }
                 | LLMError::Timeout { .. }
                 | LLMError::Network(_)
-                | LLMError::ApiError { status: 500..=599, .. }
+                | LLMError::ApiError {
+                    status: 500..=599,
+                    ..
+                }
         )
     }
 
@@ -69,7 +71,9 @@ impl LLMError {
             LLMError::RateLimit { retry_after } => *retry_after,
             LLMError::Timeout { .. } => Some(2),
             LLMError::Network(_) => Some(1),
-            LLMError::ApiError { status: 500..=599, .. } => Some(5),
+            LLMError::ApiError {
+                status: 500..=599, ..
+            } => Some(5),
             _ => None,
         }
     }
@@ -82,7 +86,10 @@ impl LLMError {
                 | LLMError::Configuration(_)
                 | LLMError::ModelNotFound(_)
                 | LLMError::TokenLimit { .. }
-                | LLMError::ApiError { status: 400..=499, .. }
+                | LLMError::ApiError {
+                    status: 400..=499,
+                    ..
+                }
         )
     }
 }
@@ -93,7 +100,9 @@ mod tests {
 
     #[test]
     fn test_retryable_errors() {
-        let rate_limit = LLMError::RateLimit { retry_after: Some(60) };
+        let rate_limit = LLMError::RateLimit {
+            retry_after: Some(60),
+        };
         assert!(rate_limit.is_retryable());
         assert!(!rate_limit.is_permanent());
         assert_eq!(rate_limit.retry_delay(), Some(60));
@@ -124,7 +133,10 @@ mod tests {
         assert!(!client_error.is_retryable());
         assert!(client_error.is_permanent());
 
-        let token_limit = LLMError::TokenLimit { used: 100000, max: 50000 };
+        let token_limit = LLMError::TokenLimit {
+            used: 100000,
+            max: 50000,
+        };
         assert!(!token_limit.is_retryable());
         assert!(token_limit.is_permanent());
     }
@@ -137,7 +149,9 @@ mod tests {
         let error = LLMError::Timeout { seconds: 30 };
         assert!(error.to_string().contains("30 seconds"));
 
-        let error = LLMError::RateLimit { retry_after: Some(60) };
+        let error = LLMError::RateLimit {
+            retry_after: Some(60),
+        };
         assert!(error.to_string().contains("Rate limit"));
         assert!(error.to_string().contains("60"));
     }

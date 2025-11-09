@@ -1,5 +1,4 @@
 /// Edit tool - performs search/replace operations on files
-
 use super::{Tool, ToolResult};
 use anyhow::{Context, Result};
 use serde_json::json;
@@ -7,6 +6,12 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub struct EditTool;
+
+impl Default for EditTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl EditTool {
     pub fn new() -> Self {
@@ -65,10 +70,7 @@ impl Tool for EditTool {
             .and_then(|v| v.as_str())
             .context("Missing 'replace' argument")?;
 
-        let replace_all = args
-            .get("all")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(true);
+        let replace_all = args.get("all").and_then(|v| v.as_bool()).unwrap_or(true);
 
         let path_buf = PathBuf::from(path);
 

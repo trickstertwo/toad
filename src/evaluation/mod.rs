@@ -2,23 +2,22 @@
 ///
 /// This module provides the core infrastructure for running and evaluating
 /// AI coding agent performance on SWE-bench tasks.
-
 use crate::config::ToadConfig;
 use crate::metrics::Metrics;
 use anyhow::Result;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use chrono::{DateTime, Utc};
 
 pub mod task_loader;
 pub use task_loader::TaskLoader;
 
 pub mod dataset_manager;
-pub use dataset_manager::{DatasetManager, DatasetSource, DatasetInfo};
+pub use dataset_manager::{DatasetInfo, DatasetManager, DatasetSource};
 
 pub mod experiment_manager;
-pub use experiment_manager::{ExperimentManager, Experiment, ExperimentStatus, ExperimentResults};
+pub use experiment_manager::{Experiment, ExperimentManager, ExperimentResults, ExperimentStatus};
 
 /// Complexity level of a task
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -226,7 +225,10 @@ impl EvaluationResults {
     /// Print summary
     pub fn print_summary(&self) {
         println!("\n=== Evaluation Results: {} ===", self.config_name);
-        println!("Accuracy: {:.2}% ({}/{})", self.accuracy, self.tasks_solved, self.total_tasks);
+        println!(
+            "Accuracy: {:.2}% ({}/{})",
+            self.accuracy, self.tasks_solved, self.total_tasks
+        );
         println!("Avg Cost: ${:.4}/task", self.avg_cost_usd);
         println!("Avg Duration: {:.2}s/task", self.avg_duration_ms / 1000.0);
         println!("Total Tasks: {}", self.total_tasks);
@@ -265,21 +267,21 @@ impl EvaluationHarness {
     }
 
     /// Run a single task with the agent
-    async fn run_task(&self, task: &Task, config: &ToadConfig) -> Result<TaskResult> {
+    async fn run_task(&self, task: &Task, _config: &ToadConfig) -> Result<TaskResult> {
         use crate::agent::Agent;
-        use crate::llm::{AnthropicClient, get_api_key};
-        use crate::tools::ToolRegistry;
+        use crate::llm::{get_api_key, AnthropicClient};
         use crate::metrics::MetricsCollector;
+        use crate::tools::ToolRegistry;
         use anyhow::Context;
 
         tracing::info!("Running task: {}", task.id);
 
         // Get API key
-        let api_key = get_api_key().context("Failed to get API key. Set ANTHROPIC_API_KEY environment variable")?;
+        let api_key = get_api_key()
+            .context("Failed to get API key. Set ANTHROPIC_API_KEY environment variable")?;
 
         // Create LLM client
-        let llm_client = AnthropicClient::new(api_key)
-            .with_model("claude-sonnet-4-20250514");
+        let llm_client = AnthropicClient::new(api_key).with_model("claude-sonnet-4-20250514");
 
         // Create tool registry based on milestone
         let tool_registry = ToolRegistry::m1_baseline();

@@ -1,8 +1,6 @@
 /// Metrics collection and analysis for TOAD evaluations
-
 use serde::{Deserialize, Serialize};
-use std::time::{Duration, Instant};
-use std::collections::HashMap;
+use std::time::Instant;
 
 /// Quality metrics for a task solution
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -130,7 +128,11 @@ impl Metrics {
     /// Calculate efficiency score (accuracy / cost)
     pub fn efficiency(&self) -> f64 {
         if self.cost_usd > 0.0 {
-            if self.solved { 1.0 / self.cost_usd } else { 0.0 }
+            if self.solved {
+                1.0 / self.cost_usd
+            } else {
+                0.0
+            }
         } else {
             0.0
         }
@@ -181,7 +183,13 @@ impl MetricsCollector {
     }
 
     /// Record an API call
-    pub fn record_api_call(&mut self, input_tokens: u64, output_tokens: u64, cached_tokens: u64, cost: f64) {
+    pub fn record_api_call(
+        &mut self,
+        input_tokens: u64,
+        output_tokens: u64,
+        cached_tokens: u64,
+        cost: f64,
+    ) {
         self.metrics.api_calls += 1;
         self.metrics.input_tokens += input_tokens;
         self.metrics.output_tokens += output_tokens;
@@ -278,17 +286,22 @@ impl AggregateMetrics {
         let mean_cost_usd = costs.iter().sum::<f64>() / count as f64;
         let mean_duration_ms = durations.iter().sum::<u64>() as f64 / count as f64;
         let mean_api_calls = metrics.iter().map(|m| m.api_calls as f64).sum::<f64>() / count as f64;
-        let mean_tokens = metrics.iter().map(|m| m.total_tokens() as f64).sum::<f64>() / count as f64;
+        let mean_tokens =
+            metrics.iter().map(|m| m.total_tokens() as f64).sum::<f64>() / count as f64;
 
         // Calculate standard deviations
-        let variance_cost = costs.iter()
+        let variance_cost = costs
+            .iter()
             .map(|c| (c - mean_cost_usd).powi(2))
-            .sum::<f64>() / count as f64;
+            .sum::<f64>()
+            / count as f64;
         let std_cost_usd = variance_cost.sqrt();
 
-        let variance_duration = durations.iter()
+        let variance_duration = durations
+            .iter()
             .map(|d| (*d as f64 - mean_duration_ms).powi(2))
-            .sum::<f64>() / count as f64;
+            .sum::<f64>()
+            / count as f64;
         let std_duration_ms = variance_duration.sqrt();
 
         // Min/max

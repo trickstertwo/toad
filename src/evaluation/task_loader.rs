@@ -1,10 +1,9 @@
 /// Task loader for SWE-bench datasets
-
-use super::{Task, Complexity};
+use super::{Complexity, Task};
 use anyhow::{Context, Result};
 use serde_json::Value;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// Load tasks from SWE-bench dataset
 pub struct TaskLoader {
@@ -19,15 +18,12 @@ impl TaskLoader {
 
     /// Load all tasks from the dataset
     pub fn load_all(&self) -> Result<Vec<Task>> {
-        let content = std::fs::read_to_string(&self.dataset_path)
-            .context("Failed to read dataset file")?;
+        let content =
+            std::fs::read_to_string(&self.dataset_path).context("Failed to read dataset file")?;
 
-        let tasks: Vec<Value> = serde_json::from_str(&content)
-            .context("Failed to parse JSON")?;
+        let tasks: Vec<Value> = serde_json::from_str(&content).context("Failed to parse JSON")?;
 
-        tasks.into_iter()
-            .map(|v| self.parse_task(v))
-            .collect()
+        tasks.into_iter().map(|v| self.parse_task(v)).collect()
     }
 
     /// Load a sample of N tasks
@@ -64,41 +60,49 @@ impl TaskLoader {
     fn parse_task(&self, value: Value) -> Result<Task> {
         let obj = value.as_object().context("Task is not an object")?;
 
-        let id = obj.get("instance_id")
+        let id = obj
+            .get("instance_id")
             .and_then(|v| v.as_str())
             .context("Missing instance_id")?
             .to_string();
 
-        let repo = obj.get("repo")
+        let repo = obj
+            .get("repo")
             .and_then(|v| v.as_str())
             .unwrap_or("unknown/unknown")
             .to_string();
 
-        let base_commit = obj.get("base_commit")
+        let base_commit = obj
+            .get("base_commit")
             .and_then(|v| v.as_str())
             .unwrap_or("unknown")
             .to_string();
 
-        let problem_statement = obj.get("problem_statement")
+        let problem_statement = obj
+            .get("problem_statement")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
 
-        let hints = obj.get("hints_text")
+        let hints = obj
+            .get("hints_text")
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
 
-        let test_patch = obj.get("test_patch")
+        let test_patch = obj
+            .get("test_patch")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
 
-        let files_to_modify = obj.get("patch")
+        let files_to_modify = obj
+            .get("patch")
             .and_then(|v| v.as_str())
             .map(|patch| self.extract_files_from_patch(patch))
             .unwrap_or_default();
 
-        let solution_patch = obj.get("patch")
+        let solution_patch = obj
+            .get("patch")
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
 
@@ -218,10 +222,7 @@ mod tests {
         let loader = TaskLoader::new(PathBuf::from("/tmp/test"));
 
         // Simple: short + few files
-        let complexity = loader.estimate_complexity(
-            "Short problem",
-            &[PathBuf::from("file.rs")],
-        );
+        let complexity = loader.estimate_complexity("Short problem", &[PathBuf::from("file.rs")]);
         assert_eq!(complexity, Complexity::Simple);
 
         // Hard: many files

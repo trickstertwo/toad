@@ -2,15 +2,14 @@
 ///
 /// This module provides infrastructure for managing A/B experiments,
 /// tracking results, and making decisions based on statistical evidence.
-
-use super::{EvaluationResults, Task};
-use crate::config::{FeatureFlags, ToadConfig};
+use super::EvaluationResults;
+use crate::config::FeatureFlags;
 use crate::stats::{ComparisonResult, Recommendation};
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// An experimental hypothesis to test
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -119,7 +118,10 @@ impl ExperimentManager {
         treatment: FeatureFlags,
         expected_improvement: f64,
     ) -> Result<String> {
-        let id = format!("exp_{}", chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0));
+        let id = format!(
+            "exp_{}",
+            chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0)
+        );
 
         let experiment = Experiment {
             id: id.clone(),
@@ -243,7 +245,7 @@ impl ExperimentManager {
         let completed = self.list_by_status(ExperimentStatus::Completed);
         let failed = self.list_by_status(ExperimentStatus::Failed);
 
-        report.push_str(&format!("## Summary\n"));
+        report.push_str("## Summary\n");
         report.push_str(&format!("- Planned: {}\n", planned.len()));
         report.push_str(&format!("- Running: {}\n", running.len()));
         report.push_str(&format!("- Completed: {}\n", completed.len()));
@@ -256,9 +258,18 @@ impl ExperimentManager {
                 report.push_str(&format!("**Hypothesis:** {}\n\n", exp.hypothesis));
 
                 if let Some(results) = &exp.results {
-                    report.push_str(&format!("**Baseline:** {:.2}%\n", results.baseline_results.accuracy));
-                    report.push_str(&format!("**Treatment:** {:.2}%\n", results.treatment_results.accuracy));
-                    report.push_str(&format!("**Delta:** {:+.2}%\n", results.comparison.delta.accuracy));
+                    report.push_str(&format!(
+                        "**Baseline:** {:.2}%\n",
+                        results.baseline_results.accuracy
+                    ));
+                    report.push_str(&format!(
+                        "**Treatment:** {:.2}%\n",
+                        results.treatment_results.accuracy
+                    ));
+                    report.push_str(&format!(
+                        "**Delta:** {:+.2}%\n",
+                        results.comparison.delta.accuracy
+                    ));
                     report.push_str(&format!("**Decision:** {:?}\n\n", results.decision));
                 }
             }
@@ -287,13 +298,15 @@ mod tests {
         let baseline = FeatureFlags::milestone_1();
         let treatment = FeatureFlags::milestone_2();
 
-        let id = manager.create_experiment(
-            "Test AST context".to_string(),
-            "AST improves accuracy by 3%".to_string(),
-            baseline,
-            treatment,
-            3.0,
-        ).unwrap();
+        let id = manager
+            .create_experiment(
+                "Test AST context".to_string(),
+                "AST improves accuracy by 3%".to_string(),
+                baseline,
+                treatment,
+                3.0,
+            )
+            .unwrap();
 
         assert!(manager.get(&id).is_some());
         assert_eq!(manager.get(&id).unwrap().status, ExperimentStatus::Planned);
@@ -304,15 +317,19 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let mut manager = ExperimentManager::new(temp_dir.path().to_path_buf());
 
-        let id = manager.create_experiment(
-            "Test".to_string(),
-            "Hypothesis".to_string(),
-            FeatureFlags::default(),
-            FeatureFlags::default(),
-            1.0,
-        ).unwrap();
+        let id = manager
+            .create_experiment(
+                "Test".to_string(),
+                "Hypothesis".to_string(),
+                FeatureFlags::default(),
+                FeatureFlags::default(),
+                1.0,
+            )
+            .unwrap();
 
-        manager.update_status(&id, ExperimentStatus::Running).unwrap();
+        manager
+            .update_status(&id, ExperimentStatus::Running)
+            .unwrap();
         assert_eq!(manager.get(&id).unwrap().status, ExperimentStatus::Running);
     }
 
@@ -321,23 +338,29 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let mut manager = ExperimentManager::new(temp_dir.path().to_path_buf());
 
-        manager.create_experiment(
-            "Exp 1".to_string(),
-            "H1".to_string(),
-            FeatureFlags::default(),
-            FeatureFlags::default(),
-            1.0,
-        ).unwrap();
+        manager
+            .create_experiment(
+                "Exp 1".to_string(),
+                "H1".to_string(),
+                FeatureFlags::default(),
+                FeatureFlags::default(),
+                1.0,
+            )
+            .unwrap();
 
-        let id2 = manager.create_experiment(
-            "Exp 2".to_string(),
-            "H2".to_string(),
-            FeatureFlags::default(),
-            FeatureFlags::default(),
-            2.0,
-        ).unwrap();
+        let id2 = manager
+            .create_experiment(
+                "Exp 2".to_string(),
+                "H2".to_string(),
+                FeatureFlags::default(),
+                FeatureFlags::default(),
+                2.0,
+            )
+            .unwrap();
 
-        manager.update_status(&id2, ExperimentStatus::Running).unwrap();
+        manager
+            .update_status(&id2, ExperimentStatus::Running)
+            .unwrap();
 
         let planned = manager.list_by_status(ExperimentStatus::Planned);
         let running = manager.list_by_status(ExperimentStatus::Running);
@@ -351,13 +374,15 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let mut manager = ExperimentManager::new(temp_dir.path().to_path_buf());
 
-        let id = manager.create_experiment(
-            "Test".to_string(),
-            "Hypothesis".to_string(),
-            FeatureFlags::default(),
-            FeatureFlags::default(),
-            1.0,
-        ).unwrap();
+        let id = manager
+            .create_experiment(
+                "Test".to_string(),
+                "Hypothesis".to_string(),
+                FeatureFlags::default(),
+                FeatureFlags::default(),
+                1.0,
+            )
+            .unwrap();
 
         // Create new manager and load
         let mut manager2 = ExperimentManager::new(temp_dir.path().to_path_buf());
@@ -372,13 +397,15 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let mut manager = ExperimentManager::new(temp_dir.path().to_path_buf());
 
-        manager.create_experiment(
-            "Exp 1".to_string(),
-            "H1".to_string(),
-            FeatureFlags::default(),
-            FeatureFlags::default(),
-            1.0,
-        ).unwrap();
+        manager
+            .create_experiment(
+                "Exp 1".to_string(),
+                "H1".to_string(),
+                FeatureFlags::default(),
+                FeatureFlags::default(),
+                1.0,
+            )
+            .unwrap();
 
         let report = manager.generate_report();
         assert!(report.contains("Experiment Report"));

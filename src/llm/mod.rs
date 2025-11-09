@@ -5,7 +5,6 @@
 /// - Message formatting and parsing
 /// - Token counting and cost tracking
 /// - Tool use (function calling) support
-
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -16,7 +15,7 @@ pub mod rate_limiter;
 
 pub use anthropic::AnthropicClient;
 pub use errors::LLMError;
-pub use rate_limiter::{RateLimiter, RateLimitConfig, RateLimitStatus};
+pub use rate_limiter::{RateLimitConfig, RateLimitStatus, RateLimiter};
 
 /// Represents a message in the conversation
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -102,11 +101,13 @@ impl Usage {
         let input_cost = (self.input_tokens as f64 / 1_000_000.0) * 3.0;
         let output_cost = (self.output_tokens as f64 / 1_000_000.0) * 15.0;
 
-        let cache_creation_cost = self.cache_creation_tokens
+        let cache_creation_cost = self
+            .cache_creation_tokens
             .map(|t| (t as f64 / 1_000_000.0) * 3.75)
             .unwrap_or(0.0);
 
-        let cache_read_cost = self.cache_read_tokens
+        let cache_read_cost = self
+            .cache_read_tokens
             .map(|t| (t as f64 / 1_000_000.0) * 0.30)
             .unwrap_or(0.0);
 
@@ -130,8 +131,7 @@ pub trait LLMClient: Send + Sync {
 
 /// Get API key from environment variable
 pub fn get_api_key() -> Result<String> {
-    env::var("ANTHROPIC_API_KEY")
-        .context("ANTHROPIC_API_KEY environment variable not set")
+    env::var("ANTHROPIC_API_KEY").context("ANTHROPIC_API_KEY environment variable not set")
 }
 
 #[cfg(test)]

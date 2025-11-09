@@ -5,11 +5,10 @@
 /// 2. Tool selection and execution
 /// 3. Iterative problem solving
 /// 4. Solution validation
-
 use crate::evaluation::Task;
-use crate::llm::{LLMClient, LLMResponse, Message, Role, StopReason, ToolUse};
+use crate::llm::{LLMClient, Message, StopReason, ToolUse};
 use crate::metrics::MetricsCollector;
-use crate::tools::{ToolRegistry, ToolResult};
+use crate::tools::ToolRegistry;
 use anyhow::{anyhow, Context, Result};
 use serde_json::json;
 
@@ -50,9 +49,7 @@ impl Agent {
         metrics.start();
 
         // Build initial prompt
-        let prompt = PromptBuilder::new()
-            .with_task(task)
-            .build();
+        let prompt = PromptBuilder::new().with_task(task).build();
 
         let mut conversation = vec![Message::user(prompt)];
         let mut step_count = 0;
@@ -99,14 +96,15 @@ impl Agent {
                     let tool_results = self.execute_tools(&response.tool_uses, metrics).await?;
 
                     // Add assistant message with tool uses
+                    let content_with_newline = format!("{}\n\n", response.content);
+                    let content_prefix = if response.content.is_empty() {
+                        ""
+                    } else {
+                        content_with_newline.as_str()
+                    };
                     conversation.push(Message::assistant(format!(
                         "{}Tool uses: {}",
-                        if response.content.is_empty() {
-                            ""
-                        } else {
-                            &format!("{}\n\n", response.content)
-                        },
-                        tool_results
+                        content_prefix, tool_results
                     )));
                 }
                 StopReason::EndTurn | StopReason::MaxTokens | StopReason::StopSequence => {
@@ -157,19 +155,22 @@ impl Agent {
             "read" => metrics.record_file_read(),
             "write" => metrics.record_file_write(),
             "edit" => metrics.record_edit_attempt(),
-            "bash" if tool_use.input.get("command").and_then(|c| c.as_str())
-                .map(|s| s.contains("test") || s.contains("pytest") || s.contains("cargo test"))
-                .unwrap_or(false) => {
+            "bash"
+                if tool_use
+                    .input
+                    .get("command")
+                    .and_then(|c| c.as_str())
+                    .map(|s| s.contains("test") || s.contains("pytest") || s.contains("cargo test"))
+                    .unwrap_or(false) =>
+            {
                 metrics.record_test_run()
-            },
+            }
             _ => {}
         }
 
         // Convert JSON input to HashMap
         let args = if let Some(obj) = tool_use.input.as_object() {
-            obj.iter()
-                .map(|(k, v)| (k.clone(), v.clone()))
-                .collect()
+            obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect()
         } else {
             return Err(anyhow!("Tool input must be a JSON object"));
         };
@@ -242,7 +243,10 @@ mod tests {
             _tools: Option<Vec<serde_json::Value>>,
         ) -> Result<LLMResponse> {
             let mut idx = self.current.lock().unwrap();
-            let response = self.responses.get(*idx).cloned()
+            let response = self
+                .responses
+                .get(*idx)
+                .cloned()
                 .ok_or_else(|| anyhow!("No more mock responses"))?;
             *idx += 1;
             Ok(response)

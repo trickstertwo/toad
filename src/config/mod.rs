@@ -1,6 +1,5 @@
 /// Feature flags for experimental A/B testing
 /// Each feature can be toggled on/off to measure its impact
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -137,19 +136,45 @@ impl FeatureFlags {
     /// Count enabled features
     pub fn enabled_count(&self) -> usize {
         let mut count = 0;
-        if self.context_ast { count += 1; }
-        if self.context_embeddings { count += 1; }
-        if self.context_graph { count += 1; }
-        if self.context_reranking { count += 1; }
-        if self.routing_semantic { count += 1; }
-        if self.routing_multi_model { count += 1; }
-        if self.routing_speculative { count += 1; }
-        if self.smart_test_selection { count += 1; }
-        if self.failure_memory { count += 1; }
-        if self.opportunistic_planning { count += 1; }
-        if self.prompt_caching { count += 1; }
-        if self.semantic_caching { count += 1; }
-        if self.tree_sitter_validation { count += 1; }
+        if self.context_ast {
+            count += 1;
+        }
+        if self.context_embeddings {
+            count += 1;
+        }
+        if self.context_graph {
+            count += 1;
+        }
+        if self.context_reranking {
+            count += 1;
+        }
+        if self.routing_semantic {
+            count += 1;
+        }
+        if self.routing_multi_model {
+            count += 1;
+        }
+        if self.routing_speculative {
+            count += 1;
+        }
+        if self.smart_test_selection {
+            count += 1;
+        }
+        if self.failure_memory {
+            count += 1;
+        }
+        if self.opportunistic_planning {
+            count += 1;
+        }
+        if self.prompt_caching {
+            count += 1;
+        }
+        if self.semantic_caching {
+            count += 1;
+        }
+        if self.tree_sitter_validation {
+            count += 1;
+        }
         count
     }
 

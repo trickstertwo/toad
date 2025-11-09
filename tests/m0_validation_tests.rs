@@ -2,37 +2,35 @@
 ///
 /// This test validates the complete experimental workflow from
 /// experiment creation through statistical comparison to decision.
-
 #[cfg(test)]
 mod m0_validation_tests {
-    use toad::config::{FeatureFlags, ToadConfig};
-    use toad::evaluation::{
-        task_loader, EvaluationHarness, ExperimentManager, ExperimentStatus,
-    };
-    use toad::stats::ComparisonResult;
-    use std::path::PathBuf;
+    
     use tempfile::TempDir;
+    use toad::config::{FeatureFlags, ToadConfig};
+    use toad::evaluation::{task_loader, EvaluationHarness, ExperimentManager, ExperimentStatus};
+    use toad::stats::ComparisonResult;
 
     /// Test the complete experimental workflow
     #[tokio::test]
+    #[ignore] // Requires ANTHROPIC_API_KEY, run with `cargo test -- --ignored`
     async fn test_complete_experimental_workflow() {
         // 1. Create experiment manager
         let temp_dir = TempDir::new().unwrap();
-        let mut exp_manager = ExperimentManager::new(
-            temp_dir.path().join("experiments")
-        );
+        let mut exp_manager = ExperimentManager::new(temp_dir.path().join("experiments"));
 
         // 2. Define hypothesis
         let baseline = FeatureFlags::milestone_1();
         let treatment = FeatureFlags::milestone_2();
 
-        let exp_id = exp_manager.create_experiment(
-            "Test AST Context".to_string(),
-            "AST-based context improves accuracy by 3-5 points".to_string(),
-            baseline.clone(),
-            treatment.clone(),
-            3.0,
-        ).unwrap();
+        let exp_id = exp_manager
+            .create_experiment(
+                "Test AST Context".to_string(),
+                "AST-based context improves accuracy by 3-5 points".to_string(),
+                baseline.clone(),
+                treatment.clone(),
+                3.0,
+            )
+            .unwrap();
 
         // Verify experiment created
         assert!(exp_manager.get(&exp_id).is_some());
@@ -42,7 +40,9 @@ mod m0_validation_tests {
         );
 
         // 3. Update status to running
-        exp_manager.update_status(&exp_id, ExperimentStatus::Running).unwrap();
+        exp_manager
+            .update_status(&exp_id, ExperimentStatus::Running)
+            .unwrap();
 
         // 4. Generate test tasks
         let tasks = task_loader::create_test_tasks(20);
@@ -54,10 +54,7 @@ mod m0_validation_tests {
             ..Default::default()
         };
 
-        let harness = EvaluationHarness::new(
-            tasks.clone(),
-            temp_dir.path().join("results")
-        );
+        let harness = EvaluationHarness::new(tasks.clone(), temp_dir.path().join("results"));
 
         let results_a = harness.evaluate(&config_a).await.unwrap();
         assert_eq!(results_a.total_tasks, 20);
@@ -81,13 +78,15 @@ mod m0_validation_tests {
         assert!(comparison.delta.accuracy.abs() <= 100.0);
 
         // 8. Record results in experiment
-        exp_manager.record_results(
-            &exp_id,
-            results_a,
-            results_b,
-            comparison,
-            "End-to-end test completed successfully".to_string(),
-        ).unwrap();
+        exp_manager
+            .record_results(
+                &exp_id,
+                results_a,
+                results_b,
+                comparison,
+                "End-to-end test completed successfully".to_string(),
+            )
+            .unwrap();
 
         // Verify experiment completed
         let exp = exp_manager.get(&exp_id).unwrap();
@@ -179,8 +178,8 @@ mod m0_validation_tests {
     /// Test dataset manager with different sources
     #[test]
     fn test_dataset_manager_sources() {
-        use toad::evaluation::{DatasetManager, DatasetSource};
         use tempfile::TempDir;
+        use toad::evaluation::{DatasetManager, DatasetSource};
 
         let temp_dir = TempDir::new().unwrap();
         let manager = DatasetManager::new(temp_dir.path().to_path_buf());
@@ -208,7 +207,7 @@ mod m0_validation_tests {
     /// Test metrics collection completeness
     #[test]
     fn test_metrics_completeness() {
-        use toad::metrics::{Metrics, MetricsCollector, QualityMetrics};
+        use toad::metrics::{MetricsCollector, QualityMetrics};
 
         let mut collector = MetricsCollector::new();
         collector.start();
@@ -243,9 +242,7 @@ mod m0_validation_tests {
         assert_eq!(metrics.edit_attempts, 1);
         assert_eq!(metrics.test_runs, 1);
         assert_eq!(metrics.agent_steps, 1);
-        // Time assertions may be 0 in fast tests, just verify they're set
-        assert!(metrics.duration_ms >= 0);
-        assert!(metrics.time_to_first_response_ms >= 0);
+        // Duration fields are u64, so they're always set (can be 0 for fast tests)
 
         // Test calculations
         assert_eq!(metrics.total_tokens(), 1500);
@@ -261,7 +258,9 @@ mod m0_validation_tests {
         use toad::stats::{ComparisonResult, Recommendation};
 
         fn create_results(name: &str, solved: Vec<bool>, costs: Vec<f64>) -> EvaluationResults {
-            let results: Vec<TaskResult> = solved.iter().zip(costs.iter())
+            let results: Vec<TaskResult> = solved
+                .iter()
+                .zip(costs.iter())
                 .enumerate()
                 .map(|(i, (s, c))| {
                     let mut result = TaskResult::new(format!("task-{}", i));
@@ -318,12 +317,19 @@ mod m0_validation_tests {
 
         assert_eq!(original.model, deserialized.model);
         assert_eq!(original.max_context_tokens, deserialized.max_context_tokens);
-        assert_eq!(original.features.context_ast, deserialized.features.context_ast);
-        assert_eq!(original.features.enabled_count(), deserialized.features.enabled_count());
+        assert_eq!(
+            original.features.context_ast,
+            deserialized.features.context_ast
+        );
+        assert_eq!(
+            original.features.enabled_count(),
+            deserialized.features.enabled_count()
+        );
     }
 
     /// Smoke test: Full pipeline with real file I/O
     #[tokio::test]
+    #[ignore] // Requires ANTHROPIC_API_KEY, run with `cargo test -- --ignored`
     async fn test_smoke_full_pipeline() {
         use tempfile::TempDir;
 
@@ -335,10 +341,7 @@ mod m0_validation_tests {
 
         // 2. Run evaluation
         let config = ToadConfig::minimal();
-        let harness = EvaluationHarness::new(
-            tasks,
-            temp_dir.path().join("results")
-        );
+        let harness = EvaluationHarness::new(tasks, temp_dir.path().join("results"));
 
         let results = harness.evaluate(&config).await.unwrap();
         assert_eq!(results.total_tasks, 5);
@@ -351,7 +354,7 @@ mod m0_validation_tests {
             .unwrap()
             .collect();
 
-        assert!(result_files.len() > 0);
+        assert!(!result_files.is_empty());
 
         // 5. Load results back
         for entry in result_files {
