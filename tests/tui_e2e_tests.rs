@@ -650,3 +650,339 @@ fn test_e2e_terminal_size_variations() {
             .expect(&format!("Failed to render at {}x{}", width, height));
     }
 }
+
+// ============================================================================
+// EDGE CASE TESTS (Added to improve test coverage)
+// ============================================================================
+
+#[test]
+fn test_e2e_quit_with_ctrl_d() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    assert_eq!(*app.screen(), AppScreen::Main);
+    assert!(!app.should_quit());
+
+    // Quit with Ctrl+D (when input is empty)
+    app.update(ctrl_key('d')).ok();
+
+    assert!(app.should_quit(), "Ctrl+D should quit when input is empty");
+
+    terminal.draw(|f| toad::core::ui::render(&mut app, f)).ok();
+}
+
+#[test]
+fn test_e2e_quit_with_esc_from_welcome() {
+    let mut app = App::new();
+
+    assert_eq!(*app.screen(), AppScreen::Welcome);
+    assert!(!app.should_quit());
+
+    // Quit with Esc from welcome
+    app.update(key_event(KeyCode::Esc)).ok();
+
+    assert!(app.should_quit(), "Esc should quit from welcome screen");
+}
+
+#[test]
+fn test_e2e_quit_with_esc_from_trust_dialog() {
+    let mut app = App::new();
+
+    // Navigate to trust dialog
+    app.update(key_event(KeyCode::Enter)).ok();
+    assert_eq!(*app.screen(), AppScreen::TrustDialog);
+
+    // Quit with Esc
+    app.update(key_event(KeyCode::Esc)).ok();
+
+    assert!(app.should_quit(), "Esc should quit from trust dialog");
+}
+
+#[test]
+fn test_e2e_trust_dialog_option_1() {
+    // Test option 1: Yes, for this session
+    let mut app = App::new();
+
+    // If welcome already shown (from session), manually set screen
+    if *app.screen() == AppScreen::Main {
+        // Skip this test if session already trusts folder
+        return;
+    }
+
+    app.update(key_event(KeyCode::Enter)).ok(); // To trust dialog
+    assert_eq!(*app.screen(), AppScreen::TrustDialog);
+
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    assert_eq!(*app.screen(), AppScreen::Main, "Option 1 should go to Main");
+    assert!(app.trust_dialog().is_none());
+}
+
+#[test]
+fn test_e2e_trust_dialog_option_3() {
+    // Test option 3: No, quit
+    let mut app = App::new();
+
+    // If welcome already shown, skip
+    if *app.screen() == AppScreen::Main {
+        return;
+    }
+
+    app.update(key_event(KeyCode::Enter)).ok();
+
+    // Skip if already on main (session persistence)
+    if *app.screen() != AppScreen::TrustDialog {
+        return;
+    }
+
+    app.update(key_event(KeyCode::Char('3'))).ok();
+
+    assert!(app.should_quit(), "Option 3 should quit");
+}
+
+#[test]
+fn test_e2e_trust_dialog_enter_confirms() {
+    let mut app = App::new();
+
+    // Navigate to trust dialog
+    app.update(key_event(KeyCode::Enter)).ok();
+    assert_eq!(*app.screen(), AppScreen::TrustDialog);
+
+    // Navigate to option 2 with arrow keys
+    app.update(key_event(KeyCode::Down)).ok();
+
+    // Confirm with Enter
+    app.update(key_event(KeyCode::Enter)).ok();
+
+    assert_eq!(*app.screen(), AppScreen::Main, "Enter should confirm selection");
+}
+
+#[test]
+fn test_e2e_input_field_with_unicode() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+    assert_eq!(*app.screen(), AppScreen::Main);
+
+    // Type Unicode characters
+    app.update(key_event(KeyCode::Char('🐸'))).ok();
+    app.update(key_event(KeyCode::Char('日'))).ok();
+    app.update(key_event(KeyCode::Char('本'))).ok();
+
+    // Should not crash with Unicode
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should render with Unicode input");
+
+    // Verify input field contains Unicode
+    assert!(app.input_field().value().len() > 0, "Input field should contain Unicode");
+}
+
+#[test]
+fn test_e2e_very_small_terminal() {
+    // Test with extremely small terminal (smaller than minimum practical size)
+    let sizes = [
+        (20, 8),   // Very small
+        (30, 10),  // Small
+        (40, 12),  // Minimal
+    ];
+
+    for (width, height) in sizes {
+        let backend = TestBackend::new(width, height);
+        let mut terminal = Terminal::new(backend).expect("Failed to create terminal");
+        let mut app = App::new();
+
+        // Should not panic even with tiny terminal
+        terminal
+            .draw(|frame| {
+                toad::core::ui::render(&mut app, frame);
+            })
+            .expect(&format!(
+                "Should render without panic at very small size {}x{}",
+                width, height
+            ));
+    }
+}
+
+#[test]
+fn test_e2e_input_field_very_long_text() {
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Type many characters (test truncation/wrapping)
+    for _ in 0..200 {
+        app.update(key_event(KeyCode::Char('a'))).ok();
+    }
+
+    // Should not crash with very long input
+    assert!(
+        app.input_field().value().len() > 0,
+        "Input field should handle long text"
+    );
+}
+
+#[test]
+fn test_e2e_rapid_screen_transitions() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Rapidly transition between screens
+    for _ in 0..50 {
+        // Welcome -> Trust
+        if *app.screen() == AppScreen::Welcome {
+            app.update(key_event(KeyCode::Enter)).ok();
+        }
+
+        // Trust -> Main (if on trust)
+        if *app.screen() == AppScreen::TrustDialog {
+            app.update(key_event(KeyCode::Char('1'))).ok();
+        }
+
+        // Main -> Help -> Main
+        if *app.screen() == AppScreen::Main {
+            app.update(key_event(KeyCode::Char('?'))).ok();
+            app.update(key_event(KeyCode::Char('?'))).ok();
+        }
+    }
+
+    // Should handle rapid transitions without crash
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should handle rapid transitions");
+}
+
+#[test]
+fn test_e2e_command_palette_with_input() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Open command palette
+    app.update(ctrl_key('p')).ok();
+    assert!(app.show_palette());
+
+    // Type some characters
+    app.update(key_event(KeyCode::Char('h'))).ok();
+    app.update(key_event(KeyCode::Char('e'))).ok();
+    app.update(key_event(KeyCode::Char('l'))).ok();
+    app.update(key_event(KeyCode::Char('p'))).ok();
+
+    // Should still render correctly
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should render palette with input");
+
+    // Close with Esc
+    app.update(key_event(KeyCode::Esc)).ok();
+    assert!(!app.show_palette(), "Esc should close palette");
+}
+
+#[test]
+fn test_e2e_help_screen_from_different_screens() {
+    let mut terminal = create_test_terminal();
+
+    // Cannot show help from Welcome (no '?' handler there)
+    // But can show help from Main
+
+    let mut app = App::new();
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+    assert_eq!(*app.screen(), AppScreen::Main);
+
+    // Show help
+    app.update(key_event(KeyCode::Char('?'))).ok();
+    assert!(app.show_help());
+
+    // Render should work
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should render help from main");
+
+    // Hide help
+    app.update(key_event(KeyCode::Char('?'))).ok();
+    assert!(!app.show_help());
+}
+
+#[test]
+fn test_e2e_backspace_empty_input() {
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Input field should be empty
+    assert_eq!(app.input_field().value().len(), 0);
+
+    // Backspace on empty input should not crash
+    app.update(key_event(KeyCode::Backspace)).ok();
+
+    assert_eq!(app.input_field().value().len(), 0, "Backspace on empty should stay empty");
+}
+
+#[test]
+fn test_e2e_multiple_backspaces() {
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Type some characters
+    app.update(key_event(KeyCode::Char('h'))).ok();
+    app.update(key_event(KeyCode::Char('e'))).ok();
+    app.update(key_event(KeyCode::Char('l'))).ok();
+    app.update(key_event(KeyCode::Char('l'))).ok();
+    app.update(key_event(KeyCode::Char('o'))).ok();
+
+    assert!(app.input_field().value().len() > 0);
+
+    // Backspace all characters
+    for _ in 0..10 {
+        // More backspaces than characters
+        app.update(key_event(KeyCode::Backspace)).ok();
+    }
+
+    // Should handle extra backspaces gracefully
+    assert_eq!(app.input_field().value().len(), 0, "Should be empty after backspacing");
+}
+
+#[test]
+fn test_e2e_terminal_resize_during_operation() {
+    let mut terminal = create_test_terminal();
+    let mut app = App::new();
+
+    // Navigate to main screen
+    app.update(key_event(KeyCode::Enter)).ok();
+    app.update(key_event(KeyCode::Char('1'))).ok();
+
+    // Type some text
+    app.update(key_event(KeyCode::Char('t'))).ok();
+    app.update(key_event(KeyCode::Char('e'))).ok();
+    app.update(key_event(KeyCode::Char('s'))).ok();
+    app.update(key_event(KeyCode::Char('t'))).ok();
+
+    // Simulate resize event
+    app.update(Event::Resize(100, 30)).ok();
+
+    // Should still render after resize
+    terminal
+        .draw(|f| toad::core::ui::render(&mut app, f))
+        .expect("Should render after resize");
+
+    // Input should still be there
+    assert!(app.input_field().value().len() > 0, "Input should persist after resize");
+}
