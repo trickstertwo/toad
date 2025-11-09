@@ -338,11 +338,10 @@ impl ContextBuilder {
     pub fn with_file(mut self, file: impl Into<String>) -> Self {
         let file_str = file.into();
         // Extract extension
-        if let Some(ext) = file_str.split('.').last() {
-            if ext != &file_str {
+        if let Some(ext) = file_str.split('.').next_back()
+            && ext != file_str {
                 self.context.file_extension = Some(ext.to_string());
             }
-        }
         self.context.current_file = Some(file_str);
         self
     }

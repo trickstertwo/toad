@@ -24,8 +24,10 @@ use std::fmt;
 
 /// Editor mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum EditorMode {
     /// Normal mode - navigation and commands
+    #[default]
     Normal,
     /// Insert mode - text editing
     Insert,
@@ -95,11 +97,6 @@ impl EditorMode {
     }
 }
 
-impl Default for EditorMode {
-    fn default() -> Self {
-        EditorMode::Normal
-    }
-}
 
 impl fmt::Display for EditorMode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -109,8 +106,10 @@ impl fmt::Display for EditorMode {
 
 /// Mode indicator display style
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum IndicatorStyle {
     /// Full mode name
+    #[default]
     Full,
     /// Short mode name
     Short,
@@ -118,11 +117,6 @@ pub enum IndicatorStyle {
     Block,
 }
 
-impl Default for IndicatorStyle {
-    fn default() -> Self {
-        IndicatorStyle::Full
-    }
-}
 
 /// Mode indicator widget
 pub struct ModeIndicator {

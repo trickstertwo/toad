@@ -461,36 +461,354 @@ impl Theme for CatppuccinLatte {
 mod tests {
     use super::*;
 
+    // ===== CatppuccinMocha Tests =====
     #[test]
-    fn test_catppuccin_mocha() {
+    fn test_mocha_metadata() {
         let theme = CatppuccinMocha;
         assert_eq!(theme.name(), "Catppuccin Mocha");
         assert!(theme.description().contains("Mocha"));
     }
 
     #[test]
-    fn test_catppuccin_macchiato() {
+    fn test_mocha_primary_colors() {
+        let theme = CatppuccinMocha;
+        assert_eq!(theme.primary(), Color::Rgb(166, 227, 161));
+        assert_eq!(theme.primary_bright(), Color::Rgb(180, 240, 175));
+        assert_eq!(theme.primary_dark(), Color::Rgb(150, 215, 145));
+    }
+
+    #[test]
+    fn test_mocha_grayscale() {
+        let theme = CatppuccinMocha;
+        assert_eq!(theme.white(), Color::Rgb(205, 214, 244));
+        assert_eq!(theme.light_gray(), Color::Rgb(186, 194, 222));
+        assert_eq!(theme.gray(), Color::Rgb(166, 173, 200));
+        assert_eq!(theme.dark_gray(), Color::Rgb(147, 153, 178));
+        assert_eq!(theme.darker_gray(), Color::Rgb(108, 112, 134));
+        assert_eq!(theme.black(), Color::Rgb(30, 30, 46));
+    }
+
+    #[test]
+    fn test_mocha_semantic_colors() {
+        let theme = CatppuccinMocha;
+        assert_eq!(theme.success(), Color::Rgb(166, 227, 161));
+        assert_eq!(theme.error(), Color::Rgb(243, 139, 168));
+        assert_eq!(theme.warning(), Color::Rgb(249, 226, 175));
+        assert_eq!(theme.info(), Color::Rgb(137, 180, 250));
+    }
+
+    #[test]
+    fn test_mocha_ui_colors() {
+        let theme = CatppuccinMocha;
+        assert_eq!(theme.background(), Color::Rgb(30, 30, 46));
+        assert_eq!(theme.foreground(), Color::Rgb(205, 214, 244));
+        assert_eq!(theme.border(), Color::Rgb(108, 112, 134));
+        assert_eq!(theme.border_focused(), Color::Rgb(166, 227, 161));
+        assert_eq!(theme.title(), Color::Rgb(205, 214, 244));
+        assert_eq!(theme.accent(), Color::Rgb(166, 227, 161));
+    }
+
+    // ===== CatppuccinMacchiato Tests =====
+    #[test]
+    fn test_macchiato_metadata() {
         let theme = CatppuccinMacchiato;
         assert_eq!(theme.name(), "Catppuccin Macchiato");
         assert!(theme.description().contains("Macchiato"));
     }
 
     #[test]
-    fn test_catppuccin_frappe() {
+    fn test_macchiato_primary_colors() {
+        let theme = CatppuccinMacchiato;
+        assert_eq!(theme.primary(), Color::Rgb(166, 218, 149));
+        assert_eq!(theme.primary_bright(), Color::Rgb(180, 230, 165));
+        assert_eq!(theme.primary_dark(), Color::Rgb(150, 205, 135));
+    }
+
+    #[test]
+    fn test_macchiato_grayscale() {
+        let theme = CatppuccinMacchiato;
+        assert_eq!(theme.white(), Color::Rgb(202, 211, 245));
+        assert_eq!(theme.light_gray(), Color::Rgb(184, 192, 224));
+        assert_eq!(theme.gray(), Color::Rgb(165, 173, 203));
+        assert_eq!(theme.dark_gray(), Color::Rgb(128, 135, 162));
+        assert_eq!(theme.darker_gray(), Color::Rgb(110, 115, 141));
+        assert_eq!(theme.black(), Color::Rgb(36, 39, 58));
+    }
+
+    #[test]
+    fn test_macchiato_ui_colors() {
+        let theme = CatppuccinMacchiato;
+        assert_eq!(theme.background(), Color::Rgb(36, 39, 58));
+        assert_eq!(theme.foreground(), Color::Rgb(202, 211, 245));
+        assert_eq!(theme.border(), Color::Rgb(110, 115, 141));
+        assert_eq!(theme.border_focused(), Color::Rgb(166, 218, 149));
+    }
+
+    // ===== CatppuccinFrappe Tests =====
+    #[test]
+    fn test_frappe_metadata() {
         let theme = CatppuccinFrappe;
         assert_eq!(theme.name(), "Catppuccin Frappe");
         assert!(theme.description().contains("Frappe"));
     }
 
     #[test]
-    fn test_catppuccin_latte() {
+    fn test_frappe_primary_colors() {
+        let theme = CatppuccinFrappe;
+        assert_eq!(theme.primary(), Color::Rgb(166, 209, 137));
+        assert_eq!(theme.primary_bright(), Color::Rgb(180, 220, 150));
+        assert_eq!(theme.primary_dark(), Color::Rgb(150, 195, 125));
+    }
+
+    #[test]
+    fn test_frappe_grayscale() {
+        let theme = CatppuccinFrappe;
+        assert_eq!(theme.white(), Color::Rgb(198, 208, 245));
+        assert_eq!(theme.light_gray(), Color::Rgb(181, 191, 226));
+        assert_eq!(theme.gray(), Color::Rgb(165, 173, 206));
+        assert_eq!(theme.dark_gray(), Color::Rgb(131, 139, 167));
+        assert_eq!(theme.darker_gray(), Color::Rgb(115, 121, 148));
+        assert_eq!(theme.black(), Color::Rgb(48, 52, 70));
+    }
+
+    #[test]
+    fn test_frappe_ui_colors() {
+        let theme = CatppuccinFrappe;
+        assert_eq!(theme.background(), Color::Rgb(48, 52, 70));
+        assert_eq!(theme.foreground(), Color::Rgb(198, 208, 245));
+        assert_eq!(theme.border(), Color::Rgb(115, 121, 148));
+        assert_eq!(theme.border_focused(), Color::Rgb(166, 209, 137));
+    }
+
+    // ===== CatppuccinLatte Tests =====
+    #[test]
+    fn test_latte_metadata() {
         let theme = CatppuccinLatte;
         assert_eq!(theme.name(), "Catppuccin Latte");
         assert!(theme.description().contains("Latte"));
-        // Light theme should have bright background
-        match theme.background() {
-            Color::Rgb(r, g, b) => assert!(r > 200 && g > 200 && b > 200),
-            _ => panic!("Expected RGB color"),
-        }
+    }
+
+    #[test]
+    fn test_latte_primary_colors() {
+        let theme = CatppuccinLatte;
+        assert_eq!(theme.primary(), Color::Rgb(64, 160, 43));
+        assert_eq!(theme.primary_bright(), Color::Rgb(80, 180, 55));
+        assert_eq!(theme.primary_dark(), Color::Rgb(50, 140, 35));
+    }
+
+    #[test]
+    fn test_latte_grayscale() {
+        let theme = CatppuccinLatte;
+        assert_eq!(theme.white(), Color::Rgb(76, 79, 105));
+        assert_eq!(theme.light_gray(), Color::Rgb(92, 95, 119));
+        assert_eq!(theme.gray(), Color::Rgb(108, 111, 133));
+        assert_eq!(theme.dark_gray(), Color::Rgb(156, 160, 176));
+        assert_eq!(theme.darker_gray(), Color::Rgb(172, 176, 190));
+        assert_eq!(theme.black(), Color::Rgb(239, 241, 245));
+    }
+
+    #[test]
+    fn test_latte_semantic_colors() {
+        let theme = CatppuccinLatte;
+        assert_eq!(theme.success(), Color::Rgb(64, 160, 43));
+        assert_eq!(theme.error(), Color::Rgb(210, 15, 57));
+        assert_eq!(theme.warning(), Color::Rgb(223, 142, 29));
+        assert_eq!(theme.info(), Color::Rgb(30, 102, 245));
+    }
+
+    #[test]
+    fn test_latte_ui_colors() {
+        let theme = CatppuccinLatte;
+        assert_eq!(theme.background(), Color::Rgb(239, 241, 245));
+        assert_eq!(theme.foreground(), Color::Rgb(76, 79, 105));
+        assert_eq!(theme.border(), Color::Rgb(172, 176, 190));
+        assert_eq!(theme.border_focused(), Color::Rgb(64, 160, 43));
+    }
+
+    // ===== Cross-variant tests =====
+    #[test]
+    fn test_all_variants_have_unique_names() {
+        let mocha = CatppuccinMocha;
+        let macchiato = CatppuccinMacchiato;
+        let frappe = CatppuccinFrappe;
+        let latte = CatppuccinLatte;
+
+        assert_ne!(mocha.name(), macchiato.name());
+        assert_ne!(mocha.name(), frappe.name());
+        assert_ne!(mocha.name(), latte.name());
+        assert_ne!(macchiato.name(), frappe.name());
+    }
+
+    #[test]
+    fn test_latte_background_brightness() {
+        let theme = CatppuccinLatte;
+        // Latte (light variant) should have bright background
+        assert_eq!(theme.background(), Color::Rgb(239, 241, 245));
+        // Verified: all RGB values (239, 241, 245) are > 200, confirming it's bright
+    }
+
+    #[test]
+    fn test_dark_variants_background_darkness() {
+        let mocha = CatppuccinMocha;
+        let macchiato = CatppuccinMacchiato;
+        let frappe = CatppuccinFrappe;
+
+        // Dark variants should have dark backgrounds - verify by comparing to known dark values
+        assert_eq!(mocha.background(), Color::Rgb(30, 30, 46));
+        assert_eq!(macchiato.background(), Color::Rgb(36, 39, 58));
+        assert_eq!(frappe.background(), Color::Rgb(48, 52, 70));
+    }
+
+    // ===== Mocha rainbow colors =====
+    #[test]
+    fn test_mocha_rainbow_colors() {
+        let theme = CatppuccinMocha;
+        assert_eq!(theme.red(), Color::Rgb(243, 139, 168));
+        assert_eq!(theme.yellow(), Color::Rgb(249, 226, 175));
+        assert_eq!(theme.blue(), Color::Rgb(137, 180, 250));
+        assert_eq!(theme.green(), Color::Rgb(166, 227, 161));
+        assert_eq!(theme.cyan(), Color::Rgb(148, 226, 213));
+        assert_eq!(theme.magenta(), Color::Rgb(245, 194, 231));
+    }
+
+    // ===== Macchiato comprehensive coverage =====
+    #[test]
+    fn test_macchiato_semantic_colors() {
+        let theme = CatppuccinMacchiato;
+        assert_eq!(theme.success(), Color::Rgb(166, 218, 149));
+        assert_eq!(theme.error(), Color::Rgb(237, 135, 150));
+        assert_eq!(theme.warning(), Color::Rgb(238, 212, 159));
+        assert_eq!(theme.info(), Color::Rgb(138, 173, 244));
+    }
+
+    #[test]
+    fn test_macchiato_rainbow_colors() {
+        let theme = CatppuccinMacchiato;
+        assert_eq!(theme.red(), Color::Rgb(237, 135, 150));
+        assert_eq!(theme.yellow(), Color::Rgb(238, 212, 159));
+        assert_eq!(theme.blue(), Color::Rgb(138, 173, 244));
+        assert_eq!(theme.green(), Color::Rgb(166, 218, 149));
+        assert_eq!(theme.cyan(), Color::Rgb(139, 213, 202));
+        assert_eq!(theme.magenta(), Color::Rgb(245, 169, 227));
+    }
+
+    #[test]
+    fn test_macchiato_title_and_accent() {
+        let theme = CatppuccinMacchiato;
+        assert_eq!(theme.title(), Color::Rgb(202, 211, 245));
+        assert_eq!(theme.accent(), Color::Rgb(166, 218, 149));
+    }
+
+    // ===== Frappe comprehensive coverage =====
+    #[test]
+    fn test_frappe_semantic_colors() {
+        let theme = CatppuccinFrappe;
+        assert_eq!(theme.success(), Color::Rgb(166, 209, 137));
+        assert_eq!(theme.error(), Color::Rgb(231, 130, 132));
+        assert_eq!(theme.warning(), Color::Rgb(229, 200, 144));
+        assert_eq!(theme.info(), Color::Rgb(140, 170, 238));
+    }
+
+    #[test]
+    fn test_frappe_rainbow_colors() {
+        let theme = CatppuccinFrappe;
+        assert_eq!(theme.red(), Color::Rgb(231, 130, 132));
+        assert_eq!(theme.yellow(), Color::Rgb(229, 200, 144));
+        assert_eq!(theme.blue(), Color::Rgb(140, 170, 238));
+        assert_eq!(theme.green(), Color::Rgb(166, 209, 137));
+        assert_eq!(theme.cyan(), Color::Rgb(129, 200, 190));
+        assert_eq!(theme.magenta(), Color::Rgb(244, 184, 228));
+    }
+
+    #[test]
+    fn test_frappe_title_and_accent() {
+        let theme = CatppuccinFrappe;
+        assert_eq!(theme.title(), Color::Rgb(198, 208, 245));
+        assert_eq!(theme.accent(), Color::Rgb(166, 209, 137));
+    }
+
+    // ===== Latte comprehensive coverage =====
+    #[test]
+    fn test_latte_rainbow_colors() {
+        let theme = CatppuccinLatte;
+        assert_eq!(theme.red(), Color::Rgb(210, 15, 57));
+        assert_eq!(theme.yellow(), Color::Rgb(223, 142, 29));
+        assert_eq!(theme.blue(), Color::Rgb(30, 102, 245));
+        assert_eq!(theme.green(), Color::Rgb(64, 160, 43));
+        assert_eq!(theme.cyan(), Color::Rgb(23, 146, 153));
+        assert_eq!(theme.magenta(), Color::Rgb(234, 118, 203));
+    }
+
+    #[test]
+    fn test_latte_title_and_accent() {
+        let theme = CatppuccinLatte;
+        assert_eq!(theme.title(), Color::Rgb(76, 79, 105));
+        assert_eq!(theme.accent(), Color::Rgb(64, 160, 43));
+    }
+
+    // ===== Color consistency tests =====
+    #[test]
+    fn test_all_themes_primary_matches_accent() {
+        let mocha = CatppuccinMocha;
+        let macchiato = CatppuccinMacchiato;
+        let frappe = CatppuccinFrappe;
+        let latte = CatppuccinLatte;
+
+        assert_eq!(mocha.primary(), mocha.accent());
+        assert_eq!(macchiato.primary(), macchiato.accent());
+        assert_eq!(frappe.primary(), frappe.accent());
+        assert_eq!(latte.primary(), latte.accent());
+    }
+
+    #[test]
+    fn test_all_themes_success_uses_green() {
+        let mocha = CatppuccinMocha;
+        let macchiato = CatppuccinMacchiato;
+        let frappe = CatppuccinFrappe;
+        let latte = CatppuccinLatte;
+
+        assert_eq!(mocha.success(), mocha.green());
+        assert_eq!(macchiato.success(), macchiato.green());
+        assert_eq!(frappe.success(), frappe.green());
+        assert_eq!(latte.success(), latte.green());
+    }
+
+    #[test]
+    fn test_all_themes_error_uses_red() {
+        let mocha = CatppuccinMocha;
+        let macchiato = CatppuccinMacchiato;
+        let frappe = CatppuccinFrappe;
+        let latte = CatppuccinLatte;
+
+        assert_eq!(mocha.error(), mocha.red());
+        assert_eq!(macchiato.error(), macchiato.red());
+        assert_eq!(frappe.error(), frappe.red());
+        assert_eq!(latte.error(), latte.red());
+    }
+
+    #[test]
+    fn test_all_themes_warning_uses_yellow() {
+        let mocha = CatppuccinMocha;
+        let macchiato = CatppuccinMacchiato;
+        let frappe = CatppuccinFrappe;
+        let latte = CatppuccinLatte;
+
+        assert_eq!(mocha.warning(), mocha.yellow());
+        assert_eq!(macchiato.warning(), macchiato.yellow());
+        assert_eq!(frappe.warning(), frappe.yellow());
+        assert_eq!(latte.warning(), latte.yellow());
+    }
+
+    #[test]
+    fn test_all_themes_info_uses_blue() {
+        let mocha = CatppuccinMocha;
+        let macchiato = CatppuccinMacchiato;
+        let frappe = CatppuccinFrappe;
+        let latte = CatppuccinLatte;
+
+        assert_eq!(mocha.info(), mocha.blue());
+        assert_eq!(macchiato.info(), macchiato.blue());
+        assert_eq!(frappe.info(), frappe.blue());
+        assert_eq!(latte.info(), latte.blue());
     }
 }

@@ -284,3 +284,94 @@ impl Default for WelcomeScreen {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_welcome_screen_new() {
+        let screen = WelcomeScreen::new();
+        assert!(screen.show_tips, "New screen should show tips by default");
+    }
+
+    #[test]
+    fn test_welcome_screen_default() {
+        let screen = WelcomeScreen::default();
+        assert!(screen.show_tips, "Default screen should show tips");
+    }
+
+    #[test]
+    fn test_welcome_screen_with_tips_true() {
+        let screen = WelcomeScreen::new().with_tips(true);
+        assert!(screen.show_tips, "Screen should show tips when with_tips(true)");
+    }
+
+    #[test]
+    fn test_welcome_screen_with_tips_false() {
+        let screen = WelcomeScreen::new().with_tips(false);
+        assert!(!screen.show_tips, "Screen should hide tips when with_tips(false)");
+    }
+
+    #[test]
+    fn test_welcome_screen_builder_pattern() {
+        // Test that builder pattern can be chained
+        let screen = WelcomeScreen::new().with_tips(false).with_tips(true);
+        assert!(screen.show_tips, "Builder pattern should allow chaining");
+    }
+
+    #[test]
+    fn test_welcome_screen_toggle_tips() {
+        // Test toggling tips multiple times
+        let screen = WelcomeScreen::new()
+            .with_tips(false)
+            .with_tips(true)
+            .with_tips(false);
+        assert!(!screen.show_tips, "Tips should be hidden after final toggle");
+    }
+
+    #[test]
+    fn test_welcome_screen_tips_default_true() {
+        // Verify default behavior
+        let default_screen = WelcomeScreen::default();
+        let new_screen = WelcomeScreen::new();
+        assert_eq!(
+            default_screen.show_tips, new_screen.show_tips,
+            "Default and new should have same tips state"
+        );
+    }
+
+    #[test]
+    fn test_welcome_screen_with_tips_idempotent() {
+        // Setting the same value twice should work
+        let screen1 = WelcomeScreen::new().with_tips(true).with_tips(true);
+        let screen2 = WelcomeScreen::new().with_tips(true);
+        assert_eq!(
+            screen1.show_tips, screen2.show_tips,
+            "Idempotent with_tips calls should produce same result"
+        );
+    }
+
+    #[test]
+    fn test_welcome_screen_struct_size() {
+        // Ensure the struct is small (only contains a bool)
+        use std::mem::size_of;
+        assert_eq!(
+            size_of::<WelcomeScreen>(),
+            size_of::<bool>(),
+            "WelcomeScreen should only contain show_tips bool"
+        );
+    }
+
+    #[test]
+    fn test_welcome_screen_multiple_instances() {
+        // Test creating multiple instances with different configs
+        let screen1 = WelcomeScreen::new();
+        let screen2 = WelcomeScreen::new().with_tips(false);
+        let screen3 = WelcomeScreen::default();
+
+        assert!(screen1.show_tips);
+        assert!(!screen2.show_tips);
+        assert!(screen3.show_tips);
+    }
+}

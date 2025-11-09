@@ -159,7 +159,9 @@ impl NerdFonts {
         let name_lower = name.to_lowercase();
 
         // Special folder names
-        let special_icon = match name_lower.as_str() {
+        
+
+        (match name_lower.as_str() {
             ".git" => "",
             "node_modules" => "",
             "target" => "",
@@ -173,16 +175,8 @@ impl NerdFonts {
             ".vscode" => "",
             "bin" => "",
             "lib" => "",
-            _ => {
-                if open {
-                    ""
-                } else {
-                    ""
-                }
-            }
-        };
-
-        special_icon
+            _ => ""
+        }) as _
     }
 
     /// Get git status icon

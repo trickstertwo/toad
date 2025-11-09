@@ -140,12 +140,11 @@ impl FileOps {
         }
 
         // Create parent directory if needed
-        if self.create_parents {
-            if let Some(parent) = dest_path.parent() {
+        if self.create_parents
+            && let Some(parent) = dest_path.parent() {
                 fs::create_dir_all(parent)
                     .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
             }
-        }
 
         // Perform copy
         fs::copy(src_path, dest_path)
@@ -212,12 +211,11 @@ impl FileOps {
         }
 
         // Create parent directory if needed
-        if self.create_parents {
-            if let Some(parent) = dest_path.parent() {
+        if self.create_parents
+            && let Some(parent) = dest_path.parent() {
                 fs::create_dir_all(parent)
                     .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
             }
-        }
 
         // Perform move
         fs::rename(src_path, dest_path)

@@ -145,7 +145,7 @@ impl Workspace {
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
-            .as_secs()
+            .as_millis() as u64
     }
 }
 
@@ -692,11 +692,12 @@ mod tests {
         manager.create_workspace("p1", "/path1");
         manager.create_workspace("p2", "/path2");
 
+        // Sleep to ensure different timestamps (now using millisecond granularity)
         std::thread::sleep(std::time::Duration::from_millis(10));
         manager.switch_workspace("p2");
 
         let workspaces = manager.workspaces_by_recent();
-        assert_eq!(workspaces[0].name(), "p2");
-        assert_eq!(workspaces[1].name(), "p1");
+        assert_eq!(workspaces[0].name(), "p2", "Most recently accessed workspace should be first");
+        assert_eq!(workspaces[1].name(), "p1", "Least recently accessed workspace should be second");
     }
 }

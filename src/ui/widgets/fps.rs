@@ -563,4 +563,563 @@ mod tests {
         assert!(fps.current_fps() > 0.0);
         assert!(fps.average_fps() > 0.0);
     }
+
+    // ============ Default Trait Test ============
+
+    #[test]
+    fn test_fps_counter_default() {
+        let fps = FpsCounter::default();
+        assert_eq!(fps.sample_count(), 0);
+        assert_eq!(fps.current_fps(), 0.0);
+        assert_eq!(fps.max_samples, 60);
+        assert!(!fps.show_stats);
+    }
+
+    // ============ Clone Trait Test ============
+
+    #[test]
+    fn test_fps_counter_clone() {
+        let mut fps1 = FpsCounter::new().with_stats(true);
+        thread::sleep(Duration::from_millis(10));
+        fps1.tick();
+
+        let fps2 = fps1.clone();
+        assert_eq!(fps1.sample_count(), fps2.sample_count());
+        assert_eq!(fps1.current_fps(), fps2.current_fps());
+        assert_eq!(fps1.show_stats, fps2.show_stats);
+    }
+
+    // ============ Debug Trait Test ============
+
+    #[test]
+    fn test_fps_counter_debug() {
+        let fps = FpsCounter::new();
+        let debug_str = format!("{:?}", fps);
+        assert!(debug_str.contains("FpsCounter"));
+    }
+
+    // ============ Extreme Stress Tests ============
+
+    #[test]
+    fn test_fps_10k_ticks() {
+        let mut fps = FpsCounter::with_capacity(10000);
+
+        for _ in 0..10000 {
+            fps.tick();
+        }
+
+        assert_eq!(fps.sample_count(), 10000);
+        assert!(fps.current_fps() > 0.0);
+        assert!(fps.average_fps() > 0.0);
+    }
+
+    #[test]
+    fn test_fps_large_capacity_10k() {
+        let fps = FpsCounter::with_capacity(10000);
+        assert_eq!(fps.max_samples, 10000);
+        assert_eq!(fps.sample_count(), 0);
+    }
+
+    #[test]
+    fn test_fps_rapid_tick_reset_cycles_1000() {
+        let mut fps = FpsCounter::new();
+
+        for _ in 0..1000 {
+            fps.tick();
+            fps.reset();
+        }
+
+        assert_eq!(fps.sample_count(), 0);
+        assert_eq!(fps.current_fps(), 0.0);
+    }
+
+    #[test]
+    fn test_fps_extreme_threshold_values() {
+        let fps = FpsCounter::new()
+            .with_warning_threshold(1000.0)
+            .with_critical_threshold(0.001);
+
+        assert_eq!(fps.warning_threshold, 1000.0);
+        assert_eq!(fps.critical_threshold, 0.001);
+    }
+
+    #[test]
+    fn test_fps_alternating_fast_slow_frames_1000() {
+        let mut fps = FpsCounter::with_capacity(2000);
+
+        for i in 0..1000 {
+            if i % 2 == 0 {
+                thread::sleep(Duration::from_micros(100));
+            } else {
+                thread::sleep(Duration::from_micros(500));
+            }
+            fps.tick();
+        }
+
+        assert_eq!(fps.sample_count(), 1000);
+        assert!(fps.min_fps() > 0.0);
+        assert!(fps.max_fps() > fps.min_fps());
+    }
+
+    // ============ FPS Color Edge Cases ============
+
+    #[test]
+    fn test_fps_color_critical_red() {
+        let mut fps = FpsCounter::new()
+            .with_warning_threshold(30.0)
+            .with_critical_threshold(15.0);
+
+        // Force very low FPS by setting current_fps directly via tick with long delay
+        thread::sleep(Duration::from_millis(100)); // ~10 FPS
+        fps.tick();
+
+        let color = fps.fps_color();
+        assert_eq!(color, Color::Red);
+    }
+
+    #[test]
+    fn test_fps_color_warning_yellow() {
+        let mut fps = FpsCounter::new()
+            .with_warning_threshold(100.0)
+            .with_critical_threshold(50.0);
+
+        thread::sleep(Duration::from_millis(15)); // ~66 FPS (between 50 and 100)
+        fps.tick();
+
+        let color = fps.fps_color();
+        assert_eq!(color, Color::Yellow);
+    }
+
+    #[test]
+    fn test_fps_color_boundary_exactly_at_warning() {
+        let mut fps = FpsCounter::new()
+            .with_warning_threshold(30.0)
+            .with_critical_threshold(15.0);
+
+        // Manually set current_fps to exactly warning threshold
+        fps.current_fps = 30.0;
+
+        let color = fps.fps_color();
+        // At exactly 30.0, it's not < 30.0, so should be green
+        assert_eq!(color, Color::Green);
+    }
+
+    // ============ Sample Capacity Edge Cases ============
+
+    #[test]
+    fn test_fps_capacity_zero() {
+        let mut fps = FpsCounter::with_capacity(0);
+        fps.tick();
+        // With capacity 0, should immediately remove samples
+        assert_eq!(fps.sample_count(), 0);
+    }
+
+    #[test]
+    fn test_fps_capacity_one() {
+        let mut fps = FpsCounter::with_capacity(1);
+
+        thread::sleep(Duration::from_millis(10));
+        fps.tick();
+        assert_eq!(fps.sample_count(), 1);
+
+        thread::sleep(Duration::from_millis(10));
+        fps.tick();
+        // Should only keep 1 sample
+        assert_eq!(fps.sample_count(), 1);
+    }
+
+    #[test]
+    fn test_fps_exact_capacity_boundary() {
+        let mut fps = FpsCounter::with_capacity(5);
+
+        for _ in 0..5 {
+            thread::sleep(Duration::from_millis(1));
+            fps.tick();
+        }
+
+        assert_eq!(fps.sample_count(), 5);
+
+        // One more should evict oldest
+        thread::sleep(Duration::from_millis(1));
+        fps.tick();
+        assert_eq!(fps.sample_count(), 5);
+    }
+
+    #[test]
+    fn test_fps_way_over_capacity() {
+        let mut fps = FpsCounter::with_capacity(10);
+
+        for _ in 0..100 {
+            fps.tick();
+        }
+
+        // Should never exceed capacity
+        assert_eq!(fps.sample_count(), 10);
+    }
+
+    // ============ Empty State Operations ============
+
+    #[test]
+    fn test_fps_all_getters_on_empty() {
+        let fps = FpsCounter::new();
+
+        assert_eq!(fps.current_fps(), 0.0);
+        assert_eq!(fps.average_fps(), 0.0);
+        assert_eq!(fps.min_fps(), 0.0);
+        assert_eq!(fps.max_fps(), 0.0);
+        assert_eq!(fps.average_frame_time_ms(), 0.0);
+        assert_eq!(fps.sample_count(), 0);
+    }
+
+    #[test]
+    fn test_fps_reset_on_empty() {
+        let mut fps = FpsCounter::new();
+        fps.reset();
+
+        assert_eq!(fps.sample_count(), 0);
+        assert_eq!(fps.current_fps(), 0.0);
+    }
+
+    #[test]
+    fn test_fps_render_on_empty() {
+        let fps = FpsCounter::new();
+        let display = fps.render_string();
+
+        assert!(display.contains("FPS"));
+        assert!(display.contains("0.0"));
+    }
+
+    // ============ Multi-Phase Comprehensive Workflow ============
+
+    #[test]
+    fn test_fps_10_phase_comprehensive_workflow() {
+        let mut fps = FpsCounter::with_capacity(100)
+            .with_stats(true)
+            .with_warning_threshold(50.0)
+            .with_critical_threshold(20.0);
+
+        // Phase 1: Initial state
+        assert_eq!(fps.sample_count(), 0);
+
+        // Phase 2: Add some fast frames
+        for _ in 0..10 {
+            thread::sleep(Duration::from_micros(100));
+            fps.tick();
+        }
+        assert_eq!(fps.sample_count(), 10);
+
+        // Phase 3: Add some slow frames
+        for _ in 0..5 {
+            thread::sleep(Duration::from_millis(5));
+            fps.tick();
+        }
+        assert_eq!(fps.sample_count(), 15);
+
+        // Phase 4: Check statistics
+        assert!(fps.current_fps() > 0.0);
+        assert!(fps.average_fps() > 0.0);
+        assert!(fps.min_fps() > 0.0);
+        assert!(fps.max_fps() >= fps.min_fps());
+
+        // Phase 5: Fill to capacity
+        for _ in 0..85 {
+            fps.tick();
+        }
+        assert_eq!(fps.sample_count(), 100);
+
+        // Phase 6: Overflow capacity
+        for _ in 0..20 {
+            fps.tick();
+        }
+        assert_eq!(fps.sample_count(), 100); // Should stay at capacity
+
+        // Phase 7: Check render with stats
+        let display = fps.render_string();
+        assert!(display.contains("avg"));
+        assert!(display.contains("min"));
+        assert!(display.contains("max"));
+        assert!(display.contains("ms"));
+
+        // Phase 8: Clone and verify independence
+        let fps2 = fps.clone();
+        assert_eq!(fps.sample_count(), fps2.sample_count());
+
+        // Phase 9: Reset
+        fps.reset();
+        assert_eq!(fps.sample_count(), 0);
+        assert_eq!(fps.current_fps(), 0.0);
+
+        // Phase 10: Verify original still works
+        fps.tick();
+        assert_eq!(fps.sample_count(), 1);
+        assert!(fps.current_fps() > 0.0);
+    }
+
+    // ============ Frame Time Edge Cases ============
+
+    #[test]
+    fn test_fps_very_fast_frames_microseconds() {
+        let mut fps = FpsCounter::new();
+
+        for _ in 0..10 {
+            thread::sleep(Duration::from_micros(10));
+            fps.tick();
+        }
+
+        assert_eq!(fps.sample_count(), 10);
+        // Very fast frames should produce high FPS
+        assert!(fps.current_fps() > 1000.0);
+    }
+
+    #[test]
+    fn test_fps_very_slow_frames_seconds() {
+        let mut fps = FpsCounter::new();
+
+        thread::sleep(Duration::from_secs(1));
+        fps.tick();
+
+        assert_eq!(fps.sample_count(), 1);
+        // 1 second frame should be ~1 FPS
+        assert!(fps.current_fps() < 2.0);
+        assert!(fps.current_fps() > 0.0);
+    }
+
+    #[test]
+    fn test_fps_mixed_frame_times() {
+        let mut fps = FpsCounter::new();
+
+        // Mix of different frame times
+        thread::sleep(Duration::from_micros(100));
+        fps.tick();
+
+        thread::sleep(Duration::from_millis(1));
+        fps.tick();
+
+        thread::sleep(Duration::from_millis(10));
+        fps.tick();
+
+        thread::sleep(Duration::from_millis(50));
+        fps.tick();
+
+        assert_eq!(fps.sample_count(), 4);
+        assert!(fps.min_fps() > 0.0);
+        assert!(fps.max_fps() > fps.min_fps());
+    }
+
+    #[test]
+    fn test_fps_consistent_frame_times() {
+        let mut fps = FpsCounter::new();
+
+        // All frames same duration
+        for _ in 0..5 {
+            thread::sleep(Duration::from_millis(16)); // ~60 FPS
+            fps.tick();
+        }
+
+        assert_eq!(fps.sample_count(), 5);
+        // With consistent timing, min/max/avg should be very close
+        let avg = fps.average_fps();
+        let min = fps.min_fps();
+        let max = fps.max_fps();
+
+        assert!(avg > 50.0 && avg < 70.0); // ~60 FPS
+        assert!(max - min < 20.0); // Should be close
+    }
+
+    // ============ Render String Edge Cases ============
+
+    #[test]
+    fn test_fps_render_very_high_fps() {
+        let mut fps = FpsCounter::new();
+        fps.current_fps = 999999.9;
+
+        let display = fps.render_string();
+        assert!(display.contains("999999.9"));
+    }
+
+    #[test]
+    fn test_fps_render_very_low_fps() {
+        let mut fps = FpsCounter::new();
+        fps.current_fps = 0.1;
+
+        let display = fps.render_string();
+        assert!(display.contains("0.1"));
+    }
+
+    #[test]
+    fn test_fps_render_toggle_stats() {
+        let mut fps = FpsCounter::new();
+        thread::sleep(Duration::from_millis(10));
+        fps.tick();
+
+        // Without stats
+        let display1 = fps.render_string();
+        assert!(!display1.contains("avg"));
+
+        // With stats
+        fps.show_stats = true;
+        let display2 = fps.render_string();
+        assert!(display2.contains("avg"));
+        assert!(display2.contains("min"));
+        assert!(display2.contains("max"));
+    }
+
+    // ============ Threshold Boundary Tests ============
+
+    #[test]
+    fn test_fps_exactly_at_critical_threshold() {
+        let mut fps = FpsCounter::new()
+            .with_warning_threshold(30.0)
+            .with_critical_threshold(15.0);
+
+        fps.current_fps = 15.0;
+
+        let color = fps.fps_color();
+        // At exactly 15.0, it's not < 15.0, so should be yellow (warning)
+        assert_eq!(color, Color::Yellow);
+    }
+
+    #[test]
+    fn test_fps_between_thresholds() {
+        let mut fps = FpsCounter::new()
+            .with_warning_threshold(30.0)
+            .with_critical_threshold(15.0);
+
+        fps.current_fps = 20.0; // Between 15 and 30
+
+        let color = fps.fps_color();
+        assert_eq!(color, Color::Yellow);
+    }
+
+    #[test]
+    fn test_fps_just_below_critical() {
+        let mut fps = FpsCounter::new()
+            .with_warning_threshold(30.0)
+            .with_critical_threshold(15.0);
+
+        fps.current_fps = 14.9;
+
+        let color = fps.fps_color();
+        assert_eq!(color, Color::Red);
+    }
+
+    // ============ Sample Statistics Edge Cases ============
+
+    #[test]
+    fn test_fps_single_sample_stats() {
+        let mut fps = FpsCounter::new();
+
+        thread::sleep(Duration::from_millis(10));
+        fps.tick();
+
+        assert_eq!(fps.sample_count(), 1);
+        // With single sample, min/max/avg should all be equal
+        assert_eq!(fps.min_fps(), fps.max_fps());
+        assert_eq!(fps.min_fps(), fps.average_fps());
+    }
+
+    #[test]
+    fn test_fps_all_identical_samples() {
+        let mut fps = FpsCounter::new();
+
+        // Create identical samples (as close as possible)
+        for _ in 0..5 {
+            thread::sleep(Duration::from_millis(10));
+            fps.tick();
+        }
+
+        assert_eq!(fps.sample_count(), 5);
+        // Should have very similar values
+        let avg = fps.average_fps();
+        let min = fps.min_fps();
+        let max = fps.max_fps();
+
+        assert!((max - min) / avg < 0.2); // Less than 20% variation
+    }
+
+    #[test]
+    fn test_fps_highly_variable_samples() {
+        let mut fps = FpsCounter::new();
+
+        // Create highly variable samples
+        thread::sleep(Duration::from_micros(100)); // Very fast
+        fps.tick();
+
+        thread::sleep(Duration::from_millis(100)); // Very slow
+        fps.tick();
+
+        assert_eq!(fps.sample_count(), 2);
+        let min = fps.min_fps();
+        let max = fps.max_fps();
+
+        // Should have large difference
+        assert!(max > min * 10.0); // At least 10x difference
+    }
+
+    // ============ Builder Pattern Comprehensive ============
+
+    #[test]
+    fn test_fps_builder_all_methods_chained() {
+        let fps = FpsCounter::with_capacity(200)
+            .with_stats(true)
+            .with_warning_threshold(45.0)
+            .with_critical_threshold(12.0);
+
+        assert_eq!(fps.max_samples, 200);
+        assert!(fps.show_stats);
+        assert_eq!(fps.warning_threshold, 45.0);
+        assert_eq!(fps.critical_threshold, 12.0);
+    }
+
+    #[test]
+    fn test_fps_builder_overwrite_values() {
+        let fps = FpsCounter::new()
+            .with_warning_threshold(30.0)
+            .with_warning_threshold(40.0) // Overwrite
+            .with_critical_threshold(10.0)
+            .with_critical_threshold(5.0); // Overwrite
+
+        // Should use last values
+        assert_eq!(fps.warning_threshold, 40.0);
+        assert_eq!(fps.critical_threshold, 5.0);
+    }
+
+    // ============ Frame Time Milliseconds Edge Cases ============
+
+    #[test]
+    fn test_fps_average_frame_time_ms_empty() {
+        let fps = FpsCounter::new();
+        assert_eq!(fps.average_frame_time_ms(), 0.0);
+    }
+
+    #[test]
+    fn test_fps_average_frame_time_ms_single_sample() {
+        let mut fps = FpsCounter::new();
+
+        thread::sleep(Duration::from_millis(20));
+        fps.tick();
+
+        let frame_time = fps.average_frame_time_ms();
+        assert!(frame_time >= 20.0);
+        assert!(frame_time < 30.0); // Allow some variance
+    }
+
+    // ============ Clone Independence ============
+
+    #[test]
+    fn test_fps_clone_independence() {
+        let mut fps1 = FpsCounter::new();
+        thread::sleep(Duration::from_millis(10));
+        fps1.tick();
+
+        let mut fps2 = fps1.clone();
+
+        // Modify fps2
+        thread::sleep(Duration::from_millis(10));
+        fps2.tick();
+
+        // fps1 should be unchanged
+        assert_eq!(fps1.sample_count(), 1);
+        assert_eq!(fps2.sample_count(), 2);
+    }
 }

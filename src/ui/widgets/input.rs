@@ -192,3 +192,797 @@ impl Default for InputField {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_input_field_new() {
+        let input = InputField::new();
+        assert_eq!(input.value(), "");
+        assert_eq!(input.cursor_position, 0);
+        assert!(!input.is_focused());
+    }
+
+    #[test]
+    fn test_input_field_default() {
+        let input = InputField::default();
+        assert_eq!(input.value(), "");
+        assert!(!input.is_focused());
+    }
+
+    #[test]
+    fn test_input_field_with_placeholder() {
+        let input = InputField::new().with_placeholder("Custom placeholder");
+        assert_eq!(input.placeholder, "Custom placeholder");
+    }
+
+    #[test]
+    fn test_input_field_set_value() {
+        let mut input = InputField::new();
+        input.set_value("test".to_string());
+        assert_eq!(input.value(), "test");
+        assert_eq!(input.cursor_position, 4); // Cursor at end
+    }
+
+    #[test]
+    fn test_input_field_insert_char() {
+        let mut input = InputField::new();
+        input.insert_char('a');
+        input.insert_char('b');
+        input.insert_char('c');
+        assert_eq!(input.value(), "abc");
+        assert_eq!(input.cursor_position, 3);
+    }
+
+    #[test]
+    fn test_input_field_insert_unicode() {
+        let mut input = InputField::new();
+        input.insert_char('🐸');
+        input.insert_char('日');
+        input.insert_char('本');
+        assert_eq!(input.value(), "🐸日本");
+        // Cursor position is in bytes, emoji is 4 bytes, Japanese chars are 3 bytes each
+        assert!(input.cursor_position > 3);
+    }
+
+    #[test]
+    fn test_input_field_delete_char() {
+        let mut input = InputField::new();
+        input.insert_char('a');
+        input.insert_char('b');
+        input.insert_char('c');
+
+        input.delete_char();
+        assert_eq!(input.value(), "ab");
+
+        input.delete_char();
+        assert_eq!(input.value(), "a");
+
+        input.delete_char();
+        assert_eq!(input.value(), "");
+    }
+
+    #[test]
+    fn test_input_field_delete_char_empty() {
+        let mut input = InputField::new();
+        input.delete_char(); // Should not panic on empty
+        assert_eq!(input.value(), "");
+    }
+
+    #[test]
+    fn test_input_field_delete_unicode() {
+        let mut input = InputField::new();
+        input.insert_char('🐸');
+        input.delete_char();
+        assert_eq!(input.value(), "");
+    }
+
+    #[test]
+    fn test_input_field_move_cursor_left() {
+        let mut input = InputField::new();
+        input.set_value("abc".to_string());
+
+        input.move_cursor_left();
+        assert_eq!(input.cursor_position, 2);
+
+        input.move_cursor_left();
+        assert_eq!(input.cursor_position, 1);
+    }
+
+    #[test]
+    fn test_input_field_move_cursor_left_boundary() {
+        let mut input = InputField::new();
+        input.set_value("a".to_string());
+
+        input.move_cursor_left();
+        assert_eq!(input.cursor_position, 0);
+
+        input.move_cursor_left(); // Should not go negative
+        assert_eq!(input.cursor_position, 0);
+    }
+
+    #[test]
+    fn test_input_field_move_cursor_right() {
+        let mut input = InputField::new();
+        input.set_value("abc".to_string());
+        input.cursor_position = 0;
+
+        input.move_cursor_right();
+        assert_eq!(input.cursor_position, 1);
+
+        input.move_cursor_right();
+        assert_eq!(input.cursor_position, 2);
+    }
+
+    #[test]
+    fn test_input_field_move_cursor_right_boundary() {
+        let mut input = InputField::new();
+        input.set_value("ab".to_string());
+
+        input.move_cursor_right(); // Already at end, should not move
+        assert_eq!(input.cursor_position, 2);
+    }
+
+    #[test]
+    fn test_input_field_move_cursor_start() {
+        let mut input = InputField::new();
+        input.set_value("abc".to_string());
+
+        input.move_cursor_start();
+        assert_eq!(input.cursor_position, 0);
+    }
+
+    #[test]
+    fn test_input_field_move_cursor_end() {
+        let mut input = InputField::new();
+        input.set_value("abc".to_string());
+        input.cursor_position = 0;
+
+        input.move_cursor_end();
+        assert_eq!(input.cursor_position, 3);
+    }
+
+    #[test]
+    fn test_input_field_clear() {
+        let mut input = InputField::new();
+        input.set_value("test".to_string());
+
+        input.clear();
+        assert_eq!(input.value(), "");
+        assert_eq!(input.cursor_position, 0);
+    }
+
+    #[test]
+    fn test_input_field_set_focused() {
+        let mut input = InputField::new();
+
+        input.set_focused(true);
+        assert!(input.is_focused());
+
+        input.set_focused(false);
+        assert!(!input.is_focused());
+    }
+
+    #[test]
+    fn test_input_field_very_long_text() {
+        let mut input = InputField::new();
+        let long_text = "a".repeat(10000);
+        input.set_value(long_text.clone());
+
+        assert_eq!(input.value(), long_text);
+        assert_eq!(input.cursor_position, 10000);
+    }
+
+    #[test]
+    fn test_input_field_insert_at_middle() {
+        let mut input = InputField::new();
+        input.set_value("ac".to_string());
+        input.cursor_position = 1; // Between 'a' and 'c'
+
+        input.insert_char('b');
+        assert_eq!(input.value(), "abc");
+    }
+
+    #[test]
+    fn test_input_field_delete_at_middle() {
+        let mut input = InputField::new();
+        input.set_value("abc".to_string());
+        input.cursor_position = 2; // After 'b'
+
+        input.delete_char();
+        assert_eq!(input.value(), "ac");
+    }
+
+    #[test]
+    fn test_input_field_cursor_movement_sequence() {
+        let mut input = InputField::new();
+        input.set_value("hello".to_string());
+
+        input.move_cursor_start();
+        assert_eq!(input.cursor_position, 0);
+
+        input.move_cursor_right();
+        input.move_cursor_right();
+        assert_eq!(input.cursor_position, 2);
+
+        input.delete_char();
+        assert_eq!(input.value(), "hllo");
+
+        input.insert_char('e');
+        assert_eq!(input.value(), "hello");
+    }
+
+    #[test]
+    fn test_input_field_unicode_cursor_navigation() {
+        let mut input = InputField::new();
+        input.insert_char('a');
+        input.insert_char('🐸');
+        input.insert_char('b');
+
+        assert_eq!(input.value(), "a🐸b");
+
+        input.move_cursor_left(); // Before 'b'
+        input.move_cursor_left(); // Before emoji
+        input.move_cursor_left(); // Before 'a'
+        assert_eq!(input.cursor_position, 0);
+    }
+
+    #[test]
+    fn test_input_field_empty_value() {
+        let input = InputField::new();
+        assert_eq!(input.value(), "");
+        assert_eq!(input.value().len(), 0);
+    }
+
+    #[test]
+    fn test_input_field_multiple_instances() {
+        let input1 = InputField::new();
+        let mut input2 = InputField::new();
+
+        input2.set_value("test".to_string());
+
+        assert_eq!(input1.value(), "");
+        assert_eq!(input2.value(), "test");
+    }
+
+    #[test]
+    fn test_input_field_char_position() {
+        let mut input = InputField::new();
+        input.set_value("abc".to_string());
+
+        // char_position is private, but we can test it indirectly
+        // by testing cursor movement
+        input.cursor_position = 0;
+        input.move_cursor_right();
+        assert_eq!(input.cursor_position, 1);
+    }
+
+    #[test]
+    fn test_input_field_special_characters() {
+        let mut input = InputField::new();
+        input.insert_char('\n');
+        input.insert_char('\t');
+        input.insert_char(' ');
+
+        assert_eq!(input.value(), "\n\t ");
+    }
+
+    #[test]
+    fn test_input_field_emoji_sequence() {
+        let mut input = InputField::new();
+        input.insert_char('👨');
+        input.insert_char('‍');
+        input.insert_char('💻');
+
+        // Complex emoji sequences
+        assert!(input.value().len() > 3);
+    }
+
+    // ============================================================================
+    // ADVANCED COMPREHENSIVE EDGE CASE TESTS (90%+ COVERAGE)
+    // ============================================================================
+
+    // ============ Stress Tests ============
+
+    #[test]
+    fn test_input_field_rapid_char_insertions() {
+        let mut input = InputField::new();
+
+        for i in 0..5000 {
+            input.insert_char((b'A' + (i % 26) as u8) as char);
+        }
+
+        assert_eq!(input.value().len(), 5000);
+        assert_eq!(input.cursor_position, 5000);
+    }
+
+    #[test]
+    fn test_input_field_rapid_deletions() {
+        let mut input = InputField::new();
+        input.set_value("A".repeat(3000));
+
+        for _ in 0..3000 {
+            input.delete_char();
+        }
+
+        assert_eq!(input.value(), "");
+        assert_eq!(input.cursor_position, 0);
+    }
+
+    #[test]
+    fn test_input_field_rapid_cursor_movements() {
+        let mut input = InputField::new();
+        input.set_value("X".repeat(100));
+
+        for _ in 0..1000 {
+            input.move_cursor_left();
+        }
+
+        assert_eq!(input.cursor_position, 0);
+
+        for _ in 0..1000 {
+            input.move_cursor_right();
+        }
+
+        assert_eq!(input.cursor_position, 100);
+    }
+
+    #[test]
+    fn test_input_field_alternating_insert_delete() {
+        let mut input = InputField::new();
+
+        for _ in 0..1000 {
+            input.insert_char('A');
+            input.delete_char();
+        }
+
+        assert_eq!(input.value(), "");
+    }
+
+    #[test]
+    fn test_input_field_rapid_clear_refill() {
+        let mut input = InputField::new();
+
+        for i in 0..500 {
+            input.set_value(format!("Text {}", i));
+            input.clear();
+        }
+
+        assert_eq!(input.value(), "");
+    }
+
+    // ============ Unicode Edge Cases ============
+
+    #[test]
+    fn test_input_field_rtl_text() {
+        let mut input = InputField::new();
+        input.set_value("مرحبا Hello שלום".to_string());
+
+        assert!(input.value().contains("مرحبا"));
+        assert!(input.value().contains("שלום"));
+    }
+
+    #[test]
+    fn test_input_field_mixed_scripts() {
+        let mut input = InputField::new();
+        input.insert_char('H');
+        input.insert_char('e');
+        input.insert_char('l');
+        input.insert_char('l');
+        input.insert_char('o');
+        input.insert_char('🐸');
+        input.insert_char('日');
+        input.insert_char('本');
+        input.insert_char('語');
+
+        assert_eq!(input.value(), "Hello🐸日本語");
+    }
+
+    #[test]
+    fn test_input_field_combining_characters() {
+        let mut input = InputField::new();
+        input.insert_char('e');
+        input.insert_char('\u{0301}'); // Combining acute accent
+
+        assert!(input.value().len() > 1);
+    }
+
+    #[test]
+    fn test_input_field_zero_width_characters() {
+        let mut input = InputField::new();
+        input.insert_char('A');
+        input.insert_char('\u{200B}'); // Zero-width space
+        input.insert_char('B');
+
+        assert_eq!(input.value(), "A\u{200B}B");
+    }
+
+    #[test]
+    fn test_input_field_emoji_variations() {
+        let emojis = ['🐸', '💚', '🚀', '✨', '🔥', '🌟', '🎯', '💎'];
+        let mut input = InputField::new();
+
+        for emoji in emojis {
+            input.insert_char(emoji);
+        }
+
+        for emoji in emojis {
+            assert!(input.value().contains(emoji));
+        }
+    }
+
+    // ============ Extreme Input Sizes ============
+
+    #[test]
+    fn test_input_field_100k_characters() {
+        let mut input = InputField::new();
+        let huge_text = "X".repeat(100000);
+        input.set_value(huge_text.clone());
+
+        assert_eq!(input.value().len(), 100000);
+        assert_eq!(input.cursor_position, 100000);
+    }
+
+    #[test]
+    fn test_input_field_single_unicode_char_100_times() {
+        let mut input = InputField::new();
+
+        for _ in 0..100 {
+            input.insert_char('🐸');
+        }
+
+        // Each emoji is 4 bytes
+        assert_eq!(input.value().len(), 400);
+    }
+
+    // ============ Complex Editing Workflows ============
+
+    #[test]
+    fn test_input_field_insert_middle_delete_workflow() {
+        let mut input = InputField::new();
+        input.set_value("HelloWorld".to_string());
+
+        // Move to middle
+        input.move_cursor_start();
+        for _ in 0..5 {
+            input.move_cursor_right();
+        }
+
+        // Insert space
+        input.insert_char(' ');
+        assert_eq!(input.value(), "Hello World");
+
+        // Delete space
+        input.delete_char();
+        assert_eq!(input.value(), "HelloWorld");
+    }
+
+    #[test]
+    fn test_input_field_zigzag_cursor_pattern() {
+        let mut input = InputField::new();
+        input.set_value("ABCDEFGHIJ".to_string());
+
+        for _ in 0..100 {
+            input.move_cursor_right();
+            input.move_cursor_right();
+            input.move_cursor_left();
+        }
+
+        // Should handle without panic
+    }
+
+    #[test]
+    fn test_input_field_boundary_navigation() {
+        let mut input = InputField::new();
+        input.set_value("Test".to_string());
+
+        // Move to boundaries repeatedly
+        for _ in 0..50 {
+            input.move_cursor_start();
+            assert_eq!(input.cursor_position, 0);
+
+            input.move_cursor_end();
+            assert_eq!(input.cursor_position, 4);
+        }
+    }
+
+    // ============ Placeholder Edge Cases ============
+
+    #[test]
+    fn test_input_field_very_long_placeholder() {
+        let long_placeholder = "Placeholder ".repeat(1000);
+        let input = InputField::new().with_placeholder(long_placeholder.clone());
+
+        assert_eq!(input.placeholder.len(), long_placeholder.len());
+    }
+
+    #[test]
+    fn test_input_field_unicode_placeholder() {
+        let input = InputField::new().with_placeholder("Enter 🐸 to continue");
+
+        assert!(input.placeholder.contains("🐸"));
+    }
+
+    #[test]
+    fn test_input_field_empty_placeholder() {
+        let input = InputField::new().with_placeholder("");
+
+        assert_eq!(input.placeholder, "");
+    }
+
+    // ============ Focus State Transitions ============
+
+    #[test]
+    fn test_input_field_rapid_focus_toggle() {
+        let mut input = InputField::new();
+
+        for i in 0..1000 {
+            input.set_focused(i % 2 == 0);
+        }
+
+        assert!(!input.is_focused()); // Last toggle (i=999) sets to false
+    }
+
+    #[test]
+    fn test_input_field_focus_with_editing() {
+        let mut input = InputField::new();
+
+        for i in 0..100 {
+            input.set_focused(i % 2 == 0);
+            input.insert_char('A');
+        }
+
+        assert_eq!(input.value().len(), 100);
+    }
+
+    // ============ Cursor Position Edge Cases ============
+
+    #[test]
+    fn test_input_field_cursor_at_all_positions() {
+        let mut input = InputField::new();
+        input.set_value("ABCDEFGHIJ".to_string());
+
+        // Test cursor at each position
+        input.move_cursor_start();
+        for i in 0..=10 {
+            assert_eq!(input.cursor_position, i);
+            if i < 10 {
+                input.move_cursor_right();
+            }
+        }
+    }
+
+    #[test]
+    fn test_input_field_cursor_beyond_text_length() {
+        let mut input = InputField::new();
+        input.set_value("Short".to_string());
+
+        // Try to move cursor beyond text
+        for _ in 0..100 {
+            input.move_cursor_right();
+        }
+
+        assert_eq!(input.cursor_position, 5); // Stays at end
+    }
+
+    #[test]
+    fn test_input_field_cursor_before_text_start() {
+        let mut input = InputField::new();
+        input.set_value("Text".to_string());
+        input.move_cursor_start();
+
+        // Try to move cursor before start
+        for _ in 0..100 {
+            input.move_cursor_left();
+        }
+
+        assert_eq!(input.cursor_position, 0); // Stays at start
+    }
+
+    // ============ Delete Edge Cases ============
+
+    #[test]
+    fn test_input_field_delete_at_start() {
+        let mut input = InputField::new();
+        input.set_value("Test".to_string());
+        input.move_cursor_start();
+
+        input.delete_char();
+        assert_eq!(input.value(), "Test"); // Nothing to delete
+    }
+
+    #[test]
+    fn test_input_field_delete_all_one_by_one() {
+        let mut input = InputField::new();
+        input.set_value("ABCDEFGHIJ".to_string());
+
+        for _ in 0..10 {
+            input.delete_char();
+        }
+
+        assert_eq!(input.value(), "");
+        assert_eq!(input.cursor_position, 0);
+    }
+
+    #[test]
+    fn test_input_field_delete_from_middle() {
+        let mut input = InputField::new();
+        input.set_value("ABCDEFGH".to_string());
+        input.cursor_position = 4; // After 'D'
+
+        for _ in 0..4 {
+            input.delete_char();
+        }
+
+        assert_eq!(input.value(), "EFGH");
+        assert_eq!(input.cursor_position, 0);
+    }
+
+    // ============ Insert Edge Cases ============
+
+    #[test]
+    fn test_input_field_insert_at_start() {
+        let mut input = InputField::new();
+        input.set_value("World".to_string());
+        input.move_cursor_start();
+
+        input.insert_char('H');
+        input.insert_char('e');
+        input.insert_char('l');
+        input.insert_char('l');
+        input.insert_char('o');
+
+        assert_eq!(input.value(), "HelloWorld");
+    }
+
+    #[test]
+    fn test_input_field_insert_at_end() {
+        let mut input = InputField::new();
+        input.set_value("Hello".to_string());
+
+        input.insert_char(' ');
+        input.insert_char('W');
+        input.insert_char('o');
+        input.insert_char('r');
+        input.insert_char('l');
+        input.insert_char('d');
+
+        assert_eq!(input.value(), "Hello World");
+    }
+
+    #[test]
+    fn test_input_field_insert_all_ascii() {
+        let mut input = InputField::new();
+
+        for i in 32..=126 {
+            input.insert_char(i as u8 as char);
+        }
+
+        assert_eq!(input.value().len(), 95); // All printable ASCII
+    }
+
+    // ============ Clear Edge Cases ============
+
+    #[test]
+    fn test_input_field_clear_when_empty() {
+        let mut input = InputField::new();
+        input.clear();
+
+        assert_eq!(input.value(), "");
+        assert_eq!(input.cursor_position, 0);
+    }
+
+    #[test]
+    fn test_input_field_clear_preserves_placeholder() {
+        let mut input = InputField::new().with_placeholder("Test placeholder");
+        input.set_value("Some text".to_string());
+        input.clear();
+
+        assert_eq!(input.value(), "");
+        assert_eq!(input.placeholder, "Test placeholder");
+    }
+
+    #[test]
+    fn test_input_field_clear_resets_cursor() {
+        let mut input = InputField::new();
+        input.set_value("Long text here".to_string());
+        input.cursor_position = 7;
+
+        input.clear();
+        assert_eq!(input.cursor_position, 0);
+    }
+
+    // ============ Value Setter Edge Cases ============
+
+    #[test]
+    fn test_input_field_set_value_replaces_existing() {
+        let mut input = InputField::new();
+        input.set_value("First".to_string());
+        input.set_value("Second".to_string());
+
+        assert_eq!(input.value(), "Second");
+    }
+
+    #[test]
+    fn test_input_field_set_value_empty() {
+        let mut input = InputField::new();
+        input.set_value("Text".to_string());
+        input.set_value(String::new());
+
+        assert_eq!(input.value(), "");
+        assert_eq!(input.cursor_position, 0);
+    }
+
+    // ============ Trait Coverage ============
+
+    #[test]
+    fn test_input_field_debug() {
+        let input = InputField::new();
+        let debug_str = format!("{:?}", input);
+
+        assert!(debug_str.contains("InputField"));
+    }
+
+    // ============ Comprehensive Stress Test ============
+
+    #[test]
+    fn test_comprehensive_input_stress() {
+        let mut input = InputField::new().with_placeholder("Enter text 🐸");
+
+        // Complex editing workflow
+        for i in 0..100 {
+            // Insert varied content
+            match i % 4 {
+                0 => input.insert_char('A'),
+                1 => input.insert_char('🚀'),
+                2 => input.insert_char('日'),
+                _ => input.insert_char(' '),
+            }
+        }
+
+        assert_eq!(input.value().len(), 225); // Mixed byte lengths: A(1)*25 + 🚀(4)*25 + 日(3)*25 + ' '(1)*25 = 225
+
+        // Navigate and edit
+        input.move_cursor_start();
+        for _ in 0..50 {
+            input.move_cursor_right();
+        }
+
+        // Insert at middle
+        input.insert_char('X');
+
+        // Delete some chars
+        for _ in 0..10 {
+            input.delete_char();
+        }
+
+        // Navigate to extremes
+        input.move_cursor_end();
+        input.move_cursor_start();
+
+        // Toggle focus
+        for i in 0..20 {
+            input.set_focused(i % 2 == 0);
+        }
+
+        // Clear and refill
+        input.clear();
+        assert_eq!(input.value(), "");
+
+        input.set_value("Final test 💚 مرحبا שלום".to_string());
+        assert!(input.value().contains("💚"));
+        assert!(input.value().contains("مرحبا"));
+        assert!(input.value().contains("שלום"));
+
+        // Navigate through unicode
+        input.move_cursor_start();
+        for _ in 0..20 {
+            input.move_cursor_right();
+        }
+
+        // Verify state is consistent
+        assert!(input.cursor_position <= input.value().len());
+    }
+}

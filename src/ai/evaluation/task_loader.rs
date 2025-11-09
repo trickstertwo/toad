@@ -33,7 +33,7 @@ impl TaskLoader {
             content
                 .lines()
                 .filter(|line| !line.trim().is_empty())
-                .map(|line| serde_json::from_str(line))
+                .map(serde_json::from_str)
                 .collect::<Result<Vec<Value>, _>>()
                 .context("Failed to parse JSONL")?
         } else {
@@ -146,11 +146,10 @@ impl TaskLoader {
         let mut files = Vec::new();
 
         for line in patch.lines() {
-            if line.starts_with("--- a/") {
-                if let Some(path) = line.strip_prefix("--- a/") {
+            if line.starts_with("--- a/")
+                && let Some(path) = line.strip_prefix("--- a/") {
                     files.push(PathBuf::from(path));
                 }
-            }
         }
 
         files

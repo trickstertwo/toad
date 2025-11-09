@@ -214,11 +214,10 @@ impl Canvas {
                 for x in (cx - radius)..=(cx + radius) {
                     let dx = x - cx;
                     let dy = y - cy;
-                    if dx * dx + dy * dy <= radius * radius {
-                        if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
+                    if dx * dx + dy * dy <= radius * radius
+                        && x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
                             self.set_pixel(x as usize, y as usize, ch, color, None);
                         }
-                    }
                 }
             }
         } else {

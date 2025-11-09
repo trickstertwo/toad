@@ -10,6 +10,12 @@ pub struct WriteTool {
     validate_syntax: bool,
 }
 
+impl Default for WriteTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WriteTool {
     /// Create a new WriteTool without syntax validation (backwards compatible)
     pub fn new() -> Self {
@@ -132,16 +138,14 @@ impl Tool for WriteTool {
         }
 
         // Create parent directories if they don't exist
-        if let Some(parent) = path_buf.parent() {
-            if !parent.exists() {
-                if let Err(e) = tokio::fs::create_dir_all(parent).await {
+        if let Some(parent) = path_buf.parent()
+            && !parent.exists()
+                && let Err(e) = tokio::fs::create_dir_all(parent).await {
                     return Ok(ToolResult::error(
                         self.name(),
                         format!("Failed to create parent directories: {}", e),
                     ));
                 }
-            }
-        }
 
         match tokio::fs::write(&path_buf, content).await {
             Ok(_) => Ok(ToolResult::success(

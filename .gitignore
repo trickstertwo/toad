@@ -23,3 +23,9 @@ Thumbs.db
 
 # Environment variables
 .env
+
+# Claude Code automation
+.claude/edit-log.json
+.claude/hooks/node_modules/
+.toad/active/*
+.toad/archive/*

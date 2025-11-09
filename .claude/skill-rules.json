@@ -1,0 +1,55 @@
+{
+  "rust-dev-guidelines": {
+    "type": "domain",
+    "enforcement": "suggest",
+    "priority": "high",
+    "promptTriggers": {
+      "keywords": [
+        "rust",
+        "cargo",
+        "trait",
+        "impl",
+        "async",
+        "tokio",
+        "error handling",
+        "lifetime",
+        "borrow",
+        "ownership",
+        "unwrap",
+        "Result",
+        "Option",
+        "anyhow",
+        "thiserror"
+      ],
+      "intentPatterns": [
+        "(create|add|implement).*?(feature|function|struct|trait|module|enum)",
+        "(how to|best practice|pattern).*?(rust|cargo|async|error)",
+        "fix.*?(error|warning|clippy|borrow|lifetime)",
+        "(write|add|create).*?(test|tests)",
+        "(refactor|improve|optimize).*?(code|implementation)",
+        "async.*?(tokio|future|await)",
+        "error.*?(handling|propagation|context)"
+      ]
+    },
+    "fileTriggers": {
+      "pathPatterns": [
+        "src/**/*.rs",
+        "tests/**/*.rs",
+        "benches/**/*.rs",
+        "examples/**/*.rs"
+      ],
+      "contentPatterns": [
+        "fn\\s+\\w+",
+        "struct\\s+\\w+",
+        "impl\\s+",
+        "trait\\s+\\w+",
+        "use\\s+",
+        "pub\\s+",
+        "async\\s+fn",
+        "#\\[derive",
+        "#\\[test\\]",
+        "#\\[tokio::test\\]"
+      ]
+    }
+  }
+}
