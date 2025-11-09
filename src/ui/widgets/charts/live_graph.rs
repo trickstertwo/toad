@@ -20,9 +20,10 @@
 //! graph.add_point(48.1);
 //! ```
 
-use crate::ui::widgets::{
-    BarChartWidget as BarChart, BarData, DataSeries, LineChartWidget as LineChart,
-    ScatterPlotWidget as ScatterPlot, ScatterSeries,
+use super::{
+    bar_chart::{BarChart, BarData},
+    line_chart::{DataSeries, LineChart},
+    scatter_plot::{ScatterPlot, ScatterSeries},
 };
 use ratatui::{buffer::Buffer, layout::Rect, style::Color, widgets::Widget};
 use std::time::{Duration, Instant};
