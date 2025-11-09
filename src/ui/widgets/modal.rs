@@ -261,4 +261,264 @@ mod tests {
         assert_eq!(ModalType::Info.icon(), "ℹ");
         assert_eq!(ModalType::Success.icon(), "✓");
     }
+
+    // ============ COMPREHENSIVE EDGE CASE TESTS ============
+
+    #[test]
+    fn test_modal_with_very_long_message() {
+        let long_message = "A".repeat(10000);
+        let modal = Modal::error(long_message.clone());
+        assert_eq!(modal.modal_type(), ModalType::Error);
+        assert_eq!(modal.message, long_message);
+    }
+
+    #[test]
+    fn test_modal_with_unicode_message() {
+        let modal = Modal::success("🎉 成功！ Operation completed 日本語");
+        assert!(modal.message.contains("🎉"));
+        assert!(modal.message.contains("成功"));
+    }
+
+    #[test]
+    fn test_modal_with_empty_message() {
+        let modal = Modal::info("");
+        assert_eq!(modal.message, "");
+    }
+
+    #[test]
+    fn test_modal_with_whitespace_only_message() {
+        let modal = Modal::warning("     ");
+        assert_eq!(modal.message, "     ");
+    }
+
+    #[test]
+    fn test_modal_with_newlines_in_message() {
+        let modal = Modal::error("Error on line 1\nError on line 2\nError on line 3");
+        assert!(modal.message.contains("\n"));
+    }
+
+    #[test]
+    fn test_modal_with_special_characters() {
+        let modal = Modal::info("Test<>&\"'\\|/*?");
+        assert!(modal.message.contains("<>"));
+    }
+
+    #[test]
+    fn test_modal_with_very_long_title() {
+        let long_title = "B".repeat(1000);
+        let modal = Modal::error("Message").with_title(long_title.clone());
+        assert_eq!(modal.title, Some(long_title));
+    }
+
+    #[test]
+    fn test_modal_with_unicode_title() {
+        let modal = Modal::success("Done").with_title("✅ 完了しました");
+        assert!(modal.title.clone().unwrap().contains("✅"));
+    }
+
+    #[test]
+    fn test_modal_with_empty_title() {
+        let modal = Modal::info("Message").with_title("");
+        assert_eq!(modal.title, Some("".to_string()));
+    }
+
+    #[test]
+    fn test_modal_with_many_details() {
+        let mut modal = Modal::error("Main error");
+        for i in 0..100 {
+            modal = modal.add_detail(format!("Detail {}", i));
+        }
+        assert_eq!(modal.details.len(), 100);
+    }
+
+    #[test]
+    fn test_modal_with_very_long_details() {
+        let long_detail = "C".repeat(10000);
+        let modal = Modal::warning("Warning").add_detail(long_detail.clone());
+        assert_eq!(modal.details[0], long_detail);
+    }
+
+    #[test]
+    fn test_modal_with_unicode_details() {
+        let modal = Modal::error("Error")
+            .add_detail("原因: ファイルが見つかりません")
+            .add_detail("🔍 詳細情報");
+
+        assert_eq!(modal.details.len(), 2);
+        assert!(modal.details[0].contains("原因"));
+    }
+
+    #[test]
+    fn test_modal_with_empty_details() {
+        let modal = Modal::info("Message")
+            .add_detail("")
+            .add_detail("   ")
+            .add_detail("\n");
+
+        assert_eq!(modal.details.len(), 3);
+    }
+
+    #[test]
+    fn test_modal_with_details_vec() {
+        let details = vec![
+            "Detail 1".to_string(),
+            "Detail 2".to_string(),
+            "Detail 3".to_string(),
+        ];
+        let modal = Modal::success("Success").with_details(details.clone());
+        assert_eq!(modal.details, details);
+    }
+
+    #[test]
+    fn test_modal_with_empty_details_vec() {
+        let modal = Modal::info("Message").with_details(vec![]);
+        assert_eq!(modal.details.len(), 0);
+    }
+
+    #[test]
+    fn test_modal_with_very_long_button_label() {
+        let long_label = "D".repeat(1000);
+        let modal = Modal::error("Error").with_button(long_label.clone());
+        assert_eq!(modal.button_label, long_label);
+    }
+
+    #[test]
+    fn test_modal_with_unicode_button_label() {
+        let modal = Modal::success("Done").with_button("閉じる ✕");
+        assert!(modal.button_label.contains("閉じる"));
+    }
+
+    #[test]
+    fn test_modal_with_empty_button_label() {
+        let modal = Modal::warning("Warning").with_button("");
+        assert_eq!(modal.button_label, "");
+    }
+
+    #[test]
+    fn test_modal_type_colors_unique() {
+        let error_color = ModalType::Error.color();
+        let warning_color = ModalType::Warning.color();
+        let info_color = ModalType::Info.color();
+        let success_color = ModalType::Success.color();
+
+        // Colors should be distinct (at least some of them)
+        assert_ne!(error_color, success_color);
+        assert_ne!(warning_color, info_color);
+    }
+
+    #[test]
+    fn test_modal_type_icons_unique() {
+        let icons = vec![
+            ModalType::Error.icon(),
+            ModalType::Warning.icon(),
+            ModalType::Info.icon(),
+            ModalType::Success.icon(),
+        ];
+
+        // All icons should be unique
+        for (i, icon1) in icons.iter().enumerate() {
+            for (j, icon2) in icons.iter().enumerate() {
+                if i != j {
+                    assert_ne!(icon1, icon2);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_modal_type_equality() {
+        assert_eq!(ModalType::Error, ModalType::Error);
+        assert_eq!(ModalType::Success, ModalType::Success);
+        assert_ne!(ModalType::Error, ModalType::Warning);
+        assert_ne!(ModalType::Info, ModalType::Success);
+    }
+
+    #[test]
+    fn test_modal_type_copy() {
+        let original = ModalType::Info;
+        let copied = original;
+        assert_eq!(original, copied);
+    }
+
+    #[test]
+    fn test_modal_builder_pattern_chaining() {
+        let modal = Modal::error("Error message")
+            .with_title("Custom Error")
+            .add_detail("Detail 1")
+            .add_detail("Detail 2")
+            .with_button("Dismiss");
+
+        assert_eq!(modal.modal_type(), ModalType::Error);
+        assert_eq!(modal.title, Some("Custom Error".to_string()));
+        assert_eq!(modal.details.len(), 2);
+        assert_eq!(modal.button_label, "Dismiss");
+    }
+
+    #[test]
+    fn test_modal_replacing_details() {
+        let modal = Modal::info("Message")
+            .add_detail("First")
+            .with_details(vec!["Replaced".to_string()]);
+
+        assert_eq!(modal.details.len(), 1);
+        assert_eq!(modal.details[0], "Replaced");
+    }
+
+    #[test]
+    fn test_modal_multiple_detail_additions() {
+        let modal = Modal::warning("Warning")
+            .add_detail("Detail 1")
+            .add_detail("Detail 2")
+            .add_detail("Detail 3")
+            .add_detail("Detail 4");
+
+        assert_eq!(modal.details.len(), 4);
+    }
+
+    #[test]
+    fn test_modal_default_button_label() {
+        let modal = Modal::success("Done");
+        assert_eq!(modal.button_label, "OK");
+    }
+
+    #[test]
+    fn test_modal_title_override() {
+        let modal = Modal::error("Error").with_title("Custom Title");
+
+        // Modal should use custom title instead of default
+        assert_eq!(modal.title, Some("Custom Title".to_string()));
+    }
+
+    #[test]
+    fn test_modal_no_title_uses_default() {
+        let modal = Modal::warning("Warning");
+
+        // No custom title set
+        assert_eq!(modal.title, None);
+    }
+
+    #[test]
+    fn test_modal_all_types_constructors() {
+        let error = Modal::error("Error");
+        let warning = Modal::warning("Warning");
+        let info = Modal::info("Info");
+        let success = Modal::success("Success");
+
+        assert_eq!(error.modal_type(), ModalType::Error);
+        assert_eq!(warning.modal_type(), ModalType::Warning);
+        assert_eq!(info.modal_type(), ModalType::Info);
+        assert_eq!(success.modal_type(), ModalType::Success);
+    }
+
+    #[test]
+    fn test_modal_with_mixed_unicode_and_ascii() {
+        let modal = Modal::info("ASCII Message 🎉")
+            .with_title("タイトル Title")
+            .add_detail("Detail with emoji 🔍")
+            .add_detail("純粋な日本語")
+            .with_button("OK ✓");
+
+        assert!(modal.message.contains("ASCII"));
+        assert!(modal.message.contains("🎉"));
+    }
 }

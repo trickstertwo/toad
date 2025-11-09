@@ -829,4 +829,327 @@ mod tests {
         let progress = ProgressBar::default();
         assert_eq!(progress.progress(), 0.0);
     }
+
+    // ============ COMPREHENSIVE EDGE CASE TESTS ============
+
+    #[test]
+    fn test_progress_bar_negative_values_clamped() {
+        let mut progress = ProgressBar::new("Test");
+        progress.set_progress(-0.5);
+        assert_eq!(progress.progress(), 0.0);
+
+        progress.set_progress(-100.0);
+        assert_eq!(progress.progress(), 0.0);
+    }
+
+    #[test]
+    fn test_progress_bar_overflow_values_clamped() {
+        let mut progress = ProgressBar::new("Test");
+        progress.set_progress(1.5);
+        assert_eq!(progress.progress(), 1.0);
+
+        progress.set_progress(100.0);
+        assert_eq!(progress.progress(), 1.0);
+    }
+
+    #[test]
+    fn test_progress_bar_with_very_long_title() {
+        let long_title = "A".repeat(1000);
+        let progress = ProgressBar::new(long_title);
+        assert_eq!(progress.progress(), 0.0);
+    }
+
+    #[test]
+    fn test_progress_bar_with_unicode_title() {
+        let progress = ProgressBar::new("🚀 Loading 日本語");
+        assert_eq!(progress.progress(), 0.0);
+    }
+
+    #[test]
+    fn test_progress_bar_with_very_long_message() {
+        let long_message = "B".repeat(1000);
+        let progress = ProgressBar::new("Test").with_message(long_message);
+        assert_eq!(progress.progress(), 0.0);
+    }
+
+    #[test]
+    fn test_progress_bar_with_unicode_message() {
+        let progress = ProgressBar::new("Test").with_message("処理中... 🔄");
+        assert_eq!(progress.progress(), 0.0);
+    }
+
+    #[test]
+    fn test_progress_bar_very_small_increments() {
+        let mut progress = ProgressBar::new("Test");
+        progress.set_progress(0.001);
+        assert_eq!(progress.progress(), 0.001);
+
+        progress.set_progress(0.0001);
+        assert_eq!(progress.progress(), 0.0001);
+    }
+
+    #[test]
+    fn test_progress_bar_rapid_updates() {
+        let mut progress = ProgressBar::new("Test");
+
+        for i in 0..1000 {
+            progress.set_progress(i as f64 / 1000.0);
+        }
+
+        assert_eq!(progress.progress(), 0.999);
+    }
+
+    #[test]
+    fn test_progress_bar_message_update() {
+        let mut progress = ProgressBar::new("Test");
+        progress.set_message("First");
+        progress.set_message("Second");
+        progress.set_message("Third");
+        // Verify no panic on multiple updates
+    }
+
+    #[test]
+    fn test_progress_bar_exactly_half() {
+        let progress = ProgressBar::new("Test").with_progress(0.5);
+        assert_eq!(progress.progress(), 0.5);
+        assert!(!progress.is_complete());
+    }
+
+    #[test]
+    fn test_progress_bar_exactly_complete() {
+        let progress = ProgressBar::new("Test").with_progress(1.0);
+        assert_eq!(progress.progress(), 1.0);
+        assert!(progress.is_complete());
+    }
+
+    #[test]
+    fn test_progress_bar_just_below_complete() {
+        let progress = ProgressBar::new("Test").with_progress(0.9999);
+        assert!(!progress.is_complete());
+    }
+
+    #[test]
+    fn test_multi_stage_empty_stages() {
+        let stages: Vec<String> = vec![];
+        let progress = MultiStageProgress::new("Empty", stages);
+
+        assert_eq!(progress.stage_count(), 0);
+        assert_eq!(progress.overall_progress(), 0.0);
+        assert!(progress.is_complete());
+    }
+
+    #[test]
+    fn test_multi_stage_single_stage() {
+        let stages = vec!["Only Stage".to_string()];
+        let mut progress = MultiStageProgress::new("Test", stages);
+
+        progress.set_stage(0);
+        progress.complete_stage();
+
+        assert!(progress.is_complete());
+    }
+
+    #[test]
+    fn test_multi_stage_many_stages() {
+        let stages: Vec<String> = (0..100).map(|i| format!("Stage {}", i)).collect();
+        let progress = MultiStageProgress::new("Test", stages);
+
+        assert_eq!(progress.stage_count(), 100);
+    }
+
+    #[test]
+    fn test_multi_stage_unicode_stage_names() {
+        let stages = vec![
+            "📥 Download".to_string(),
+            "📦 Extract".to_string(),
+            "⚙️ Configure".to_string(),
+            "✅ Complete".to_string(),
+        ];
+        let mut progress = MultiStageProgress::new("Setup", stages);
+
+        progress.set_stage(0);
+        assert_eq!(progress.current_stage(), 0);
+    }
+
+    #[test]
+    fn test_multi_stage_very_long_stage_names() {
+        let long_name = "A".repeat(1000);
+        let stages = vec![long_name.clone(), long_name.clone()];
+        let progress = MultiStageProgress::new("Test", stages);
+
+        assert_eq!(progress.stage_count(), 2);
+    }
+
+    #[test]
+    fn test_multi_stage_progress_precision() {
+        let stages = vec!["A".to_string(), "B".to_string()];
+        let mut progress = MultiStageProgress::new("Test", stages);
+
+        progress.set_stage(0);
+        progress.set_stage_progress(0.5);
+
+        // 0.5 progress in first of 2 stages
+        let overall = progress.overall_progress();
+        assert!((overall - 0.25).abs() < 1e-10); // Floating point comparison
+    }
+
+    #[test]
+    fn test_multi_stage_complete_all_stages() {
+        let stages = vec!["A".to_string(), "B".to_string(), "C".to_string()];
+        let mut progress = MultiStageProgress::new("Test", stages);
+
+        progress.set_stage(0);
+        progress.complete_stage();
+        progress.complete_stage();
+        progress.complete_stage();
+
+        assert!(progress.is_complete());
+        assert_eq!(progress.completed_stages(), 3);
+    }
+
+    #[test]
+    fn test_multi_stage_next_stage_without_completing() {
+        let stages = vec!["A".to_string(), "B".to_string(), "C".to_string()];
+        let mut progress = MultiStageProgress::new("Test", stages);
+
+        progress.set_stage(0);
+        progress.next_stage();
+
+        assert_eq!(progress.current_stage(), 1);
+        assert_eq!(progress.completed_stages(), 0); // Not completed, just moved
+    }
+
+    #[test]
+    fn test_multi_stage_next_stage_at_last_stage() {
+        let stages = vec!["A".to_string(), "B".to_string()];
+        let mut progress = MultiStageProgress::new("Test", stages);
+
+        progress.set_stage(1);
+        progress.next_stage();
+
+        // Should stay at stage 1
+        assert_eq!(progress.current_stage(), 1);
+    }
+
+    #[test]
+    fn test_multi_stage_complete_at_last_stage() {
+        let stages = vec!["A".to_string(), "B".to_string()];
+        let mut progress = MultiStageProgress::new("Test", stages);
+
+        progress.set_stage(0);
+        progress.complete_stage(); // Move to stage 1
+        progress.complete_stage(); // Complete stage 1
+
+        assert_eq!(progress.current_stage(), 1);
+        assert_eq!(progress.stage_progress, 1.0);
+        assert!(progress.is_complete());
+    }
+
+    #[test]
+    fn test_multi_stage_stage_elapsed_non_existent() {
+        let stages = vec!["A".to_string()];
+        let mut progress = MultiStageProgress::new("Test", stages);
+
+        progress.set_stage(0);
+
+        // Query non-existent stage
+        assert!(progress.stage_elapsed(10).is_none());
+    }
+
+    #[test]
+    fn test_multi_stage_render_string_output() {
+        let stages = vec!["Download".to_string(), "Install".to_string()];
+        let mut progress = MultiStageProgress::new("Setup", stages);
+
+        progress.set_stage(0);
+        let output = progress.render_string();
+
+        assert!(output.contains("Download"));
+        assert!(output.contains("Install"));
+        assert!(output.contains("→")); // Separator
+    }
+
+    #[test]
+    fn test_stage_status_color_codes() {
+        assert_ne!(
+            StageStatus::Pending.color(),
+            StageStatus::InProgress.color()
+        );
+        assert_ne!(
+            StageStatus::InProgress.color(),
+            StageStatus::Complete.color()
+        );
+    }
+
+    #[test]
+    fn test_multi_stage_overall_progress_at_boundaries() {
+        let stages = vec!["A".to_string(), "B".to_string()];
+        let mut progress = MultiStageProgress::new("Test", stages);
+
+        // At start
+        assert_eq!(progress.overall_progress(), 0.0);
+
+        // First stage complete
+        progress.set_stage(0);
+        progress.complete_stage();
+        assert_eq!(progress.overall_progress(), 0.5);
+
+        // Second stage complete
+        progress.complete_stage();
+        assert_eq!(progress.overall_progress(), 1.0);
+    }
+
+    #[test]
+    fn test_multi_stage_with_time_tracking_disabled() {
+        let stages = vec!["A".to_string()];
+        let progress = MultiStageProgress::new("Test", stages).with_time_tracking(false);
+
+        assert!(!progress.show_time);
+    }
+
+    #[test]
+    fn test_multi_stage_total_elapsed_with_no_stages_started() {
+        let stages = vec!["A".to_string(), "B".to_string()];
+        let progress = MultiStageProgress::new("Test", stages);
+
+        let elapsed = progress.total_elapsed();
+        assert_eq!(elapsed, Duration::from_secs(0));
+    }
+
+    #[test]
+    fn test_multi_stage_set_stage_progress_clamping() {
+        let stages = vec!["A".to_string()];
+        let mut progress = MultiStageProgress::new("Test", stages);
+
+        progress.set_stage(0);
+
+        // Test overflow
+        progress.set_stage_progress(2.0);
+        assert_eq!(progress.stage_progress, 1.0);
+
+        // Test underflow
+        progress.set_stage_progress(-0.5);
+        assert_eq!(progress.stage_progress, 0.0);
+    }
+
+    #[test]
+    fn test_progress_bar_builder_chaining() {
+        let progress = ProgressBar::new("Test")
+            .with_progress(0.75)
+            .with_message("Processing...");
+
+        assert_eq!(progress.progress(), 0.75);
+    }
+
+    #[test]
+    fn test_multi_stage_set_stage_resets_progress() {
+        let stages = vec!["A".to_string(), "B".to_string()];
+        let mut progress = MultiStageProgress::new("Test", stages);
+
+        progress.set_stage(0);
+        progress.set_stage_progress(0.8);
+
+        progress.set_stage(1);
+        assert_eq!(progress.stage_progress, 0.0); // Should reset
+    }
 }
