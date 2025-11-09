@@ -4,25 +4,13 @@
 //! that handles state transitions based on events.
 
 use crate::config::Config;
+use crate::core::app_state::{AppScreen, EvaluationState};
 use crate::core::event::Event;
 use crate::performance::PerformanceMetrics;
 use crate::ui::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, ToastManager};
 use crate::workspace::{LayoutManager, SessionState, TabManager};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::path::PathBuf;
-
-/// Different screens/modes the application can be in
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum AppScreen {
-    /// Initial welcome screen with logo and tips
-    Welcome,
-    /// Trust confirmation dialog for the current directory
-    TrustDialog,
-    /// Main application interface
-    Main,
-    /// Evaluation running screen
-    Evaluation,
-}
 
 /// Application state (Model in Elm Architecture)
 #[derive(Debug)]
@@ -95,22 +83,6 @@ pub struct App {
 
     /// Current evaluation state
     evaluation_state: Option<EvaluationState>,
-}
-
-/// State of a running or completed evaluation
-#[derive(Debug)]
-pub struct EvaluationState {
-    /// Handle to the running evaluation (if still running)
-    pub handle: Option<crate::ai::eval_runner::EvaluationHandle>,
-
-    /// Latest progress information
-    pub progress: Option<crate::core::event::EvaluationProgress>,
-
-    /// Final results (if completed)
-    pub results: Option<crate::ai::evaluation::EvaluationResults>,
-
-    /// Error message (if failed)
-    pub error: Option<String>,
 }
 
 impl Default for App {
