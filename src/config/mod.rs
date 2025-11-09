@@ -6,6 +6,7 @@ pub mod accessibility;
 pub use accessibility::AccessibilityConfig;
 pub use tui::{AiConfig, Config, EditorConfig, SessionConfig, UiConfig};
 
+use crate::ai::llm::{ProviderConfig, ProviderType};
 use serde::{Deserialize, Serialize};
 
 /// Feature flags for experimental A/B testing
@@ -38,6 +39,11 @@ pub struct FeatureFlags {
     /// Use multi-model ensemble (race multiple models)
     /// Evidence: TRAE 75.2% vs Warp 71% = +4.2 points PROVEN
     pub routing_multi_model: bool,
+
+    /// Use cascading routing (cheap → expensive)
+    /// Evidence: DavaJ 84.7% HumanEval, 70% cost reduction
+    /// Try local models first (Ollama 7B/32B), escalate to cloud if needed
+    pub routing_cascade: bool,
 
     /// Use speculative execution (fast + premium in parallel)
     /// Evidence: Novel for LLMs, could save 24% cost if effective
@@ -83,6 +89,7 @@ impl Default for FeatureFlags {
             // Routing: Start simple (no routing)
             routing_semantic: false,
             routing_multi_model: false,
+            routing_cascade: false,
             routing_speculative: false,
 
             // Intelligence: Start with proven features
@@ -130,12 +137,27 @@ impl FeatureFlags {
         }
     }
 
-    /// M3 advanced: + Multi-model (70-75% target)
+    /// M3 advanced: + Multi-model racing (63-68% target)
     pub fn milestone_3() -> Self {
         Self {
             context_ast: true,
             smart_test_selection: true,
             routing_multi_model: true,
+            prompt_caching: true,
+            tree_sitter_validation: true,
+            ..Default::default()
+        }
+    }
+
+    /// M4 cost-optimized: + Cascading routing (65-70% target, 70% cost reduction)
+    pub fn milestone_4() -> Self {
+        Self {
+            context_ast: true,
+            smart_test_selection: true,
+            routing_multi_model: true,
+            routing_cascade: true,
+            context_embeddings: true,
+            failure_memory: true,
             prompt_caching: true,
             tree_sitter_validation: true,
             ..Default::default()
@@ -161,6 +183,9 @@ impl FeatureFlags {
             count += 1;
         }
         if self.routing_multi_model {
+            count += 1;
+        }
+        if self.routing_cascade {
             count += 1;
         }
         if self.routing_speculative {
@@ -191,7 +216,7 @@ impl FeatureFlags {
     pub fn description(&self) -> String {
         format!(
             "Context: AST={}, Embed={}, Graph={}, Rerank={} | \
-             Routing: Semantic={}, Multi={}, Spec={} | \
+             Routing: Semantic={}, Multi={}, Cascade={}, Spec={} | \
              Intel: Tests={}, Memory={}, Plan={} | \
              Opt: PCache={}, SCache={}, Validate={}",
             self.context_ast,
@@ -200,6 +225,7 @@ impl FeatureFlags {
             self.context_reranking,
             self.routing_semantic,
             self.routing_multi_model,
+            self.routing_cascade,
             self.routing_speculative,
             self.smart_test_selection,
             self.failure_memory,
@@ -211,14 +237,22 @@ impl FeatureFlags {
     }
 }
 
+/// Default racing models for M3 multi-model ensemble
+fn default_racing_models() -> Vec<String> {
+    vec![
+        "claude-sonnet-4-20250514".to_string(),
+        "claude-sonnet-3-5-20241022".to_string(),
+    ]
+}
+
 /// Main TOAD configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToadConfig {
     /// Feature flags for A/B testing
     pub features: FeatureFlags,
 
-    /// Model to use (e.g., "claude-sonnet-4", "gpt-4", etc.)
-    pub model: String,
+    /// LLM provider configuration (Anthropic, GitHub, Ollama)
+    pub provider: ProviderConfig,
 
     /// Maximum tokens for context
     pub max_context_tokens: usize,
@@ -228,16 +262,26 @@ pub struct ToadConfig {
 
     /// Enable verbose logging
     pub verbose: bool,
+
+    /// Models to race when routing_multi_model is enabled (M3+)
+    ///
+    /// Default for M3: ["claude-sonnet-4-20250514", "claude-sonnet-3-5-20241022"]
+    /// These models race in parallel with first-complete-wins selection.
+    ///
+    /// Note: Opus 4 may not be available yet, using Sonnet 3.5 as fallback.
+    #[serde(default = "default_racing_models")]
+    pub racing_models: Vec<String>,
 }
 
 impl Default for ToadConfig {
     fn default() -> Self {
         Self {
             features: FeatureFlags::default(),
-            model: "claude-sonnet-4".to_string(),
+            provider: ProviderConfig::default(),
             max_context_tokens: 200_000,
             task_timeout_secs: 600, // 10 minutes
             verbose: false,
+            racing_models: default_racing_models(),
         }
     }
 }
@@ -249,6 +293,7 @@ impl ToadConfig {
             1 => FeatureFlags::milestone_1(),
             2 => FeatureFlags::milestone_2(),
             3 => FeatureFlags::milestone_3(),
+            4 => FeatureFlags::milestone_4(),
             _ => FeatureFlags::default(),
         };
 
@@ -266,6 +311,30 @@ impl ToadConfig {
             task_timeout_secs: 300,
             ..Default::default()
         }
+    }
+
+    /// Set provider configuration
+    pub fn with_provider(mut self, provider: ProviderConfig) -> Self {
+        self.provider = provider;
+        self
+    }
+
+    /// Use Anthropic provider
+    pub fn with_anthropic(mut self, model: impl Into<String>) -> Self {
+        self.provider = ProviderConfig::anthropic(model);
+        self
+    }
+
+    /// Use GitHub Models provider
+    pub fn with_github(mut self, model: impl Into<String>) -> Self {
+        self.provider = ProviderConfig::github(model);
+        self
+    }
+
+    /// Use Ollama (local) provider
+    pub fn with_ollama(mut self, model: impl Into<String>) -> Self {
+        self.provider = ProviderConfig::ollama(model);
+        self
     }
 }
 
@@ -301,6 +370,77 @@ mod tests {
         let config = ToadConfig::default();
         let json = serde_json::to_string(&config).unwrap();
         let deserialized: ToadConfig = serde_json::from_str(&json).unwrap();
-        assert_eq!(config.model, deserialized.model);
+        assert_eq!(config.provider.model, deserialized.provider.model);
+    }
+
+    #[test]
+    fn test_config_with_providers() {
+        let config = ToadConfig::default()
+            .with_anthropic("claude-sonnet-4-5-20250929");
+        assert_eq!(config.provider.provider, ProviderType::Anthropic);
+
+        let config = ToadConfig::default()
+            .with_github("gpt-4o");
+        assert_eq!(config.provider.provider, ProviderType::GitHub);
+
+        let config = ToadConfig::default()
+            .with_ollama("llama2");
+        assert_eq!(config.provider.provider, ProviderType::Ollama);
+    }
+
+    #[test]
+    fn test_m3_config_has_racing_enabled() {
+        let m3_features = FeatureFlags::milestone_3();
+
+        // M3 MUST have multi-model racing enabled
+        assert!(m3_features.routing_multi_model, "M3 must have routing_multi_model enabled (TRAE +4.2 points)");
+
+        // M3 should inherit M2 features
+        assert!(m3_features.context_ast, "M3 should have AST context from M2");
+        assert!(m3_features.smart_test_selection, "M3 should have smart test selection from M2");
+        assert!(m3_features.prompt_caching, "M3 should have prompt caching from M1");
+        assert!(m3_features.tree_sitter_validation, "M3 should have tree-sitter validation from M1");
+
+        // M3 should NOT have M4 features
+        assert!(!m3_features.routing_cascade, "M3 should not have cascading routing (that's M4)");
+        assert!(!m3_features.context_embeddings, "M3 should not have embeddings (that's M4)");
+    }
+
+    #[test]
+    fn test_m3_baseline_config_uses_features() {
+        let config = ToadConfig::for_milestone(3);
+
+        assert!(config.features.routing_multi_model);
+        assert!(config.features.context_ast);
+        assert!(config.features.smart_test_selection);
+        assert!(config.features.prompt_caching);
+        assert!(config.features.tree_sitter_validation);
+    }
+
+    #[test]
+    fn test_default_racing_models() {
+        let config = ToadConfig::default();
+
+        // Default should have 2 racing models
+        assert_eq!(config.racing_models.len(), 2, "Default config should have 2 racing models");
+
+        // Should include Sonnet 4 and Sonnet 3.5
+        assert!(config.racing_models.contains(&"claude-sonnet-4-20250514".to_string()),
+            "Should include Sonnet 4");
+        assert!(config.racing_models.contains(&"claude-sonnet-3-5-20241022".to_string()),
+            "Should include Sonnet 3.5");
+    }
+
+    #[test]
+    fn test_racing_models_serialization() {
+        let config = ToadConfig {
+            racing_models: vec!["model1".to_string(), "model2".to_string()],
+            ..Default::default()
+        };
+
+        let json = serde_json::to_string(&config).unwrap();
+        let deserialized: ToadConfig = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(config.racing_models, deserialized.racing_models);
     }
 }

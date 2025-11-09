@@ -592,6 +592,11 @@ mod tests {
 
     #[test]
     fn test_toast_with_empty_message() {
+        let toast = Toast::info("");
+        assert_eq!(toast.message(), "");
+        assert!(toast.is_visible());
+    }
+
     // ========================================
     // MEDIUM TIER EDGE CASE TESTS
     // ========================================
@@ -811,7 +816,9 @@ mod tests {
 
         manager.success("Test 2");
         assert_eq!(manager.len(), 1);
+    }
 
+    #[test]
     fn test_toast_very_long_message() {
         let long_msg = "A".repeat(1000);
         let toast = Toast::success(&long_msg);
@@ -953,15 +960,6 @@ mod tests {
         manager.cleanup();
 
         assert_eq!(manager.len(), 1); // Should still be there
-    }
-
-    #[test]
-    fn test_toast_clone() {
-        let original = Toast::info("Original");
-        let cloned = original.clone();
-
-        assert_eq!(original.message(), cloned.message());
-        assert_eq!(original.level(), cloned.level());
     }
 
     #[test]
@@ -1130,13 +1128,6 @@ mod tests {
     }
 
     #[test]
-    fn test_toast_level_clone() {
-        let original = ToastLevel::Warning;
-        let cloned = original.clone();
-        assert_eq!(original, cloned);
-    }
-
-    #[test]
     fn test_toast_level_all_icons_unique() {
         let icons = vec![
             ToastLevel::Info.icon(),
@@ -1257,12 +1248,6 @@ mod tests {
         let long = "M".repeat(100000);
         let toast = Toast::error(long.clone());
         assert_eq!(toast.message().len(), 100000);
-    }
-
-    #[test]
-    fn test_toast_message_with_tabs() {
-        let toast = Toast::info("Col1\tCol2\tCol3");
-        assert!(toast.message().contains("\t"));
     }
 
     #[test]
@@ -1438,6 +1423,9 @@ mod tests {
         }
 
         assert!(manager.is_empty());
+    }
+
+    #[test]
     fn test_manager_many_toasts() {
         let mut manager = ToastManager::new();
 

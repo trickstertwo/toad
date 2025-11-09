@@ -1,8 +1,9 @@
-/// Integration tests for TOAD evaluation framework
 use std::path::PathBuf;
-use toad::ai::evaluation::{Complexity, task_loader};
+/// Integration tests for TOAD evaluation framework
 use toad::config::{FeatureFlags, ToadConfig};
-use toad::{ComparisonResult, EvaluationHarness, Metrics};
+use toad::{Complexity, EvaluationHarness, Task, task_loader};
+use toad::Metrics;
+use toad::ComparisonResult;
 
 #[tokio::test]
 async fn test_basic_evaluation() {
@@ -98,7 +99,7 @@ fn test_task_complexity_estimation() {
 
 #[test]
 fn test_metrics_aggregation() {
-    use toad::ai::metrics::AggregateMetrics;
+    use toad::AggregateMetrics;
 
     let metrics = vec![
         Metrics {
@@ -144,7 +145,7 @@ async fn test_save_and_load_results() {
     // Check that file was created
     let entries: Vec<_> = std::fs::read_dir(temp_dir.path()).unwrap().collect();
 
-    assert!(!entries.is_empty());
+    assert!(entries.len() > 0);
 }
 
 #[test]

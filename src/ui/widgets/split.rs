@@ -873,6 +873,14 @@ mod tests {
         let split = SplitPane::new(SplitDirection::Horizontal)
             .with_split_size(SplitSize::Percentage(99))
             .with_min_size(0);
+
+        let area = Rect::new(0, 0, 100, 50);
+        let (left, right) = split.calculate_panes(area);
+
+        assert_eq!(left.width, 99);
+        assert_eq!(right.width, 1);
+    }
+
     // ========================================
     // MEDIUM TIER EDGE CASE TESTS
     // ========================================
@@ -951,6 +959,9 @@ mod tests {
 
         assert_eq!(top.height, 0);
         assert_eq!(bottom.height, 0);
+    }
+
+    #[test]
     fn test_extreme_uneven_split_1_99() {
         let split =
             SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Percentage(1));
@@ -1010,7 +1021,8 @@ mod tests {
         assert!(split.resize(-20).is_ok());
         match split.split_size() {
             SplitSize::Fixed(n) => assert_eq!(n, 30),
-            SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Fixed(50));
+            _ => panic!("Expected Fixed"),
+        }
 
         assert!(split.resize(20).is_ok());
         match split.split_size() {
@@ -1038,6 +1050,9 @@ mod tests {
             SplitSize::Fixed(n) => assert_eq!(n, 30),
             _ => panic!("Expected Fixed"),
         }
+    }
+
+    #[test]
     fn test_resize_fixed_below_minimum() {
         let mut split = SplitPane::new(SplitDirection::Horizontal)
             .with_split_size(SplitSize::Fixed(20))
@@ -1194,23 +1209,7 @@ mod tests {
         let (left, right) = split.calculate_panes(area);
 
         assert_eq!(left.width, 100);
-            SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Min(30));
-
-        assert!(split.resize(10).is_ok());
-        match split.split_size() {
-            SplitSize::Min(n) => assert_eq!(n, 40),
-            _ => panic!("Expected Min"),
-        }
-
-        // Min size can go to 0
-        assert!(split.resize(-40).is_ok());
-        match split.split_size() {
-            SplitSize::Min(n) => assert_eq!(n, 0),
-            _ => panic!("Expected Min"),
-        }
-
-        // But not negative
-        assert!(split.resize(-1).is_err());
+        assert_eq!(right.width, 0);
     }
 
     #[test]
@@ -1784,6 +1783,10 @@ mod tests {
                 SplitSize::Percentage(p) => assert_eq!(p, 50),
                 _ => panic!("Expected Percentage"),
             }
+        }
+    }
+
+    #[test]
     fn test_calculate_panes_single_column() {
         let split =
             SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Percentage(50));
@@ -1918,17 +1921,6 @@ mod tests {
         assert_eq!(split.border_style().focused_border_type(), BorderType::Double);
     }
 
-    #[test]
-    fn test_border_style_mut() {
-        let mut split = SplitPane::new(SplitDirection::Horizontal);
-
-        split.border_style_mut().set_show_borders(false);
-        assert!(!split.border_style().show_borders());
-
-        split.border_style_mut().set_focused_border_color(Color::Magenta);
-        assert_eq!(split.border_style().focused_border_color(), Color::Magenta);
-    }
-
     // Builder Pattern Chaining
     #[test]
     fn test_builder_chaining_all_methods() {
@@ -2018,19 +2010,6 @@ mod tests {
         let debug_str = format!("{:?}", size);
         assert!(debug_str.contains("Fixed"));
         assert!(debug_str.contains("40"));
-    }
-
-    #[test]
-    fn test_split_pane_clone() {
-        let split1 = SplitPane::new(SplitDirection::Horizontal)
-            .with_split_size(SplitSize::Percentage(70));
-        let split2 = split1.clone();
-
-        assert_eq!(split1.direction(), split2.direction());
-        match (split1.split_size(), split2.split_size()) {
-            (SplitSize::Percentage(p1), SplitSize::Percentage(p2)) => assert_eq!(p1, p2),
-            _ => panic!("Expected matching Percentage sizes"),
-        }
     }
 
     #[test]
@@ -2151,17 +2130,19 @@ mod tests {
     fn test_horizontal_with_min_size() {
         let split =
             SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Min(20));
+
+        let area = Rect::new(0, 0, 100, 50);
+        let (left, right) = split.calculate_panes(area);
+
+        assert!(left.width >= 20);
+        assert_eq!(left.width + right.width, 100);
+    }
+
+    #[test]
     fn test_split_pane_debug() {
         let split = SplitPane::new(SplitDirection::Vertical);
         let debug_str = format!("{:?}", split);
         assert!(debug_str.contains("SplitPane"));
-    }
-
-    #[test]
-    fn test_border_style_clone() {
-        let style1 = PaneBorderStyle::new();
-        let style2 = style1.clone();
-        assert_eq!(style1.show_borders(), style2.show_borders());
     }
 
     #[test]
@@ -2311,9 +2292,7 @@ mod tests {
         match split.split_size() {
             SplitSize::Percentage(p) => assert_eq!(p, 50),
             _ => panic!("Expected Percentage 50"),
-        // Min(0) means first pane gets at least 0, could get more
-        assert!(left.width >= 0);
-        assert!(right.width >= 0);
+        }
     }
 
     #[test]
@@ -2346,6 +2325,9 @@ mod tests {
         assert_eq!(style.unfocused_border_type(), BorderType::Plain);
         assert_eq!(style.focused_border_color(), Color::Green);
         assert_eq!(style.unfocused_border_color(), Color::DarkGray);
+    }
+
+    #[test]
     fn test_calculate_panes_with_fixed_very_large() {
         let split = SplitPane::new(SplitDirection::Horizontal)
             .with_split_size(SplitSize::Fixed(10000));

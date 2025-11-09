@@ -4,16 +4,20 @@
 //! evaluation frameworks, and tooling.
 
 pub mod agent;
+pub mod context;
 pub mod eval_commands;
 pub mod eval_runner;
 pub mod evaluation;
 pub mod llm;
 pub mod metrics;
+pub mod routing;
 pub mod stats;
+pub mod test_selection;
 pub mod tools;
 
 // Re-exports
 pub use agent::{Agent, AgentResult, PromptBuilder};
+pub use context::{AstCache, AstContext, AstParser, ContextBuilder, ExtractorRegistry, FileContext, Import, Language, Symbol, SymbolKind};
 pub use eval_commands::{
     CompareArgs, EvalArgs, EvalCommand, ParseError as EvalParseError, ShowConfigArgs,
     parse_eval_command,
@@ -23,7 +27,15 @@ pub use evaluation::{
     DatasetManager, DatasetSource, EvaluationHarness, EvaluationResults, Task, TaskLoader,
     TaskResult,
 };
-pub use llm::{AnthropicClient, LLMClient, LLMResponse, Message, Usage};
+pub use llm::{
+    AnthropicClient, DeterministicLLMClient, LLMClient, LLMResponse, Message,
+    MockResponseBuilder, SequencedMockClient, Usage,
+};
 pub use metrics::{Metrics, MetricsCollector, QualityMetrics};
+pub use routing::{CascadingRouter, Difficulty, ModelTier, Router, TaskClassifier};
 pub use stats::{ComparisonResult, StatisticalTest};
+pub use test_selection::{
+    DependencyMapper, TestDiscovery, TestExecutionResult, TestExecutor, TestSelection,
+    TestSelector,
+};
 pub use tools::{Tool, ToolRegistry, ToolResult};

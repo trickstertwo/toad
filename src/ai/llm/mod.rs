@@ -11,11 +11,23 @@ use std::env;
 
 pub mod anthropic;
 pub mod errors;
+pub mod github;
+pub mod mock;
+pub mod ollama;
+pub mod provider;
+pub mod racing;
 pub mod rate_limiter;
+pub mod streaming;
 
 pub use anthropic::AnthropicClient;
 pub use errors::LLMError;
+pub use github::GitHubClient;
+pub use mock::{DeterministicLLMClient, MockResponseBuilder, SequencedMockClient};
+pub use ollama::OllamaClient;
+pub use provider::{LLMProvider, ProviderConfig, ProviderType};
+pub use racing::{RaceResult, RacingClient, SelectionStrategy};
 pub use rate_limiter::{RateLimitConfig, RateLimitStatus, RateLimiter};
+pub use streaming::{MessageStream, StreamAccumulator, StreamEvent};
 
 /// Represents a message in the conversation
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -124,6 +136,14 @@ pub trait LLMClient: Send + Sync {
         messages: Vec<Message>,
         tools: Option<Vec<serde_json::Value>>,
     ) -> Result<LLMResponse>;
+
+    /// Send a message and get a streaming response
+    /// Returns a stream of events for real-time processing
+    async fn send_message_stream(
+        &self,
+        messages: Vec<Message>,
+        tools: Option<Vec<serde_json::Value>>,
+    ) -> Result<MessageStream>;
 
     /// Get the model name
     fn model_name(&self) -> &str;

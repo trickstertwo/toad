@@ -46,10 +46,22 @@ impl Agent {
         task: &Task,
         metrics: &mut MetricsCollector,
     ) -> Result<AgentResult> {
+        self.execute_task_with_prompt(task, None, metrics).await
+    }
+
+    /// Execute a task with optional custom initial prompt
+    pub async fn execute_task_with_prompt(
+        &self,
+        task: &Task,
+        custom_prompt: Option<String>,
+        metrics: &mut MetricsCollector,
+    ) -> Result<AgentResult> {
         metrics.start();
 
-        // Build initial prompt
-        let prompt = PromptBuilder::new().with_task(task).build();
+        // Use custom prompt if provided, otherwise build default
+        let prompt = custom_prompt.unwrap_or_else(|| {
+            PromptBuilder::new().with_task(task).build()
+        });
 
         let mut conversation = vec![Message::user(prompt)];
         let mut step_count = 0;
@@ -96,16 +108,13 @@ impl Agent {
                     let tool_results = self.execute_tools(&response.tool_uses, metrics).await?;
 
                     // Add assistant message with tool uses
-                    let content_prefix = if response.content.is_empty() {
-                        String::new()
-                    } else {
-                        format!("{}\n\n", response.content)
-                    };
-                    conversation.push(Message::assistant(format!(
-                        "{}Tool uses: {}",
-                        content_prefix,
-                        tool_results
-                    )));
+                    conversation.push(Message::assistant(
+                        if response.content.is_empty() {
+                            format!("Tool uses: {}", tool_results)
+                        } else {
+                            format!("{}\n\nTool uses: {}", response.content, tool_results)
+                        }
+                    ));
                 }
                 StopReason::EndTurn | StopReason::MaxTokens | StopReason::StopSequence => {
                     // Task complete or hit limit
@@ -254,6 +263,15 @@ mod tests {
 
         fn model_name(&self) -> &str {
             "mock-model"
+        }
+
+        async fn send_message_stream(
+            &self,
+            _messages: Vec<Message>,
+            _tools: Option<Vec<serde_json::Value>>,
+        ) -> Result<crate::ai::llm::MessageStream> {
+            // Mock implementation doesn't support streaming yet
+            Err(anyhow!("Streaming not supported in mock client"))
         }
     }
 

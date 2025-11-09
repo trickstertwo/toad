@@ -45,7 +45,22 @@ statrs = "0.17"
 chrono = { version = "0.4", features = ["serde"] }
 
 # HTTP client
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
+eventsource-stream = "0.2"
+futures = "0.3"
+pin-project = "1.1"
+
+# Tree-sitter for AST parsing (M2 Context) and syntax highlighting
+tree-sitter = "0.24"
+tree-sitter-python = "0.23"
+tree-sitter-javascript = "0.23"
+tree-sitter-typescript = "0.23"
+tree-sitter-rust = "0.23"
+tree-sitter-highlight = "0.24"
+streaming-iterator = "0.1"
+
+# LRU cache for AST results
+lru = "0.12"
 
 # Compression
 flate2 = "1.0"
@@ -53,13 +68,6 @@ flate2 = "1.0"
 # Parquet support for SWE-bench datasets
 parquet = "53"
 arrow = "53"
-
-# Syntax highlighting
-tree-sitter = "0.24"
-tree-sitter-highlight = "0.24"
-tree-sitter-rust = "0.23"
-tree-sitter-javascript = "0.23"
-tree-sitter-python = "0.23"
 
 # Testing
 mockall = "0.12"

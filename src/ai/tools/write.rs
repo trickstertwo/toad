@@ -1,11 +1,14 @@
-/// Write tool - writes content to a file
+/// Write tool - writes content to a file with optional syntax validation
 use super::{Tool, ToolResult};
 use anyhow::{Context, Result};
 use serde_json::json;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-pub struct WriteTool;
+pub struct WriteTool {
+    /// Whether to validate syntax before writing
+    validate_syntax: bool,
+}
 
 impl Default for WriteTool {
     fn default() -> Self {
@@ -14,8 +17,73 @@ impl Default for WriteTool {
 }
 
 impl WriteTool {
+    /// Create a new WriteTool without syntax validation (backwards compatible)
     pub fn new() -> Self {
-        Self
+        Self {
+            validate_syntax: false,
+        }
+    }
+
+    /// Create a WriteTool with optional syntax validation
+    pub fn with_validation(validate_syntax: bool) -> Self {
+        Self { validate_syntax }
+    }
+
+    /// Validate syntax using tree-sitter for supported languages
+    fn validate_syntax(path: &Path, content: &str) -> Result<(), String> {
+        use crate::ai::context::parser::detect_language;
+        use crate::ai::context::Language;
+
+        // Detect language from file extension
+        let language = match detect_language(path) {
+            Some(lang) => lang,
+            None => {
+                // If we don't recognize the language, skip validation
+                return Ok(());
+            }
+        };
+
+        // Use tree-sitter to validate syntax
+        let mut parser = tree_sitter::Parser::new();
+
+        // Set language based on file type
+        let tree_sitter_lang = match language {
+            Language::Python => {
+                parser
+                    .set_language(&tree_sitter_python::LANGUAGE.into())
+                    .map_err(|e| format!("Failed to set Python language: {}", e))?;
+                "Python"
+            }
+            Language::JavaScript => {
+                parser
+                    .set_language(&tree_sitter_javascript::LANGUAGE.into())
+                    .map_err(|e| format!("Failed to set JavaScript language: {}", e))?;
+                "JavaScript"
+            }
+            Language::TypeScript => {
+                parser
+                    .set_language(&tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into())
+                    .map_err(|e| format!("Failed to set TypeScript language: {}", e))?;
+                "TypeScript"
+            }
+            Language::Rust => {
+                // Rust parser not implemented yet, skip validation
+                return Ok(());
+            }
+        };
+
+        // Try to parse the content
+        let tree = parser
+            .parse(content, None)
+            .ok_or_else(|| format!("Failed to parse {} file", tree_sitter_lang))?;
+
+        // Check for syntax errors (missing nodes indicate parse errors)
+        let root = tree.root_node();
+        if root.has_error() {
+            return Err(format!("Syntax error in {} file", tree_sitter_lang));
+        }
+
+        Ok(())
     }
 }
 
@@ -58,6 +126,16 @@ impl Tool for WriteTool {
             .context("Missing 'content' argument")?;
 
         let path_buf = PathBuf::from(path);
+
+        // Validate syntax if enabled
+        if self.validate_syntax {
+            if let Err(e) = Self::validate_syntax(&path_buf, content) {
+                return Ok(ToolResult::error(
+                    self.name(),
+                    format!("Validation failed: {}", e),
+                ));
+            }
+        }
 
         // Create parent directories if they don't exist
         if let Some(parent) = path_buf.parent()
@@ -151,5 +229,136 @@ mod tests {
         assert!(schema["properties"]["path"].is_object());
         assert!(schema["properties"]["content"].is_object());
         assert_eq!(schema["required"].as_array().unwrap().len(), 2);
+    }
+
+    // === Tree-sitter Validation Tests ===
+
+    #[tokio::test]
+    async fn test_write_tool_validation_valid_python() {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("valid.py");
+
+        let tool = WriteTool::with_validation(true);
+        let mut args = HashMap::new();
+        args.insert(
+            "path".to_string(),
+            serde_json::Value::String(file_path.to_string_lossy().to_string()),
+        );
+        args.insert(
+            "content".to_string(),
+            serde_json::Value::String("def hello():\n    print('world')\n".to_string()),
+        );
+
+        let result = tool.execute(args).await.unwrap();
+        assert!(result.success, "Valid Python code should pass validation");
+        assert!(file_path.exists());
+    }
+
+    #[tokio::test]
+    async fn test_write_tool_validation_invalid_python() {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("invalid.py");
+
+        let tool = WriteTool::with_validation(true);
+        let mut args = HashMap::new();
+        args.insert(
+            "path".to_string(),
+            serde_json::Value::String(file_path.to_string_lossy().to_string()),
+        );
+        args.insert(
+            "content".to_string(),
+            serde_json::Value::String("def hello(\n    print('missing closing paren'\n".to_string()),
+        );
+
+        let result = tool.execute(args).await.unwrap();
+        assert!(!result.success, "Invalid Python code should fail validation");
+        assert!(result.error.unwrap().contains("Syntax error"));
+        assert!(!file_path.exists(), "File should not be written on validation failure");
+    }
+
+    #[tokio::test]
+    async fn test_write_tool_validation_valid_javascript() {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("valid.js");
+
+        let tool = WriteTool::with_validation(true);
+        let mut args = HashMap::new();
+        args.insert(
+            "path".to_string(),
+            serde_json::Value::String(file_path.to_string_lossy().to_string()),
+        );
+        args.insert(
+            "content".to_string(),
+            serde_json::Value::String("function hello() {\n  console.log('world');\n}\n".to_string()),
+        );
+
+        let result = tool.execute(args).await.unwrap();
+        assert!(result.success, "Valid JavaScript code should pass validation");
+        assert!(file_path.exists());
+    }
+
+    #[tokio::test]
+    async fn test_write_tool_validation_invalid_javascript() {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("invalid.js");
+
+        let tool = WriteTool::with_validation(true);
+        let mut args = HashMap::new();
+        args.insert(
+            "path".to_string(),
+            serde_json::Value::String(file_path.to_string_lossy().to_string()),
+        );
+        args.insert(
+            "content".to_string(),
+            serde_json::Value::String("function hello() {\n  console.log('missing brace'\n".to_string()),
+        );
+
+        let result = tool.execute(args).await.unwrap();
+        assert!(!result.success, "Invalid JavaScript code should fail validation");
+        assert!(result.error.unwrap().contains("Syntax error"));
+        assert!(!file_path.exists(), "File should not be written on validation failure");
+    }
+
+    #[tokio::test]
+    async fn test_write_tool_validation_unknown_extension() {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("file.unknown");
+
+        let tool = WriteTool::with_validation(true);
+        let mut args = HashMap::new();
+        args.insert(
+            "path".to_string(),
+            serde_json::Value::String(file_path.to_string_lossy().to_string()),
+        );
+        args.insert(
+            "content".to_string(),
+            serde_json::Value::String("any content here, no validation".to_string()),
+        );
+
+        let result = tool.execute(args).await.unwrap();
+        assert!(result.success, "Unknown file types should skip validation");
+        assert!(file_path.exists());
+    }
+
+    #[tokio::test]
+    async fn test_write_tool_validation_disabled() {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("invalid.py");
+
+        // Validation disabled
+        let tool = WriteTool::with_validation(false);
+        let mut args = HashMap::new();
+        args.insert(
+            "path".to_string(),
+            serde_json::Value::String(file_path.to_string_lossy().to_string()),
+        );
+        args.insert(
+            "content".to_string(),
+            serde_json::Value::String("def hello(\n    invalid python\n".to_string()),
+        );
+
+        let result = tool.execute(args).await.unwrap();
+        assert!(result.success, "Invalid code should be written when validation is disabled");
+        assert!(file_path.exists());
     }
 }
