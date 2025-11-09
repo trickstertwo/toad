@@ -1247,4 +1247,151 @@ mod tests {
         assert_eq!(model1.capabilities.len(), 1);
         assert_eq!(model2.capabilities.len(), 2);
     }
+
+    // ============ ADDITIONAL FUNCTIONAL TESTS FROM INTEGRATION ============
+
+    #[test]
+    fn test_model_info_with_max_output_builder() {
+        let model = ModelInfo::new("test", "Test", "Provider").with_max_output(8192);
+        assert_eq!(model.max_output, 8192);
+    }
+
+    #[test]
+    fn test_model_info_with_capability_builder() {
+        let model = ModelInfo::new("test", "Test", "Provider")
+            .with_capability("coding")
+            .with_capability("reasoning");
+        assert_eq!(model.capabilities.len(), 2);
+        assert!(model.capabilities.contains(&"coding".to_string()));
+        assert!(model.capabilities.contains(&"reasoning".to_string()));
+    }
+
+    #[test]
+    fn test_model_info_with_available_builder() {
+        let available = ModelInfo::new("test", "Test", "Provider").with_available(true);
+        assert!(available.available);
+        let unavailable = ModelInfo::new("test", "Test", "Provider").with_available(false);
+        assert!(!unavailable.available);
+    }
+
+    #[test]
+    fn test_formatted_context_small_values() {
+        let model = ModelInfo::new("test", "Test", "Provider").with_context_window(512);
+        assert_eq!(model.formatted_context(), "512");
+    }
+
+    #[test]
+    fn test_cost_indicator_values_range() {
+        let cheap = ModelInfo::new("test", "Test", "Provider").with_cost(0.5);
+        assert_eq!(cheap.cost_indicator(), "$$");
+        let expensive = ModelInfo::new("test", "Test", "Provider").with_cost(3.0);
+        assert_eq!(expensive.cost_indicator(), "$$$$$");
+    }
+
+    #[test]
+    fn test_speed_indicator_values_range() {
+        let slow = ModelInfo::new("test", "Test", "Provider").with_speed(0.5);
+        assert_eq!(slow.speed_indicator(), "⚡⚡");
+        let fast = ModelInfo::new("test", "Test", "Provider").with_speed(2.5);
+        assert_eq!(fast.speed_indicator(), "⚡⚡⚡");
+    }
+
+    #[test]
+    fn test_model_info_chaining_complete() {
+        let model = ModelInfo::new("gpt-4", "GPT-4", "OpenAI")
+            .with_context_window(128_000)
+            .with_max_output(4096)
+            .with_cost(2.0)
+            .with_speed(1.5)
+            .with_capability("coding")
+            .with_capability("analysis")
+            .with_available(true);
+        assert_eq!(model.id, "gpt-4");
+        assert_eq!(model.context_window, 128_000);
+        assert_eq!(model.max_output, 4096);
+        assert_eq!(model.cost, 2.0);
+        assert_eq!(model.speed, 1.5);
+        assert_eq!(model.capabilities.len(), 2);
+        assert!(model.available);
+    }
+
+    #[test]
+    fn test_selector_with_models_builder() {
+        let models = vec![
+            ModelInfo::new("model1", "Model 1", "Provider"),
+            ModelInfo::new("model2", "Model 2", "Provider"),
+        ];
+        let selector = ModelSelector::new().with_models(models);
+        assert_eq!(selector.models.len(), 2);
+        assert_eq!(selector.selected, 0);
+    }
+
+    #[test]
+    fn test_selector_add_model_method() {
+        let mut selector = ModelSelector::new();
+        let initial_count = selector.models.len();
+        selector.add_model(ModelInfo::new("new-model", "New Model", "Provider"));
+        assert_eq!(selector.models.len(), initial_count + 1);
+    }
+
+    #[test]
+    fn test_selector_select_by_index_method() {
+        let mut selector = ModelSelector::new();
+        selector.select(2);
+        assert_eq!(selector.selected, 2);
+        assert_eq!(selector.list_state.selected(), Some(2));
+    }
+
+    #[test]
+    fn test_selector_select_invalid_index_ignored() {
+        let mut selector = ModelSelector::new();
+        let initial_selected = selector.selected;
+        selector.select(999);
+        assert_eq!(selector.selected, initial_selected);
+    }
+
+    #[test]
+    fn test_selector_set_filter_method() {
+        let mut selector = ModelSelector::new();
+        selector.set_filter(Some("coding".to_string()));
+        assert_eq!(selector.filter, Some("coding".to_string()));
+        selector.set_filter(None);
+        assert_eq!(selector.filter, None);
+    }
+
+    #[test]
+    fn test_selector_next_wraps_around_boundary() {
+        let mut selector = ModelSelector::new();
+        let count = selector.models.len();
+        for _ in 0..count - 1 {
+            selector.next();
+        }
+        assert_eq!(selector.selected, count - 1);
+        selector.next();
+        assert_eq!(selector.selected, 0);
+    }
+
+    #[test]
+    fn test_selector_previous_wraps_around_boundary() {
+        let mut selector = ModelSelector::new();
+        assert_eq!(selector.selected, 0);
+        selector.previous();
+        assert_eq!(selector.selected, selector.models.len() - 1);
+    }
+
+    #[test]
+    fn test_selector_select_by_id_invalid_returns_false() {
+        let mut selector = ModelSelector::new();
+        let result = selector.select_by_id("nonexistent-model");
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_selector_with_models_adjusts_selection_boundary() {
+        let mut selector = ModelSelector::new();
+        selector.select(5);
+        let models = vec![ModelInfo::new("model1", "Model 1", "Provider")];
+        selector = selector.with_models(models);
+        assert_eq!(selector.selected, 0);
+    }
 }
