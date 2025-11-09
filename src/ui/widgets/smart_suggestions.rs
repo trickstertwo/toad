@@ -430,7 +430,7 @@ impl SmartSuggestions {
     /// Sort suggestions by relevance (descending)
     pub fn sort_by_relevance(&mut self) {
         self.suggestions
-            .sort_by(|a, b| b.relevance.partial_cmp(&a.relevance).unwrap());
+            .sort_by(|a, b| b.relevance.total_cmp(&a.relevance));
     }
 
     /// Update suggestion relevance by action
