@@ -406,3 +406,598 @@ impl Default for CommandPalette {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ============================================================================
+    // COMPREHENSIVE EDGE CASE TESTS (ADVANCED TIER - Advanced Input)
+    // ============================================================================
+
+    // ============ Basic Functionality Tests ============
+
+    #[test]
+    fn test_palette_creation() {
+        let palette = CommandPalette::new();
+        assert_eq!(palette.query(), "");
+        assert!(palette.selected_command().is_some());
+    }
+
+    #[test]
+    fn test_palette_default() {
+        let palette = CommandPalette::default();
+        assert_eq!(palette.query(), "");
+    }
+
+    #[test]
+    fn test_insert_single_char() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('h');
+        assert_eq!(palette.query(), "h");
+    }
+
+    #[test]
+    fn test_insert_multiple_chars() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('h');
+        palette.insert_char('e');
+        palette.insert_char('l');
+        palette.insert_char('p');
+        assert_eq!(palette.query(), "help");
+    }
+
+    #[test]
+    fn test_delete_char() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('a');
+        palette.insert_char('b');
+        palette.delete_char();
+        assert_eq!(palette.query(), "a");
+    }
+
+    #[test]
+    fn test_delete_char_when_empty() {
+        let mut palette = CommandPalette::new();
+        palette.delete_char();
+        assert_eq!(palette.query(), "");
+    }
+
+    #[test]
+    fn test_clear_query() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('t');
+        palette.insert_char('e');
+        palette.insert_char('s');
+        palette.insert_char('t');
+        palette.clear_query();
+        assert_eq!(palette.query(), "");
+    }
+
+    #[test]
+    fn test_select_next() {
+        let mut palette = CommandPalette::new();
+        let first = palette.selected_command();
+        palette.select_next();
+        let second = palette.selected_command();
+        assert_ne!(first, second);
+    }
+
+    #[test]
+    fn test_select_previous() {
+        let mut palette = CommandPalette::new();
+        let first = palette.selected_command();
+        palette.select_previous();
+        let last = palette.selected_command();
+        assert_ne!(first, last);
+    }
+
+    #[test]
+    fn test_palette_command_clone() {
+        let cmd = PaletteCommand {
+            id: "test".to_string(),
+            label: "Test".to_string(),
+            description: "Test description".to_string(),
+        };
+        let cloned = cmd.clone();
+        assert_eq!(cmd.id, cloned.id);
+        assert_eq!(cmd.label, cloned.label);
+        assert_eq!(cmd.description, cloned.description);
+    }
+
+    #[test]
+    fn test_palette_command_debug() {
+        let cmd = PaletteCommand {
+            id: "test".to_string(),
+            label: "Test".to_string(),
+            description: "Test description".to_string(),
+        };
+        let debug_str = format!("{:?}", cmd);
+        assert!(debug_str.contains("PaletteCommand"));
+    }
+
+    // ============ Stress Tests ============
+
+    #[test]
+    fn test_palette_rapid_char_insertion_1000() {
+        let mut palette = CommandPalette::new();
+        for _ in 0..1000 {
+            palette.insert_char('x');
+        }
+        assert_eq!(palette.query().len(), 1000);
+    }
+
+    #[test]
+    fn test_palette_rapid_navigation_1000_next() {
+        let mut palette = CommandPalette::new();
+        for _ in 0..1000 {
+            palette.select_next();
+        }
+        // Should have wrapped around many times, still have a selection
+        assert!(palette.selected_command().is_some());
+    }
+
+    #[test]
+    fn test_palette_rapid_navigation_1000_previous() {
+        let mut palette = CommandPalette::new();
+        for _ in 0..1000 {
+            palette.select_previous();
+        }
+        assert!(palette.selected_command().is_some());
+    }
+
+    #[test]
+    fn test_palette_alternating_insert_delete_1000() {
+        let mut palette = CommandPalette::new();
+        for i in 0..1000 {
+            if i % 2 == 0 {
+                palette.insert_char('a');
+            } else {
+                palette.delete_char();
+            }
+        }
+        // Should end with empty query (1000 iterations, alternating)
+        assert_eq!(palette.query(), "");
+    }
+
+    #[test]
+    fn test_palette_rapid_clear_operations() {
+        let mut palette = CommandPalette::new();
+        for _ in 0..1000 {
+            palette.insert_char('t');
+            palette.insert_char('e');
+            palette.insert_char('s');
+            palette.insert_char('t');
+            palette.clear_query();
+        }
+        assert_eq!(palette.query(), "");
+    }
+
+    // ============ Unicode Edge Cases ============
+
+    #[test]
+    fn test_palette_query_with_emoji() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('🚀');
+        palette.insert_char('🐸');
+        assert!(palette.query().contains('🚀'));
+        assert!(palette.query().contains('🐸'));
+    }
+
+    #[test]
+    fn test_palette_query_with_rtl_text() {
+        let mut palette = CommandPalette::new();
+        for c in "مرحبا".chars() {
+            palette.insert_char(c);
+        }
+        assert!(palette.query().contains("مرحبا"));
+    }
+
+    #[test]
+    fn test_palette_query_with_hebrew() {
+        let mut palette = CommandPalette::new();
+        for c in "שלום".chars() {
+            palette.insert_char(c);
+        }
+        assert!(palette.query().contains("שלום"));
+    }
+
+    #[test]
+    fn test_palette_query_with_japanese() {
+        let mut palette = CommandPalette::new();
+        for c in "日本語".chars() {
+            palette.insert_char(c);
+        }
+        assert_eq!(palette.query(), "日本語");
+    }
+
+    #[test]
+    fn test_palette_query_with_combining_characters() {
+        let mut palette = CommandPalette::new();
+        for c in "é̂ñ̃".chars() {
+            palette.insert_char(c);
+        }
+        assert!(palette.query().len() > 2);
+    }
+
+    #[test]
+    fn test_palette_query_with_zero_width() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('a');
+        palette.insert_char('\u{200B}'); // Zero-width space
+        palette.insert_char('b');
+        assert!(palette.query().contains('a'));
+        assert!(palette.query().contains('b'));
+    }
+
+    #[test]
+    fn test_palette_query_with_emoji_skin_tones() {
+        let mut palette = CommandPalette::new();
+        for c in "👍🏻👍🏿".chars() {
+            palette.insert_char(c);
+        }
+        assert!(palette.query().contains("👍"));
+    }
+
+    #[test]
+    fn test_palette_query_with_mixed_scripts() {
+        let mut palette = CommandPalette::new();
+        for c in "Hello日本مرحبا🚀".chars() {
+            palette.insert_char(c);
+        }
+        assert_eq!(palette.query(), "Hello日本مرحبا🚀");
+    }
+
+    #[test]
+    fn test_palette_delete_emoji() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('🚀');
+        palette.delete_char();
+        assert_eq!(palette.query(), "");
+    }
+
+    #[test]
+    fn test_palette_delete_multibyte_char() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('日');
+        palette.delete_char();
+        assert_eq!(palette.query(), "");
+    }
+
+    // ============ Filter Edge Cases ============
+
+    #[test]
+    fn test_palette_filter_empty_query_shows_all() {
+        let palette = CommandPalette::new();
+        // With empty query, should have a selection (all commands visible)
+        assert!(palette.selected_command().is_some());
+    }
+
+    #[test]
+    fn test_palette_filter_case_insensitive() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('H');
+        palette.insert_char('E');
+        palette.insert_char('L');
+        palette.insert_char('P');
+        // Should still find "help" command (case-insensitive)
+        let selected = palette.selected_command();
+        assert!(selected.is_some());
+    }
+
+    #[test]
+    fn test_palette_filter_no_matches() {
+        let mut palette = CommandPalette::new();
+        for c in "xyzabc123nonexistent".chars() {
+            palette.insert_char(c);
+        }
+        // With no matches, selection should be None
+        assert!(palette.selected_command().is_none());
+    }
+
+    #[test]
+    fn test_palette_filter_single_char() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('q');
+        // Should filter to commands containing 'q'
+        let selected = palette.selected_command();
+        assert!(selected.is_some());
+    }
+
+    #[test]
+    fn test_palette_filter_progressive() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('h');
+        let count_h = palette.selected_command();
+        palette.insert_char('e');
+        palette.insert_char('l');
+        palette.insert_char('p');
+        let count_help = palette.selected_command();
+        // Both should have selections
+        assert!(count_h.is_some());
+        assert!(count_help.is_some());
+    }
+
+    #[test]
+    fn test_palette_clear_query_restores_all() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('q');
+        palette.insert_char('u');
+        palette.insert_char('i');
+        palette.insert_char('t');
+        palette.clear_query();
+        // After clear, should show all commands again
+        assert!(palette.selected_command().is_some());
+    }
+
+    // ============ Selection Edge Cases ============
+
+    #[test]
+    fn test_palette_select_next_wraps() {
+        let mut palette = CommandPalette::new();
+        let first_selection = palette.selected_command();
+
+        // Navigate to last item by going previous once (wraps)
+        palette.select_previous();
+
+        // Then go next (should wrap to first)
+        palette.select_next();
+
+        let wrapped_selection = palette.selected_command();
+        assert_eq!(first_selection, wrapped_selection);
+    }
+
+    #[test]
+    fn test_palette_select_previous_wraps() {
+        let mut palette = CommandPalette::new();
+        let first = palette.selected_command();
+        palette.select_previous();
+        let last = palette.selected_command();
+        assert_ne!(first, last);
+    }
+
+    #[test]
+    fn test_palette_selection_after_filter_change() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('h');
+        let selected_after_h = palette.selected_command();
+        palette.insert_char('e');
+        palette.insert_char('l');
+        palette.insert_char('p');
+        let selected_after_help = palette.selected_command();
+        // Both should have selections, might be different commands
+        assert!(selected_after_h.is_some());
+        assert!(selected_after_help.is_some());
+    }
+
+    #[test]
+    fn test_palette_selection_when_no_results() {
+        let mut palette = CommandPalette::new();
+        for c in "nonexistentcommand123".chars() {
+            palette.insert_char(c);
+        }
+        assert!(palette.selected_command().is_none());
+
+        // Navigation should be safe with no results
+        palette.select_next();
+        palette.select_previous();
+        assert!(palette.selected_command().is_none());
+    }
+
+    // ============ Cursor Position Edge Cases ============
+
+    #[test]
+    fn test_palette_cursor_at_start() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('a');
+        palette.insert_char('b');
+        palette.insert_char('c');
+        // Cursor should be at end (position 3)
+        assert_eq!(palette.query(), "abc");
+    }
+
+    #[test]
+    fn test_palette_delete_updates_cursor() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('a');
+        palette.insert_char('b');
+        palette.delete_char();
+        palette.insert_char('c');
+        assert_eq!(palette.query(), "ac");
+    }
+
+    #[test]
+    fn test_palette_empty_after_deletes() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('a');
+        palette.delete_char();
+        palette.delete_char(); // Extra delete on empty
+        assert_eq!(palette.query(), "");
+    }
+
+    // ============ Complex Workflow Tests ============
+
+    #[test]
+    fn test_palette_complex_workflow_type_navigate_clear() {
+        let mut palette = CommandPalette::new();
+
+        // Type a query
+        for c in "help".chars() {
+            palette.insert_char(c);
+        }
+        assert_eq!(palette.query(), "help");
+
+        // Navigate
+        palette.select_next();
+        palette.select_next();
+        palette.select_previous();
+
+        // Clear and verify
+        palette.clear_query();
+        assert_eq!(palette.query(), "");
+        assert!(palette.selected_command().is_some());
+
+        // Type new query
+        for c in "quit".chars() {
+            palette.insert_char(c);
+        }
+        assert_eq!(palette.query(), "quit");
+    }
+
+    #[test]
+    fn test_palette_workflow_filter_to_nothing_then_back() {
+        let mut palette = CommandPalette::new();
+
+        // Filter to something that doesn't exist
+        for c in "nonexistent".chars() {
+            palette.insert_char(c);
+        }
+        assert!(palette.selected_command().is_none());
+
+        // Clear and go back
+        palette.clear_query();
+        assert!(palette.selected_command().is_some());
+    }
+
+    #[test]
+    fn test_palette_workflow_rapid_operations() {
+        let mut palette = CommandPalette::new();
+
+        for _ in 0..100 {
+            palette.insert_char('h');
+            palette.select_next();
+            palette.insert_char('e');
+            palette.select_previous();
+            palette.delete_char();
+            palette.delete_char();
+        }
+
+        // Should still be functional
+        assert_eq!(palette.query(), "");
+    }
+
+    #[test]
+    fn test_palette_workflow_unicode_operations() {
+        let mut palette = CommandPalette::new();
+
+        // Insert unicode
+        palette.insert_char('日');
+        palette.insert_char('本');
+
+        // Navigate
+        palette.select_next();
+
+        // Delete one char
+        palette.delete_char();
+        assert_eq!(palette.query(), "日");
+
+        // Add more
+        palette.insert_char('🚀');
+        assert_eq!(palette.query(), "日🚀");
+
+        // Clear
+        palette.clear_query();
+        assert_eq!(palette.query(), "");
+    }
+
+    // ============ Comprehensive Stress Test ============
+
+    #[test]
+    fn test_comprehensive_palette_stress() {
+        let mut palette = CommandPalette::new();
+
+        // Phase 1: Rapid insertions with varied characters
+        for i in 0..200 {
+            let c = match i % 5 {
+                0 => 'a',
+                1 => '🚀',
+                2 => '日',
+                3 => 'x',
+                _ => 'q',
+            };
+            palette.insert_char(c);
+        }
+        assert_eq!(palette.query().chars().count(), 200);
+
+        // Phase 2: Rapid deletions
+        for _ in 0..100 {
+            palette.delete_char();
+        }
+        assert_eq!(palette.query().chars().count(), 100);
+
+        // Phase 3: Clear and start fresh
+        palette.clear_query();
+        assert_eq!(palette.query(), "");
+
+        // Phase 4: Type realistic queries with navigation
+        for c in "help".chars() {
+            palette.insert_char(c);
+        }
+        palette.select_next();
+        palette.select_next();
+        palette.select_previous();
+
+        let selected = palette.selected_command();
+        assert!(selected.is_some());
+
+        // Phase 5: Clear and try another
+        palette.clear_query();
+        for c in "quit".chars() {
+            palette.insert_char(c);
+        }
+
+        let quit_selected = palette.selected_command();
+        assert!(quit_selected.is_some());
+
+        // Phase 6: Verify state consistency
+        palette.clear_query();
+        assert!(palette.selected_command().is_some());
+    }
+
+    // ============ Edge Case: Whitespace and Special Characters ============
+
+    #[test]
+    fn test_palette_query_with_spaces() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('a');
+        palette.insert_char(' ');
+        palette.insert_char('b');
+        assert_eq!(palette.query(), "a b");
+    }
+
+    #[test]
+    fn test_palette_query_only_spaces() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char(' ');
+        palette.insert_char(' ');
+        palette.insert_char(' ');
+        assert_eq!(palette.query(), "   ");
+    }
+
+    #[test]
+    fn test_palette_query_with_newline() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('a');
+        palette.insert_char('\n');
+        palette.insert_char('b');
+        assert!(palette.query().contains('\n'));
+    }
+
+    #[test]
+    fn test_palette_query_with_tab() {
+        let mut palette = CommandPalette::new();
+        palette.insert_char('a');
+        palette.insert_char('\t');
+        palette.insert_char('b');
+        assert!(palette.query().contains('\t'));
+    }
+
+    #[test]
+    fn test_palette_query_with_special_chars() {
+        let mut palette = CommandPalette::new();
+        for c in "!@#$%^&*()".chars() {
+            palette.insert_char(c);
+        }
+        assert_eq!(palette.query(), "!@#$%^&*()");
+    }
+}

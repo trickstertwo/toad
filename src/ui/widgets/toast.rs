@@ -1276,3 +1276,4 @@ mod tests {
         assert!(manager.is_empty());
     }
 }
+
