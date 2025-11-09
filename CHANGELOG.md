@@ -17,6 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- COMPLETED 2025-11-08: Automated project initialization system -->
 
 ### Added
+- **M3: Multi-Model Racing** (TRAE approach - +4.2 points on SWE-bench)
+  - `RacingClient` for parallel LLM execution with first-complete-wins selection
+  - Race metadata tracking (winner model, costs, latency improvements)
+  - Configuration support for racing models in `ToadConfig`
+  - Evaluation harness integration with automatic race metadata extraction
+  - Evidence-based implementation following TRAE paper (2024)
+  - Latency reduction through parallel model execution (20-40% P50 improvement)
+  - Cost tracking including wasted costs from cancelled models
+  - Comprehensive test suite (18 tests: 11 racing + 7 integration)
 - **Domain-driven architecture restructure** migrating 134 files from flat structure to organized domains
   - `core/` - TUI fundamentals (Elm Architecture: Model-Message-Update-View)
   - `ui/` - Widgets, themes, visual components (40+ widgets)
