@@ -1101,4 +1101,517 @@ mod tests {
         window.set_content("Content 3");
         assert_eq!(window.content(), "Content 3");
     }
+
+    // ============ Default Trait Test ============
+
+    #[test]
+    fn test_floating_window_default() {
+        let window = FloatingWindow::default();
+        assert_eq!(window.title(), "Window");
+        assert_eq!(window.content(), "");
+        assert!(window.is_visible());
+        assert!(!window.is_minimized());
+        assert!(window.is_draggable());
+        assert!(window.is_closable());
+    }
+
+    #[test]
+    fn test_manager_default() {
+        let manager = FloatingWindowManager::default();
+        assert_eq!(manager.window_count(), 0);
+        assert!(manager.focused_window().is_none());
+    }
+
+    // ============ Extreme Stress Tests (10k operations) ============
+
+    #[test]
+    fn test_window_extreme_move_operations_10k() {
+        let mut window = FloatingWindow::new("Test", "Content");
+        window.set_position(5000, 5000);
+
+        for _ in 0..5000 {
+            window.move_by(1, 1);
+        }
+        for _ in 0..5000 {
+            window.move_by(-1, -1);
+        }
+
+        let pos = window.get_position();
+        assert_eq!(pos.x, 5000);
+        assert_eq!(pos.y, 5000);
+    }
+
+    #[test]
+    fn test_window_rapid_toggle_visibility_10k() {
+        let mut window = FloatingWindow::new("Test", "Content");
+
+        for _ in 0..10000 {
+            window.toggle();
+        }
+
+        // Even number of toggles, should be back to original state (visible)
+        assert!(window.is_visible());
+    }
+
+    #[test]
+    fn test_window_rapid_toggle_minimize_10k() {
+        let mut window = FloatingWindow::new("Test", "Content");
+
+        for _ in 0..10000 {
+            window.toggle_minimize();
+        }
+
+        // Even number of toggles, should be back to original state (not minimized)
+        assert!(!window.is_minimized());
+    }
+
+    #[test]
+    fn test_window_rapid_size_changes_10k() {
+        let mut window = FloatingWindow::new("Test", "Content");
+
+        for i in 1..=10000 {
+            window.set_size((i % 100) as u16 + 10, (i % 50) as u16 + 5);
+        }
+
+        // Final size should be from last iteration (i=10000)
+        let (w, h) = window.get_size();
+        assert_eq!(w, 10); // 10000 % 100 + 10 = 0 + 10
+        assert_eq!(h, 5); // 10000 % 50 + 5 = 0 + 5
+    }
+
+    #[test]
+    fn test_manager_extreme_add_remove_10k() {
+        let mut manager = FloatingWindowManager::new();
+
+        for i in 0..10000 {
+            manager.add_window(FloatingWindow::new(format!("Window {}", i), "Content"));
+            if i % 3 == 0 && manager.window_count() > 0 {
+                manager.remove_window(0);
+            }
+        }
+
+        assert!(manager.window_count() > 6600); // Approximately 2/3 remain
+    }
+
+    // ============ Non-closable Window Tests ============
+
+    #[test]
+    fn test_non_closable_window_cannot_close() {
+        let mut manager = FloatingWindowManager::new();
+        manager.add_window(FloatingWindow::new("Non-closable", "Content").closable(false));
+
+        let closed = manager.close_focused();
+        assert!(closed.is_none());
+        assert_eq!(manager.window_count(), 1);
+    }
+
+    #[test]
+    fn test_mixed_closable_non_closable() {
+        let mut manager = FloatingWindowManager::new();
+        manager.add_window(FloatingWindow::new("Closable", "Content"));
+        manager.add_window(FloatingWindow::new("Non-closable", "Content").closable(false));
+        manager.add_window(FloatingWindow::new("Closable 2", "Content"));
+
+        manager.set_focus(1); // Focus non-closable
+        let closed = manager.close_focused();
+        assert!(closed.is_none());
+        assert_eq!(manager.window_count(), 3);
+
+        manager.set_focus(0); // Focus closable
+        let closed = manager.close_focused();
+        assert!(closed.is_some());
+        assert_eq!(manager.window_count(), 2);
+    }
+
+    // ============ Manager Set Focus Edge Cases ============
+
+    #[test]
+    fn test_manager_set_focus_out_of_bounds() {
+        let mut manager = FloatingWindowManager::new();
+        manager.add_window(FloatingWindow::new("Window 1", "Content"));
+
+        let result = manager.set_focus(10);
+        assert!(!result);
+        assert_eq!(manager.focused, Some(0));
+    }
+
+    #[test]
+    fn test_manager_set_focus_valid_index() {
+        let mut manager = FloatingWindowManager::new();
+        manager.add_window(FloatingWindow::new("Window 1", "Content"));
+        manager.add_window(FloatingWindow::new("Window 2", "Content"));
+        manager.add_window(FloatingWindow::new("Window 3", "Content"));
+
+        let result = manager.set_focus(2);
+        assert!(result);
+        assert_eq!(manager.focused, Some(2));
+    }
+
+    #[test]
+    fn test_manager_focused_window_mut() {
+        let mut manager = FloatingWindowManager::new();
+        manager.add_window(FloatingWindow::new("Window 1", "Content 1"));
+        manager.add_window(FloatingWindow::new("Window 2", "Content 2"));
+
+        manager.set_focus(1);
+        if let Some(window) = manager.focused_window_mut() {
+            window.set_title("Modified Title");
+        }
+
+        assert_eq!(manager.windows()[1].title(), "Modified Title");
+    }
+
+    #[test]
+    fn test_manager_window_mut_out_of_bounds() {
+        let mut manager = FloatingWindowManager::new();
+        manager.add_window(FloatingWindow::new("Window 1", "Content"));
+
+        let window = manager.window_mut(100);
+        assert!(window.is_none());
+    }
+
+    #[test]
+    fn test_manager_window_mut_valid_index() {
+        let mut manager = FloatingWindowManager::new();
+        manager.add_window(FloatingWindow::new("Window 1", "Content"));
+
+        if let Some(window) = manager.window_mut(0) {
+            window.set_content("New Content");
+        }
+
+        assert_eq!(manager.windows()[0].content(), "New Content");
+    }
+
+    // ============ Window rect() Method Tests ============
+
+    #[test]
+    fn test_window_rect_normal() {
+        let window = FloatingWindow::new("Test", "Content")
+            .position(10, 20)
+            .size(50, 15);
+
+        let rect = window.rect();
+        assert_eq!(rect.x, 10);
+        assert_eq!(rect.y, 20);
+        assert_eq!(rect.width, 50);
+        assert_eq!(rect.height, 15);
+    }
+
+    #[test]
+    fn test_window_rect_minimized() {
+        let mut window = FloatingWindow::new("Test", "Content")
+            .position(10, 20)
+            .size(50, 15);
+
+        window.minimize();
+        let rect = window.rect();
+        assert_eq!(rect.x, 10);
+        assert_eq!(rect.y, 20);
+        assert_eq!(rect.width, 50);
+        assert_eq!(rect.height, 3); // Minimized height is 3
+    }
+
+    #[test]
+    fn test_window_rect_after_move() {
+        let mut window = FloatingWindow::new("Test", "Content")
+            .position(10, 10)
+            .size(40, 10);
+
+        window.move_by(5, 5);
+        let rect = window.rect();
+        assert_eq!(rect.x, 15);
+        assert_eq!(rect.y, 15);
+    }
+
+    // ============ Show/Restore Interaction Tests ============
+
+    #[test]
+    fn test_show_restores_minimized() {
+        let mut window = FloatingWindow::new("Test", "Content");
+        window.minimize();
+        assert!(window.is_minimized());
+
+        window.show();
+        assert!(window.is_visible());
+        assert!(!window.is_minimized());
+    }
+
+    #[test]
+    fn test_restore_preserves_visibility() {
+        let mut window = FloatingWindow::new("Test", "Content");
+        window.hide();
+        window.minimize();
+
+        window.restore();
+        assert!(!window.is_visible());
+        assert!(!window.is_minimized());
+    }
+
+    #[test]
+    fn test_hide_preserves_minimized_state() {
+        let mut window = FloatingWindow::new("Test", "Content");
+        window.minimize();
+        assert!(window.is_minimized());
+
+        window.hide();
+        assert!(!window.is_visible());
+        assert!(window.is_minimized());
+    }
+
+    // ============ Complex Multi-Phase Workflows ============
+
+    #[test]
+    fn test_window_10_phase_comprehensive_workflow() {
+        let mut window = FloatingWindow::new("Test Window", "Initial content");
+
+        // Phase 1: Setup
+        window.set_position(0, 0);
+        window.set_size(40, 10);
+        assert_eq!(window.get_position(), WindowPosition::new(0, 0));
+
+        // Phase 2: Move around terminal
+        for _ in 0..10 {
+            window.move_by(5, 2);
+        }
+        assert_eq!(window.get_position(), WindowPosition::new(50, 20));
+
+        // Phase 3: Minimize and restore
+        window.minimize();
+        assert!(window.is_minimized());
+        assert_eq!(window.rect().height, 3);
+
+        window.restore();
+        assert!(!window.is_minimized());
+        assert_eq!(window.rect().height, 10);
+
+        // Phase 4: Hide and show
+        window.hide();
+        assert!(!window.is_visible());
+
+        window.show();
+        assert!(window.is_visible());
+
+        // Phase 5: Toggle operations
+        window.toggle();
+        assert!(!window.is_visible());
+
+        window.toggle();
+        assert!(window.is_visible());
+
+        // Phase 6: Center in terminal
+        window.center(80, 24);
+        assert_eq!(window.get_position(), WindowPosition::new(20, 7));
+
+        // Phase 7: Resize
+        window.set_size(60, 20);
+        assert_eq!(window.get_size(), (60, 20));
+
+        // Phase 8: Update content and title
+        window.set_title("Updated Title");
+        window.set_content("Updated Content");
+        assert_eq!(window.title(), "Updated Title");
+        assert_eq!(window.content(), "Updated Content");
+
+        // Phase 9: Test draggable
+        let original_pos = window.get_position();
+        window.move_by(10, 10);
+        assert_ne!(window.get_position(), original_pos);
+
+        // Phase 10: Clone and verify
+        let cloned = window.clone();
+        assert_eq!(cloned.title(), "Updated Title");
+        assert_eq!(cloned.content(), "Updated Content");
+        assert_eq!(cloned.get_position(), window.get_position());
+    }
+
+    #[test]
+    fn test_manager_10_phase_comprehensive_workflow() {
+        let mut manager = FloatingWindowManager::new();
+
+        // Phase 1: Add initial windows
+        for i in 0..5 {
+            manager.add_window(FloatingWindow::new(format!("Window {}", i), format!("Content {}", i)));
+        }
+        assert_eq!(manager.window_count(), 5);
+
+        // Phase 2: Navigate focus
+        for _ in 0..10 {
+            manager.focus_next();
+        }
+        assert_eq!(manager.focused, Some(0)); // Wrapped around
+
+        // Phase 3: Modify focused windows
+        for _ in 0..5 {
+            if let Some(window) = manager.focused_window_mut() {
+                window.toggle_minimize();
+            }
+            manager.focus_next();
+        }
+
+        // Phase 4: Add more windows
+        for i in 5..10 {
+            manager.add_window(FloatingWindow::new(format!("Window {}", i), format!("Content {}", i)));
+        }
+        assert_eq!(manager.window_count(), 10);
+
+        // Phase 5: Close some windows
+        for _ in 0..3 {
+            manager.close_focused();
+            manager.focus_next();
+        }
+        assert_eq!(manager.window_count(), 7);
+
+        // Phase 6: Remove specific window
+        manager.remove_window(0);
+        assert_eq!(manager.window_count(), 6);
+
+        // Phase 7: Focus navigation backwards
+        for _ in 0..5 {
+            manager.focus_previous();
+        }
+
+        // Phase 8: Modify via window_mut
+        if let Some(window) = manager.window_mut(0) {
+            window.set_title("Modified via window_mut");
+        }
+
+        // Phase 9: Set specific focus
+        manager.set_focus(3);
+        assert_eq!(manager.focused, Some(3));
+
+        // Phase 10: Clean up all windows
+        while manager.window_count() > 0 {
+            manager.remove_window(0);
+        }
+        assert_eq!(manager.window_count(), 0);
+        assert!(manager.focused_window().is_none());
+    }
+
+    // ============ Builder Pattern Edge Cases ============
+
+    #[test]
+    fn test_builder_all_methods() {
+        let window = FloatingWindow::new("Test", "Content")
+            .position(10, 20)
+            .size(50, 15)
+            .draggable(false)
+            .closable(false);
+
+        assert_eq!(window.get_position(), WindowPosition::new(10, 20));
+        assert_eq!(window.get_size(), (50, 15));
+        assert!(!window.is_draggable());
+        assert!(!window.is_closable());
+    }
+
+    #[test]
+    fn test_builder_chaining_order() {
+        let window1 = FloatingWindow::new("Test", "Content")
+            .position(10, 10)
+            .size(40, 10);
+
+        let window2 = FloatingWindow::new("Test", "Content")
+            .size(40, 10)
+            .position(10, 10);
+
+        assert_eq!(window1.get_position(), window2.get_position());
+        assert_eq!(window1.get_size(), window2.get_size());
+    }
+
+    #[test]
+    fn test_builder_overwrite_values() {
+        let window = FloatingWindow::new("Test", "Content")
+            .position(10, 10)
+            .position(20, 20)
+            .size(40, 10)
+            .size(60, 20);
+
+        assert_eq!(window.get_position(), WindowPosition::new(20, 20));
+        assert_eq!(window.get_size(), (60, 20));
+    }
+
+    // ============ Manager Remove Focus Adjustment Tests ============
+
+    #[test]
+    fn test_manager_remove_focused_window() {
+        let mut manager = FloatingWindowManager::new();
+        manager.add_window(FloatingWindow::new("Window 1", "Content"));
+        manager.add_window(FloatingWindow::new("Window 2", "Content"));
+        manager.add_window(FloatingWindow::new("Window 3", "Content"));
+
+        manager.set_focus(1);
+        manager.remove_window(1);
+
+        // Focus should remain at index 1 (which is now "Window 3")
+        assert_eq!(manager.focused, Some(1));
+        assert_eq!(manager.window_count(), 2);
+    }
+
+    #[test]
+    fn test_manager_remove_last_focused_window() {
+        let mut manager = FloatingWindowManager::new();
+        manager.add_window(FloatingWindow::new("Window 1", "Content"));
+        manager.add_window(FloatingWindow::new("Window 2", "Content"));
+
+        manager.set_focus(1);
+        manager.remove_window(1);
+
+        // Focus should move to last available window (index 0)
+        assert_eq!(manager.focused, Some(0));
+        assert_eq!(manager.window_count(), 1);
+    }
+
+    #[test]
+    fn test_manager_remove_before_focused() {
+        let mut manager = FloatingWindowManager::new();
+        manager.add_window(FloatingWindow::new("Window 1", "Content"));
+        manager.add_window(FloatingWindow::new("Window 2", "Content"));
+        manager.add_window(FloatingWindow::new("Window 3", "Content"));
+
+        manager.set_focus(2);
+        manager.remove_window(0);
+
+        // Focus should adjust to index 1 (since window before focused was removed)
+        assert_eq!(manager.focused, Some(1));
+        assert_eq!(manager.window_count(), 2);
+    }
+
+    // ============ Very Large Content Tests ============
+
+    #[test]
+    fn test_window_100k_content() {
+        let large_content = "X".repeat(100000);
+        let window = FloatingWindow::new("Test", large_content.clone());
+        assert_eq!(window.content().len(), 100000);
+    }
+
+    #[test]
+    fn test_window_multiline_content_1000_lines() {
+        let multiline = "Line\n".repeat(1000);
+        let window = FloatingWindow::new("Test", multiline.clone());
+        assert_eq!(window.content().lines().count(), 1000);
+    }
+
+    // ============ Position Clamp Tests ============
+
+    #[test]
+    fn test_window_move_negative_clamps_to_zero() {
+        let mut window = FloatingWindow::new("Test", "Content");
+        window.set_position(5, 5);
+        window.move_by(-10, -10);
+
+        let pos = window.get_position();
+        assert_eq!(pos.x, 0);
+        assert_eq!(pos.y, 0);
+    }
+
+    #[test]
+    fn test_window_move_large_positive() {
+        let mut window = FloatingWindow::new("Test", "Content");
+        window.set_position(0, 0);
+        window.move_by(1000, 1000);
+
+        let pos = window.get_position();
+        assert_eq!(pos.x, 1000);
+        assert_eq!(pos.y, 1000);
+    }
 }
