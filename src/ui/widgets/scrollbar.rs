@@ -341,4 +341,338 @@ mod tests {
         let state = ScrollbarState::new(10, 0, 20);
         assert_eq!(state.thumb_size_percentage(), 1.0); // Clamped to max
     }
+
+    // === COMPREHENSIVE EDGE CASE TESTS (MEDIUM tier) ===
+
+    // --- Extreme Values ---
+
+    #[test]
+    fn test_scrollbar_state_very_large_total() {
+        let state = ScrollbarState::new(1_000_000, 500_000, 1000);
+        assert_eq!(state.total, 1_000_000);
+        assert!(state.should_show());
+        // Approximately halfway through (500,000 / 999,000 ≈ 0.5005)
+        assert!((state.scroll_percentage() - 0.5).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_scrollbar_state_very_small_viewport() {
+        let state = ScrollbarState::new(10_000, 0, 1);
+        assert_eq!(state.viewport_size, 1);
+        assert!(state.should_show());
+        assert_eq!(state.thumb_size_percentage(), 0.0001); // 1/10000
+    }
+
+    #[test]
+    fn test_scrollbar_state_very_large_position() {
+        let state = ScrollbarState::new(100, 10_000, 20);
+        // Position beyond max should clamp
+        assert_eq!(state.scroll_percentage(), 1.0);
+    }
+
+    #[test]
+    fn test_scrollbar_state_max_values() {
+        let state = ScrollbarState::new(usize::MAX, usize::MAX / 2, 1000);
+        // Should handle extreme values without overflow
+        assert!(state.scroll_percentage() >= 0.0 && state.scroll_percentage() <= 1.0);
+    }
+
+    // --- Boundary Conditions ---
+
+    #[test]
+    fn test_scrollbar_state_position_at_zero() {
+        let state = ScrollbarState::new(100, 0, 20);
+        assert_eq!(state.position, 0);
+        assert_eq!(state.scroll_percentage(), 0.0);
+    }
+
+    #[test]
+    fn test_scrollbar_state_position_at_max() {
+        let state = ScrollbarState::new(100, 80, 20);
+        assert_eq!(state.scroll_percentage(), 1.0);
+    }
+
+    #[test]
+    fn test_scrollbar_state_viewport_equals_one() {
+        let state = ScrollbarState::new(100, 50, 1);
+        assert_eq!(state.viewport_size, 1);
+        assert!(state.should_show());
+        assert_eq!(state.thumb_size_percentage(), 0.01); // 1/100
+    }
+
+    #[test]
+    fn test_scrollbar_state_viewport_equals_total() {
+        let state = ScrollbarState::new(50, 0, 50);
+        assert_eq!(state.viewport_size, state.total);
+        assert!(!state.should_show()); // Should not show when equal
+        assert_eq!(state.scroll_percentage(), 0.0);
+    }
+
+    #[test]
+    fn test_scrollbar_state_viewport_greater_than_total() {
+        let state = ScrollbarState::new(30, 0, 50);
+        assert!(state.viewport_size > state.total);
+        assert!(!state.should_show());
+        assert_eq!(state.thumb_size_percentage(), 1.0); // Clamped
+    }
+
+    #[test]
+    fn test_scrollbar_state_total_equals_one() {
+        let state = ScrollbarState::new(1, 0, 1);
+        assert_eq!(state.total, 1);
+        assert!(!state.should_show());
+    }
+
+    #[test]
+    fn test_scrollbar_state_all_zeros() {
+        let state = ScrollbarState::new(0, 0, 0);
+        assert_eq!(state.scroll_percentage(), 0.0);
+        assert_eq!(state.thumb_size_percentage(), 1.0);
+        assert!(!state.should_show());
+    }
+
+    // --- Percentage Calculation Precision ---
+
+    #[test]
+    fn test_scroll_percentage_fractional_positions() {
+        // Test various fractional positions
+        let state1 = ScrollbarState::new(100, 25, 20);
+        assert!((state1.scroll_percentage() - 0.3125).abs() < 0.001); // 25/80
+
+        let state2 = ScrollbarState::new(100, 75, 20);
+        assert!((state2.scroll_percentage() - 0.9375).abs() < 0.001); // 75/80
+
+        let state3 = ScrollbarState::new(100, 10, 20);
+        assert!((state3.scroll_percentage() - 0.125).abs() < 0.001); // 10/80
+    }
+
+    #[test]
+    fn test_thumb_size_percentage_fractional_viewports() {
+        let state1 = ScrollbarState::new(100, 0, 33);
+        assert!((state1.thumb_size_percentage() - 0.33).abs() < 0.01); // 33/100
+
+        let state2 = ScrollbarState::new(1000, 0, 123);
+        assert!((state2.thumb_size_percentage() - 0.123).abs() < 0.001); // 123/1000
+    }
+
+    // --- Unicode Characters ---
+
+    #[test]
+    fn test_scrollbar_unicode_track_char() {
+        let state = ScrollbarState::new(100, 0, 20);
+        let scrollbar = Scrollbar::vertical(state).track_char('░');
+
+        assert_eq!(scrollbar.track_char, '░');
+    }
+
+    #[test]
+    fn test_scrollbar_unicode_thumb_char() {
+        let state = ScrollbarState::new(100, 0, 20);
+        let scrollbar = Scrollbar::vertical(state).thumb_char('▓');
+
+        assert_eq!(scrollbar.thumb_char, '▓');
+    }
+
+    #[test]
+    fn test_scrollbar_emoji_characters() {
+        let state = ScrollbarState::new(100, 0, 20);
+        let scrollbar = Scrollbar::vertical(state)
+            .track_char('🌫')
+            .thumb_char('🐸');
+
+        assert_eq!(scrollbar.track_char, '🌫');
+        assert_eq!(scrollbar.thumb_char, '🐸');
+    }
+
+    // --- Builder Pattern Chaining ---
+
+    #[test]
+    fn test_scrollbar_builder_chaining() {
+        let state = ScrollbarState::new(100, 50, 20);
+        let scrollbar = Scrollbar::horizontal(state)
+            .show_track(false)
+            .track_char('.')
+            .thumb_char('#');
+
+        assert_eq!(scrollbar.orientation, ScrollbarOrientation::Horizontal);
+        assert!(!scrollbar.show_track);
+        assert_eq!(scrollbar.track_char, '.');
+        assert_eq!(scrollbar.thumb_char, '#');
+    }
+
+    #[test]
+    fn test_scrollbar_builder_partial_chaining() {
+        let state = ScrollbarState::new(100, 0, 20);
+        let scrollbar = Scrollbar::vertical(state).show_track(false);
+
+        assert!(!scrollbar.show_track);
+        assert_eq!(scrollbar.track_char, '│'); // Default
+        assert_eq!(scrollbar.thumb_char, '█'); // Default
+    }
+
+    // --- State Transitions ---
+
+    #[test]
+    fn test_scrollbar_multiple_state_updates() {
+        let state1 = ScrollbarState::new(100, 0, 20);
+        let mut scrollbar = Scrollbar::vertical(state1);
+
+        assert_eq!(scrollbar.state().position, 0);
+
+        let state2 = ScrollbarState::new(100, 25, 20);
+        scrollbar.set_state(state2);
+        assert_eq!(scrollbar.state().position, 25);
+
+        let state3 = ScrollbarState::new(100, 50, 20);
+        scrollbar.set_state(state3);
+        assert_eq!(scrollbar.state().position, 50);
+
+        let state4 = ScrollbarState::new(100, 80, 20);
+        scrollbar.set_state(state4);
+        assert_eq!(scrollbar.state().position, 80);
+    }
+
+    #[test]
+    fn test_scrollbar_state_updates_with_different_totals() {
+        let state1 = ScrollbarState::new(100, 0, 20);
+        let mut scrollbar = Scrollbar::vertical(state1);
+
+        let state2 = ScrollbarState::new(200, 50, 20);
+        scrollbar.set_state(state2);
+        assert_eq!(scrollbar.state().total, 200);
+        assert_eq!(scrollbar.state().position, 50);
+
+        let state3 = ScrollbarState::new(50, 10, 20);
+        scrollbar.set_state(state3);
+        assert_eq!(scrollbar.state().total, 50);
+        assert_eq!(scrollbar.state().position, 10);
+    }
+
+    // --- Trait Implementations ---
+
+    #[test]
+    fn test_scrollbar_orientation_clone() {
+        let ori1 = ScrollbarOrientation::Vertical;
+        let ori2 = ori1;
+        assert_eq!(ori1, ori2); // Copy trait should work
+    }
+
+    #[test]
+    fn test_scrollbar_orientation_debug() {
+        let ori = ScrollbarOrientation::Horizontal;
+        let debug_str = format!("{:?}", ori);
+        assert!(debug_str.contains("Horizontal"));
+    }
+
+    #[test]
+    fn test_scrollbar_orientation_partial_eq() {
+        assert_eq!(ScrollbarOrientation::Vertical, ScrollbarOrientation::Vertical);
+        assert_eq!(ScrollbarOrientation::Horizontal, ScrollbarOrientation::Horizontal);
+        assert_ne!(ScrollbarOrientation::Vertical, ScrollbarOrientation::Horizontal);
+    }
+
+    #[test]
+    fn test_scrollbar_state_clone() {
+        let state1 = ScrollbarState::new(100, 50, 20);
+        let state2 = state1;
+
+        assert_eq!(state1.total, state2.total);
+        assert_eq!(state1.position, state2.position);
+        assert_eq!(state1.viewport_size, state2.viewport_size);
+    }
+
+    #[test]
+    fn test_scrollbar_state_debug() {
+        let state = ScrollbarState::new(100, 50, 20);
+        let debug_str = format!("{:?}", state);
+        assert!(debug_str.contains("100"));
+        assert!(debug_str.contains("50"));
+        assert!(debug_str.contains("20"));
+    }
+
+    #[test]
+    fn test_scrollbar_state_partial_eq() {
+        let state1 = ScrollbarState::new(100, 50, 20);
+        let state2 = ScrollbarState::new(100, 50, 20);
+        let state3 = ScrollbarState::new(100, 60, 20);
+
+        assert_eq!(state1, state2);
+        assert_ne!(state1, state3);
+    }
+
+    #[test]
+    fn test_scrollbar_clone() {
+        let state = ScrollbarState::new(100, 50, 20);
+        let scrollbar1 = Scrollbar::vertical(state).track_char('|');
+        let scrollbar2 = scrollbar1.clone();
+
+        assert_eq!(scrollbar1.orientation, scrollbar2.orientation);
+        assert_eq!(scrollbar1.track_char, scrollbar2.track_char);
+    }
+
+    #[test]
+    fn test_scrollbar_debug() {
+        let state = ScrollbarState::new(100, 50, 20);
+        let scrollbar = Scrollbar::vertical(state);
+        let debug_str = format!("{:?}", scrollbar);
+        assert!(debug_str.contains("Vertical"));
+    }
+
+    // --- Complex Scenarios ---
+
+    #[test]
+    fn test_scrollbar_scrolling_through_large_list() {
+        // Simulate scrolling through a list of 1000 items with viewport of 10
+        let positions = vec![0, 100, 250, 500, 750, 900, 990];
+
+        for pos in positions {
+            let state = ScrollbarState::new(1000, pos, 10);
+            assert!(state.should_show());
+
+            let scroll_pct = state.scroll_percentage();
+            assert!(scroll_pct >= 0.0 && scroll_pct <= 1.0);
+
+            let thumb_pct = state.thumb_size_percentage();
+            assert_eq!(thumb_pct, 0.01); // 10/1000
+        }
+    }
+
+    #[test]
+    fn test_scrollbar_orientation_switching() {
+        let state = ScrollbarState::new(100, 50, 20);
+
+        let vertical = Scrollbar::vertical(state);
+        assert_eq!(vertical.orientation, ScrollbarOrientation::Vertical);
+        assert_eq!(vertical.track_char, '│');
+
+        let horizontal = Scrollbar::horizontal(state);
+        assert_eq!(horizontal.orientation, ScrollbarOrientation::Horizontal);
+        assert_eq!(horizontal.track_char, '─');
+    }
+
+    #[test]
+    fn test_scrollbar_edge_case_combinations() {
+        // Test various edge case combinations
+        let test_cases = vec![
+            (0, 0, 0),     // All zeros
+            (1, 0, 1),     // Single item
+            (10, 0, 10),   // Exact fit
+            (10, 0, 20),   // Viewport larger
+            (100, 0, 1),   // Minimal viewport
+            (100, 99, 1),  // Position near end
+        ];
+
+        for (total, position, viewport) in test_cases {
+            let state = ScrollbarState::new(total, position, viewport);
+
+            // Verify calculations don't panic
+            let _should_show = state.should_show();
+            let scroll_pct = state.scroll_percentage();
+            let thumb_pct = state.thumb_size_percentage();
+
+            // Verify percentages are in valid range
+            assert!(scroll_pct >= 0.0 && scroll_pct <= 1.0);
+            assert!(thumb_pct >= 0.0 && thumb_pct <= 1.0);
+        }
+    }
 }
