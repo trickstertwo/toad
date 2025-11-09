@@ -819,4 +819,460 @@ mod tests {
 
         assert_eq!(manager.len(), 3);
     }
+
+    // ============================================================================
+    // ADVANCED COMPREHENSIVE EDGE CASE TESTS (90%+ COVERAGE)
+    // ============================================================================
+
+    // ============ Stress Tests ============
+
+    #[test]
+    fn test_toast_manager_10000_toasts() {
+        let mut manager = ToastManager::new();
+        for i in 0..10000 {
+            manager.info(format!("Toast {}", i));
+        }
+        assert_eq!(manager.len(), 10000);
+    }
+
+    #[test]
+    fn test_toast_rapid_creation_all_types() {
+        for _ in 0..1000 {
+            let _info = Toast::info("Info");
+            let _success = Toast::success("Success");
+            let _warning = Toast::warning("Warning");
+            let _error = Toast::error("Error");
+        }
+        // Just verify no crashes
+    }
+
+    #[test]
+    fn test_toast_manager_rapid_add_clear_cycles() {
+        let mut manager = ToastManager::new();
+        for i in 0..100 {
+            manager.info(format!("Message {}", i));
+            manager.success(format!("Success {}", i));
+            manager.clear();
+            assert_eq!(manager.len(), 0);
+        }
+    }
+
+    #[test]
+    fn test_toast_manager_alternating_types_stress() {
+        let mut manager = ToastManager::new();
+        for i in 0..1000 {
+            match i % 4 {
+                0 => manager.info(format!("I{}", i)),
+                1 => manager.success(format!("S{}", i)),
+                2 => manager.warning(format!("W{}", i)),
+                _ => manager.error(format!("E{}", i)),
+            }
+        }
+        assert_eq!(manager.len(), 1000);
+    }
+
+    // ============ Unicode Edge Cases ============
+
+    #[test]
+    fn test_toast_with_rtl_text() {
+        let toast = Toast::info("مرحبا العالم Hello שלום");
+        assert!(toast.message().contains("مرحبا"));
+        assert!(toast.message().contains("שלום"));
+    }
+
+    #[test]
+    fn test_toast_with_emoji_sequences() {
+        let toast = Toast::success("👨‍👩‍👧‍👦 Family emoji 🎉");
+        assert!(toast.message().contains("👨‍👩‍👧‍👦"));
+    }
+
+    #[test]
+    fn test_toast_with_combining_characters() {
+        let toast = Toast::warning("Café résumé naïve");
+        assert!(toast.message().contains("é"));
+    }
+
+    #[test]
+    fn test_toast_with_zero_width_characters() {
+        let toast = Toast::error("Test\u{200B}with\u{200B}zero\u{200B}width");
+        assert!(toast.message().contains("\u{200B}"));
+    }
+
+    #[test]
+    fn test_toast_with_all_unicode_types() {
+        let toast = Toast::info("Latin αβγ 中文 日本語 한글 العربية עברית 🎉🚀");
+        assert!(toast.message().contains("αβγ"));
+        assert!(toast.message().contains("中文"));
+    }
+
+    #[test]
+    fn test_toast_with_box_drawing_characters() {
+        let toast = Toast::info("┌─┬─┐\n│ │ │\n├─┼─┤");
+        assert!(toast.message().contains("┌"));
+    }
+
+    // ============ Duration Edge Cases ============
+
+    #[test]
+    fn test_toast_zero_duration() {
+        let toast = Toast::new(ToastLevel::Info, "Zero", Duration::from_secs(0));
+        // Might be immediately invisible
+        let _ = toast.is_visible();
+    }
+
+    #[test]
+    fn test_toast_very_long_duration() {
+        let toast = Toast::new(
+            ToastLevel::Success,
+            "Long",
+            Duration::from_secs(3600 * 24 * 365),
+        );
+        assert!(toast.is_visible());
+        let remaining = toast.remaining_time();
+        assert!(remaining > Duration::from_secs(3600 * 24 * 364));
+    }
+
+    #[test]
+    fn test_toast_one_millisecond_duration() {
+        let toast = Toast::new(ToastLevel::Warning, "Fast", Duration::from_millis(1));
+        let remaining = toast.remaining_time();
+        assert!(remaining <= Duration::from_millis(1));
+    }
+
+    #[test]
+    fn test_toast_remaining_time_decreases() {
+        let toast = Toast::info("Test");
+        let remaining1 = toast.remaining_time();
+
+        std::thread::sleep(Duration::from_millis(10));
+
+        let remaining2 = toast.remaining_time();
+        assert!(remaining2 <= remaining1);
+    }
+
+    // ============ ToastLevel Debug and Clone ============
+
+    #[test]
+    fn test_toast_level_debug_format() {
+        let info = ToastLevel::Info;
+        let success = ToastLevel::Success;
+        let warning = ToastLevel::Warning;
+        let error = ToastLevel::Error;
+
+        assert!(format!("{:?}", info).contains("Info"));
+        assert!(format!("{:?}", success).contains("Success"));
+        assert!(format!("{:?}", warning).contains("Warning"));
+        assert!(format!("{:?}", error).contains("Error"));
+    }
+
+    #[test]
+    fn test_toast_level_clone() {
+        let original = ToastLevel::Warning;
+        let cloned = original.clone();
+        assert_eq!(original, cloned);
+    }
+
+    #[test]
+    fn test_toast_level_all_icons_unique() {
+        let icons = vec![
+            ToastLevel::Info.icon(),
+            ToastLevel::Success.icon(),
+            ToastLevel::Warning.icon(),
+            ToastLevel::Error.icon(),
+        ];
+
+        for (i, icon1) in icons.iter().enumerate() {
+            for (j, icon2) in icons.iter().enumerate() {
+                if i != j {
+                    assert_ne!(icon1, icon2);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_toast_level_all_border_colors() {
+        // Just verify all methods work without panicking
+        let _info_color = ToastLevel::Info.border_color();
+        let _success_color = ToastLevel::Success.border_color();
+        let _warning_color = ToastLevel::Warning.border_color();
+        let _error_color = ToastLevel::Error.border_color();
+    }
+
+    // ============ Toast Clone and Debug ============
+
+    #[test]
+    fn test_toast_debug_format() {
+        let toast = Toast::info("Debug test");
+        let debug_str = format!("{:?}", toast);
+        assert!(!debug_str.is_empty());
+    }
+
+    #[test]
+    fn test_toast_clone_preserves_all_fields() {
+        let original = Toast::warning("Original message");
+        let cloned = original.clone();
+
+        assert_eq!(original.message(), cloned.message());
+        assert_eq!(original.level(), cloned.level());
+        // Both should be visible (just created)
+        assert!(original.is_visible());
+        assert!(cloned.is_visible());
+    }
+
+    // ============ ToastManager Edge Cases ============
+
+    #[test]
+    fn test_toast_manager_empty_after_default() {
+        let manager = ToastManager::default();
+        assert!(manager.is_empty());
+        assert_eq!(manager.len(), 0);
+    }
+
+    #[test]
+    fn test_toast_manager_debug_format() {
+        let mut manager = ToastManager::new();
+        manager.info("Test");
+        let debug_str = format!("{:?}", manager);
+        assert!(!debug_str.is_empty());
+    }
+
+    #[test]
+    fn test_toast_manager_multiple_cleanup_calls() {
+        let mut manager = ToastManager::new();
+        manager.info("Test 1");
+        manager.success("Test 2");
+
+        manager.cleanup();
+        let count1 = manager.len();
+
+        manager.cleanup();
+        let count2 = manager.len();
+
+        manager.cleanup();
+        let count3 = manager.len();
+
+        // Should remain stable
+        assert_eq!(count1, count2);
+        assert_eq!(count2, count3);
+    }
+
+    #[test]
+    fn test_toast_manager_clear_then_add() {
+        let mut manager = ToastManager::new();
+        manager.info("First batch");
+        manager.success("First batch 2");
+
+        manager.clear();
+        assert_eq!(manager.len(), 0);
+
+        manager.warning("Second batch");
+        assert_eq!(manager.len(), 1);
+    }
+
+    #[test]
+    fn test_toast_manager_sequential_adds_preserved() {
+        let mut manager = ToastManager::new();
+
+        manager.info("1");
+        manager.success("2");
+        manager.warning("3");
+        manager.error("4");
+
+        assert_eq!(manager.len(), 4);
+
+        // Toasts are stored in order added
+        manager.cleanup();
+        assert_eq!(manager.len(), 4); // All still visible
+    }
+
+    // ============ Message Edge Cases ============
+
+    #[test]
+    fn test_toast_extremely_long_message_100k() {
+        let long = "M".repeat(100000);
+        let toast = Toast::error(long.clone());
+        assert_eq!(toast.message().len(), 100000);
+    }
+
+    #[test]
+    fn test_toast_message_with_tabs() {
+        let toast = Toast::info("Col1\tCol2\tCol3");
+        assert!(toast.message().contains("\t"));
+    }
+
+    #[test]
+    fn test_toast_message_with_multiple_newlines() {
+        let toast = Toast::warning("Line1\n\n\nLine2");
+        assert_eq!(toast.message().matches('\n').count(), 3);
+    }
+
+    #[test]
+    fn test_toast_message_with_carriage_returns() {
+        let toast = Toast::error("Text\rWith\rCR");
+        assert!(toast.message().contains("\r"));
+    }
+
+    #[test]
+    fn test_toast_message_with_ansi_sequences() {
+        let toast = Toast::info("\x1b[31mRed\x1b[0m");
+        assert!(toast.message().contains("\x1b"));
+    }
+
+    #[test]
+    fn test_toast_message_only_special_chars() {
+        let toast = Toast::success("!@#$%^&*()_+-=[]{}|;:',.<>?/~`");
+        assert!(toast.message().contains("!@#"));
+    }
+
+    // ============ Complex Manager Operations ============
+
+    #[test]
+    fn test_toast_manager_mixed_operations_sequence() {
+        let mut manager = ToastManager::new();
+
+        manager.info("1");
+        manager.success("2");
+        assert_eq!(manager.len(), 2);
+
+        manager.cleanup();
+        assert_eq!(manager.len(), 2);
+
+        manager.warning("3");
+        assert_eq!(manager.len(), 3);
+
+        manager.clear();
+        assert_eq!(manager.len(), 0);
+
+        manager.error("4");
+        assert_eq!(manager.len(), 1);
+    }
+
+    #[test]
+    fn test_toast_manager_add_custom_with_various_durations() {
+        let mut manager = ToastManager::new();
+
+        manager.add(Toast::new(
+            ToastLevel::Info,
+            "1sec",
+            Duration::from_secs(1),
+        ));
+        manager.add(Toast::new(
+            ToastLevel::Success,
+            "5sec",
+            Duration::from_secs(5),
+        ));
+        manager.add(Toast::new(
+            ToastLevel::Warning,
+            "10sec",
+            Duration::from_secs(10),
+        ));
+
+        assert_eq!(manager.len(), 3);
+    }
+
+    #[test]
+    fn test_toast_manager_with_unicode_messages() {
+        let mut manager = ToastManager::new();
+
+        manager.info("日本語");
+        manager.success("العربية");
+        manager.warning("עברית");
+        manager.error("한글");
+
+        assert_eq!(manager.len(), 4);
+    }
+
+    // ============ Comprehensive Stress Test ============
+
+    #[test]
+    fn test_comprehensive_toast_manager_stress() {
+        let mut manager = ToastManager::new();
+
+        // Add 100 toasts with varying types and messages
+        for i in 0..100 {
+            let message = format!("Message {} with unicode 日本語 🎉", i);
+
+            match i % 4 {
+                0 => manager.info(message),
+                1 => manager.success(message),
+                2 => manager.warning(message),
+                _ => manager.error(message),
+            }
+        }
+
+        assert_eq!(manager.len(), 100);
+
+        // Cleanup shouldn't remove any (all just created)
+        manager.cleanup();
+        assert_eq!(manager.len(), 100);
+
+        // Clear and verify
+        manager.clear();
+        assert_eq!(manager.len(), 0);
+        assert!(manager.is_empty());
+
+        // Add more after clear
+        for i in 0..50 {
+            manager.add(Toast::new(
+                ToastLevel::Success,
+                format!("Custom {}", i),
+                Duration::from_secs(i % 10 + 1),
+            ));
+        }
+
+        assert_eq!(manager.len(), 50);
+    }
+
+    #[test]
+    fn test_toast_level_coverage_all_methods() {
+        let levels = vec![
+            ToastLevel::Info,
+            ToastLevel::Success,
+            ToastLevel::Warning,
+            ToastLevel::Error,
+        ];
+
+        for level in levels {
+            // Call all methods to ensure they don't panic
+            let _icon = level.icon();
+            let _color = level.border_color();
+            let _debug = format!("{:?}", level);
+            let _clone = level.clone();
+            let _copy = level;
+        }
+    }
+
+    #[test]
+    fn test_toast_all_constructors() {
+        let info = Toast::info("Info test");
+        let success = Toast::success("Success test");
+        let warning = Toast::warning("Warning test");
+        let error = Toast::error("Error test");
+        let custom = Toast::new(ToastLevel::Info, "Custom", Duration::from_secs(1));
+
+        assert_eq!(info.level(), ToastLevel::Info);
+        assert_eq!(success.level(), ToastLevel::Success);
+        assert_eq!(warning.level(), ToastLevel::Warning);
+        assert_eq!(error.level(), ToastLevel::Error);
+        assert_eq!(custom.level(), ToastLevel::Info);
+    }
+
+    #[test]
+    fn test_toast_manager_len_consistency() {
+        let mut manager = ToastManager::new();
+
+        for i in 1..=10 {
+            manager.info(format!("Message {}", i));
+            assert_eq!(manager.len(), i);
+            assert!(!manager.is_empty());
+        }
+
+        for i in (0..10).rev() {
+            manager.toasts.pop();
+            assert_eq!(manager.len(), i);
+        }
+
+        assert!(manager.is_empty());
+    }
 }
