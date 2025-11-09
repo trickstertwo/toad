@@ -122,12 +122,12 @@ impl ScatterSeries {
             .points
             .iter()
             .map(|(x, _)| *x)
-            .min_by(|a, b| a.partial_cmp(b).unwrap());
+            .min_by(|a, b| a.total_cmp(b));
         let max = self
             .points
             .iter()
             .map(|(x, _)| *x)
-            .max_by(|a, b| a.partial_cmp(b).unwrap());
+            .max_by(|a, b| a.total_cmp(b));
         (min, max)
     }
 
@@ -148,12 +148,12 @@ impl ScatterSeries {
             .points
             .iter()
             .map(|(_, y)| *y)
-            .min_by(|a, b| a.partial_cmp(b).unwrap());
+            .min_by(|a, b| a.total_cmp(b));
         let max = self
             .points
             .iter()
             .map(|(_, y)| *y)
-            .max_by(|a, b| a.partial_cmp(b).unwrap());
+            .max_by(|a, b| a.total_cmp(b));
         (min, max)
     }
 }
@@ -721,5 +721,111 @@ mod tests {
         assert!(plot.show_grid);
         assert_eq!(plot.x_bounds, Some((0.0, 10.0)));
         assert_eq!(plot.y_bounds, Some((0.0, 100.0)));
+    }
+
+    // Edge case tests for NaN and infinity handling
+
+    #[test]
+    fn test_scatter_series_x_bounds_with_nan() {
+        // NaN values should be handled gracefully with total_cmp
+        let series = ScatterSeries::new("Test", vec![(f64::NAN, 2.0), (3.0, 4.0), (2.0, 3.0)]);
+        let (min, max) = series.x_bounds();
+        // total_cmp treats NaN as less than all other values
+        assert!(min.is_some());
+        assert!(max.is_some());
+    }
+
+    #[test]
+    fn test_scatter_series_y_bounds_with_nan() {
+        let series = ScatterSeries::new("Test", vec![(1.0, f64::NAN), (3.0, 4.0), (2.0, 3.0)]);
+        let (min, max) = series.y_bounds();
+        // Should not panic, NaN is handled by total_cmp
+        assert!(min.is_some());
+        assert!(max.is_some());
+    }
+
+    #[test]
+    fn test_scatter_series_x_bounds_with_infinity() {
+        let series = ScatterSeries::new(
+            "Test",
+            vec![(f64::INFINITY, 2.0), (3.0, 4.0), (f64::NEG_INFINITY, 3.0)],
+        );
+        let (min, max) = series.x_bounds();
+        assert_eq!(min, Some(f64::NEG_INFINITY));
+        assert_eq!(max, Some(f64::INFINITY));
+    }
+
+    #[test]
+    fn test_scatter_series_y_bounds_with_infinity() {
+        let series = ScatterSeries::new(
+            "Test",
+            vec![(1.0, f64::INFINITY), (3.0, 4.0), (2.0, f64::NEG_INFINITY)],
+        );
+        let (min, max) = series.y_bounds();
+        assert_eq!(min, Some(f64::NEG_INFINITY));
+        assert_eq!(max, Some(f64::INFINITY));
+    }
+
+    #[test]
+    fn test_scatter_series_all_nan() {
+        // All NaN values should still return Some
+        let series = ScatterSeries::new("Test", vec![(f64::NAN, f64::NAN), (f64::NAN, f64::NAN)]);
+        let (min_x, max_x) = series.x_bounds();
+        let (min_y, max_y) = series.y_bounds();
+        assert!(min_x.is_some());
+        assert!(max_x.is_some());
+        assert!(min_y.is_some());
+        assert!(max_y.is_some());
+    }
+
+    #[test]
+    fn test_scatter_series_mixed_valid_and_nan() {
+        // Mix of valid and NaN values
+        let series = ScatterSeries::new(
+            "Test",
+            vec![(1.0, 2.0), (f64::NAN, 3.0), (3.0, f64::NAN), (2.0, 4.0)],
+        );
+        let (min_x, max_x) = series.x_bounds();
+        let (min_y, max_y) = series.y_bounds();
+        // total_cmp orders NaN as less than all finite values
+        assert!(min_x.is_some());
+        assert!(max_x.is_some());
+        assert!(min_y.is_some());
+        assert!(max_y.is_some());
+    }
+
+    #[test]
+    fn test_scatter_series_single_point_with_nan() {
+        let series = ScatterSeries::new("Test", vec![(f64::NAN, f64::NAN)]);
+        let (min_x, max_x) = series.x_bounds();
+        let (min_y, max_y) = series.y_bounds();
+        assert!(min_x.is_some());
+        assert!(max_x.is_some());
+        assert!(min_y.is_some());
+        assert!(max_y.is_some());
+    }
+
+    #[test]
+    fn test_scatter_series_zero_values() {
+        // Test with zero values (regression test)
+        let series = ScatterSeries::new("Test", vec![(0.0, 0.0), (1.0, 1.0)]);
+        let (min_x, max_x) = series.x_bounds();
+        let (min_y, max_y) = series.y_bounds();
+        assert_eq!(min_x, Some(0.0));
+        assert_eq!(max_x, Some(1.0));
+        assert_eq!(min_y, Some(0.0));
+        assert_eq!(max_y, Some(1.0));
+    }
+
+    #[test]
+    fn test_scatter_series_negative_values() {
+        // Test with negative values
+        let series = ScatterSeries::new("Test", vec![(-5.0, -10.0), (5.0, 10.0), (0.0, 0.0)]);
+        let (min_x, max_x) = series.x_bounds();
+        let (min_y, max_y) = series.y_bounds();
+        assert_eq!(min_x, Some(-5.0));
+        assert_eq!(max_x, Some(5.0));
+        assert_eq!(min_y, Some(-10.0));
+        assert_eq!(max_y, Some(10.0));
     }
 }

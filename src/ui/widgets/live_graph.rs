@@ -379,7 +379,7 @@ impl LiveGraph {
         self.data
             .iter()
             .copied()
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .min_by(|a, b| a.total_cmp(b))
     }
 
     /// Get maximum data point
@@ -397,7 +397,7 @@ impl LiveGraph {
         self.data
             .iter()
             .copied()
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
+            .max_by(|a, b| a.total_cmp(b))
     }
 
     /// Set graph type
