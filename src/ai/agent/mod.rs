@@ -96,13 +96,14 @@ impl Agent {
                     let tool_results = self.execute_tools(&response.tool_uses, metrics).await?;
 
                     // Add assistant message with tool uses
+                    let content_prefix = if response.content.is_empty() {
+                        String::new()
+                    } else {
+                        format!("{}\n\n", response.content)
+                    };
                     conversation.push(Message::assistant(format!(
                         "{}Tool uses: {}",
-                        if response.content.is_empty() {
-                            ""
-                        } else {
-                            &format!("{}\n\n", response.content)
-                        },
+                        content_prefix,
                         tool_results
                     )));
                 }

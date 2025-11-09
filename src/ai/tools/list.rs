@@ -7,6 +7,12 @@ use std::path::PathBuf;
 
 pub struct ListTool;
 
+impl Default for ListTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ListTool {
     pub fn new() -> Self {
         Self

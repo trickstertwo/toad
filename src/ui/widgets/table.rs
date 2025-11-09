@@ -324,4 +324,390 @@ mod tests {
         assert_eq!(table.row_count(), 0);
         assert_eq!(table.selected(), None);
     }
+
+    // ========================================================================
+    // COMPREHENSIVE EDGE CASE TESTS (MEDIUM TIER)
+    // ========================================================================
+
+    #[test]
+    fn test_table_empty_no_columns() {
+        let table = DataTable::new("Empty Table", vec![]);
+        assert_eq!(table.row_count(), 0);
+        assert_eq!(table.selected(), Some(0)); // Default selection
+    }
+
+    #[test]
+    fn test_table_single_column() {
+        let columns = vec![TableColumn::new("Only Column", 50)];
+        let mut table = DataTable::new("Single Column", columns);
+
+        table.add_row(vec!["Value 1".to_string()]);
+        table.add_row(vec!["Value 2".to_string()]);
+
+        assert_eq!(table.row_count(), 2);
+        assert_eq!(table.selected_row(), Some(&vec!["Value 1".to_string()]));
+    }
+
+    #[test]
+    fn test_table_single_row() {
+        let columns = vec![
+            TableColumn::new("Col1", 10),
+            TableColumn::new("Col2", 10),
+            TableColumn::new("Col3", 10),
+        ];
+        let mut table = DataTable::new("Single Row", columns);
+
+        table.add_row(vec!["A".to_string(), "B".to_string(), "C".to_string()]);
+
+        assert_eq!(table.row_count(), 1);
+
+        // Wrap-around with single row
+        table.select_next();
+        assert_eq!(table.selected(), Some(0), "Should wrap to first row");
+
+        table.select_previous();
+        assert_eq!(table.selected(), Some(0), "Should stay on only row");
+    }
+
+    #[test]
+    fn test_table_very_large_dataset() {
+        let columns = vec![TableColumn::new("ID", 10), TableColumn::new("Data", 50)];
+        let mut table = DataTable::new("Large Table", columns);
+
+        // Add 10,000 rows
+        for i in 0..10_000 {
+            table.add_row(vec![format!("{}", i), format!("Data row {}", i)]);
+        }
+
+        assert_eq!(table.row_count(), 10_000);
+
+        // Navigate to last row
+        table.select_last();
+        assert_eq!(table.selected(), Some(9_999));
+
+        // Navigate to first row
+        table.select_first();
+        assert_eq!(table.selected(), Some(0));
+    }
+
+    #[test]
+    fn test_table_with_unicode_cells() {
+        let columns = vec![
+            TableColumn::new("🐸 Emoji", 20),
+            TableColumn::new("日本語", 20),
+        ];
+        let mut table = DataTable::new("Unicode Table", columns);
+
+        table.add_row(vec!["🎉 Party".to_string(), "こんにちは".to_string()]);
+        table.add_row(vec!["👨‍💻 Dev".to_string(), "標題".to_string()]);
+        table.add_row(vec!["🐸 Frog".to_string(), "カエル".to_string()]);
+
+        assert_eq!(table.row_count(), 3);
+
+        // Verify Unicode is preserved
+        let first_row = table.selected_row().unwrap();
+        assert!(first_row[0].contains("🎉"));
+        assert!(first_row[1].contains("こんにちは"));
+    }
+
+    #[test]
+    fn test_table_very_long_cell_content() {
+        let columns = vec![
+            TableColumn::new("Short", 10),
+            TableColumn::new("Long Content", 50),
+        ];
+        let mut table = DataTable::new("Long Cell Table", columns);
+
+        let long_text = "x".repeat(1000);
+        table.add_row(vec!["Short".to_string(), long_text.clone()]);
+
+        assert_eq!(table.selected_row().unwrap()[1].len(), 1000);
+        assert_eq!(table.selected_row().unwrap()[1], long_text);
+    }
+
+    #[test]
+    fn test_table_column_alignment() {
+        let columns = vec![
+            TableColumn::new("Left", 15).with_alignment(ColumnAlignment::Left),
+            TableColumn::new("Center", 15).with_alignment(ColumnAlignment::Center),
+            TableColumn::new("Right", 15).with_alignment(ColumnAlignment::Right),
+        ];
+
+        assert_eq!(columns[0].alignment, ColumnAlignment::Left);
+        assert_eq!(columns[1].alignment, ColumnAlignment::Center);
+        assert_eq!(columns[2].alignment, ColumnAlignment::Right);
+    }
+
+    #[test]
+    fn test_table_column_width_extremes() {
+        // Zero width column
+        let col_zero = TableColumn::new("Zero", 0);
+        assert_eq!(col_zero.width, 0);
+
+        // Very large width
+        let col_large = TableColumn::new("Large", u16::MAX);
+        assert_eq!(col_large.width, u16::MAX);
+    }
+
+    #[test]
+    fn test_table_empty_navigation() {
+        let columns = vec![TableColumn::new("Data", 20)];
+        let mut table = DataTable::new("Empty Nav Test", columns);
+
+        // Navigation on empty table should be no-op
+        table.select_next();
+        assert_eq!(table.selected(), Some(0)); // Still default
+
+        table.select_previous();
+        assert_eq!(table.selected(), Some(0));
+
+        table.select_first();
+        assert_eq!(table.selected(), Some(0));
+
+        table.select_last();
+        assert_eq!(table.selected(), Some(0));
+    }
+
+    #[test]
+    fn test_table_selected_row_none() {
+        let columns = vec![TableColumn::new("Data", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        table.add_row(vec!["Row 1".to_string()]);
+        table.clear();
+
+        // After clear, selection should be None
+        assert!(table.selected_row().is_none());
+    }
+
+    #[test]
+    fn test_table_set_rows_with_selection() {
+        let columns = vec![TableColumn::new("Data", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        // Initially empty, no selection
+        table.clear();
+        assert_eq!(table.selected(), None);
+
+        // Set rows should restore selection to 0
+        table.set_rows(vec![
+            vec!["Row 1".to_string()],
+            vec!["Row 2".to_string()],
+        ]);
+
+        assert_eq!(table.selected(), Some(0));
+    }
+
+    #[test]
+    fn test_table_header_toggle() {
+        let columns = vec![TableColumn::new("Header", 20)];
+        let mut table = DataTable::new("Toggle Test", columns);
+
+        // Default should show header
+        assert!(table.show_header);
+
+        table.set_show_header(false);
+        assert!(!table.show_header);
+
+        table.set_show_header(true);
+        assert!(table.show_header);
+    }
+
+    #[test]
+    fn test_table_mismatched_column_count() {
+        let columns = vec![
+            TableColumn::new("Col1", 10),
+            TableColumn::new("Col2", 10),
+            TableColumn::new("Col3", 10),
+        ];
+        let mut table = DataTable::new("Mismatch Test", columns);
+
+        // Add row with fewer columns than defined
+        table.add_row(vec!["A".to_string(), "B".to_string()]);
+
+        // Add row with more columns than defined
+        table.add_row(vec![
+            "X".to_string(),
+            "Y".to_string(),
+            "Z".to_string(),
+            "Extra".to_string(),
+        ]);
+
+        assert_eq!(table.row_count(), 2);
+        // Table should handle mismatches gracefully
+    }
+
+    #[test]
+    fn test_table_empty_strings_in_cells() {
+        let columns = vec![TableColumn::new("Data", 20)];
+        let mut table = DataTable::new("Empty Cells", columns);
+
+        table.add_row(vec!["".to_string()]);
+        table.add_row(vec!["Non-empty".to_string()]);
+        table.add_row(vec!["".to_string()]);
+
+        assert_eq!(table.row_count(), 3);
+        assert_eq!(table.selected_row().unwrap()[0], "");
+    }
+
+    #[test]
+    fn test_table_newlines_in_cells() {
+        let columns = vec![TableColumn::new("Data", 20)];
+        let mut table = DataTable::new("Newline Test", columns);
+
+        table.add_row(vec!["Line 1\nLine 2\nLine 3".to_string()]);
+
+        assert!(table.selected_row().unwrap()[0].contains('\n'));
+    }
+
+    #[test]
+    fn test_table_rapid_selection_changes() {
+        let columns = vec![TableColumn::new("Data", 20)];
+        let mut table = DataTable::new("Rapid Test", columns);
+
+        table.set_rows(vec![
+            vec!["Row 1".to_string()],
+            vec!["Row 2".to_string()],
+            vec!["Row 3".to_string()],
+            vec!["Row 4".to_string()],
+            vec!["Row 5".to_string()],
+        ]);
+
+        // Rapid next
+        for _ in 0..100 {
+            table.select_next();
+        }
+
+        // Should wrap around correctly
+        assert_eq!(table.selected(), Some(0)); // 100 % 5 = 0
+
+        // Rapid previous
+        for _ in 0..50 {
+            table.select_previous();
+        }
+
+        assert_eq!(table.selected(), Some(0)); // 50 % 5 = 0
+    }
+
+    #[test]
+    fn test_table_column_alignment_all_variants() {
+        // Ensure all alignment variants work
+        let left = ColumnAlignment::Left;
+        let center = ColumnAlignment::Center;
+        let right = ColumnAlignment::Right;
+
+        assert_eq!(left, ColumnAlignment::Left);
+        assert_eq!(center, ColumnAlignment::Center);
+        assert_eq!(right, ColumnAlignment::Right);
+
+        // Test PartialEq
+        assert_ne!(left, center);
+        assert_ne!(center, right);
+        assert_ne!(left, right);
+    }
+
+    #[test]
+    fn test_table_column_clone() {
+        let col1 = TableColumn::new("Test", 20)
+            .with_alignment(ColumnAlignment::Center);
+
+        let col2 = col1.clone();
+
+        assert_eq!(col1.header, col2.header);
+        assert_eq!(col1.width, col2.width);
+        assert_eq!(col1.alignment, col2.alignment);
+    }
+
+    #[test]
+    fn test_table_column_debug() {
+        let col = TableColumn::new("Debug Test", 15)
+            .with_alignment(ColumnAlignment::Right);
+
+        let debug_str = format!("{:?}", col);
+        assert!(debug_str.contains("Debug Test"));
+        assert!(debug_str.contains("15"));
+    }
+
+    #[test]
+    fn test_table_add_row_multiple_times() {
+        let columns = vec![TableColumn::new("Data", 20)];
+        let mut table = DataTable::new("Multi Add Test", columns);
+
+        // Add same row multiple times
+        for i in 0..5 {
+            table.add_row(vec![format!("Row {}", i)]);
+        }
+
+        assert_eq!(table.row_count(), 5);
+
+        // Select each row and verify content
+        for i in 0..5 {
+            table.select_first();
+            for _ in 0..i {
+                table.select_next();
+            }
+            assert_eq!(
+                table.selected_row().unwrap()[0],
+                format!("Row {}", i)
+            );
+        }
+    }
+
+    #[test]
+    fn test_table_special_characters_in_cells() {
+        let columns = vec![TableColumn::new("Special", 30)];
+        let mut table = DataTable::new("Special Chars", columns);
+
+        table.add_row(vec!["<>&\"'".to_string()]);
+        table.add_row(vec!["\t\r\n".to_string()]);
+        table.add_row(vec!["!@#$%^&*()".to_string()]);
+
+        assert_eq!(table.row_count(), 3);
+    }
+
+    #[test]
+    fn test_table_selection_persistence_after_add_row() {
+        let columns = vec![TableColumn::new("Data", 20)];
+        let mut table = DataTable::new("Persistence Test", columns);
+
+        table.set_rows(vec![
+            vec!["Row 1".to_string()],
+            vec!["Row 2".to_string()],
+        ]);
+
+        // Select second row
+        table.select_next();
+        assert_eq!(table.selected(), Some(1));
+
+        // Add new row
+        table.add_row(vec!["Row 3".to_string()]);
+
+        // Selection should remain on index 1
+        assert_eq!(table.selected(), Some(1));
+        assert_eq!(table.row_count(), 3);
+    }
+
+    #[test]
+    fn test_table_boundary_navigation_wrap_around() {
+        let columns = vec![TableColumn::new("Data", 20)];
+        let mut table = DataTable::new("Wrap Test", columns);
+
+        table.set_rows(vec![
+            vec!["First".to_string()],
+            vec!["Middle".to_string()],
+            vec!["Last".to_string()],
+        ]);
+
+        // Start at first
+        table.select_first();
+        assert_eq!(table.selected(), Some(0));
+
+        // Previous from first wraps to last
+        table.select_previous();
+        assert_eq!(table.selected(), Some(2));
+
+        // Next from last wraps to first
+        table.select_next();
+        assert_eq!(table.selected(), Some(0));
+    }
 }

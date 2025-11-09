@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 /// Main TUI configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct Config {
     /// UI-specific settings
     pub ui: UiConfig,
@@ -22,16 +23,6 @@ pub struct Config {
     pub session: SessionConfig,
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            ui: UiConfig::default(),
-            editor: EditorConfig::default(),
-            ai: AiConfig::default(),
-            session: SessionConfig::default(),
-        }
-    }
-}
 
 impl Config {
     /// Load config from a TOML file

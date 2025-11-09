@@ -4,11 +4,10 @@
 
 use ratatui::{
     Frame,
-    buffer::Buffer,
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Widget},
+    widgets::{Block, Borders, List, ListItem, ListState},
 };
 use serde::{Deserialize, Serialize};
 
@@ -274,18 +273,6 @@ impl ModelSelector {
         self.filter = capability;
     }
 
-    /// Get filtered models
-    fn filtered_models(&self) -> Vec<&ModelInfo> {
-        if let Some(ref filter) = self.filter {
-            self.models
-                .iter()
-                .filter(|m| m.capabilities.contains(filter))
-                .collect()
-        } else {
-            self.models.iter().collect()
-        }
-    }
-
     /// Render the model selector
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
         // Get filtered indices before borrowing
@@ -389,8 +376,8 @@ impl ModelSelector {
         frame.render_stateful_widget(list, area, &mut self.list_state);
 
         // Render details panel if enabled and model selected
-        if self.show_details {
-            if let Some(model) = self.selected_model() {
+        if self.show_details
+            && let Some(model) = self.selected_model() {
                 // Show capabilities at the bottom
                 let caps_text = format!("Capabilities: {}", model.capabilities.join(", "));
                 let caps_line = Line::from(vec![Span::styled(
@@ -412,7 +399,6 @@ impl ModelSelector {
                     frame.render_widget(caps_line, caps_area);
                 }
             }
-        }
     }
 }
 
@@ -454,12 +440,12 @@ mod tests {
     #[test]
     fn test_cost_indicator() {
         let model = ModelInfo::new("test", "Test", "Provider").with_cost(2.5);
-        assert!(model.cost_indicator().len() > 0);
+        assert!(!model.cost_indicator().is_empty());
     }
 
     #[test]
     fn test_speed_indicator() {
         let model = ModelInfo::new("test", "Test", "Provider").with_speed(2.0);
-        assert!(model.speed_indicator().len() > 0);
+        assert!(!model.speed_indicator().is_empty());
     }
 }

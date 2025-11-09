@@ -224,13 +224,11 @@ impl ExperimentManager {
             let entry = entry?;
             let path = entry.path();
 
-            if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                if let Ok(json) = std::fs::read_to_string(&path) {
-                    if let Ok(exp) = serde_json::from_str::<Experiment>(&json) {
+            if path.extension().and_then(|s| s.to_str()) == Some("json")
+                && let Ok(json) = std::fs::read_to_string(&path)
+                    && let Ok(exp) = serde_json::from_str::<Experiment>(&json) {
                         self.experiments.insert(exp.id.clone(), exp);
                     }
-                }
-            }
         }
 
         Ok(())
@@ -245,7 +243,7 @@ impl ExperimentManager {
         let completed = self.list_by_status(ExperimentStatus::Completed);
         let failed = self.list_by_status(ExperimentStatus::Failed);
 
-        report.push_str(&format!("## Summary\n"));
+        report.push_str("## Summary\n");
         report.push_str(&format!("- Planned: {}\n", planned.len()));
         report.push_str(&format!("- Running: {}\n", running.len()));
         report.push_str(&format!("- Completed: {}\n", completed.len()));

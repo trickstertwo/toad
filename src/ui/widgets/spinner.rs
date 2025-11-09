@@ -22,8 +22,10 @@ use serde::{Deserialize, Serialize};
 
 /// Spinner animation style
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum SpinnerStyle {
     /// Rotating dots: ⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏
+    #[default]
     Dots,
     /// Rotating line: | / - \
     Line,
@@ -80,11 +82,6 @@ impl SpinnerStyle {
     }
 }
 
-impl Default for SpinnerStyle {
-    fn default() -> Self {
-        SpinnerStyle::Dots
-    }
-}
 
 /// Loading spinner widget
 #[derive(Debug, Clone)]

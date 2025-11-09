@@ -52,7 +52,7 @@ impl Workspace {
     pub fn new(id: impl Into<String>, name: impl Into<String>, root_path: PathBuf) -> Self {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_default()
             .as_secs();
 
         Self {
@@ -103,7 +103,7 @@ impl Workspace {
     pub fn touch(&mut self) {
         self.last_accessed = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_default()
             .as_secs();
     }
 
@@ -116,7 +116,7 @@ impl Workspace {
     pub fn age_seconds(&self) -> u64 {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_default()
             .as_secs();
         now.saturating_sub(self.created_at)
     }
@@ -125,7 +125,7 @@ impl Workspace {
     pub fn idle_seconds(&self) -> u64 {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_default()
             .as_secs();
         now.saturating_sub(self.last_accessed)
     }
@@ -178,7 +178,8 @@ impl WorkspaceManager {
         let id_str = id.into();
         let workspace = Workspace::new(id_str.clone(), name, root_path.into());
         self.workspaces.insert(id_str.clone(), workspace);
-        self.workspaces.get(&id_str).unwrap()
+        // Safe: we just inserted this value above
+        self.workspaces.get(&id_str).expect("workspace was just inserted")
     }
 
     /// Get workspace by ID

@@ -224,11 +224,10 @@ impl Textarea {
 
     /// Clamp cursor column to line length
     fn clamp_cursor_col(&mut self) {
-        if let Some(line) = self.lines.get(self.cursor_row) {
-            if self.cursor_col > line.len() {
+        if let Some(line) = self.lines.get(self.cursor_row)
+            && self.cursor_col > line.len() {
                 self.cursor_col = line.len();
             }
-        }
     }
 
     /// Ensure cursor is visible in the viewport
@@ -378,5 +377,499 @@ mod tests {
 
         textarea.move_up();
         assert_eq!(textarea.cursor_position().0, 1);
+    }
+
+    // === COMPREHENSIVE EDGE CASE TESTS (MEDIUM tier) ===
+
+    // --- Empty States ---
+
+    #[test]
+    fn test_textarea_empty_creation() {
+        let textarea = Textarea::new("Empty");
+        assert_eq!(textarea.line_count(), 1);
+        assert_eq!(textarea.content(), "");
+        assert_eq!(textarea.cursor_position(), (0, 0));
+    }
+
+    #[test]
+    fn test_textarea_set_empty_content() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("Some content");
+        textarea.set_content(""); // Clear to empty
+
+        assert_eq!(textarea.line_count(), 1);
+        assert_eq!(textarea.content(), "");
+        assert_eq!(textarea.cursor_position(), (0, 0));
+    }
+
+    #[test]
+    fn test_textarea_empty_line_navigation() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("\n\n"); // 2 empty lines (lines() splits: ["", ""])
+
+        assert_eq!(textarea.line_count(), 2);
+
+        textarea.move_down();
+        assert_eq!(textarea.cursor_position().0, 1);
+
+        // Try to move down again (should stay at line 1, the last line)
+        textarea.move_down();
+        assert_eq!(textarea.cursor_position().0, 1);
+    }
+
+    // --- Single Item ---
+
+    #[test]
+    fn test_textarea_single_character() {
+        let mut textarea = Textarea::new("Test");
+        textarea.insert_char('X');
+
+        assert_eq!(textarea.content(), "X");
+        assert_eq!(textarea.line_count(), 1);
+        assert_eq!(textarea.cursor_position(), (0, 1));
+    }
+
+    #[test]
+    fn test_textarea_single_line() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("Single line");
+
+        assert_eq!(textarea.line_count(), 1);
+        assert_eq!(textarea.content(), "Single line");
+
+        // Try to move down (should not move)
+        let initial_pos = textarea.cursor_position();
+        textarea.move_down();
+        assert_eq!(textarea.cursor_position(), initial_pos);
+    }
+
+    // --- Unicode and Emoji ---
+
+    #[test]
+    fn test_textarea_unicode_characters() {
+        let mut textarea = Textarea::new("Unicode");
+        textarea.set_content("Hello 🐸 こんにちは 👨‍💻");
+
+        assert_eq!(textarea.content(), "Hello 🐸 こんにちは 👨‍💻");
+
+        // Move to end and delete
+        textarea.move_to_line_end();
+        textarea.delete_char();
+        // Should delete the entire 👨‍💻 emoji (multi-codepoint)
+        assert!(textarea.content().contains("こんにちは"));
+    }
+
+    #[test]
+    fn test_textarea_unicode_cursor_navigation() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("日本語テスト");
+
+        // Move right through multi-byte characters
+        textarea.move_right();
+        textarea.move_right();
+        textarea.move_right();
+
+        // Insert character in the middle
+        textarea.insert_char('X');
+        assert_eq!(textarea.content(), "日本語Xテスト");
+    }
+
+    #[test]
+    fn test_textarea_emoji_on_multiple_lines() {
+        let mut textarea = Textarea::new("Emoji");
+        textarea.insert_char('🎉');
+        textarea.insert_newline();
+        textarea.insert_char('🐸');
+        textarea.insert_newline();
+        textarea.insert_char('👨');
+        textarea.insert_char('‍');
+        textarea.insert_char('💻');
+
+        assert_eq!(textarea.line_count(), 3);
+        assert!(textarea.content().contains("🎉"));
+        assert!(textarea.content().contains("🐸"));
+    }
+
+    // --- Extreme Values ---
+
+    #[test]
+    fn test_textarea_very_long_line() {
+        let mut textarea = Textarea::new("Long Line");
+        let long_text = "x".repeat(10_000);
+        textarea.set_content(&long_text);
+
+        assert_eq!(textarea.content().len(), 10_000);
+        assert_eq!(textarea.line_count(), 1);
+
+        // Navigate to end
+        textarea.move_to_line_end();
+        assert_eq!(textarea.cursor_position().1, 10_000);
+    }
+
+    #[test]
+    fn test_textarea_very_many_lines() {
+        let mut textarea = Textarea::new("Many Lines");
+        let lines: Vec<String> = (0..10_000).map(|i| format!("Line {}", i)).collect();
+        textarea.set_content(lines.join("\n"));
+
+        assert_eq!(textarea.line_count(), 10_000);
+
+        // Navigate down multiple times
+        for _ in 0..100 {
+            textarea.move_down();
+        }
+        assert_eq!(textarea.cursor_position().0, 100);
+    }
+
+    #[test]
+    fn test_textarea_very_long_line_with_unicode() {
+        let mut textarea = Textarea::new("Unicode Long");
+        let long_unicode = "日本語".repeat(1_000); // 3 chars × 1000 = 3000 chars
+        textarea.set_content(&long_unicode);
+
+        assert_eq!(textarea.line_count(), 1);
+        assert!(textarea.content().len() > 8000); // Each char is 3 bytes
+
+        // Move to end
+        textarea.move_to_line_end();
+        assert!(textarea.cursor_position().1 > 8000);
+    }
+
+    // --- Boundary Conditions ---
+
+    #[test]
+    fn test_textarea_cursor_at_line_start() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("Hello World");
+        textarea.move_to_line_end();
+        textarea.move_to_line_start();
+
+        assert_eq!(textarea.cursor_position().1, 0);
+
+        // Try to move left (should not move further)
+        textarea.move_left();
+        assert_eq!(textarea.cursor_position(), (0, 0));
+    }
+
+    #[test]
+    fn test_textarea_cursor_at_line_end() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("Hello");
+        textarea.move_to_line_end();
+
+        assert_eq!(textarea.cursor_position().1, 5);
+
+        // Try to move right (should not move on same line)
+        let before = textarea.cursor_position();
+        textarea.move_right();
+        // Should still be at end of first line (or moved to next line if exists)
+        let after = textarea.cursor_position();
+        assert!(after.0 == before.0 && after.1 == before.1);
+    }
+
+    #[test]
+    fn test_textarea_cursor_at_first_line() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("Line1\nLine2\nLine3");
+
+        assert_eq!(textarea.cursor_position().0, 0);
+
+        // Try to move up (should not move)
+        textarea.move_up();
+        assert_eq!(textarea.cursor_position().0, 0);
+    }
+
+    #[test]
+    fn test_textarea_cursor_at_last_line() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("Line1\nLine2\nLine3");
+
+        // Move to last line
+        textarea.move_down();
+        textarea.move_down();
+        assert_eq!(textarea.cursor_position().0, 2);
+
+        // Try to move down (should not move)
+        textarea.move_down();
+        assert_eq!(textarea.cursor_position().0, 2);
+    }
+
+    // --- Deletion Edge Cases ---
+
+    #[test]
+    fn test_textarea_delete_at_line_start_joins_lines() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("First\nSecond");
+        assert_eq!(textarea.line_count(), 2);
+
+        // Move to second line
+        textarea.move_down();
+        assert_eq!(textarea.cursor_position(), (1, 0));
+
+        // Delete at line start (should join with previous line)
+        textarea.delete_char();
+        assert_eq!(textarea.content(), "FirstSecond");
+        assert_eq!(textarea.line_count(), 1);
+    }
+
+    #[test]
+    fn test_textarea_delete_forward_at_line_end_joins_lines() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("First\nSecond");
+        assert_eq!(textarea.line_count(), 2);
+
+        // Move to end of first line
+        textarea.move_to_line_end();
+        assert_eq!(textarea.cursor_position(), (0, 5));
+
+        // Delete forward at line end (should join with next line)
+        textarea.delete_char_forward();
+        assert_eq!(textarea.content(), "FirstSecond");
+        assert_eq!(textarea.line_count(), 1);
+    }
+
+    #[test]
+    fn test_textarea_delete_unicode_character() {
+        let mut textarea = Textarea::new("Unicode");
+        textarea.set_content("Hello🐸World");
+
+        // Move to after emoji
+        for _ in 0..6 {
+            textarea.move_right();
+        }
+
+        // Delete the emoji
+        textarea.delete_char();
+        assert_eq!(textarea.content(), "HelloWorld");
+    }
+
+    #[test]
+    fn test_textarea_delete_forward_unicode() {
+        let mut textarea = Textarea::new("Unicode");
+        textarea.set_content("Hello🐸World");
+
+        // Move to before emoji
+        for _ in 0..5 {
+            textarea.move_right();
+        }
+
+        // Delete forward (emoji)
+        textarea.delete_char_forward();
+        assert_eq!(textarea.content(), "HelloWorld");
+    }
+
+    // --- Line Operations ---
+
+    #[test]
+    fn test_textarea_split_line_in_middle() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("HelloWorld");
+
+        // Move to middle
+        for _ in 0..5 {
+            textarea.move_right();
+        }
+
+        // Insert newline
+        textarea.insert_newline();
+        assert_eq!(textarea.content(), "Hello\nWorld");
+        assert_eq!(textarea.line_count(), 2);
+        assert_eq!(textarea.cursor_position(), (1, 0));
+    }
+
+    #[test]
+    fn test_textarea_multiple_consecutive_newlines() {
+        let mut textarea = Textarea::new("Test");
+        textarea.insert_char('A');
+        textarea.insert_newline();
+        textarea.insert_newline();
+        textarea.insert_newline();
+        textarea.insert_char('B');
+
+        assert_eq!(textarea.content(), "A\n\n\nB");
+        assert_eq!(textarea.line_count(), 4);
+    }
+
+    // --- Cursor Movement Across Lines ---
+
+    #[test]
+    fn test_textarea_move_left_wraps_to_previous_line() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("First\nSecond");
+
+        // Move to second line
+        textarea.move_down();
+        assert_eq!(textarea.cursor_position(), (1, 0));
+
+        // Move left (should wrap to end of previous line)
+        textarea.move_left();
+        assert_eq!(textarea.cursor_position(), (0, 5)); // End of "First"
+    }
+
+    #[test]
+    fn test_textarea_move_right_wraps_to_next_line() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("First\nSecond");
+
+        // Move to end of first line
+        textarea.move_to_line_end();
+        assert_eq!(textarea.cursor_position(), (0, 5));
+
+        // Move right (should wrap to start of next line)
+        textarea.move_right();
+        assert_eq!(textarea.cursor_position(), (1, 0));
+    }
+
+    #[test]
+    fn test_textarea_cursor_column_clamps_on_shorter_line() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("Long line here\nShort");
+
+        // Move to end of first line
+        textarea.move_to_line_end();
+        assert_eq!(textarea.cursor_position().1, 14); // "Long line here".len()
+
+        // Move down to shorter line (cursor should clamp)
+        textarea.move_down();
+        assert_eq!(textarea.cursor_position(), (1, 5)); // "Short".len()
+    }
+
+    // --- Scrolling ---
+
+    #[test]
+    fn test_textarea_scroll_up_down() {
+        let mut textarea = Textarea::new("Scroll");
+        let lines: Vec<String> = (0..100).map(|i| format!("Line {}", i)).collect();
+        textarea.set_content(lines.join("\n"));
+
+        // Scroll down
+        for _ in 0..10 {
+            textarea.scroll_down();
+        }
+        // Note: scroll_offset is private, but we can test it doesn't panic
+
+        // Scroll up
+        for _ in 0..5 {
+            textarea.scroll_up();
+        }
+        // Should not panic
+    }
+
+    #[test]
+    fn test_textarea_scroll_at_boundaries() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("Line1\nLine2\nLine3");
+
+        // Try to scroll up when at top (should not panic)
+        textarea.scroll_up();
+
+        // Scroll down to bottom
+        for _ in 0..10 {
+            textarea.scroll_down();
+        }
+        // Should not panic or go beyond content
+    }
+
+    // --- State Management ---
+
+    #[test]
+    fn test_textarea_focus_state() {
+        let mut textarea = Textarea::new("Focus");
+
+        textarea.set_focused(true);
+        textarea.set_focused(false);
+        textarea.set_focused(true);
+        // Should not panic
+    }
+
+    #[test]
+    fn test_textarea_line_numbers_toggle() {
+        let mut textarea = Textarea::new("Numbers");
+
+        textarea.set_show_line_numbers(true);
+        textarea.set_show_line_numbers(false);
+        textarea.set_show_line_numbers(true);
+        // Should not panic
+    }
+
+    // --- Default Implementation ---
+
+    #[test]
+    fn test_textarea_default() {
+        let textarea = Textarea::default();
+        assert_eq!(textarea.line_count(), 1);
+        assert_eq!(textarea.content(), "");
+        assert_eq!(textarea.cursor_position(), (0, 0));
+    }
+
+    // --- Content Operations ---
+
+    #[test]
+    fn test_textarea_get_lines() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("Line1\nLine2\nLine3");
+
+        let lines = textarea.lines();
+        assert_eq!(lines.len(), 3);
+        assert_eq!(lines[0], "Line1");
+        assert_eq!(lines[1], "Line2");
+        assert_eq!(lines[2], "Line3");
+    }
+
+    #[test]
+    fn test_textarea_content_preserves_empty_lines() {
+        let mut textarea = Textarea::new("Test");
+        textarea.set_content("A\n\nB\n\nC");
+
+        assert_eq!(textarea.line_count(), 5);
+        let lines = textarea.lines();
+        assert_eq!(lines[0], "A");
+        assert_eq!(lines[1], "");
+        assert_eq!(lines[2], "B");
+        assert_eq!(lines[3], "");
+        assert_eq!(lines[4], "C");
+    }
+
+    #[test]
+    fn test_textarea_insert_multiple_chars_builds_word() {
+        let mut textarea = Textarea::new("Test");
+        for c in "Hello".chars() {
+            textarea.insert_char(c);
+        }
+        assert_eq!(textarea.content(), "Hello");
+        assert_eq!(textarea.cursor_position(), (0, 5));
+    }
+
+    #[test]
+    fn test_textarea_complex_editing_workflow() {
+        let mut textarea = Textarea::new("Complex");
+
+        // Type "Hello"
+        textarea.insert_char('H');
+        textarea.insert_char('e');
+        textarea.insert_char('l');
+        textarea.insert_char('l');
+        textarea.insert_char('o');
+
+        // New line
+        textarea.insert_newline();
+
+        // Type "World"
+        textarea.insert_char('W');
+        textarea.insert_char('o');
+        textarea.insert_char('r');
+        textarea.insert_char('l');
+        textarea.insert_char('d');
+
+        assert_eq!(textarea.content(), "Hello\nWorld");
+        assert_eq!(textarea.line_count(), 2);
+
+        // Move up and to end
+        textarea.move_up();
+        textarea.move_to_line_end();
+
+        // Delete last char of "Hello"
+        textarea.delete_char();
+        assert_eq!(textarea.content(), "Hell\nWorld");
     }
 }

@@ -358,13 +358,7 @@ impl VimMotions {
             return None;
         }
 
-        for i in (0..pos).rev() {
-            if chars[i] == ch {
-                return Some(i);
-            }
-        }
-
-        None
+        (0..pos).rev().find(|&i| chars[i] == ch)
     }
 
     /// Till character forward (t motion) - stops before the character

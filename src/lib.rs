@@ -18,6 +18,7 @@ pub mod commands;
 pub mod config;
 pub mod core;
 pub mod editor;
+pub mod git;
 pub mod infrastructure;
 pub mod navigation;
 pub mod performance;
@@ -36,10 +37,11 @@ pub use config::{
 };
 pub use core::{App, AppScreen, EvaluationProgress, EvaluationState, Event, EventHandler, Tui};
 pub use editor::{Motion, MultiCursor, UndoStack, VimMotions};
+pub use git::{BranchInfo, CommitInfo, FileChange, GitGraphService, GitService};
 pub use infrastructure::{Clipboard, ErrorHandler, KeyBindings};
 pub use navigation::{FuzzyFinder, SearchState};
 pub use performance::PerformanceMetrics;
-pub use ui::ToadTheme;
+pub use ui::{HighlightTheme, HighlightedSpan, Language, SyntaxHighlighter, ToadTheme};
 pub use workspace::{LayoutManager, SessionState, Tab, TabManager};
 
 /// Current TOAD version

@@ -9,6 +9,12 @@ use tokio::process::Command;
 /// Git diff tool - shows changes in the repository
 pub struct GitDiffTool;
 
+impl Default for GitDiffTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GitDiffTool {
     pub fn new() -> Self {
         Self
@@ -104,6 +110,12 @@ impl Tool for GitDiffTool {
 /// Git status tool - shows repository status
 pub struct GitStatusTool;
 
+impl Default for GitStatusTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GitStatusTool {
     pub fn new() -> Self {
         Self
@@ -186,7 +198,7 @@ mod tests {
         // Initialize git repo
         Command::new("git")
             .current_dir(path)
-            .args(&["init"])
+            .args(["init"])
             .output()
             .await
             .unwrap();
@@ -194,14 +206,14 @@ mod tests {
         // Configure git
         Command::new("git")
             .current_dir(path)
-            .args(&["config", "user.email", "test@example.com"])
+            .args(["config", "user.email", "test@example.com"])
             .output()
             .await
             .unwrap();
 
         Command::new("git")
             .current_dir(path)
-            .args(&["config", "user.name", "Test User"])
+            .args(["config", "user.name", "Test User"])
             .output()
             .await
             .unwrap();
@@ -279,14 +291,14 @@ mod tests {
 
         Command::new("git")
             .current_dir(temp_dir.path())
-            .args(&["add", "test.txt"])
+            .args(["add", "test.txt"])
             .output()
             .await
             .unwrap();
 
         Command::new("git")
             .current_dir(temp_dir.path())
-            .args(&["commit", "-m", "initial"])
+            .args(["commit", "-m", "initial"])
             .output()
             .await
             .unwrap();
@@ -321,7 +333,7 @@ mod tests {
         // Stage the file
         Command::new("git")
             .current_dir(temp_dir.path())
-            .args(&["add", "test.txt"])
+            .args(["add", "test.txt"])
             .output()
             .await
             .unwrap();

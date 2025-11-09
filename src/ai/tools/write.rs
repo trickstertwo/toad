@@ -7,6 +7,12 @@ use std::path::PathBuf;
 
 pub struct WriteTool;
 
+impl Default for WriteTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WriteTool {
     pub fn new() -> Self {
         Self
@@ -54,16 +60,14 @@ impl Tool for WriteTool {
         let path_buf = PathBuf::from(path);
 
         // Create parent directories if they don't exist
-        if let Some(parent) = path_buf.parent() {
-            if !parent.exists() {
-                if let Err(e) = tokio::fs::create_dir_all(parent).await {
+        if let Some(parent) = path_buf.parent()
+            && !parent.exists()
+                && let Err(e) = tokio::fs::create_dir_all(parent).await {
                     return Ok(ToolResult::error(
                         self.name(),
                         format!("Failed to create parent directories: {}", e),
                     ));
                 }
-            }
-        }
 
         match tokio::fs::write(&path_buf, content).await {
             Ok(_) => Ok(ToolResult::success(

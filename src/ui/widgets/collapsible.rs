@@ -235,11 +235,10 @@ impl CollapsibleList {
 
     /// Toggle focused section
     pub fn toggle_focused(&mut self) {
-        if let Some(idx) = self.focused {
-            if let Some(section) = self.sections.get_mut(idx) {
+        if let Some(idx) = self.focused
+            && let Some(section) = self.sections.get_mut(idx) {
                 section.toggle();
             }
-        }
     }
 
     /// Expand all sections
@@ -264,7 +263,7 @@ impl CollapsibleList {
 
         // Calculate heights for each section
         let mut constraints = Vec::new();
-        for (_idx, section) in self.sections.iter().enumerate() {
+        for section in self.sections.iter() {
             // Header always takes 1 line
             constraints.push(Constraint::Length(3));
 

@@ -16,7 +16,6 @@ use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
 };
 use serde::{Deserialize, Serialize};
@@ -24,8 +23,10 @@ use std::fmt;
 
 /// Sparkline rendering style
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum SparklineStyle {
     /// Bar style using block characters
+    #[default]
     Bars,
     /// Line style using braille characters
     Braille,
@@ -53,11 +54,6 @@ impl SparklineStyle {
     }
 }
 
-impl Default for SparklineStyle {
-    fn default() -> Self {
-        SparklineStyle::Bars
-    }
-}
 
 impl fmt::Display for SparklineStyle {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

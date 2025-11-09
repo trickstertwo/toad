@@ -164,14 +164,12 @@ impl MacroManager {
     /// assert!(manager.has_macro('a'));
     /// ```
     pub fn stop_recording(&mut self) -> bool {
-        if let Some(register) = self.recording.take() {
-            if let Some(macro_) = self.current_macro.take() {
-                if !macro_.is_empty() {
+        if let Some(register) = self.recording.take()
+            && let Some(macro_) = self.current_macro.take()
+                && !macro_.is_empty() {
                     self.macros.insert(register, macro_);
                     return true;
                 }
-            }
-        }
         false
     }
 
@@ -231,11 +229,7 @@ impl MacroManager {
 
     /// Repeat the last executed macro
     pub fn repeat_last(&mut self) -> Option<Vec<MacroAction>> {
-        if let Some(register) = self.last_macro {
-            Some(self.execute(register))
-        } else {
-            None
-        }
+        self.last_macro.map(|register| self.execute(register))
     }
 
     /// Check if a macro exists

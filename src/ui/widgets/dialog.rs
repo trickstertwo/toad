@@ -215,3 +215,294 @@ impl ConfirmDialog {
         frame.render_widget(help_paragraph, chunks[chunk_idx]);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_dialog_option_new() {
+        let option = DialogOption::new('1', "Test Option");
+        assert_eq!(option.key, '1');
+        assert_eq!(option.label, "Test Option");
+    }
+
+    #[test]
+    fn test_confirm_dialog_new() {
+        let dialog = ConfirmDialog::new("Test Title");
+        assert_eq!(dialog.title, "Test Title");
+        assert!(dialog.message.is_empty());
+        assert!(dialog.options.is_empty());
+        assert_eq!(dialog.selected, 0);
+        assert!(dialog.info_box.is_none());
+    }
+
+    #[test]
+    fn test_confirm_dialog_builder_pattern() {
+        let dialog = ConfirmDialog::new("Title")
+            .message("Line 1")
+            .message("Line 2")
+            .option('1', "Option 1")
+            .option('2', "Option 2")
+            .info_box("Info text");
+
+        assert_eq!(dialog.message.len(), 2);
+        assert_eq!(dialog.options.len(), 2);
+        assert!(dialog.info_box.is_some());
+    }
+
+    #[test]
+    fn test_confirm_dialog_single_message() {
+        let dialog = ConfirmDialog::new("Title").message("Single message");
+        assert_eq!(dialog.message.len(), 1);
+        assert_eq!(dialog.message[0], "Single message");
+    }
+
+    #[test]
+    fn test_confirm_dialog_multiple_messages() {
+        let dialog = ConfirmDialog::new("Title")
+            .message("Line 1")
+            .message("Line 2")
+            .message("Line 3");
+
+        assert_eq!(dialog.message.len(), 3);
+        assert_eq!(dialog.message[0], "Line 1");
+        assert_eq!(dialog.message[1], "Line 2");
+        assert_eq!(dialog.message[2], "Line 3");
+    }
+
+    #[test]
+    fn test_confirm_dialog_options() {
+        let dialog = ConfirmDialog::new("Title")
+            .option('1', "Yes")
+            .option('2', "No")
+            .option('3', "Cancel");
+
+        assert_eq!(dialog.options.len(), 3);
+        assert_eq!(dialog.options[0].key, '1');
+        assert_eq!(dialog.options[0].label, "Yes");
+        assert_eq!(dialog.options[1].key, '2');
+        assert_eq!(dialog.options[1].label, "No");
+        assert_eq!(dialog.options[2].key, '3');
+        assert_eq!(dialog.options[2].label, "Cancel");
+    }
+
+    #[test]
+    fn test_confirm_dialog_selected_default() {
+        let dialog = ConfirmDialog::new("Title")
+            .option('1', "Option 1")
+            .option('2', "Option 2");
+
+        assert_eq!(dialog.selected(), 0, "First option should be selected by default");
+    }
+
+    #[test]
+    fn test_confirm_dialog_select_next() {
+        let mut dialog = ConfirmDialog::new("Title")
+            .option('1', "Option 1")
+            .option('2', "Option 2")
+            .option('3', "Option 3");
+
+        assert_eq!(dialog.selected(), 0);
+
+        dialog.select_next();
+        assert_eq!(dialog.selected(), 1);
+
+        dialog.select_next();
+        assert_eq!(dialog.selected(), 2);
+    }
+
+    #[test]
+    fn test_confirm_dialog_select_next_boundary() {
+        let mut dialog = ConfirmDialog::new("Title")
+            .option('1', "Option 1")
+            .option('2', "Option 2");
+
+        dialog.select_next(); // Move to option 2
+        assert_eq!(dialog.selected(), 1);
+
+        dialog.select_next(); // Try to move past last option
+        assert_eq!(dialog.selected(), 1, "Should not go past last option");
+    }
+
+    #[test]
+    fn test_confirm_dialog_select_previous() {
+        let mut dialog = ConfirmDialog::new("Title")
+            .option('1', "Option 1")
+            .option('2', "Option 2")
+            .option('3', "Option 3");
+
+        dialog.select_next();
+        dialog.select_next();
+        assert_eq!(dialog.selected(), 2);
+
+        dialog.select_previous();
+        assert_eq!(dialog.selected(), 1);
+
+        dialog.select_previous();
+        assert_eq!(dialog.selected(), 0);
+    }
+
+    #[test]
+    fn test_confirm_dialog_select_previous_boundary() {
+        let mut dialog = ConfirmDialog::new("Title")
+            .option('1', "Option 1")
+            .option('2', "Option 2");
+
+        assert_eq!(dialog.selected(), 0);
+
+        dialog.select_previous(); // Try to move before first option
+        assert_eq!(dialog.selected(), 0, "Should not go before first option");
+    }
+
+    #[test]
+    fn test_confirm_dialog_select_by_key_found() {
+        let mut dialog = ConfirmDialog::new("Title")
+            .option('1', "Yes")
+            .option('2', "No")
+            .option('3', "Cancel");
+
+        let result = dialog.select_by_key('2');
+        assert!(result.is_some());
+        assert_eq!(result.unwrap(), 1);
+        assert_eq!(dialog.selected(), 1);
+    }
+
+    #[test]
+    fn test_confirm_dialog_select_by_key_not_found() {
+        let mut dialog = ConfirmDialog::new("Title")
+            .option('1', "Yes")
+            .option('2', "No");
+
+        let result = dialog.select_by_key('9');
+        assert!(result.is_none());
+        assert_eq!(dialog.selected(), 0, "Selection should not change if key not found");
+    }
+
+    #[test]
+    fn test_confirm_dialog_select_by_key_updates_selection() {
+        let mut dialog = ConfirmDialog::new("Title")
+            .option('1', "Yes")
+            .option('2', "No")
+            .option('3', "Cancel");
+
+        dialog.select_by_key('3');
+        assert_eq!(dialog.selected(), 2);
+
+        dialog.select_by_key('1');
+        assert_eq!(dialog.selected(), 0);
+    }
+
+    #[test]
+    fn test_confirm_dialog_info_box() {
+        let dialog = ConfirmDialog::new("Title").info_box("Important info");
+
+        assert!(dialog.info_box.is_some());
+        assert_eq!(dialog.info_box.unwrap(), "Important info");
+    }
+
+    #[test]
+    fn test_confirm_dialog_info_box_override() {
+        let dialog = ConfirmDialog::new("Title")
+            .info_box("First info")
+            .info_box("Second info");
+
+        assert_eq!(dialog.info_box.unwrap(), "Second info", "Last info_box call should override");
+    }
+
+    #[test]
+    fn test_confirm_dialog_navigation_cycle() {
+        let mut dialog = ConfirmDialog::new("Title")
+            .option('1', "Option 1")
+            .option('2', "Option 2")
+            .option('3', "Option 3");
+
+        // Navigate down
+        for i in 0..3 {
+            assert_eq!(dialog.selected(), i);
+            if i < 2 {
+                dialog.select_next();
+            }
+        }
+
+        // Navigate up
+        for i in (0..3).rev() {
+            assert_eq!(dialog.selected(), i);
+            if i > 0 {
+                dialog.select_previous();
+            }
+        }
+    }
+
+    #[test]
+    fn test_confirm_dialog_empty_options() {
+        let dialog = ConfirmDialog::new("Title")
+            .message("No options provided");
+
+        assert_eq!(dialog.options.len(), 0);
+        assert_eq!(dialog.selected(), 0);
+    }
+
+    #[test]
+    fn test_confirm_dialog_single_option() {
+        let mut dialog = ConfirmDialog::new("Title")
+            .option('1', "Only option");
+
+        assert_eq!(dialog.selected(), 0);
+
+        dialog.select_next();
+        assert_eq!(dialog.selected(), 0, "Should stay on single option");
+
+        dialog.select_previous();
+        assert_eq!(dialog.selected(), 0, "Should stay on single option");
+    }
+
+    #[test]
+    fn test_confirm_dialog_with_unicode() {
+        let dialog = ConfirmDialog::new("标题 Title")
+            .message("Message with emoji 🎉")
+            .option('1', "Option with emoji 🐸")
+            .info_box("Info with Unicode 日本語");
+
+        assert!(dialog.title.contains("标题"));
+        assert!(dialog.message[0].contains("🎉"));
+        assert!(dialog.options[0].label.contains("🐸"));
+        assert!(dialog.info_box.unwrap().contains("日本語"));
+    }
+
+    #[test]
+    fn test_confirm_dialog_long_message() {
+        let long_msg = "x".repeat(1000);
+        let dialog = ConfirmDialog::new("Title").message(long_msg.clone());
+
+        assert_eq!(dialog.message[0].len(), 1000);
+        assert_eq!(dialog.message[0], long_msg);
+    }
+
+    #[test]
+    fn test_dialog_option_clone() {
+        let option1 = DialogOption::new('1', "Test");
+        let option2 = option1.clone();
+
+        assert_eq!(option1.key, option2.key);
+        assert_eq!(option1.label, option2.label);
+    }
+
+    #[test]
+    fn test_trust_dialog_typical_usage() {
+        // Simulate the typical trust dialog usage
+        let mut dialog = ConfirmDialog::new("Do you trust this folder?")
+            .message("This folder wants to access your files.")
+            .option('1', "Yes, for this session")
+            .option('2', "Yes, and remember my choice")
+            .option('3', "No, quit");
+
+        assert_eq!(dialog.options.len(), 3);
+        assert_eq!(dialog.selected(), 0);
+
+        // User presses '2' to select second option
+        let result = dialog.select_by_key('2');
+        assert!(result.is_some());
+        assert_eq!(dialog.selected(), 1);
+    }
+}

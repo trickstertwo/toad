@@ -50,11 +50,10 @@ impl PromptBuilder {
                 task.problem_statement
             ));
 
-            if let Some(hints) = task.hints {
-                if !hints.is_empty() {
+            if let Some(hints) = task.hints
+                && !hints.is_empty() {
                     prompt.push_str(&format!("**Hints:**\n{}\n\n", hints));
                 }
-            }
         }
 
         prompt

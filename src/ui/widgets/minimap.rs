@@ -24,20 +24,17 @@ use crate::ui::theme::ToadTheme;
 
 /// Minimap display mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum MinimapMode {
     /// Show characters (scaled down)
     Characters,
     /// Show blocks/density
+    #[default]
     Blocks,
     /// Show syntax highlighting colors
     Colors,
 }
 
-impl Default for MinimapMode {
-    fn default() -> Self {
-        MinimapMode::Blocks
-    }
-}
 
 /// Minimap widget
 #[derive(Debug, Clone)]

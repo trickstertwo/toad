@@ -300,11 +300,10 @@ impl KeySequenceManager {
     /// ```
     pub fn process_key(&mut self, key: KeyCode) -> Option<String> {
         // Check for timeout
-        if let Some(last_time) = self.last_key_time {
-            if last_time.elapsed() > self.timeout {
+        if let Some(last_time) = self.last_key_time
+            && last_time.elapsed() > self.timeout {
                 self.reset();
             }
-        }
 
         // Add key to current sequence
         self.current_sequence.push(key);

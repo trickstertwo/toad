@@ -270,7 +270,7 @@ impl AliasManager {
         // Check if the expanded form starts with another alias
         let first_word = expanded.split_whitespace().next()?;
 
-        if let Some(_) = self.aliases.get(first_word) {
+        if self.aliases.get(first_word).is_some() {
             // Recursively expand
             self.expand_recursive(first_word, &[], depth + 1)
         } else {
