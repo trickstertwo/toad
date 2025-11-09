@@ -448,4 +448,209 @@ mod tests {
         let model = ModelInfo::new("test", "Test", "Provider").with_speed(2.0);
         assert!(!model.speed_indicator().is_empty());
     }
+
+    // Comprehensive tests for ModelInfo builder methods
+
+    #[test]
+    fn test_model_info_with_max_output() {
+        let model = ModelInfo::new("test", "Test", "Provider").with_max_output(8192);
+        assert_eq!(model.max_output, 8192);
+    }
+
+    #[test]
+    fn test_model_info_with_capability() {
+        let model = ModelInfo::new("test", "Test", "Provider")
+            .with_capability("coding")
+            .with_capability("reasoning");
+
+        assert_eq!(model.capabilities.len(), 2);
+        assert!(model.capabilities.contains(&"coding".to_string()));
+        assert!(model.capabilities.contains(&"reasoning".to_string()));
+    }
+
+    #[test]
+    fn test_model_info_with_available() {
+        let available = ModelInfo::new("test", "Test", "Provider").with_available(true);
+        assert!(available.available);
+
+        let unavailable = ModelInfo::new("test", "Test", "Provider").with_available(false);
+        assert!(!unavailable.available);
+    }
+
+    #[test]
+    fn test_formatted_context_millions() {
+        let model = ModelInfo::new("test", "Test", "Provider").with_context_window(2_000_000);
+        assert_eq!(model.formatted_context(), "2M");
+    }
+
+    #[test]
+    fn test_formatted_context_thousands() {
+        let model = ModelInfo::new("test", "Test", "Provider").with_context_window(128_000);
+        assert_eq!(model.formatted_context(), "128K");
+    }
+
+    #[test]
+    fn test_formatted_context_small() {
+        let model = ModelInfo::new("test", "Test", "Provider").with_context_window(512);
+        assert_eq!(model.formatted_context(), "512");
+    }
+
+    #[test]
+    fn test_cost_indicator_values() {
+        let cheap = ModelInfo::new("test", "Test", "Provider").with_cost(0.5);
+        assert_eq!(cheap.cost_indicator(), "$$"); // ceil(0.5 * 4.0) = 2
+
+        let expensive = ModelInfo::new("test", "Test", "Provider").with_cost(3.0);
+        assert_eq!(expensive.cost_indicator(), "$$$$$"); // ceil(3.0 * 4.0) = 12, clamped to 5
+    }
+
+    #[test]
+    fn test_speed_indicator_values() {
+        let slow = ModelInfo::new("test", "Test", "Provider").with_speed(0.5);
+        assert_eq!(slow.speed_indicator(), "⚡⚡"); // ceil(0.5 * 3.0) = 2
+
+        let fast = ModelInfo::new("test", "Test", "Provider").with_speed(2.5);
+        assert_eq!(fast.speed_indicator(), "⚡⚡⚡"); // ceil(2.5 * 3.0) = 8, clamped to 3
+    }
+
+    #[test]
+    fn test_model_info_chaining() {
+        let model = ModelInfo::new("gpt-4", "GPT-4", "OpenAI")
+            .with_context_window(128_000)
+            .with_max_output(4096)
+            .with_cost(2.0)
+            .with_speed(1.5)
+            .with_capability("coding")
+            .with_capability("analysis")
+            .with_available(true);
+
+        assert_eq!(model.id, "gpt-4");
+        assert_eq!(model.context_window, 128_000);
+        assert_eq!(model.max_output, 4096);
+        assert_eq!(model.cost, 2.0);
+        assert_eq!(model.speed, 1.5);
+        assert_eq!(model.capabilities.len(), 2);
+        assert!(model.available);
+    }
+
+    // Comprehensive tests for ModelSelector methods
+
+    #[test]
+    fn test_selector_with_models() {
+        let models = vec![
+            ModelInfo::new("model1", "Model 1", "Provider"),
+            ModelInfo::new("model2", "Model 2", "Provider"),
+        ];
+
+        let selector = ModelSelector::new().with_models(models);
+        assert_eq!(selector.models.len(), 2);
+        assert_eq!(selector.selected, 0);
+    }
+
+    #[test]
+    fn test_selector_add_model() {
+        let mut selector = ModelSelector::new();
+        let initial_count = selector.models.len();
+
+        selector.add_model(ModelInfo::new("new-model", "New Model", "Provider"));
+        assert_eq!(selector.models.len(), initial_count + 1);
+    }
+
+    #[test]
+    fn test_selector_select_by_index() {
+        let mut selector = ModelSelector::new();
+
+        selector.select(2);
+        assert_eq!(selector.selected, 2);
+        assert_eq!(selector.list_state.selected(), Some(2));
+    }
+
+    #[test]
+    fn test_selector_select_invalid_index() {
+        let mut selector = ModelSelector::new();
+        let initial_selected = selector.selected;
+
+        selector.select(999); // Out of bounds
+        assert_eq!(selector.selected, initial_selected); // Should not change
+    }
+
+    #[test]
+    fn test_selector_toggle_details() {
+        let mut selector = ModelSelector::new();
+        let initial = selector.show_details;
+
+        selector.toggle_details();
+        assert_eq!(selector.show_details, !initial);
+
+        selector.toggle_details();
+        assert_eq!(selector.show_details, initial);
+    }
+
+    #[test]
+    fn test_selector_set_filter() {
+        let mut selector = ModelSelector::new();
+
+        selector.set_filter(Some("coding".to_string()));
+        assert_eq!(selector.filter, Some("coding".to_string()));
+
+        selector.set_filter(None);
+        assert_eq!(selector.filter, None);
+    }
+
+    #[test]
+    fn test_selector_next_wraps_around() {
+        let mut selector = ModelSelector::new();
+        let count = selector.models.len();
+
+        // Go to last item
+        for _ in 0..count - 1 {
+            selector.next();
+        }
+        assert_eq!(selector.selected, count - 1);
+
+        // Should wrap to 0
+        selector.next();
+        assert_eq!(selector.selected, 0);
+    }
+
+    #[test]
+    fn test_selector_previous_wraps_around() {
+        let mut selector = ModelSelector::new();
+        assert_eq!(selector.selected, 0);
+
+        // Should wrap to last
+        selector.previous();
+        assert_eq!(selector.selected, selector.models.len() - 1);
+    }
+
+    #[test]
+    fn test_selector_select_by_id_invalid() {
+        let mut selector = ModelSelector::new();
+        let result = selector.select_by_id("nonexistent-model");
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_selector_default() {
+        let selector = ModelSelector::default();
+        assert!(!selector.models.is_empty()); // Should have default models
+        assert!(selector.selected_model().is_some());
+    }
+
+    #[test]
+    fn test_selector_with_models_adjusts_selection() {
+        let mut selector = ModelSelector::new();
+
+        // Set selected to high index
+        selector.select(5);
+
+        // Replace with fewer models
+        let models = vec![
+            ModelInfo::new("model1", "Model 1", "Provider"),
+        ];
+
+        selector = selector.with_models(models);
+        // Selection should be adjusted to 0 (last valid index)
+        assert_eq!(selector.selected, 0);
+    }
 }

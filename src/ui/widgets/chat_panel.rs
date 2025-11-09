@@ -453,4 +453,258 @@ mod tests {
         assert_eq!(panel.message_count(), 3);
         assert_eq!(panel.messages[0].content, "2");
     }
+
+    // Comprehensive ChatMessage tests
+
+    #[test]
+    fn test_chat_message_formatted_time() {
+        let msg = ChatMessage {
+            role: MessageRole::User,
+            content: "Test".to_string(),
+            timestamp: 3661, // 1 hour, 1 minute, 1 second
+            streaming: false,
+            has_code: false,
+        };
+
+        assert_eq!(msg.formatted_time(), "01:01");
+    }
+
+    #[test]
+    fn test_chat_message_formatted_time_midnight() {
+        let msg = ChatMessage {
+            role: MessageRole::User,
+            content: "Test".to_string(),
+            timestamp: 0,
+            streaming: false,
+            has_code: false,
+        };
+
+        assert_eq!(msg.formatted_time(), "00:00");
+    }
+
+    #[test]
+    fn test_chat_message_formatted_time_end_of_day() {
+        let msg = ChatMessage {
+            role: MessageRole::User,
+            content: "Test".to_string(),
+            timestamp: 86399, // 23:59:59
+            streaming: false,
+            has_code: false,
+        };
+
+        assert_eq!(msg.formatted_time(), "23:59");
+    }
+
+    #[test]
+    fn test_chat_message_system_role() {
+        let msg = ChatMessage::new(MessageRole::System, "System message");
+        assert_eq!(msg.role, MessageRole::System);
+        assert_eq!(msg.content, "System message");
+    }
+
+    #[test]
+    fn test_chat_message_append_updates_has_code() {
+        let mut msg = ChatMessage::streaming(MessageRole::Assistant, "No code yet");
+        assert!(!msg.has_code);
+
+        msg.append("\n```rust\nfn main() {}\n```");
+        assert!(msg.has_code);
+    }
+
+    #[test]
+    fn test_chat_message_empty_content() {
+        let msg = ChatMessage::new(MessageRole::User, "");
+        assert_eq!(msg.content, "");
+        assert!(!msg.has_code);
+    }
+
+    #[test]
+    fn test_chat_message_very_long_content() {
+        let long_text = "a".repeat(10_000);
+        let msg = ChatMessage::new(MessageRole::Assistant, &long_text);
+        assert_eq!(msg.content.len(), 10_000);
+    }
+
+    #[test]
+    fn test_chat_message_multiple_code_blocks() {
+        let content = "First:\n```js\ncode1();\n```\nSecond:\n```py\ncode2()\n```";
+        let msg = ChatMessage::new(MessageRole::Assistant, content);
+        assert!(msg.has_code);
+    }
+
+    // Comprehensive ChatPanel tests
+
+    #[test]
+    fn test_chat_panel_toggle_timestamps() {
+        let mut panel = ChatPanel::new();
+        assert!(panel.show_timestamps);
+
+        panel.toggle_timestamps();
+        assert!(!panel.show_timestamps);
+
+        panel.toggle_timestamps();
+        assert!(panel.show_timestamps);
+    }
+
+    #[test]
+    fn test_chat_panel_toggle_auto_scroll() {
+        let mut panel = ChatPanel::new();
+        assert!(panel.auto_scroll);
+
+        panel.toggle_auto_scroll();
+        assert!(!panel.auto_scroll);
+
+        panel.toggle_auto_scroll();
+        assert!(panel.auto_scroll);
+    }
+
+    #[test]
+    fn test_chat_panel_with_colors() {
+        let panel = ChatPanel::new()
+            .with_user_color(Color::Red)
+            .with_assistant_color(Color::Blue)
+            .with_system_color(Color::Magenta);
+
+        assert_eq!(panel.user_color, Color::Red);
+        assert_eq!(panel.assistant_color, Color::Blue);
+        assert_eq!(panel.system_color, Color::Magenta);
+    }
+
+    #[test]
+    fn test_chat_panel_add_system_message() {
+        let mut panel = ChatPanel::new();
+
+        panel.add_system_message("Error occurred");
+        assert_eq!(panel.message_count(), 1);
+        assert_eq!(panel.messages[0].role, MessageRole::System);
+        assert_eq!(panel.messages[0].content, "Error occurred");
+    }
+
+    #[test]
+    fn test_chat_panel_scroll_to_top() {
+        let mut panel = ChatPanel::new();
+
+        panel.scroll_to_top();
+        assert_eq!(panel.scroll_offset, usize::MAX);
+        assert!(!panel.is_auto_scrolling());
+    }
+
+    #[test]
+    fn test_chat_panel_scroll_down_to_zero_enables_auto_scroll() {
+        let mut panel = ChatPanel::new();
+
+        panel.scroll_up(10);
+        assert!(!panel.is_auto_scrolling());
+
+        panel.scroll_down(10);
+        assert_eq!(panel.scroll_offset, 0);
+        assert!(panel.is_auto_scrolling());
+    }
+
+    #[test]
+    fn test_chat_panel_streaming_when_not_streaming() {
+        let mut panel = ChatPanel::new();
+
+        // Append when no streaming message exists - should be no-op
+        panel.append_streaming("This should be ignored");
+        assert_eq!(panel.message_count(), 0);
+
+        // Add a non-streaming message
+        panel.add_user_message("Regular message");
+
+        // Append should be ignored (last message is not streaming)
+        panel.append_streaming("Also ignored");
+        assert_eq!(panel.messages[0].content, "Regular message");
+    }
+
+    #[test]
+    fn test_chat_panel_finish_streaming_when_not_streaming() {
+        let mut panel = ChatPanel::new();
+
+        // Finish when no messages - should be no-op
+        panel.finish_streaming();
+        assert_eq!(panel.message_count(), 0);
+
+        // Add a regular message and try to finish
+        panel.add_user_message("Not streaming");
+        panel.finish_streaming();
+        assert!(!panel.messages[0].streaming); // Should already be false
+    }
+
+    #[test]
+    fn test_chat_panel_multiple_streaming_appends() {
+        let mut panel = ChatPanel::new();
+
+        panel.start_streaming();
+        for i in 0..10 {
+            panel.append_streaming(&format!("chunk{} ", i));
+        }
+        panel.finish_streaming();
+
+        assert_eq!(panel.message_count(), 1);
+        assert_eq!(panel.messages[0].content, "chunk0 chunk1 chunk2 chunk3 chunk4 chunk5 chunk6 chunk7 chunk8 chunk9 ");
+    }
+
+    #[test]
+    fn test_chat_panel_auto_scroll_on_add() {
+        let mut panel = ChatPanel::new();
+
+        panel.scroll_up(5);
+        assert_eq!(panel.scroll_offset, 5);
+
+        // Disable auto-scroll
+        panel.auto_scroll = false;
+        panel.add_user_message("Test");
+        assert_eq!(panel.scroll_offset, 5); // Should not change
+
+        // Enable auto-scroll
+        panel.auto_scroll = true;
+        panel.add_user_message("Test 2");
+        assert_eq!(panel.scroll_offset, 0); // Should reset
+    }
+
+    #[test]
+    fn test_chat_panel_max_history_exact_boundary() {
+        let mut panel = ChatPanel::new().with_max_history(5);
+
+        for i in 1..=5 {
+            panel.add_user_message(&i.to_string());
+        }
+
+        assert_eq!(panel.message_count(), 5);
+        assert_eq!(panel.messages[0].content, "1");
+        assert_eq!(panel.messages[4].content, "5");
+
+        // Add one more - should remove first
+        panel.add_user_message("6");
+        assert_eq!(panel.message_count(), 5);
+        assert_eq!(panel.messages[0].content, "2");
+        assert_eq!(panel.messages[4].content, "6");
+    }
+
+    #[test]
+    fn test_chat_panel_start_streaming_returns_index() {
+        let mut panel = ChatPanel::new();
+
+        panel.add_user_message("First");
+        let index = panel.start_streaming();
+
+        assert_eq!(index, 1);
+        assert_eq!(panel.message_count(), 2);
+        assert!(panel.messages[1].streaming);
+    }
+
+    #[test]
+    fn test_chat_panel_mixed_message_types() {
+        let mut panel = ChatPanel::new();
+
+        panel.add_user_message("User query");
+        panel.add_assistant_message("Assistant response");
+        panel.add_system_message("System notification");
+
+        assert_eq!(panel.message_count(), 3);
+        assert_eq!(panel.messages[0].role, MessageRole::User);
+        assert_eq!(panel.messages[1].role, MessageRole::Assistant);
+        assert_eq!(panel.messages[2].role, MessageRole::System);
+    }
 }
