@@ -13,7 +13,7 @@ use ratatui::{
     },
 };
 use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 /// Role of a message in the conversation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -46,7 +46,7 @@ impl ChatMessage {
     pub fn new(role: MessageRole, content: impl Into<String>) -> Self {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_else(|_| Duration::ZERO)
             .as_secs();
 
         let content = content.into();
