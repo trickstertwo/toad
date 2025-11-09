@@ -228,6 +228,33 @@ async fn run_tasks_with_progress(
 /// Run a single task
 async fn run_single_task(task: &Task, config: &ToadConfig) -> anyhow::Result<TaskResult> {
     use crate::ai::metrics::MetricsCollector;
+    use crate::ai::agent::PromptBuilder;
+
+    // Build AST context if feature enabled
+    let custom_prompt = if config.features.context_ast {
+        use crate::ai::context::ContextBuilder;
+        // Try to build context from current directory (task workspace)
+        // In real evaluation, this would be the cloned repo directory
+        match ContextBuilder::new()?
+            .add_directory(".", &["py", "js", "ts", "tsx", "rs"])
+            .await
+        {
+            Ok(builder) => {
+                let context = builder.build();
+                Some(PromptBuilder::new()
+                    .with_task(task)
+                    .with_ast_context(context)
+                    .build())
+            }
+            Err(e) => {
+                // Log warning but continue without AST context
+                eprintln!("Warning: Failed to build AST context: {}", e);
+                None
+            }
+        }
+    } else {
+        None
+    };
 
     // Create LLM client using provider factory
     use crate::ai::llm::LLMProvider;
@@ -245,8 +272,12 @@ async fn run_single_task(task: &Task, config: &ToadConfig) -> anyhow::Result<Tas
     // Create metrics collector
     let mut metrics_collector = MetricsCollector::new();
 
-    // Execute task
-    let agent_result = agent.execute_task(task, &mut metrics_collector).await?;
+    // Execute task with custom AST-enhanced prompt if available
+    let agent_result = agent.execute_task_with_prompt(
+        task,
+        custom_prompt,
+        &mut metrics_collector
+    ).await?;
 
     // Build task result from agent result and metrics
     let final_metrics = metrics_collector.finish();

@@ -46,10 +46,22 @@ impl Agent {
         task: &Task,
         metrics: &mut MetricsCollector,
     ) -> Result<AgentResult> {
+        self.execute_task_with_prompt(task, None, metrics).await
+    }
+
+    /// Execute a task with optional custom initial prompt
+    pub async fn execute_task_with_prompt(
+        &self,
+        task: &Task,
+        custom_prompt: Option<String>,
+        metrics: &mut MetricsCollector,
+    ) -> Result<AgentResult> {
         metrics.start();
 
-        // Build initial prompt
-        let prompt = PromptBuilder::new().with_task(task).build();
+        // Use custom prompt if provided, otherwise build default
+        let prompt = custom_prompt.unwrap_or_else(|| {
+            PromptBuilder::new().with_task(task).build()
+        });
 
         let mut conversation = vec![Message::user(prompt)];
         let mut step_count = 0;
