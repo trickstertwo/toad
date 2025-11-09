@@ -502,8 +502,7 @@ mod tests {
         manager.create_workspace("b", "B", "/b");
 
         manager.set_active("b");
-        // Sleep for 1+ seconds since last_accessed uses as_secs() granularity
-        std::thread::sleep(std::time::Duration::from_secs(1));
+        std::thread::sleep(std::time::Duration::from_millis(1100)); // Need >1s since last_accessed uses second precision
         manager.set_active("a");
 
         let recent = manager.recent_workspaces();

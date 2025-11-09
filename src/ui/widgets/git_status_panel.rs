@@ -567,4 +567,512 @@ mod tests {
         panel.set_files(files);
         assert_eq!(panel.file_count(), 2);
     }
+
+    // ============================================================================
+    // COMPREHENSIVE EDGE CASE TESTS (ADVANCED TIER - Git Integration)
+    // ============================================================================
+
+    // ============ Stress Tests ============
+
+    #[test]
+    fn test_panel_10000_files() {
+        let mut panel = GitStatusPanel::new();
+        for i in 0..10000 {
+            panel.add_file(format!("file{}.rs", i), FileStatus::Modified);
+        }
+        assert_eq!(panel.file_count(), 10000);
+    }
+
+    #[test]
+    fn test_panel_rapid_add_1000() {
+        let mut panel = GitStatusPanel::new();
+        for i in 0..1000 {
+            panel.add_file(format!("file{}.rs", i), FileStatus::Modified);
+        }
+        assert_eq!(panel.file_count(), 1000);
+    }
+
+    #[test]
+    fn test_panel_rapid_toggle_1000() {
+        let mut panel = GitStatusPanel::new();
+        for i in 0..100 {
+            panel.add_file(format!("file{}.rs", i), FileStatus::Modified);
+        }
+        for _ in 0..1000 {
+            panel.toggle_selection(0);
+        }
+        // Should end up not selected (1000 toggles = even number)
+        assert!(!panel.files[0].selected);
+    }
+
+    #[test]
+    fn test_panel_very_long_file_path() {
+        let mut panel = GitStatusPanel::new();
+        let long_path = "a/".repeat(1000) + "file.rs";
+        panel.add_file(&long_path, FileStatus::Modified);
+        assert_eq!(panel.file_count(), 1);
+    }
+
+    // ============ Unicode Edge Cases ============
+
+    #[test]
+    fn test_file_with_emoji() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("🚀_rocket.rs", FileStatus::Modified);
+        assert_eq!(panel.file_count(), 1);
+    }
+
+    #[test]
+    fn test_file_rtl_arabic() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("مرحبا.txt", FileStatus::Staged);
+        assert_eq!(panel.file_count(), 1);
+    }
+
+    #[test]
+    fn test_file_rtl_hebrew() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("שלום.txt", FileStatus::Untracked);
+        assert_eq!(panel.file_count(), 1);
+    }
+
+    #[test]
+    fn test_file_japanese() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("日本語.rs", FileStatus::Modified);
+        assert_eq!(panel.file_count(), 1);
+    }
+
+    #[test]
+    fn test_file_mixed_scripts() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("Hello_مرحبا_שלום_こんにちは.txt", FileStatus::Modified);
+        assert_eq!(panel.file_count(), 1);
+    }
+
+    #[test]
+    fn test_branch_unicode() {
+        let mut panel = GitStatusPanel::new();
+        panel.set_branch("feature/🚀-rocket");
+        assert_eq!(panel.branch, Some("feature/🚀-rocket".to_string()));
+    }
+
+    #[test]
+    fn test_branch_japanese() {
+        let mut panel = GitStatusPanel::new();
+        panel.set_branch("日本語-branch");
+        assert_eq!(panel.branch, Some("日本語-branch".to_string()));
+    }
+
+    // ============ Extreme Values ============
+
+    #[test]
+    fn test_ahead_behind_max() {
+        let mut panel = GitStatusPanel::new();
+        panel.set_ahead_behind(usize::MAX, usize::MAX);
+        assert_eq!(panel.ahead, usize::MAX);
+        assert_eq!(panel.behind, usize::MAX);
+    }
+
+    #[test]
+    fn test_empty_file_list() {
+        let panel = GitStatusPanel::new();
+        assert_eq!(panel.file_count(), 0);
+        let (modified, staged, untracked) = panel.file_counts();
+        assert_eq!(modified, 0);
+        assert_eq!(staged, 0);
+        assert_eq!(untracked, 0);
+    }
+
+    #[test]
+    fn test_very_long_branch_name() {
+        let mut panel = GitStatusPanel::new();
+        let long_branch = "feature/".to_string() + &"very-long-name-".repeat(1000);
+        panel.set_branch(&long_branch);
+        assert_eq!(panel.branch, Some(long_branch));
+    }
+
+    #[test]
+    fn test_file_path_1000_directories() {
+        let mut panel = GitStatusPanel::new();
+        let deep_path = "dir/".repeat(1000) + "file.rs";
+        panel.add_file(&deep_path, FileStatus::Modified);
+        assert_eq!(panel.file_count(), 1);
+    }
+
+    // ============ Selection Edge Cases ============
+
+    #[test]
+    fn test_toggle_selection_out_of_bounds() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("test.rs", FileStatus::Modified);
+        panel.toggle_selection(999);
+        // Should not panic, just do nothing
+        assert!(!panel.files[0].selected);
+    }
+
+    #[test]
+    fn test_select_all_files() {
+        let mut panel = GitStatusPanel::new();
+        for i in 0..10 {
+            panel.add_file(format!("file{}.rs", i), FileStatus::Modified);
+        }
+        for i in 0..10 {
+            panel.toggle_selection(i);
+        }
+        let selected = panel.selected_files();
+        assert_eq!(selected.len(), 10);
+    }
+
+    #[test]
+    fn test_select_none() {
+        let mut panel = GitStatusPanel::new();
+        for i in 0..10 {
+            panel.add_file(format!("file{}.rs", i), FileStatus::Modified);
+        }
+        let selected = panel.selected_files();
+        assert_eq!(selected.len(), 0);
+    }
+
+    #[test]
+    fn test_selected_files_empty_list() {
+        let panel = GitStatusPanel::new();
+        let selected = panel.selected_files();
+        assert_eq!(selected.len(), 0);
+    }
+
+    // ============ File Status Edge Cases ============
+
+    #[test]
+    fn test_all_file_statuses() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("modified.rs", FileStatus::Modified);
+        panel.add_file("staged.rs", FileStatus::Staged);
+        panel.add_file("untracked.rs", FileStatus::Untracked);
+        panel.add_file("deleted.rs", FileStatus::Deleted);
+        panel.add_file("renamed.rs", FileStatus::Renamed);
+        panel.add_file("conflicted.rs", FileStatus::Conflicted);
+        panel.add_file("modified_staged.rs", FileStatus::ModifiedStaged);
+        assert_eq!(panel.file_count(), 7);
+    }
+
+    #[test]
+    fn test_file_status_modified_staged() {
+        assert_eq!(FileStatus::ModifiedStaged.char(), "M");
+        assert_eq!(FileStatus::ModifiedStaged.color(), Color::Yellow);
+    }
+
+    #[test]
+    fn test_file_counts_all_statuses() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("modified.rs", FileStatus::Modified);
+        panel.add_file("staged.rs", FileStatus::Staged);
+        panel.add_file("untracked.rs", FileStatus::Untracked);
+        panel.add_file("deleted.rs", FileStatus::Deleted);
+        panel.add_file("renamed.rs", FileStatus::Renamed);
+        panel.add_file("conflicted.rs", FileStatus::Conflicted);
+        panel.add_file("modified_staged.rs", FileStatus::ModifiedStaged);
+
+        let (modified, staged, untracked) = panel.file_counts();
+        assert_eq!(modified, 2); // Modified + ModifiedStaged
+        assert_eq!(staged, 1);
+        assert_eq!(untracked, 1);
+    }
+
+    #[test]
+    fn test_file_status_deleted_color() {
+        assert_eq!(FileStatus::Deleted.color(), Color::Red);
+    }
+
+    #[test]
+    fn test_file_status_renamed_color() {
+        assert_eq!(FileStatus::Renamed.color(), Color::Cyan);
+    }
+
+    #[test]
+    fn test_file_status_conflicted_color() {
+        assert_eq!(FileStatus::Conflicted.color(), Color::Magenta);
+    }
+
+    // ============ Trait Coverage ============
+
+    #[test]
+    fn test_file_status_clone() {
+        let status = FileStatus::Modified;
+        let cloned = status.clone();
+        assert_eq!(status, cloned);
+    }
+
+    #[test]
+    fn test_file_status_copy() {
+        let status = FileStatus::Staged;
+        let copied = status;
+        assert_eq!(status, copied);
+    }
+
+    #[test]
+    fn test_file_status_equality() {
+        assert_eq!(FileStatus::Modified, FileStatus::Modified);
+        assert_ne!(FileStatus::Modified, FileStatus::Staged);
+    }
+
+    #[test]
+    fn test_file_status_debug() {
+        let status = FileStatus::Untracked;
+        let debug_str = format!("{:?}", status);
+        assert!(debug_str.contains("Untracked"));
+    }
+
+    #[test]
+    fn test_git_file_clone() {
+        let file = GitFile::new("test.rs", FileStatus::Modified);
+        let cloned = file.clone();
+        assert_eq!(file.path, cloned.path);
+        assert_eq!(file.status, cloned.status);
+    }
+
+    #[test]
+    fn test_git_file_debug() {
+        let file = GitFile::new("test.rs", FileStatus::Modified);
+        let debug_str = format!("{:?}", file);
+        assert!(debug_str.contains("GitFile"));
+    }
+
+    #[test]
+    fn test_panel_clone() {
+        let panel = GitStatusPanel::new().with_title("Test");
+        let cloned = panel.clone();
+        assert_eq!(panel.title, cloned.title);
+    }
+
+    #[test]
+    fn test_panel_debug() {
+        let panel = GitStatusPanel::new();
+        let debug_str = format!("{:?}", panel);
+        assert!(debug_str.contains("GitStatusPanel"));
+    }
+
+    #[test]
+    fn test_panel_default() {
+        let panel = GitStatusPanel::default();
+        assert_eq!(panel.file_count(), 0);
+        assert_eq!(panel.title, "Git Status");
+        assert!(panel.show_summary);
+        assert!(!panel.compact);
+    }
+
+    // ============ Complex Workflows ============
+
+    #[test]
+    fn test_add_select_clear_add_workflow() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("file1.rs", FileStatus::Modified);
+        panel.add_file("file2.rs", FileStatus::Staged);
+        panel.toggle_selection(0);
+        assert_eq!(panel.selected_files().len(), 1);
+
+        panel.clear();
+        assert_eq!(panel.file_count(), 0);
+        assert_eq!(panel.selected_files().len(), 0);
+
+        panel.add_file("file3.rs", FileStatus::Untracked);
+        assert_eq!(panel.file_count(), 1);
+    }
+
+    #[test]
+    fn test_toggle_summary_with_without_files() {
+        let panel = GitStatusPanel::new().with_summary(true);
+        assert!(panel.show_summary);
+
+        let panel = panel.with_summary(false);
+        assert!(!panel.show_summary);
+    }
+
+    #[test]
+    fn test_set_branch_files_ahead_behind_order() {
+        let mut panel = GitStatusPanel::new();
+
+        // Set in different order
+        panel.add_file("file.rs", FileStatus::Modified);
+        panel.set_ahead_behind(5, 2);
+        panel.set_branch("develop");
+
+        assert_eq!(panel.file_count(), 1);
+        assert_eq!(panel.ahead, 5);
+        assert_eq!(panel.behind, 2);
+        assert_eq!(panel.branch, Some("develop".to_string()));
+    }
+
+    #[test]
+    fn test_multiple_set_files_calls() {
+        let mut panel = GitStatusPanel::new();
+
+        let files1 = vec![GitFile::new("file1.rs", FileStatus::Modified)];
+        panel.set_files(files1);
+        assert_eq!(panel.file_count(), 1);
+
+        let files2 = vec![
+            GitFile::new("file2.rs", FileStatus::Staged),
+            GitFile::new("file3.rs", FileStatus::Untracked),
+        ];
+        panel.set_files(files2);
+        assert_eq!(panel.file_count(), 2);
+    }
+
+    // ============ Branch Edge Cases ============
+
+    #[test]
+    fn test_no_branch_detached_head() {
+        let panel = GitStatusPanel::new();
+        assert_eq!(panel.branch, None);
+    }
+
+    #[test]
+    fn test_branch_with_slashes() {
+        let mut panel = GitStatusPanel::new();
+        panel.set_branch("feature/TOAD-123/some-feature");
+        assert_eq!(panel.branch, Some("feature/TOAD-123/some-feature".to_string()));
+    }
+
+    #[test]
+    fn test_branch_empty_string() {
+        let mut panel = GitStatusPanel::new();
+        panel.set_branch("");
+        assert_eq!(panel.branch, Some("".to_string()));
+    }
+
+    // ============ Ahead/Behind Edge Cases ============
+
+    #[test]
+    fn test_ahead_only() {
+        let mut panel = GitStatusPanel::new();
+        panel.set_ahead_behind(5, 0);
+        assert_eq!(panel.ahead, 5);
+        assert_eq!(panel.behind, 0);
+    }
+
+    #[test]
+    fn test_behind_only() {
+        let mut panel = GitStatusPanel::new();
+        panel.set_ahead_behind(0, 3);
+        assert_eq!(panel.ahead, 0);
+        assert_eq!(panel.behind, 3);
+    }
+
+    #[test]
+    fn test_both_ahead_and_behind() {
+        let mut panel = GitStatusPanel::new();
+        panel.set_ahead_behind(10, 5);
+        assert_eq!(panel.ahead, 10);
+        assert_eq!(panel.behind, 5);
+    }
+
+    #[test]
+    fn test_neither_ahead_nor_behind() {
+        let mut panel = GitStatusPanel::new();
+        panel.set_ahead_behind(0, 0);
+        assert_eq!(panel.ahead, 0);
+        assert_eq!(panel.behind, 0);
+    }
+
+    // ============ Comprehensive Stress Test ============
+
+    #[test]
+    fn test_comprehensive_git_status_panel_stress() {
+        let mut panel = GitStatusPanel::new()
+            .with_title("Comprehensive Test")
+            .with_summary(true)
+            .with_compact(false);
+
+        // Phase 1: Set branch and ahead/behind
+        panel.set_branch("feature/comprehensive-test");
+        panel.set_ahead_behind(10, 3);
+        assert_eq!(panel.branch, Some("feature/comprehensive-test".to_string()));
+        assert_eq!(panel.ahead, 10);
+        assert_eq!(panel.behind, 3);
+
+        // Phase 2: Add files with all status types
+        panel.add_file("modified.rs", FileStatus::Modified);
+        panel.add_file("staged.rs", FileStatus::Staged);
+        panel.add_file("untracked.rs", FileStatus::Untracked);
+        panel.add_file("deleted.rs", FileStatus::Deleted);
+        panel.add_file("renamed.rs", FileStatus::Renamed);
+        panel.add_file("conflicted.rs", FileStatus::Conflicted);
+        panel.add_file("modified_staged.rs", FileStatus::ModifiedStaged);
+        assert_eq!(panel.file_count(), 7);
+
+        // Phase 3: Add unicode files
+        panel.add_file("🚀_rocket.rs", FileStatus::Modified);
+        panel.add_file("日本語.txt", FileStatus::Staged);
+        panel.add_file("مرحبا.rs", FileStatus::Untracked);
+        assert_eq!(panel.file_count(), 10);
+
+        // Phase 4: Select some files
+        panel.toggle_selection(0);
+        panel.toggle_selection(2);
+        panel.toggle_selection(5);
+        let selected = panel.selected_files();
+        assert_eq!(selected.len(), 3);
+
+        // Phase 5: Verify file counts
+        let (modified, staged, untracked) = panel.file_counts();
+        assert_eq!(modified, 3); // Modified + ModifiedStaged + 🚀
+        assert_eq!(staged, 2); // Staged + 日本語
+        assert_eq!(untracked, 2); // Untracked + مرحبا
+
+        // Phase 6: Toggle features
+        panel = panel.with_summary(false).with_compact(true);
+        assert!(!panel.show_summary);
+        assert!(panel.compact);
+
+        // Phase 7: Clear and reset
+        panel.clear();
+        assert_eq!(panel.file_count(), 0);
+        assert_eq!(panel.selected_files().len(), 0);
+
+        // Phase 8: Add new files with set_files
+        let new_files = vec![
+            GitFile::new("new1.rs", FileStatus::Modified),
+            GitFile::new("new2.rs", FileStatus::Staged),
+        ];
+        panel.set_files(new_files);
+        assert_eq!(panel.file_count(), 2);
+    }
+
+    // ============ File Path Edge Cases ============
+
+    #[test]
+    fn test_file_absolute_path() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("/absolute/path/to/file.rs", FileStatus::Modified);
+        assert_eq!(panel.file_count(), 1);
+    }
+
+    #[test]
+    fn test_file_relative_path() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("./relative/path/file.rs", FileStatus::Modified);
+        assert_eq!(panel.file_count(), 1);
+    }
+
+    #[test]
+    fn test_file_parent_directory() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("../parent/file.rs", FileStatus::Modified);
+        assert_eq!(panel.file_count(), 1);
+    }
+
+    #[test]
+    fn test_file_with_spaces() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("file with spaces.rs", FileStatus::Modified);
+        assert_eq!(panel.file_count(), 1);
+    }
+
+    #[test]
+    fn test_file_with_special_chars() {
+        let mut panel = GitStatusPanel::new();
+        panel.add_file("file-name_123.test.rs", FileStatus::Modified);
+        assert_eq!(panel.file_count(), 1);
+    }
 }
