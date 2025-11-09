@@ -3,6 +3,7 @@
 //! Contains infrastructure and utility modules including async operations,
 //! error handling, input handling, and file operations.
 
+pub mod achievements;
 pub mod advanced_mouse;
 pub mod async_ops;
 pub mod background_tasks;
@@ -23,8 +24,13 @@ pub mod keybinds;
 pub mod mouse;
 pub mod terminal_capabilities;
 pub mod text_truncation;
+pub mod time_tracking;
 pub mod validation;
 
+pub use achievements::{
+    Achievement, AchievementSystem, AchievementTier, AchievementType, LeaderboardEntry, Streak,
+    UnlockedAchievement, UserStats,
+};
 pub use advanced_mouse::{AdvancedMouseHandler, MouseButton, MouseGesture};
 pub use async_ops::{AsyncOperation, AsyncOperationManager, OperationId, OperationStatus};
 pub use background_tasks::{BackgroundTask, BackgroundTaskManager, TaskId, TaskStatus};
@@ -49,6 +55,9 @@ pub use keybinds::{KeyBinding, KeyBindings};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
 pub use terminal_capabilities::{ColorSupport, FeatureLevel, TerminalCapabilities};
 pub use text_truncation::{SmartTruncate, TruncationStrategy};
+pub use time_tracking::{
+    ActiveTimer, Billability, TimeEntry, TimeEntryType, TimeStats, TimeTracker,
+};
 pub use validation::{
     CompositeValidator, InputValidator, LengthValidator, NotEmptyValidator, RegexValidator,
     ValidationResult, Validator,
