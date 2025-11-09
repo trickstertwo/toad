@@ -10,6 +10,7 @@ pub mod eval_runner;
 pub mod evaluation;
 pub mod llm;
 pub mod metrics;
+pub mod routing;
 pub mod stats;
 pub mod test_selection;
 pub mod tools;
@@ -31,6 +32,7 @@ pub use llm::{
     MockResponseBuilder, SequencedMockClient, Usage,
 };
 pub use metrics::{Metrics, MetricsCollector, QualityMetrics};
+pub use routing::{CascadingRouter, Difficulty, ModelTier, Router, TaskClassifier};
 pub use stats::{ComparisonResult, StatisticalTest};
 pub use test_selection::{
     DependencyMapper, TestDiscovery, TestExecutionResult, TestExecutor, TestSelection,

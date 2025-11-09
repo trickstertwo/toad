@@ -11,13 +11,13 @@
 
 - [x] **M0: Infrastructure & Evaluation** (100% - 45 tests)
 - [x] **M1: Simple Baseline** (100% - 96 tests)
-- [x] **M2: Context + Routing** (90% - 74 tests) ✅ NEW
-- [ ] **M3: Multi-Model + Intelligence** (0%)
-- [ ] **M4: Advanced Features** (0%)
+- [x] **M2: Context + Smart Tests** (90% - 74 tests)
+- [ ] **M3: Multi-Model Racing** (0% - TRAE +4.2 points)
+- [ ] **M4: Cascading Routing** (12 tests ready - DavaJ 70% cost reduction)
 - [ ] **M5: Production Ready** (0%)
 
-**Current Status:** ✅ M1 + M2 Implementation Complete, Evaluation Wired, Ready for Quality Gates
-**Total Tests:** 1637 passing (1622 base + 15 smart test selection)
+**Current Status:** ✅ M1 + M2 Complete, M4 Routing Infrastructure Ready
+**Total Tests:** 1649 passing (1622 base + 15 smart test selection + 12 routing)
 
 ---
 
@@ -248,19 +248,20 @@ cargo run --release -- eval --count 50 --milestone 1
 
 ---
 
-## 🎯 Milestone 3: Multi-Model + Intelligence
+## 🎯 Milestone 3: Multi-Model Racing
 
 **Status:** NOT STARTED (0%)
 **Prerequisites:** M2 validated
-**Target:** +8% accuracy vs M1 (63-68%)
+**Target:** +5-7% accuracy vs M1 (63-68%)
+**Evidence:** TRAE paper: +4.2 points proven
 
 ### Multi-Model Ensemble (Feature: routing_multi_model)
-- [ ] Add support for multiple LLM providers
-    - [ ] OpenAI GPT-4 integration
-    - [ ] Anthropic Claude Opus integration
-    - [ ] Model selection strategy
-- [ ] Ensemble voting mechanism
-- [ ] Cost optimization (use cheaper models when possible)
+- [ ] Race multiple models in parallel (TRAE approach)
+    - [ ] Anthropic Claude Sonnet 4
+    - [ ] Anthropic Claude Opus 4 (fallback)
+    - [ ] Model selection strategy (first complete wins)
+- [ ] Result validation and selection
+- [ ] Cost tracking per model
 - [ ] Tests (target: 12 tests)
 
 ### Vector Embeddings (Feature: context_embeddings)
@@ -270,80 +271,85 @@ cargo run --release -- eval --count 50 --milestone 1
 - [ ] Context ranking by relevance
 - [ ] Tests (target: 10 tests)
 
-### Smart Test Selection (Feature: smart_test_selection)
-- [ ] Test file discovery
-- [ ] Dependency analysis
-- [ ] Selective test running
-- [ ] Test result caching
-- [ ] Tests (target: 8 tests)
-
 ### Failure Memory (Feature: failure_memory)
 - [ ] Error pattern tracking
 - [ ] Similar failure detection
 - [ ] Suggested fixes from history
-- [ ] Memory persistence
+- [ ] Memory persistence (JSON-based)
 - [ ] Tests (target: 6 tests)
 
 ### Quality Gates
-- [ ] A/B test M2 vs M3 (50 tasks)
-- [ ] Statistical validation
-- [ ] Cost analysis
+- [ ] A/B test M2 vs M3 (50 tasks minimum)
+- [ ] Statistical validation (p < 0.05, Cohen's d > 0.3)
+- [ ] Cost analysis (should remain similar to M2)
 - [ ] Decision and documentation
 
 **Success Criteria:**
-- Accuracy improvement: ≥+5% vs M2
+- Accuracy improvement: ≥+3% vs M2 (target: +5-7%)
 - Effect size: Cohen's d > 0.3 (medium)
-- Cost: Managed within budget
+- Cost increase: <+30% vs M2 (racing has overhead)
+- No stability regressions
 
 ---
 
-## 🚀 Milestone 4: Advanced Features
+## 🚀 Milestone 4: Cascading Routing + Cost Optimization
 
-**Status:** NOT STARTED (0%)
+**Status:** NOT STARTED (12 tests ready)
 **Prerequisites:** M3 validated
-**Target:** +10% accuracy vs M1 (65-70%)
+**Target:** +7-10% accuracy vs M1 (65-70%), 70% cost reduction
+**Evidence:** DavaJ: 84.7% HumanEval with 70% cost reduction
+
+### 🔥 Cascading Routing (Feature: routing_cascade) - INFRASTRUCTURE READY
+- [x] Task difficulty classifier (3 tests) ✅
+    - [x] Easy: < 50 lines, simple operations
+    - [x] Medium: < 200 lines, moderate complexity
+    - [x] Hard: Large scope, architecture changes
+- [x] CascadingRouter with tiers (9 tests) ✅
+    - [x] Tier 1: Ollama 7B (free, easy tasks)
+    - [x] Tier 2: Ollama 32B (free, medium tasks)
+    - [x] Tier 3: Claude Sonnet ($$, hard tasks)
+    - [x] Tier 4: Claude Opus ($$$, critical tasks)
+- [ ] Integration with evaluation harness (2 tests)
+- [ ] Local model setup documentation (Ollama installation)
+- [ ] A/B test cascading vs cloud-only (50 tasks)
+- [ ] Cost tracking and analysis
+
+**Cost Model:**
+- Easy (40% of tasks): $0 local → Save ~$80
+- Medium (40% of tasks): $0 local → Save ~$80
+- Hard (20% of tasks): $2 cloud → Cost $40
+- **Total: ~$40 vs ~$200 (80% savings)**
 
 ### Code Graph Analysis (Feature: context_graph)
 - [ ] Build code dependency graph
 - [ ] Call graph analysis
-- [ ] Data flow tracking
+- [ ] Import/export tracking
 - [ ] Impact analysis for changes
 - [ ] Tests (target: 12 tests)
 
 ### Context Re-ranking (Feature: context_reranking)
-- [ ] Implement re-ranking algorithm
+- [ ] Implement re-ranking algorithm (Cohere Rerank)
 - [ ] Relevance scoring
 - [ ] Integration with context selection
 - [ ] Tests (target: 6 tests)
 
-### Speculative Execution (Feature: routing_speculative)
-- [ ] Parallel execution paths
-- [ ] Result selection strategy
-- [ ] Cost management
-- [ ] Tests (target: 8 tests)
-
-### Opportunistic Planning (Feature: opportunistic_planning)
-- [ ] Multi-step planning
-- [ ] Plan refinement
-- [ ] Backtracking on failure
-- [ ] Tests (target: 8 tests)
-
 ### Semantic Caching (Feature: semantic_caching)
-- [ ] Semantic similarity detection
+- [ ] Semantic similarity detection (embeddings)
 - [ ] Cache by meaning, not exact match
 - [ ] Integration with prompt system
 - [ ] Tests (target: 6 tests)
 
 ### Quality Gates
-- [ ] A/B test M3 vs M4 (50 tasks)
-- [ ] Performance benchmarking
-- [ ] Statistical validation
-- [ ] Cost-benefit analysis
+- [ ] A/B test M3 vs M4 (50 tasks minimum)
+- [ ] Cost analysis: Should see 60-80% cost reduction
+- [ ] Accuracy: Maintain or improve vs M3
+- [ ] Statistical validation (p < 0.05)
 
 **Success Criteria:**
-- Accuracy: Approaching SOTA (65-70%)
-- Maintained or improved cost efficiency
-- No stability regressions
+- Accuracy: ≥M3 performance (no regression)
+- Cost reduction: ≥60% vs M3 cloud-only
+- Local model availability: Ollama setup works
+- Fallback robustness: Cloud fallback for hard tasks
 
 ---
 

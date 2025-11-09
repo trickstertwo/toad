@@ -38,6 +38,11 @@ pub struct FeatureFlags {
     /// Evidence: TRAE 75.2% vs Warp 71% = +4.2 points PROVEN
     pub routing_multi_model: bool,
 
+    /// Use cascading routing (cheap → expensive)
+    /// Evidence: DavaJ 84.7% HumanEval, 70% cost reduction
+    /// Try local models first (Ollama 7B/32B), escalate to cloud if needed
+    pub routing_cascade: bool,
+
     /// Use speculative execution (fast + premium in parallel)
     /// Evidence: Novel for LLMs, could save 24% cost if effective
     pub routing_speculative: bool,
@@ -82,6 +87,7 @@ impl Default for FeatureFlags {
             // Routing: Start simple (no routing)
             routing_semantic: false,
             routing_multi_model: false,
+            routing_cascade: false,
             routing_speculative: false,
 
             // Intelligence: Start with proven features
@@ -129,12 +135,27 @@ impl FeatureFlags {
         }
     }
 
-    /// M3 advanced: + Multi-model (70-75% target)
+    /// M3 advanced: + Multi-model racing (63-68% target)
     pub fn milestone_3() -> Self {
         Self {
             context_ast: true,
             smart_test_selection: true,
             routing_multi_model: true,
+            prompt_caching: true,
+            tree_sitter_validation: true,
+            ..Default::default()
+        }
+    }
+
+    /// M4 cost-optimized: + Cascading routing (65-70% target, 70% cost reduction)
+    pub fn milestone_4() -> Self {
+        Self {
+            context_ast: true,
+            smart_test_selection: true,
+            routing_multi_model: true,
+            routing_cascade: true,
+            context_embeddings: true,
+            failure_memory: true,
             prompt_caching: true,
             tree_sitter_validation: true,
             ..Default::default()
@@ -160,6 +181,9 @@ impl FeatureFlags {
             count += 1;
         }
         if self.routing_multi_model {
+            count += 1;
+        }
+        if self.routing_cascade {
             count += 1;
         }
         if self.routing_speculative {
@@ -190,7 +214,7 @@ impl FeatureFlags {
     pub fn description(&self) -> String {
         format!(
             "Context: AST={}, Embed={}, Graph={}, Rerank={} | \
-             Routing: Semantic={}, Multi={}, Spec={} | \
+             Routing: Semantic={}, Multi={}, Cascade={}, Spec={} | \
              Intel: Tests={}, Memory={}, Plan={} | \
              Opt: PCache={}, SCache={}, Validate={}",
             self.context_ast,
@@ -199,6 +223,7 @@ impl FeatureFlags {
             self.context_reranking,
             self.routing_semantic,
             self.routing_multi_model,
+            self.routing_cascade,
             self.routing_speculative,
             self.smart_test_selection,
             self.failure_memory,
