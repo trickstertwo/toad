@@ -29,8 +29,10 @@ pub mod keyboard_recorder;
 pub mod keyboard_shortcuts;
 pub mod keybinds;
 pub mod mouse;
+pub mod multiple_views;
 pub mod project_management;
 pub mod rich_task_cards;
+pub mod task_dependencies;
 pub mod team_collaboration;
 pub mod terminal_capabilities;
 pub mod text_truncation;
@@ -91,12 +93,19 @@ pub use keyboard_recorder::{KeyboardRecorder, RecorderState, RecordedKey};
 pub use keyboard_shortcuts::{Shortcut, ShortcutAction, ShortcutCategory, ShortcutRegistry};
 pub use keybinds::{KeyBinding, KeyBindings};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
+pub use multiple_views::{
+    CalendarMode, GroupBy, MindMapOrientation, SortBy, SortOrder, TimelineZoom, ViewConfig,
+    ViewManager, ViewSettings, ViewType,
+};
 pub use project_management::{
     Project, ProjectManager, ProjectStatus, ProjectTemplate, Workspace,
 };
 pub use rich_task_cards::{
     Assignee, CustomField, CustomFieldType, EffortEstimate, Priority, RichTaskCard,
     RichTaskCardManager, Subtask, Tag,
+};
+pub use task_dependencies::{
+    CriticalPathNode, Dependency, DependencyManager, DependencyType,
 };
 pub use team_collaboration::{
     Activity, ActivityType, BoardMember, CollaborationManager, Notification, NotificationType,
