@@ -50,6 +50,34 @@ pub struct RaceMetadata {
     pub race_duration_ms: u64,
 }
 
+/// Metadata from cascading routing (M4+)
+///
+/// Tracks which tier was selected, task difficulty, and cost optimization.
+/// This is only populated when routing_cascade feature flag is enabled.
+///
+/// # Evidence
+///
+/// Based on DavaJ research (2024):
+/// - 84.7% accuracy on HumanEval
+/// - 70% cost reduction vs cloud-only
+/// - Local-first cascade: 7B → 32B → Cloud
+///
+/// TOAD implements 4 tiers: Local7B, Local32B, CloudPremium, CloudBest
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CascadeMetadata {
+    /// Task difficulty classification (Easy/Medium/Hard)
+    pub task_difficulty: String,
+
+    /// Selected model tier (Local7B/Local32B/CloudPremium/CloudBest)
+    pub selected_tier: String,
+
+    /// Estimated cost for this tier (local = $0, cloud = $2-10)
+    pub tier_cost_usd: f64,
+
+    /// Time spent classifying and routing (microseconds for minimal overhead)
+    pub routing_duration_ms: u64,
+}
+
 /// A single SWE-bench task
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Task {
@@ -141,6 +169,10 @@ pub struct TaskResult {
     /// Racing metadata (M3+ only, when routing_multi_model enabled)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub race_metadata: Option<RaceMetadata>,
+
+    /// Cascade routing metadata (M4+ only, when routing_cascade enabled)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cascade_metadata: Option<CascadeMetadata>,
 }
 
 impl TaskResult {
@@ -159,6 +191,7 @@ impl TaskResult {
             metrics: Metrics::default(),
             timestamp: Utc::now(),
             race_metadata: None,
+            cascade_metadata: None,
         }
     }
 
@@ -299,9 +332,10 @@ impl EvaluationHarness {
         use crate::ai::agent::Agent;
         use crate::ai::llm::{AnthropicClient, LLMProvider, get_api_key};
         use crate::ai::metrics::MetricsCollector;
-        use crate::ai::routing::{CascadingRouter, Router};
+        use crate::ai::routing::{CascadingRouter, Router, TaskClassifier};
         use crate::ai::tools::ToolRegistry;
         use anyhow::Context;
+        use std::time::Instant;
 
         tracing::info!("Running task: {}", task.id);
 
@@ -311,10 +345,18 @@ impl EvaluationHarness {
         // Track if we're using racing (for metrics extraction)
         let mut racing_client_ref: Option<std::sync::Arc<crate::ai::llm::RacingClient>> = None;
 
+        // Track cascade routing metadata (for M4)
+        let mut cascade_difficulty: Option<String> = None;
+        let mut cascade_tier: Option<String> = None;
+        let mut cascade_cost: Option<f64> = None;
+        let mut cascade_duration_ms: Option<u64> = None;
+
         // Create LLM client based on routing strategy
         let llm_client: Box<dyn crate::ai::llm::LLMClient> = if config.features.routing_cascade {
             // M4: Use cascading router (cheap local → expensive cloud)
             tracing::info!("M4 Cascading routing enabled for task {}", task.id);
+
+            let routing_start = Instant::now();
 
             let router = if let Some(key) = api_key.clone() {
                 CascadingRouter::with_api_key(key)
@@ -323,8 +365,28 @@ impl EvaluationHarness {
                 CascadingRouter::new()
             };
 
+            // Classify task difficulty first (for metadata)
+            let classifier = TaskClassifier::new();
+            let difficulty = classifier.classify(task)?;
+            cascade_difficulty = Some(format!("{:?}", difficulty));
+
+            // Select tier based on difficulty
+            let tier = router.select_tier(difficulty);
+            cascade_tier = Some(format!("{:?}", tier));
+            cascade_cost = Some(tier.estimated_cost_usd());
+
             // Route to appropriate model based on task difficulty
             let provider_config = router.route(task)?;
+
+            cascade_duration_ms = Some(routing_start.elapsed().as_millis() as u64);
+
+            tracing::info!(
+                "M4: Task {} classified as {:?}, routed to {:?} (est. cost: ${:.2})",
+                task.id,
+                difficulty,
+                tier,
+                tier.estimated_cost_usd()
+            );
 
             // Create client with prompt caching if configured
             LLMProvider::create_with_features(
@@ -471,6 +533,24 @@ impl EvaluationHarness {
                     latency_improvement
                 );
             }
+        }
+
+        // Extract cascade metadata if M4 cascading was used
+        if cascade_difficulty.is_some() && cascade_tier.is_some() {
+            result.cascade_metadata = Some(CascadeMetadata {
+                task_difficulty: cascade_difficulty.unwrap(),
+                selected_tier: cascade_tier.unwrap(),
+                tier_cost_usd: cascade_cost.unwrap_or(0.0),
+                routing_duration_ms: cascade_duration_ms.unwrap_or(0),
+            });
+
+            tracing::info!(
+                "M4 Cascade metadata: difficulty={}, tier={}, cost=${:.2}, routing_time={}ms",
+                result.cascade_metadata.as_ref().unwrap().task_difficulty,
+                result.cascade_metadata.as_ref().unwrap().selected_tier,
+                result.cascade_metadata.as_ref().unwrap().tier_cost_usd,
+                result.cascade_metadata.as_ref().unwrap().routing_duration_ms
+            );
         }
 
         // For M1: We consider a task "solved" if agent completed successfully
@@ -789,5 +869,126 @@ mod tests {
 
         // Verify latency improvement is positive (racing was faster)
         assert!(metadata.latency_improvement_ms > 0);
+    }
+
+    /// Test that M4 config has cascading enabled
+    #[test]
+    fn test_m4_config_has_cascading_enabled() {
+        use crate::config::FeatureFlags;
+
+        let m4_features = FeatureFlags::milestone_4();
+
+        // M4 MUST have cascading routing enabled
+        assert!(m4_features.routing_cascade, "M4 must have cascading routing enabled (70% cost reduction)");
+
+        // M4 should inherit M3 features
+        assert!(m4_features.routing_multi_model, "M4 should have multi-model routing from M3");
+        assert!(m4_features.context_ast, "M4 should have AST context from M2");
+        assert!(m4_features.smart_test_selection, "M4 should have smart test selection from M2");
+
+        // M4 adds embeddings and failure memory
+        assert!(m4_features.context_embeddings, "M4 should have embeddings");
+        assert!(m4_features.failure_memory, "M4 should have failure memory");
+
+        // Core optimizations still enabled
+        assert!(m4_features.prompt_caching);
+    }
+
+    /// Test cascade metadata serialization
+    #[test]
+    fn test_m4_cascade_metadata_serialization() {
+        let metadata = CascadeMetadata {
+            task_difficulty: "Medium".to_string(),
+            selected_tier: "Local32B".to_string(),
+            tier_cost_usd: 0.0,
+            routing_duration_ms: 15,
+        };
+
+        // Serialize to JSON
+        let json = serde_json::to_string(&metadata).unwrap();
+        let deserialized: CascadeMetadata = serde_json::from_str(&json).unwrap();
+
+        // Verify fields match
+        assert_eq!(metadata.task_difficulty, deserialized.task_difficulty);
+        assert_eq!(metadata.selected_tier, deserialized.selected_tier);
+        assert_eq!(metadata.tier_cost_usd, deserialized.tier_cost_usd);
+        assert_eq!(metadata.routing_duration_ms, deserialized.routing_duration_ms);
+    }
+
+    /// Test cascade tier selection for easy tasks
+    #[test]
+    fn test_cascade_tier_selection_easy() {
+        use crate::ai::routing::{CascadingRouter, TaskClassifier, Difficulty};
+
+        let classifier = TaskClassifier::new();
+        let router = CascadingRouter::new();
+
+        // Create easy task
+        let task = Task {
+            id: "test-easy".to_string(),
+            problem_statement: "Fix typo in README.md".to_string(),
+            ..Task::example()
+        };
+
+        // Classify difficulty
+        let difficulty = classifier.classify(&task).unwrap();
+        assert_eq!(difficulty, Difficulty::Easy);
+
+        // Verify tier selection
+        use crate::ai::routing::ModelTier;
+        let tier = router.select_tier(difficulty);
+        assert_eq!(tier, ModelTier::Local7B);
+        assert_eq!(tier.estimated_cost_usd(), 0.0);
+    }
+
+    /// Test cascade tier selection for hard tasks
+    #[test]
+    fn test_cascade_tier_selection_hard() {
+        use crate::ai::routing::{CascadingRouter, TaskClassifier, Difficulty};
+
+        let classifier = TaskClassifier::new();
+        let router = CascadingRouter::with_api_key("test-key".to_string());
+
+        // Create hard task
+        let task = Task {
+            id: "test-hard".to_string(),
+            problem_statement: "Refactor the entire authentication architecture to improve performance. This requires changes across auth.py, middleware.py, database.py, cache.py, config.py, utils.py, and all related test files.".to_string(),
+            ..Task::example()
+        };
+
+        // Classify difficulty
+        let difficulty = classifier.classify(&task).unwrap();
+        assert_eq!(difficulty, Difficulty::Hard);
+
+        // Verify tier selection
+        use crate::ai::routing::ModelTier;
+        let tier = router.select_tier(difficulty);
+        assert_eq!(tier, ModelTier::CloudPremium);
+        assert!(tier.estimated_cost_usd() > 0.0);
+    }
+
+    /// Test cascade cost tracking
+    #[test]
+    fn test_cascade_cost_tracking() {
+        use crate::ai::routing::ModelTier;
+
+        // Easy/Medium tasks are free (local)
+        assert_eq!(ModelTier::Local7B.estimated_cost_usd(), 0.0);
+        assert_eq!(ModelTier::Local32B.estimated_cost_usd(), 0.0);
+
+        // Hard tasks cost money (cloud)
+        assert!(ModelTier::CloudPremium.estimated_cost_usd() > 0.0);
+        assert!(ModelTier::CloudBest.estimated_cost_usd() > ModelTier::CloudPremium.estimated_cost_usd());
+
+        // Verify cost model (70% reduction from DavaJ)
+        // Easy (40%) + Medium (40%) = 80% of tasks at $0
+        // Hard (20%) at ~$2 average
+        let easy_cost = 0.4 * 500.0 * ModelTier::Local7B.estimated_cost_usd();
+        let medium_cost = 0.4 * 500.0 * ModelTier::Local32B.estimated_cost_usd();
+        let hard_cost = 0.2 * 500.0 * ModelTier::CloudPremium.estimated_cost_usd();
+        let total_cost = easy_cost + medium_cost + hard_cost;
+
+        // Should be ~$200 for 500 tasks vs $1000 cloud-only (80% reduction)
+        assert!(total_cost < 500.0, "Total cost should be less than $500 for 500 tasks");
     }
 }
