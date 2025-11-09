@@ -235,6 +235,14 @@ impl FeatureFlags {
     }
 }
 
+/// Default racing models for M3 multi-model ensemble
+fn default_racing_models() -> Vec<String> {
+    vec![
+        "claude-sonnet-4-20250514".to_string(),
+        "claude-sonnet-3-5-20241022".to_string(),
+    ]
+}
+
 /// Main TOAD configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToadConfig {
@@ -252,6 +260,15 @@ pub struct ToadConfig {
 
     /// Enable verbose logging
     pub verbose: bool,
+
+    /// Models to race when routing_multi_model is enabled (M3+)
+    ///
+    /// Default for M3: ["claude-sonnet-4-20250514", "claude-sonnet-3-5-20241022"]
+    /// These models race in parallel with first-complete-wins selection.
+    ///
+    /// Note: Opus 4 may not be available yet, using Sonnet 3.5 as fallback.
+    #[serde(default = "default_racing_models")]
+    pub racing_models: Vec<String>,
 }
 
 impl Default for ToadConfig {
@@ -262,6 +279,7 @@ impl Default for ToadConfig {
             max_context_tokens: 200_000,
             task_timeout_secs: 600, // 10 minutes
             verbose: false,
+            racing_models: default_racing_models(),
         }
     }
 }
@@ -366,5 +384,61 @@ mod tests {
         let config = ToadConfig::default()
             .with_ollama("llama2");
         assert_eq!(config.provider.provider, ProviderType::Ollama);
+    }
+
+    #[test]
+    fn test_m3_config_has_racing_enabled() {
+        let m3_features = FeatureFlags::milestone_3();
+
+        // M3 MUST have multi-model racing enabled
+        assert!(m3_features.routing_multi_model, "M3 must have routing_multi_model enabled (TRAE +4.2 points)");
+
+        // M3 should inherit M2 features
+        assert!(m3_features.context_ast, "M3 should have AST context from M2");
+        assert!(m3_features.smart_test_selection, "M3 should have smart test selection from M2");
+        assert!(m3_features.prompt_caching, "M3 should have prompt caching from M1");
+        assert!(m3_features.tree_sitter_validation, "M3 should have tree-sitter validation from M1");
+
+        // M3 should NOT have M4 features
+        assert!(!m3_features.routing_cascade, "M3 should not have cascading routing (that's M4)");
+        assert!(!m3_features.context_embeddings, "M3 should not have embeddings (that's M4)");
+    }
+
+    #[test]
+    fn test_m3_baseline_config_uses_features() {
+        let config = ToadConfig::for_milestone(3);
+
+        assert!(config.features.routing_multi_model);
+        assert!(config.features.context_ast);
+        assert!(config.features.smart_test_selection);
+        assert!(config.features.prompt_caching);
+        assert!(config.features.tree_sitter_validation);
+    }
+
+    #[test]
+    fn test_default_racing_models() {
+        let config = ToadConfig::default();
+
+        // Default should have 2 racing models
+        assert_eq!(config.racing_models.len(), 2, "Default config should have 2 racing models");
+
+        // Should include Sonnet 4 and Sonnet 3.5
+        assert!(config.racing_models.contains(&"claude-sonnet-4-20250514".to_string()),
+            "Should include Sonnet 4");
+        assert!(config.racing_models.contains(&"claude-sonnet-3-5-20241022".to_string()),
+            "Should include Sonnet 3.5");
+    }
+
+    #[test]
+    fn test_racing_models_serialization() {
+        let config = ToadConfig {
+            racing_models: vec!["model1".to_string(), "model2".to_string()],
+            ..Default::default()
+        };
+
+        let json = serde_json::to_string(&config).unwrap();
+        let deserialized: ToadConfig = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(config.racing_models, deserialized.racing_models);
     }
 }
