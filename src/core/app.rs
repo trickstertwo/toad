@@ -8,7 +8,7 @@ use crate::core::event::Event;
 use crate::performance::PerformanceMetrics;
 use crate::ui::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, ToastManager};
 use crate::workspace::{LayoutManager, SessionState, TabManager};
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use std::path::PathBuf;
 
 /// Different screens/modes the application can be in
@@ -514,6 +514,11 @@ impl App {
 
     /// Handle keys on the welcome screen
     fn handle_welcome_key(&mut self, key: KeyEvent) -> crate::Result<()> {
+        // Only process key press events, ignore release and repeat
+        if key.kind != KeyEventKind::Press {
+            return Ok(());
+        }
+
         match (key.code, key.modifiers) {
             // Quit on Escape or Ctrl+C
             (KeyCode::Esc, _) | (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
@@ -532,6 +537,11 @@ impl App {
 
     /// Handle keys in the trust dialog
     fn handle_trust_dialog_key(&mut self, key: KeyEvent) -> crate::Result<()> {
+        // Only process key press events, ignore release and repeat
+        if key.kind != KeyEventKind::Press {
+            return Ok(());
+        }
+
         match (key.code, key.modifiers) {
             // Escape cancels
             (KeyCode::Esc, _) => {
@@ -570,6 +580,12 @@ impl App {
 
     /// Handle keys in main interface
     fn handle_main_key(&mut self, key: KeyEvent) -> crate::Result<()> {
+        // Only process key press events, ignore release and repeat
+        // This prevents double input on Windows
+        if key.kind != KeyEventKind::Press {
+            return Ok(());
+        }
+
         // If help is shown, intercept keys for help navigation
         if self.show_help {
             match (key.code, key.modifiers) {
@@ -854,6 +870,11 @@ impl App {
 
     /// Handle keys during evaluation screen
     fn handle_evaluation_key(&mut self, key: KeyEvent) -> crate::Result<()> {
+        // Only process key press events, ignore release and repeat
+        if key.kind != KeyEventKind::Press {
+            return Ok(());
+        }
+
         match (key.code, key.modifiers) {
             // Escape or Ctrl+C cancels running evaluation
             (KeyCode::Esc, _) | (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
