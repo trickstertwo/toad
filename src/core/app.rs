@@ -79,7 +79,7 @@ pub struct App {
     toasts: ToastManager,
 
     /// Event sender for async operations (evaluation, etc.)
-    event_tx: Option<tokio::sync::mpsc::UnboundedSender<Event>>,
+    pub(crate) event_tx: Option<tokio::sync::mpsc::UnboundedSender<Event>>,
 
     /// Current evaluation state
     pub(crate) evaluation_state: Option<EvaluationState>,
@@ -337,65 +337,6 @@ impl App {
     }
 
     /// Start an evaluation run
-    pub fn start_evaluation(&mut self, args: crate::ai::eval_commands::EvalArgs) {
-        if let Some(ref event_tx) = self.event_tx {
-            let handle = crate::ai::eval_runner::start_evaluation(args.clone(), event_tx.clone());
-
-            self.evaluation_state = Some(EvaluationState {
-                handle: Some(handle),
-                progress: None,
-                results: None,
-                error: None,
-            });
-
-            self.screen = AppScreen::Evaluation;
-            self.status_message = format!(
-                "Starting evaluation: {} tasks, milestone {}",
-                args.count.unwrap_or(10),
-                args.milestone
-            );
-        } else {
-            self.toast_error("Cannot start evaluation: event channel not initialized");
-        }
-    }
-
-    /// Start a comparison run
-    pub fn start_comparison(&mut self, args: crate::ai::eval_commands::CompareArgs) {
-        if let Some(ref event_tx) = self.event_tx {
-            let handle = crate::ai::eval_runner::start_comparison(args.clone(), event_tx.clone());
-
-            self.evaluation_state = Some(EvaluationState {
-                handle: Some(handle),
-                progress: None,
-                results: None,
-                error: None,
-            });
-
-            self.screen = AppScreen::Evaluation;
-            self.status_message = format!(
-                "Starting comparison: {} tasks, M{} vs M{}",
-                args.count.unwrap_or(20),
-                args.baseline,
-                args.test
-            );
-        } else {
-            self.toast_error("Cannot start comparison: event channel not initialized");
-        }
-    }
-
-    /// Cancel running evaluation
-    pub fn cancel_evaluation(&mut self) {
-        if let Some(ref mut eval_state) = self.evaluation_state
-            && let Some(handle) = eval_state.handle.take() {
-                // Spawn a task to cancel the evaluation
-                tokio::spawn(async move {
-                    handle.cancel().await;
-                });
-
-                self.toast_info("Evaluation cancelled");
-                self.screen = AppScreen::Main;
-            }
-    }
 
     /// Update application state based on an event (Update in Elm Architecture)
     ///
