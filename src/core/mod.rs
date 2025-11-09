@@ -8,6 +8,7 @@
 
 pub mod app;
 pub mod app_evaluation;
+pub mod app_commands;
 pub mod app_event_handlers;
 pub mod app_state;
 pub mod event;
