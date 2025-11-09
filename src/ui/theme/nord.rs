@@ -216,4 +216,39 @@ mod tests {
         assert_eq!(theme.success(), Color::Rgb(163, 190, 140)); // Nord14 green
         assert_eq!(theme.magenta(), Color::Rgb(180, 142, 173)); // Nord15 purple
     }
+
+    #[test]
+    fn test_nord_multiple_instances() {
+        let theme1 = NordTheme;
+        let theme2 = NordTheme;
+
+        // Multiple instances should have identical colors
+        assert_eq!(theme1.primary(), theme2.primary());
+        assert_eq!(theme1.background(), theme2.background());
+    }
+
+    #[test]
+    fn test_nord_all_colors_are_rgb() {
+        let theme = NordTheme;
+
+        // Verify all colors are RGB variants
+        assert!(matches!(theme.primary(), Color::Rgb(..)));
+        assert!(matches!(theme.background(), Color::Rgb(..)));
+        assert!(matches!(theme.foreground(), Color::Rgb(..)));
+        assert!(matches!(theme.success(), Color::Rgb(..)));
+        assert!(matches!(theme.error(), Color::Rgb(..)));
+        assert!(matches!(theme.warning(), Color::Rgb(..)));
+        assert!(matches!(theme.info(), Color::Rgb(..)));
+    }
+
+    #[test]
+    fn test_nord_border_colors_distinct() {
+        let theme = NordTheme;
+
+        let border = theme.border();
+        let border_focused = theme.border_focused();
+
+        // Border and focused border should be different
+        assert_ne!(border, border_focused);
+    }
 }
