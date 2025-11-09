@@ -1943,5 +1943,332 @@ mod tests {
         assert_ne!(main, eval);
         assert_ne!(eval, welcome);
     }
+
+    // ===== Command Processing Tests =====
+    #[test]
+    fn test_process_command_help() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.process_command("/help");
+
+        assert!(app.show_help, "Help should be shown after /help command");
+        assert!(app.status_message.contains("help"));
+    }
+
+    #[test]
+    fn test_process_command_commands() {
+        let mut app = App::new();
+        app.process_command("/commands");
+
+        assert!(app.status_message.contains("Available commands"));
+        assert!(app.status_message.contains("/help"));
+    }
+
+    #[test]
+    fn test_process_command_clear() {
+        let mut app = App::new();
+        app.process_command("/clear");
+
+        assert!(app.status_message.contains("cleared"));
+    }
+
+    #[test]
+    fn test_process_command_unknown() {
+        let mut app = App::new();
+        app.process_command("/unknown");
+
+        assert!(app.status_message.contains("Unknown command"));
+        assert!(app.status_message.contains("unknown"));
+    }
+
+    #[test]
+    fn test_process_command_no_slash_prefix() {
+        let mut app = App::new();
+        app.process_command("regular input");
+
+        assert!(app.status_message.contains("Processing") || app.status_message.contains("Error"));
+    }
+
+    #[test]
+    fn test_process_command_empty() {
+        let mut app = App::new();
+        app.process_command("");
+
+        // Should handle empty input gracefully
+        let _ = &app.status_message;
+    }
+
+    #[test]
+    fn test_process_command_slash_only() {
+        let mut app = App::new();
+        app.process_command("/");
+
+        // Should handle slash-only input
+        let _ = &app.status_message;
+    }
+
+    #[test]
+    fn test_process_command_multiple_commands() {
+        let mut app = App::new();
+
+        app.process_command("/help");
+        assert!(app.show_help);
+
+        app.show_help = false;
+        app.process_command("/commands");
+        assert!(!app.show_help);
+        assert!(app.status_message.contains("Available"));
+    }
+
+    // ===== Session State Tests =====
+    #[test]
+    fn test_update_session_state() {
+        let mut app = App::new();
+        app.update_session_state();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_update_session_state_multiple_calls() {
+        let mut app = App::new();
+        app.update_session_state();
+        app.update_session_state();
+        app.update_session_state();
+        // Multiple calls should not cause issues
+    }
+
+    // ===== Trust Dialog Tests =====
+    #[test]
+    fn test_create_trust_dialog() {
+        let mut app = App::new();
+        app.create_trust_dialog();
+
+        // Should create a trust dialog
+        assert!(app.trust_dialog.is_some());
+    }
+
+    #[test]
+    fn test_create_trust_dialog_multiple_calls() {
+        let mut app = App::new();
+        app.create_trust_dialog();
+        let first = app.trust_dialog.is_some();
+
+        app.create_trust_dialog();
+        let second = app.trust_dialog.is_some();
+
+        assert_eq!(first, second, "Multiple calls should maintain trust dialog");
+    }
+
+    #[test]
+    fn test_confirm_trust_selection_without_dialog() {
+        let mut app = App::new();
+        app.trust_dialog = None;
+        app.confirm_trust_selection();
+        // Should handle None case gracefully
+    }
+
+    // ===== Palette Command Tests =====
+    #[test]
+    fn test_execute_palette_command_vim_mode() {
+        let mut app = App::new();
+        let initial = app.vim_mode();
+        app.execute_palette_command("vim_mode");
+        assert_ne!(app.vim_mode(), initial, "Palette command should toggle vim mode");
+    }
+
+    #[test]
+    fn test_execute_palette_command_help() {
+        let mut app = App::new();
+        assert!(!app.show_help());
+        app.execute_palette_command("help");
+        assert!(app.show_help(), "Palette command should show help");
+    }
+
+    #[test]
+    fn test_execute_palette_command_quit() {
+        let mut app = App::new();
+        assert!(!app.should_quit());
+        app.execute_palette_command("quit");
+        assert!(app.should_quit(), "Palette command should quit");
+    }
+
+    #[test]
+    fn test_execute_palette_command_unknown() {
+        let mut app = App::new();
+        app.execute_palette_command("unknown_command");
+        // Should handle unknown commands gracefully
+    }
+
+    // ===== Input Processing Integration Tests =====
+    #[test]
+    fn test_input_command_workflow() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Type a command
+        app.input_field.set_value("/help".to_string());
+
+        // Submit (Enter key)
+        let event = Event::Key(KeyEvent::from(KeyCode::Enter));
+        app.update(event).ok();
+
+        // Help should be shown
+        assert!(app.show_help() || app.status_message.contains("help"));
+    }
+
+    #[test]
+    fn test_multiple_command_submissions() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // First command
+        app.input_field.set_value("/commands".to_string());
+        let event = Event::Key(KeyEvent::from(KeyCode::Enter));
+        app.update(event).ok();
+
+        let first_msg = app.status_message.clone();
+
+        // Second command
+        app.input_field.set_value("/clear".to_string());
+        let event = Event::Key(KeyEvent::from(KeyCode::Enter));
+        app.update(event).ok();
+
+        let second_msg = app.status_message.clone();
+
+        assert_ne!(first_msg, second_msg);
+    }
+
+    // ===== Screen State Consistency Tests =====
+    #[test]
+    fn test_screen_state_after_quit() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Ctrl+C to quit
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL));
+        app.update(event).ok();
+
+        assert!(app.should_quit());
+    }
+
+    #[test]
+    fn test_screen_remains_on_main_after_normal_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Type some normal text
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('h')));
+        app.update(event).ok();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('i')));
+        app.update(event).ok();
+
+        assert_eq!(*app.screen(), AppScreen::Main);
+        assert!(!app.should_quit());
+    }
+
+    // ===== Edge Case Integration Tests =====
+    #[test]
+    fn test_rapid_key_presses() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Simulate rapid typing
+        for c in "hello world".chars() {
+            let event = Event::Key(KeyEvent::from(KeyCode::Char(c)));
+            app.update(event).ok();
+        }
+
+        // Should handle all input without panicking
+        assert!(app.input_field().value().len() > 0);
+    }
+
+    #[test]
+    fn test_alternating_overlays() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Show help
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('?')));
+        app.update(event).ok();
+
+        // Try to show palette (might close help first)
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::CONTROL));
+        app.update(event).ok();
+
+        // Close with Esc
+        let event = Event::Key(KeyEvent::from(KeyCode::Esc));
+        app.update(event).ok();
+
+        // Should handle overlay switching
+        assert_eq!(*app.screen(), AppScreen::Main);
+    }
+
+    #[test]
+    fn test_clear_input_multiple_times() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Set some input
+        app.input_field.set_value("test".to_string());
+
+        // Clear with Ctrl+U
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
+        app.update(event).ok();
+        assert_eq!(app.input_field().value(), "");
+
+        // Type more
+        app.input_field.set_value("test2".to_string());
+
+        // Clear again
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
+        app.update(event).ok();
+        assert_eq!(app.input_field().value(), "");
+    }
+
+    #[test]
+    fn test_backspace_on_empty_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        assert_eq!(app.input_field().value(), "");
+
+        // Backspace on empty input
+        let event = Event::Key(KeyEvent::from(KeyCode::Backspace));
+        app.update(event).ok();
+
+        // Should still be empty
+        assert_eq!(app.input_field().value(), "");
+    }
+
+    #[test]
+    fn test_enter_on_empty_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        assert_eq!(app.input_field().value(), "");
+
+        // Press Enter with empty input
+        let event = Event::Key(KeyEvent::from(KeyCode::Enter));
+        app.update(event).ok();
+
+        // Should handle gracefully
+        assert_eq!(app.input_field().value(), "");
+    }
+
+    #[test]
+    fn test_unicode_input_processing() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Type unicode characters
+        for c in "🐸🎉世界".chars() {
+            let event = Event::Key(KeyEvent::from(KeyCode::Char(c)));
+            app.update(event).ok();
+        }
+
+        // Should handle unicode
+        assert!(app.input_field().value().contains("🐸"));
+    }
 }
 
