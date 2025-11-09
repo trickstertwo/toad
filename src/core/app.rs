@@ -295,11 +295,232 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
+
+    // ===== App Initialization Tests =====
 
     #[test]
     fn test_app_init() {
         let app = App::new();
         assert!(!app.should_quit());
         assert_eq!(app.title(), "Toad - AI Coding Terminal");
+    }
+
+    #[test]
+    fn test_app_new_default_equivalence() {
+        let app1 = App::new();
+        let app2 = App::default();
+
+        assert_eq!(app1.should_quit(), app2.should_quit());
+        assert_eq!(app1.title(), app2.title());
+        assert_eq!(app1.vim_mode(), app2.vim_mode());
+    }
+
+    // ===== Update Method Tests =====
+
+    #[test]
+    fn test_update_quit_event() {
+        let mut app = App::new();
+        app.update(Event::Quit).unwrap();
+        assert!(app.should_quit());
+    }
+
+    #[test]
+    fn test_update_tick_event() {
+        let mut app = App::new();
+        app.update(Event::Tick).unwrap();
+        // Tick events should not cause errors
+    }
+
+    #[test]
+    fn test_update_resize_event() {
+        let mut app = App::new();
+        app.update(Event::Resize(100, 50)).unwrap();
+        // Resize events should not cause errors
+    }
+
+    #[test]
+    fn test_update_mouse_event() {
+        let mut app = App::new();
+        let mouse = MouseEvent {
+            kind: MouseEventKind::Down(crossterm::event::MouseButton::Left),
+            column: 10,
+            row: 5,
+            modifiers: KeyModifiers::NONE,
+        };
+        app.update(Event::Mouse(mouse)).unwrap();
+        // Mouse events are no-ops but shouldn't panic
+    }
+
+    #[test]
+    fn test_update_dispatches_to_correct_screen() {
+        let mut app = App::new();
+
+        // Test Welcome screen
+        app.screen = AppScreen::Welcome;
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char(' ')))).unwrap();
+        assert_eq!(app.screen, AppScreen::TrustDialog);
+
+        // Test Main screen
+        app.screen = AppScreen::Main;
+        let result = app.update(Event::Key(KeyEvent::from(KeyCode::Char('a'))));
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_update_multiple_events_sequence() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Sequence of events
+        app.update(Event::Tick).unwrap();
+        app.update(Event::Resize(80, 24)).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('a')))).unwrap();
+        app.update(Event::Tick).unwrap();
+
+        // Should handle sequence without panicking
+        assert!(!app.should_quit());
+    }
+
+    #[test]
+    fn test_update_error_handling() {
+        let mut app = App::new();
+
+        // Update should return Result and handle various events
+        assert!(app.update(Event::Quit).is_ok());
+        assert!(app.update(Event::Tick).is_ok());
+        assert!(app.update(Event::Resize(0, 0)).is_ok());
+    }
+
+    // ===== Screen-Specific Routing Tests =====
+
+    #[test]
+    fn test_update_welcome_screen_routing() {
+        let mut app = App::new();
+        app.screen = AppScreen::Welcome;
+
+        app.update(Event::Key(KeyEvent::from(KeyCode::Enter))).unwrap();
+
+        // Should route to welcome handler and advance to trust dialog
+        assert_eq!(app.screen, AppScreen::TrustDialog);
+    }
+
+    #[test]
+    fn test_update_trust_dialog_routing() {
+        let mut app = App::new();
+        app.screen = AppScreen::TrustDialog;
+        app.create_trust_dialog();
+
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('1')))).unwrap();
+
+        // Should route to trust dialog handler and process selection
+        assert_eq!(app.screen, AppScreen::Main);
+    }
+
+    #[test]
+    fn test_update_main_screen_routing() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('?')))).unwrap();
+
+        // Should toggle help screen
+        assert!(app.show_help);
+    }
+
+    #[test]
+    fn test_update_evaluation_screen_routing() {
+        let mut app = App::new();
+        app.screen = AppScreen::Evaluation;
+        app.evaluation_state = None;
+
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('q')))).unwrap();
+
+        // Should return to main screen
+        assert_eq!(app.screen, AppScreen::Main);
+    }
+
+    // ===== Edge Cases =====
+
+    #[test]
+    fn test_update_rapid_events() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Simulate rapid keyboard input
+        for _ in 0..100 {
+            app.update(Event::Tick).unwrap();
+        }
+
+        // Should handle rapid events without issues
+        assert!(!app.should_quit());
+    }
+
+    #[test]
+    fn test_update_alternating_screens() {
+        let mut app = App::new();
+
+        // Welcome → TrustDialog
+        app.screen = AppScreen::Welcome;
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char(' ')))).unwrap();
+
+        // TrustDialog → Main
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('1')))).unwrap();
+
+        assert_eq!(app.screen, AppScreen::Main);
+    }
+
+    #[test]
+    fn test_update_preserves_state() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+        app.input_field.insert_char('s');
+        app.input_field.insert_char('t');
+
+        let initial_value = app.input_field.value().to_string();
+
+        // Events that shouldn't affect input
+        app.update(Event::Tick).unwrap();
+        app.update(Event::Resize(100, 50)).unwrap();
+
+        assert_eq!(app.input_field.value(), initial_value);
+    }
+
+    // ===== Special Event Tests =====
+
+    #[test]
+    fn test_update_ctrl_c_quits_from_main() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        app.update(Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL))).unwrap();
+
+        assert!(app.should_quit());
+    }
+
+    #[test]
+    fn test_update_esc_behavior_varies_by_screen() {
+        // Esc on Main with help shown - closes help
+        let mut app1 = App::new();
+        app1.screen = AppScreen::Main;
+        app1.show_help = true;
+        app1.update(Event::Key(KeyEvent::from(KeyCode::Esc))).unwrap();
+        assert!(!app1.show_help);
+        assert!(!app1.should_quit());
+
+        // Esc on Welcome - quits
+        let mut app2 = App::new();
+        app2.screen = AppScreen::Welcome;
+        app2.update(Event::Key(KeyEvent::from(KeyCode::Esc))).unwrap();
+        assert!(app2.should_quit());
+
+        // Esc on TrustDialog - quits
+        let mut app3 = App::new();
+        app3.screen = AppScreen::TrustDialog;
+        app3.create_trust_dialog();
+        app3.update(Event::Key(KeyEvent::from(KeyCode::Esc))).unwrap();
+        assert!(app3.should_quit());
     }
 }
