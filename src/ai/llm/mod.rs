@@ -15,6 +15,7 @@ pub mod github;
 pub mod mock;
 pub mod ollama;
 pub mod provider;
+pub mod racing;
 pub mod rate_limiter;
 pub mod streaming;
 
@@ -24,6 +25,7 @@ pub use github::GitHubClient;
 pub use mock::{DeterministicLLMClient, MockResponseBuilder, SequencedMockClient};
 pub use ollama::OllamaClient;
 pub use provider::{LLMProvider, ProviderConfig, ProviderType};
+pub use racing::{RaceResult, RacingClient, SelectionStrategy};
 pub use rate_limiter::{RateLimitConfig, RateLimitStatus, RateLimiter};
 pub use streaming::{MessageStream, StreamAccumulator, StreamEvent};
 
