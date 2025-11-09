@@ -11,13 +11,13 @@
 
 - [x] **M0: Infrastructure & Evaluation** (100% - 45 tests)
 - [x] **M1: Simple Baseline** (100% - 96 tests)
-- [x] **M2: Context + Smart Tests** (90% - 74 tests)
+- [x] **M2: Context + Smart Tests** (100% - 80 tests) ✅
 - [ ] **M3: Multi-Model Racing** (0% - TRAE +4.2 points)
 - [ ] **M4: Cascading Routing** (12 tests ready - DavaJ 70% cost reduction)
 - [ ] **M5: Production Ready** (0%)
 
-**Current Status:** ✅ M1 + M2 Complete, M4 Routing Infrastructure Ready
-**Total Tests:** 1649 passing (1622 base + 15 smart test selection + 12 routing)
+**Current Status:** ✅ M1 + M2 100% Complete, M4 Routing Infrastructure Ready
+**Total Tests:** 1657 passing (1639 base + 6 RunTestsTool + 12 routing)
 
 ---
 
@@ -167,10 +167,10 @@ cargo run --release -- eval --count 50 --milestone 1
 
 ---
 
-## ✅ Milestone 2: Context + Routing
+## ✅ Milestone 2: Context + Smart Test Selection
 
-**Status:** 90% IMPLEMENTATION COMPLETE (74 tests passing)
-**Commits:** 8 commits (f05ae9f → 26b6a0a)
+**Status:** 100% IMPLEMENTATION COMPLETE (80 tests passing) ✅
+**Commits:** 11 commits (f05ae9f → current)
 **Prerequisites:** M1 baseline measured
 **Target:** +5% accuracy vs M1 (60-65%)
 
@@ -182,15 +182,22 @@ cargo run --release -- eval --count 50 --milestone 1
   - Agent integration with feature flag
   - eval_runner wiring with graceful fallback
 
-- [x] Smart test selection (15 tests) ✅ NEW
+- [x] Smart test selection (15 tests) ✅
   - Test file discovery (Python/Rust/JS/TS)
   - Dependency mapping (source → test files)
   - Git diff integration for change detection
   - Language-specific test command generation
   - Evidence: AutoCodeRover proven, +3-5 points
 
+- [x] RunTestsTool integration (6 tests) ✅ NEW
+  - M2-specific tool for intelligent test running
+  - Uses smart test selection when enabled
+  - Falls back to all tests if selection unavailable
+  - Wired to ToolRegistry::m2_with_features()
+  - Automatically available when smart_test_selection flag enabled
+
 **Deferred (Not Required for Core M2):**
-- [ ] Semantic routing (not critical for initial M2, separate milestone)
+- [ ] Semantic routing (moved to M3/M4)
 
 ### AST-Based Context (Feature: context_ast) - ✅ FULLY INTEGRATED
 - [x] Add tree-sitter dependency (54 tests)

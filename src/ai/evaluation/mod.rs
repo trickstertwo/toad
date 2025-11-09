@@ -316,8 +316,14 @@ impl EvaluationHarness {
             Box::new(llm_client)
         };
 
-        // Create tool registry with feature flags (tree-sitter validation, etc.)
-        let tool_registry = ToolRegistry::m1_with_features(&config.features);
+        // Create tool registry with feature flags
+        // M2+ uses smart test selection, M1 uses baseline
+        let tool_registry = if config.features.smart_test_selection {
+            tracing::info!("Using M2+ tool registry with smart test selection");
+            ToolRegistry::m2_with_features(&config.features)
+        } else {
+            ToolRegistry::m1_with_features(&config.features)
+        };
 
         // Create agent
         let agent = Agent::new(llm_client, tool_registry);

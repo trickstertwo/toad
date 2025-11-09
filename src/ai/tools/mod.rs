@@ -12,6 +12,7 @@ pub mod git;
 pub mod grep;
 pub mod list;
 pub mod read;
+pub mod run_tests;
 pub mod write;
 
 pub use bash::BashTool;
@@ -20,6 +21,7 @@ pub use git::{GitDiffTool, GitStatusTool};
 pub use grep::GrepTool;
 pub use list::ListTool;
 pub use read::ReadTool;
+pub use run_tests::RunTestsTool;
 pub use write::WriteTool;
 
 /// Result of tool execution
@@ -161,6 +163,18 @@ impl ToolRegistry {
 
         registry
     }
+
+    /// Create registry with M2 tools (M1 + smart test selection)
+    pub fn m2_with_features(features: &crate::config::FeatureFlags) -> Self {
+        let mut registry = Self::m1_with_features(features);
+
+        // Add M2 smart test selection tool if enabled
+        if features.smart_test_selection {
+            registry.register(Box::new(RunTestsTool::with_smart_selection(true)));
+        }
+
+        registry
+    }
 }
 
 impl Default for ToolRegistry {
@@ -211,5 +225,39 @@ mod tests {
         assert!(registry.get("grep").is_some());
         assert!(registry.get("git_diff").is_some());
         assert!(registry.get("git_status").is_some());
+    }
+
+    #[test]
+    fn test_m2_tools_without_smart_selection() {
+        use crate::config::FeatureFlags;
+
+        let mut features = FeatureFlags::milestone_2();
+        features.smart_test_selection = false;  // Disable
+
+        let registry = ToolRegistry::m2_with_features(&features);
+
+        // Without smart test selection, M2 = M1 (8 tools)
+        assert_eq!(registry.count(), 8);
+        assert!(registry.get("run_tests").is_none());
+    }
+
+    #[test]
+    fn test_m2_tools_with_smart_selection() {
+        use crate::config::FeatureFlags;
+
+        let features = FeatureFlags::milestone_2();
+
+        let registry = ToolRegistry::m2_with_features(&features);
+
+        // M2 with smart test selection = M1 + run_tests (9 tools)
+        assert_eq!(registry.count(), 9, "M2 should have 9 tools (M1 + run_tests)");
+
+        // Verify all M1 tools still present
+        assert!(registry.get("read").is_some());
+        assert!(registry.get("write").is_some());
+        assert!(registry.get("bash").is_some());
+
+        // Verify M2 smart test selection tool is present
+        assert!(registry.get("run_tests").is_some(), "M2 should have run_tests tool");
     }
 }
