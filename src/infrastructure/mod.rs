@@ -16,6 +16,7 @@ pub mod history;
 pub mod key_sequences;
 pub mod keybinds;
 pub mod mouse;
+pub mod text_truncation;
 pub mod validation;
 
 pub use async_ops::{AsyncOperation, AsyncOperationManager, OperationId, OperationStatus};
@@ -33,6 +34,7 @@ pub use history::History;
 pub use key_sequences::{KeySequence, KeySequenceManager};
 pub use keybinds::{KeyBinding, KeyBindings};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
+pub use text_truncation::{SmartTruncate, TruncationStrategy};
 pub use validation::{
     CompositeValidator, InputValidator, LengthValidator, NotEmptyValidator, RegexValidator,
     ValidationResult, Validator,
