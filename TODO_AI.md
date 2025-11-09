@@ -69,8 +69,8 @@
 
 ## ✅ Milestone 1: Simple Baseline Agent
 
-**Status:** 95% COMPLETE (90 tests passing, 2 pre-existing failures, 1 ignored)
-**Commits:** 7 commits (99a2279 → cd8dab4)
+**Status:** 100% IMPLEMENTATION COMPLETE (1619 tests passing)
+**Commits:** 9 commits (99a2279 → 6a3472e)
 **Target Accuracy:** 55-60% on SWE-bench
 
 **Completed Features:**
@@ -80,16 +80,19 @@
   - Wired to config.features.prompt_caching
   - 90% cost reduction on repeated prompts
 
-**Deferred (Non-critical):**
-- [ ] Tree-sitter validation in WriteTool (can add later)
+- [x] Tree-sitter validation: IMPLEMENTED ✅ (6 new tests)
+  - Validates Python, JavaScript, TypeScript syntax before write
+  - Prevents writing syntactically invalid code
+  - Graceful fallback for unsupported file types
+  - Wired to config.features.tree_sitter_validation
 
-### Tool System (8 Tools - 42 tests)
+### Tool System (8 Tools - 48 tests)
 - [x] Tool trait with async execution
-- [x] ToolRegistry with m1_baseline()
+- [x] ToolRegistry with m1_baseline() + m1_with_features()
 - [x] ToolResult for success/error handling
 - [x] JSON schema for LLM tool use
 - [x] **ReadTool** - Read file contents (4 tests)
-- [x] **WriteTool** - Write files with directory creation (4 tests)
+- [x] **WriteTool** - Write files with validation (10 tests ✅ +6 validation)
 - [x] **ListTool** - List directory contents (5 tests)
 - [x] **EditTool** - Search/replace editing (6 tests)
 - [x] **BashTool** - Execute shell commands, cross-platform (6 tests)
@@ -129,17 +132,29 @@
 - [x] USAGE.md with command examples
 - [x] Cross-platform support notes
 
-### Quality Gates (PENDING - Requires API Key)
+### Quality Gates (BLOCKED - Requires ANTHROPIC_API_KEY)
+**Implementation:** ✅ 100% COMPLETE
+**Validation:** ⏸️ PENDING API KEY
+
 - [ ] **QG1:** Run on 10 tasks, verify no crashes
 - [ ] **QG2:** Run on 50 tasks, measure baseline (target: 55-60%)
 - [ ] Document baseline metrics
 - [ ] Identify failure patterns
 
-**Next Steps:**
-1. Set `ANTHROPIC_API_KEY` environment variable
-2. Run: `cargo run --release -- eval --count 10 --milestone 1`
-3. Run: `cargo run --release -- eval --count 50 --milestone 1`
-4. Document results in `M1_BASELINE_RESULTS.md`
+**To Run Quality Gates:**
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."  # Required
+cargo run --release -- eval --count 10 --milestone 1
+cargo run --release -- eval --count 50 --milestone 1
+```
+
+**Implementation Complete:**
+- All 8 tools implemented with 48 tests ✅
+- Prompt caching enabled (90% cost reduction) ✅
+- Tree-sitter validation enabled ✅
+- Multi-provider LLM support (Anthropic/GitHub/Ollama) ✅
+- Agent loop with max 25 steps ✅
+- Metrics collection and persistence ✅
 
 ---
 
