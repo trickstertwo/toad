@@ -8,6 +8,7 @@ pub mod background_tasks;
 pub mod batch_ops;
 pub mod clipboard;
 pub mod custom_keybindings;
+pub mod data_portability;
 pub mod diff;
 pub mod errors;
 pub mod file_ops;
@@ -24,6 +25,7 @@ pub use batch_ops::{
 };
 pub use clipboard::Clipboard;
 pub use custom_keybindings::{ContextualBinding, CustomKeybindings, KeybindingContext};
+pub use data_portability::{DataExporter, DataFormat, DataImporter};
 pub use diff::{ChunkHeader, DiffHunk, DiffLine, DiffLineType, DiffParser, DiffStats, FileDiff};
 pub use errors::{ErrorEntry, ErrorHandler, ErrorSeverity};
 pub use file_ops::{FileOpResult, FileOps};
