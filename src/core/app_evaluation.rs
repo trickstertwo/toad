@@ -183,4 +183,205 @@ mod tests {
         // event_tx should now be Some, enabling evaluations
         assert!(app.event_tx.is_some());
     }
+
+    // ===== Evaluation Progress Event Tests =====
+
+    #[test]
+    fn test_evaluation_progress_event_without_state() {
+        use crate::core::event::{Event, EvaluationProgress};
+
+        let mut app = App::new();
+        app.evaluation_state = None;
+
+        let progress = EvaluationProgress {
+            current_task: 5,
+            total_tasks: 10,
+            task_id: "task-123".to_string(),
+            current_step: Some(3),
+            max_steps: Some(25),
+            last_tool: Some("Read".to_string()),
+            total_tokens: 1000,
+            total_cost: 0.05,
+            message: Some("Processing...".to_string()),
+            last_result: None,
+        };
+
+        let event = Event::EvaluationProgress(progress);
+        app.update(event).unwrap();
+
+        // Should handle gracefully when no evaluation state
+    }
+
+    #[test]
+    fn test_evaluation_progress_event_with_state() {
+        use crate::core::event::{Event, EvaluationProgress};
+        use crate::core::app_state::EvaluationState;
+
+        let mut app = App::new();
+        app.evaluation_state = Some(EvaluationState {
+            handle: None,
+            progress: None,
+            results: None,
+            error: None,
+        });
+
+        let progress = EvaluationProgress {
+            current_task: 3,
+            total_tasks: 10,
+            task_id: "task-456".to_string(),
+            current_step: Some(5),
+            max_steps: Some(25),
+            last_tool: Some("Edit".to_string()),
+            total_tokens: 2000,
+            total_cost: 0.10,
+            message: Some("Working on task...".to_string()),
+            last_result: None,
+        };
+
+        let event = Event::EvaluationProgress(progress.clone());
+        app.update(event).unwrap();
+
+        // Should update status message and progress
+        assert!(app.status_message.contains("Working on task"));
+        assert!(app.evaluation_state.as_ref().unwrap().progress.is_some());
+    }
+
+    #[test]
+    fn test_evaluation_progress_event_without_message() {
+        use crate::core::event::{Event, EvaluationProgress};
+        use crate::core::app_state::EvaluationState;
+
+        let mut app = App::new();
+        app.evaluation_state = Some(EvaluationState {
+            handle: None,
+            progress: None,
+            results: None,
+            error: None,
+        });
+
+        let progress = EvaluationProgress {
+            current_task: 7,
+            total_tasks: 15,
+            task_id: "task-789".to_string(),
+            current_step: None,
+            max_steps: None,
+            last_tool: None,
+            total_tokens: 0,
+            total_cost: 0.0,
+            message: None,
+            last_result: None,
+        };
+
+        let event = Event::EvaluationProgress(progress);
+        app.update(event).unwrap();
+
+        // Should use default message format
+        assert!(app.status_message.contains("7/15") || app.status_message.contains("task-789"));
+    }
+
+    // ===== Evaluation Complete Event Tests =====
+
+    #[test]
+    fn test_evaluation_complete_event() {
+        use crate::ai::evaluation::EvaluationResults;
+        use crate::core::event::Event;
+        use crate::core::app_state::EvaluationState;
+        use chrono::Utc;
+        use std::collections::HashMap;
+
+        let mut app = App::new();
+        app.evaluation_state = Some(EvaluationState {
+            handle: None,
+            progress: None,
+            results: None,
+            error: None,
+        });
+
+        let results = EvaluationResults {
+            config_name: "M1".to_string(),
+            results: vec![],
+            accuracy: 65.5,
+            avg_cost_usd: 0.05,
+            avg_duration_ms: 1500.0,
+            total_tasks: 20,
+            tasks_solved: 13,
+            by_complexity: HashMap::new(),
+            timestamp: Utc::now(),
+        };
+
+        let event = Event::EvaluationComplete(results.clone());
+        app.update(event).unwrap();
+
+        // Should update state and show success toast
+        assert!(app.evaluation_state.as_ref().unwrap().results.is_some());
+        assert!(app.evaluation_state.as_ref().unwrap().handle.is_none());
+        assert!(app.status_message.contains("65.5") || app.status_message.contains("13/20"));
+    }
+
+    // ===== Evaluation Error Event Tests =====
+
+    #[test]
+    fn test_evaluation_error_event() {
+        use crate::core::event::Event;
+        use crate::core::app_state::{AppScreen, EvaluationState};
+
+        let mut app = App::new();
+        app.screen = AppScreen::Evaluation;
+        app.evaluation_state = Some(EvaluationState {
+            handle: None,
+            progress: None,
+            results: None,
+            error: None,
+        });
+
+        let error = "Network timeout".to_string();
+        let event = Event::EvaluationError(error.clone());
+        app.update(event).unwrap();
+
+        // Should update error state and return to Main
+        assert!(app.evaluation_state.as_ref().unwrap().error.is_some());
+        assert_eq!(*app.screen(), AppScreen::Main);
+        assert!(app.status_message.contains("Network timeout"));
+    }
+
+    #[test]
+    fn test_evaluation_error_sets_error_field() {
+        use crate::core::event::Event;
+        use crate::core::app_state::EvaluationState;
+
+        let mut app = App::new();
+        app.evaluation_state = Some(EvaluationState {
+            handle: None,
+            progress: None,
+            results: None,
+            error: None,
+        });
+
+        let error_msg = "API rate limit exceeded".to_string();
+        let event = Event::EvaluationError(error_msg.clone());
+        app.update(event).unwrap();
+
+        let eval_state = app.evaluation_state.as_ref().unwrap();
+        assert_eq!(eval_state.error.as_ref().unwrap(), &error_msg);
+    }
+
+    #[test]
+    fn test_evaluation_error_clears_handle() {
+        use crate::core::event::Event;
+        use crate::core::app_state::EvaluationState;
+
+        let mut app = App::new();
+        app.evaluation_state = Some(EvaluationState {
+            handle: None,
+            progress: None,
+            results: None,
+            error: None,
+        });
+
+        let event = Event::EvaluationError("Error".to_string());
+        app.update(event).unwrap();
+
+        // Handle should be cleared on error
+        assert!(app.evaluation_state.as_ref().unwrap().handle.is_none());
+    }
 }
