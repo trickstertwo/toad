@@ -13,11 +13,11 @@
 - [x] **M1: Simple Baseline** (100% - 96 tests)
 - [x] **M2: Context + Smart Tests** (100% - 82 tests) ✅ FULLY WIRED
 - [x] **M3: Multi-Model Racing** (100% - 18 tests) ✅ TRAE +4.2 points
-- [x] **M4: Cascading Routing** (100% - 20 tests) ✅ DavaJ 70% cost reduction
+- [x] **M4: Cascading Routing** (100% - 19 tests) ✅ DavaJ 70% cost reduction
 - [ ] **M5: Production Ready** (0%)
 
 **Current Status:** ✅ M1 + M2 + M3 + M4 100% Complete & FULLY INTEGRATED
-**Total Tests:** 1689 passing (1669 base + 20 routing/M4)
+**Total Tests:** 1688 passing (1669 base + 19 routing/M4)
 
 ---
 
@@ -359,8 +359,8 @@ cargo run --release -- eval --count 50 --milestone 1
     - [x] 3-way routing: M4 cascade | M3 racing | M1/M2 direct
 - [x] Local model setup documentation (CHANGELOG.md)
 - [x] Cost tracking and analysis
-- [x] Tests (20/12 target ✅ exceeded)
-    - 13 routing tests (classifier + router + trait)
+- [x] Tests (19/12 target ✅ exceeded)
+    - 12 routing tests (classifier + router)
     - 7 integration tests (config, metadata, tier selection, cost)
 
 **Cost Model** (Validated in tests):
@@ -416,7 +416,7 @@ cargo run --release -- eval --count 50 --milestone 1
 
 **Success Criteria:**
 - Infrastructure: ✅ COMPLETE
-- Tests: ✅ 20/12 (167% of target)
+- Tests: ✅ 19/12 (158% of target)
 - Documentation: ✅ Comprehensive rustdoc + CHANGELOG
 - Integration: ✅ Fully wired to evaluation harness
 - Ready for A/B testing: ✅ YES

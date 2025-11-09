@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Task difficulty classifier (Easy/Medium/Hard heuristics)
   - Local-first strategy: 80% of tasks run free on Ollama
   - Cloud fallback for hard tasks requiring premium models
-  - Comprehensive test suite (20 tests: 13 routing + 7 integration)
+  - Comprehensive test suite (19 tests: 12 routing + 7 integration)
   - Evidence-based implementation following DavaJ research (2024)
   - Cost model: $200 for 500 tasks vs $1000 cloud-only (80% reduction)
   - **Requirements**: Ollama with qwen2.5-coder:7b and :32b for local tiers
