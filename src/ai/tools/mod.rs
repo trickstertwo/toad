@@ -125,13 +125,33 @@ impl ToolRegistry {
         self.tools.len()
     }
 
-    /// Create registry with M1 baseline tools
+    /// Create registry with M1 baseline tools (no validation)
     pub fn m1_baseline() -> Self {
         let mut registry = Self::new();
 
         // Register all M1 baseline tools (8 total)
         registry.register(Box::new(ReadTool::new()));
         registry.register(Box::new(WriteTool::new()));
+        registry.register(Box::new(ListTool::new()));
+        registry.register(Box::new(EditTool::new()));
+        registry.register(Box::new(BashTool::new()));
+        registry.register(Box::new(GrepTool::new()));
+        registry.register(Box::new(GitDiffTool::new()));
+        registry.register(Box::new(GitStatusTool::new()));
+
+        registry
+    }
+
+    /// Create registry with M1 baseline tools and feature flags
+    pub fn m1_with_features(features: &crate::config::FeatureFlags) -> Self {
+        let mut registry = Self::new();
+
+        // Register all M1 baseline tools (8 total)
+        // WriteTool uses tree-sitter validation if enabled
+        registry.register(Box::new(ReadTool::new()));
+        registry.register(Box::new(WriteTool::with_validation(
+            features.tree_sitter_validation,
+        )));
         registry.register(Box::new(ListTool::new()));
         registry.register(Box::new(EditTool::new()));
         registry.register(Box::new(BashTool::new()));

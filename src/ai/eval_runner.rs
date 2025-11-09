@@ -263,8 +263,8 @@ async fn run_single_task(task: &Task, config: &ToadConfig) -> anyhow::Result<Tas
         config.features.prompt_caching,
     )?;
 
-    // Create tool registry
-    let tool_registry = ToolRegistry::m1_baseline();
+    // Create tool registry with feature flags
+    let tool_registry = ToolRegistry::m1_with_features(&config.features);
 
     // Create agent
     let agent = Agent::new(llm_client, tool_registry);
