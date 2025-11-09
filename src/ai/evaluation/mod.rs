@@ -267,7 +267,7 @@ impl EvaluationHarness {
     }
 
     /// Run a single task with the agent
-    async fn run_task(&self, task: &Task, _config: &ToadConfig) -> Result<TaskResult> {
+    async fn run_task(&self, task: &Task, config: &ToadConfig) -> Result<TaskResult> {
         use crate::ai::agent::Agent;
         use crate::ai::llm::{AnthropicClient, get_api_key};
         use crate::ai::metrics::MetricsCollector;
@@ -280,11 +280,16 @@ impl EvaluationHarness {
         let api_key = get_api_key()
             .context("Failed to get API key. Set ANTHROPIC_API_KEY environment variable")?;
 
-        // Create LLM client
-        let llm_client = AnthropicClient::new(api_key).with_model("claude-sonnet-4-20250514");
+        // Create LLM client with feature flags
+        let mut llm_client = AnthropicClient::new(api_key).with_model("claude-sonnet-4-20250514");
 
-        // Create tool registry based on milestone
-        let tool_registry = ToolRegistry::m1_baseline();
+        // Enable prompt caching if configured (90% cost reduction)
+        if config.features.prompt_caching {
+            llm_client = llm_client.with_prompt_caching(true);
+        }
+
+        // Create tool registry with feature flags (tree-sitter validation, etc.)
+        let tool_registry = ToolRegistry::m1_with_features(&config.features);
 
         // Create agent
         let agent = Agent::new(Box::new(llm_client), tool_registry);
@@ -402,5 +407,31 @@ mod tests {
         let results = harness.evaluate(&config).await.unwrap();
 
         assert_eq!(results.total_tasks, 1);
+    }
+
+    #[test]
+    fn test_m1_config_has_required_features() {
+        use crate::config::FeatureFlags;
+
+        let m1_features = FeatureFlags::milestone_1();
+
+        // M1 MUST have these enabled
+        assert!(m1_features.prompt_caching, "M1 must have prompt caching enabled (90% cost reduction)");
+        assert!(m1_features.tree_sitter_validation, "M1 must have tree-sitter validation enabled");
+
+        // M1 should NOT have these (simple baseline)
+        assert!(!m1_features.context_ast, "M1 should not have AST context (that's M2)");
+        assert!(!m1_features.smart_test_selection, "M1 should not have smart test selection (that's M2)");
+        assert!(!m1_features.routing_multi_model, "M1 should not have multi-model routing (that's M3)");
+    }
+
+    #[test]
+    fn test_m1_baseline_config_uses_features() {
+        let config = ToadConfig::for_milestone(1);
+
+        // Verify M1 config has the right features
+        assert!(config.features.prompt_caching);
+        assert!(config.features.tree_sitter_validation);
+        assert!(!config.features.context_ast);
     }
 }
