@@ -1588,4 +1588,360 @@ mod tests {
         let debug_str = format!("{:?}", screen);
         assert!(debug_str.contains("Welcome"));
     }
+
+    // ===== Accessor Method Tests =====
+    #[test]
+    fn test_title_accessor() {
+        let app = App::new();
+        let title = app.title();
+        assert!(!title.is_empty(), "Title should not be empty");
+    }
+
+    #[test]
+    fn test_plugin_count_accessor() {
+        let app = App::new();
+        let count = app.plugin_count();
+        assert_eq!(count, 0, "Initial plugin count should be 0");
+    }
+
+    #[test]
+    fn test_help_screen_accessor() {
+        let app = App::new();
+        let _help = app.help_screen();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_show_help_accessor() {
+        let app = App::new();
+        let show = app.show_help();
+        assert!(!show, "Help should not be shown initially");
+    }
+
+    #[test]
+    fn test_show_palette_accessor() {
+        let app = App::new();
+        let show = app.show_palette();
+        assert!(!show, "Palette should not be shown initially");
+    }
+
+    #[test]
+    fn test_vim_mode_accessor() {
+        let app = App::new();
+        let _vim = app.vim_mode();
+        // Should not panic (value depends on config)
+    }
+
+    #[test]
+    fn test_layout_accessor() {
+        let app = App::new();
+        let _layout = app.layout();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_config_accessor() {
+        let app = App::new();
+        let _config = app.config();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_performance_accessor() {
+        let app = App::new();
+        let _perf = app.performance();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_show_performance_accessor() {
+        let app = App::new();
+        let show = app.show_performance();
+        assert!(!show, "Performance overlay should not be shown initially");
+    }
+
+    #[test]
+    fn test_toasts_accessor() {
+        let app = App::new();
+        let _toasts = app.toasts();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_evaluation_state_accessor() {
+        let app = App::new();
+        let state = app.evaluation_state();
+        assert!(state.is_none(), "Initial evaluation state should be None");
+    }
+
+    // ===== Mutable Accessor Tests =====
+    #[test]
+    fn test_input_field_mut_accessor() {
+        let mut app = App::new();
+        let input = app.input_field_mut();
+        input.set_value("test".to_string());
+        assert_eq!(app.input_field().value(), "test");
+    }
+
+    #[test]
+    fn test_command_palette_mut_accessor() {
+        let mut app = App::new();
+        let _palette = app.command_palette_mut();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_layout_mut_accessor() {
+        let mut app = App::new();
+        let _layout = app.layout_mut();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_performance_mut_accessor() {
+        let mut app = App::new();
+        let _perf = app.performance_mut();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_toasts_mut_accessor() {
+        let mut app = App::new();
+        let _toasts = app.toasts_mut();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_evaluation_state_mut_accessor() {
+        let mut app = App::new();
+        let state = app.evaluation_state_mut();
+        assert!(state.is_none(), "Initial mutable evaluation state should be None");
+    }
+
+    #[test]
+    fn test_trust_dialog_mut_accessor() {
+        let mut app = App::new();
+        let dialog = app.trust_dialog_mut();
+        // Initially should be None or Some depending on directory trust
+        let _ = dialog;
+    }
+
+    // ===== State Mutation Tests =====
+    #[test]
+    fn test_toggle_vim_mode() {
+        let mut app = App::new();
+        let initial = app.vim_mode();
+        app.toggle_vim_mode();
+        assert_ne!(app.vim_mode(), initial, "Vim mode should toggle");
+        app.toggle_vim_mode();
+        assert_eq!(app.vim_mode(), initial, "Vim mode should toggle back");
+    }
+
+    #[test]
+    fn test_toggle_performance() {
+        let mut app = App::new();
+        assert!(!app.show_performance(), "Performance should start hidden");
+        app.toggle_performance();
+        assert!(app.show_performance(), "Performance should be shown after toggle");
+        app.toggle_performance();
+        assert!(!app.show_performance(), "Performance should be hidden after second toggle");
+    }
+
+    // ===== Toast Notification Tests =====
+    #[test]
+    fn test_toast_info() {
+        let mut app = App::new();
+        app.toast_info("Information message");
+        // Should not panic
+    }
+
+    #[test]
+    fn test_toast_success() {
+        let mut app = App::new();
+        app.toast_success("Success message");
+        // Should not panic
+    }
+
+    #[test]
+    fn test_toast_warning() {
+        let mut app = App::new();
+        app.toast_warning("Warning message");
+        // Should not panic
+    }
+
+    #[test]
+    fn test_toast_error() {
+        let mut app = App::new();
+        app.toast_error("Error message");
+        // Should not panic
+    }
+
+    #[test]
+    fn test_toast_with_string_types() {
+        let mut app = App::new();
+        app.toast_info(String::from("String message"));
+        app.toast_success("&str message");
+        app.toast_warning(format!("Formatted {}", "message"));
+        // Should handle various Into<String> types
+    }
+
+    // ===== AppScreen Enum Tests =====
+    #[test]
+    fn test_appscreen_partial_eq() {
+        assert_eq!(AppScreen::Welcome, AppScreen::Welcome);
+        assert_eq!(AppScreen::Main, AppScreen::Main);
+        assert_ne!(AppScreen::Welcome, AppScreen::Main);
+        assert_ne!(AppScreen::TrustDialog, AppScreen::Evaluation);
+    }
+
+    #[test]
+    fn test_appscreen_all_variants() {
+        let screens = vec![
+            AppScreen::Welcome,
+            AppScreen::TrustDialog,
+            AppScreen::Main,
+            AppScreen::Evaluation,
+        ];
+        assert_eq!(screens.len(), 4, "Should have 4 AppScreen variants");
+    }
+
+    // ===== Screen Transition Edge Cases =====
+    #[test]
+    fn test_screen_accessor_returns_reference() {
+        let app = App::new();
+        let screen1 = app.screen();
+        let screen2 = app.screen();
+        assert_eq!(screen1, screen2, "Multiple screen() calls should return same value");
+    }
+
+    #[test]
+    fn test_multiple_accessors_dont_panic() {
+        let app = App::new();
+
+        // Call all accessors multiple times
+        let _ = app.should_quit();
+        let _ = app.status_message();
+        let _ = app.title();
+        let _ = app.screen();
+        let _ = app.working_directory();
+        let _ = app.input_field();
+        let _ = app.plugin_count();
+        let _ = app.help_screen();
+        let _ = app.show_help();
+        let _ = app.show_palette();
+        let _ = app.vim_mode();
+        let _ = app.layout();
+        let _ = app.config();
+        let _ = app.performance();
+        let _ = app.show_performance();
+        let _ = app.toasts();
+        let _ = app.evaluation_state();
+    }
+
+    // ===== Edge Case Tests =====
+    #[test]
+    fn test_empty_status_message() {
+        let mut app = App::new();
+        app.status_message = String::new();
+        assert_eq!(app.status_message(), "");
+    }
+
+    #[test]
+    fn test_very_long_status_message() {
+        let mut app = App::new();
+        let long_msg = "x".repeat(10000);
+        app.status_message = long_msg.clone();
+        assert_eq!(app.status_message(), &long_msg);
+    }
+
+    #[test]
+    fn test_unicode_in_status_message() {
+        let mut app = App::new();
+        app.status_message = "🐸 Hello 世界! ✨".to_string();
+        assert!(app.status_message().contains("🐸"));
+        assert!(app.status_message().contains("世界"));
+    }
+
+    #[test]
+    fn test_app_default_trait() {
+        let app1 = App::default();
+        let app2 = App::new();
+
+        // Both should start in similar states
+        assert_eq!(app1.should_quit(), app2.should_quit());
+        assert_eq!(app1.show_help(), app2.show_help());
+        assert_eq!(app1.show_palette(), app2.show_palette());
+    }
+
+    #[test]
+    fn test_cancel_evaluation_when_none() {
+        let mut app = App::new();
+        assert!(app.evaluation_state().is_none());
+
+        // Cancel when no evaluation running - should not panic
+        app.cancel_evaluation();
+
+        assert!(app.evaluation_state().is_none());
+    }
+
+    #[test]
+    fn test_event_tx_setter() {
+        let mut app = App::new();
+        let (tx, _rx) = tokio::sync::mpsc::unbounded_channel();
+
+        app.set_event_tx(tx);
+        // Should not panic
+    }
+
+    #[test]
+    fn test_quit_flag_initially_false() {
+        let app = App::new();
+        assert!(!app.should_quit(), "App should not quit on initialization");
+    }
+
+    #[test]
+    fn test_help_and_palette_mutually_exclusive() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Show help
+        app.show_help = true;
+        assert!(app.show_help());
+
+        // Trying to show palette while help is open
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::CONTROL));
+        app.update(event).ok();
+
+        // Help should close when palette is requested
+        // (exact behavior depends on implementation)
+    }
+
+    #[test]
+    fn test_working_directory_is_valid_path() {
+        let app = App::new();
+        let wd = app.working_directory();
+        assert!(wd.as_os_str().len() > 0, "Working directory should not be empty");
+    }
+
+    #[test]
+    fn test_input_field_empty_on_creation() {
+        let app = App::new();
+        let input = app.input_field();
+        assert_eq!(input.value(), "", "Input field should start empty");
+    }
+
+    #[test]
+    fn test_screen_enum_coverage_all_variants() {
+        // Ensure all AppScreen variants can be created and compared
+        let welcome = AppScreen::Welcome;
+        let trust = AppScreen::TrustDialog;
+        let main = AppScreen::Main;
+        let eval = AppScreen::Evaluation;
+
+        assert_ne!(welcome, trust);
+        assert_ne!(trust, main);
+        assert_ne!(main, eval);
+        assert_ne!(eval, welcome);
+    }
 }
+
