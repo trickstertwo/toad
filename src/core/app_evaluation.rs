@@ -156,3 +156,31 @@ impl App {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::core::app::App;
+
+    #[test]
+    fn test_cancel_evaluation_when_none() {
+        let mut app = App::new();
+        assert!(app.evaluation_state().is_none());
+
+        // Cancel when no evaluation running - should not panic
+        app.cancel_evaluation();
+
+        assert!(app.evaluation_state().is_none());
+    }
+
+    #[test]
+    fn test_set_event_tx_allows_evaluation() {
+        use tokio::sync::mpsc;
+
+        let mut app = App::new();
+        let (tx, _rx) = mpsc::unbounded_channel();
+
+        app.set_event_tx(tx);
+        // event_tx should now be Some, enabling evaluations
+        assert!(app.event_tx.is_some());
+    }
+}

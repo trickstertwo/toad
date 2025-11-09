@@ -229,3 +229,138 @@ impl App {
         &mut self.tabs
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::core::app::App;
+
+    // ===== Mutable Accessor Tests =====
+
+    #[test]
+    fn test_input_field_mut_accessor() {
+        let mut app = App::new();
+        let input = app.input_field_mut();
+        input.set_value("test".to_string());
+        assert_eq!(app.input_field().value(), "test");
+    }
+
+    #[test]
+    fn test_command_palette_mut_accessor() {
+        let mut app = App::new();
+        let _palette = app.command_palette_mut();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_layout_mut_accessor() {
+        let mut app = App::new();
+        let _layout = app.layout_mut();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_performance_mut_accessor() {
+        let mut app = App::new();
+        let _perf = app.performance_mut();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_toasts_mut_accessor() {
+        let mut app = App::new();
+        let _toasts = app.toasts_mut();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_evaluation_state_mut_accessor() {
+        let mut app = App::new();
+        let state = app.evaluation_state_mut();
+        assert!(state.is_none(), "Initial mutable evaluation state should be None");
+    }
+
+    #[test]
+    fn test_trust_dialog_mut_accessor() {
+        let mut app = App::new();
+        let dialog = app.trust_dialog_mut();
+        // Initially should be None or Some depending on directory trust
+        let _ = dialog;
+    }
+
+    #[test]
+    fn test_session_mut_accessor() {
+        let mut app = App::new();
+        let session = app.session_mut();
+        session.set_plugin_count(42);
+        assert_eq!(app.session().plugin_count(), 42);
+    }
+
+    #[test]
+    fn test_tabs_mut_accessor() {
+        let mut app = App::new();
+        let tabs = app.tabs_mut();
+        // Should allow mutation
+        let _ = tabs;
+    }
+
+    // ===== State Mutation Tests =====
+
+    #[test]
+    fn test_toggle_vim_mode() {
+        let mut app = App::new();
+        let initial = app.vim_mode();
+        app.toggle_vim_mode();
+        assert_ne!(app.vim_mode(), initial, "Vim mode should toggle");
+        app.toggle_vim_mode();
+        assert_eq!(app.vim_mode(), initial, "Vim mode should toggle back");
+    }
+
+    #[test]
+    fn test_toggle_performance() {
+        let mut app = App::new();
+        assert!(!app.show_performance(), "Performance should start hidden");
+        app.toggle_performance();
+        assert!(app.show_performance(), "Performance should be shown after toggle");
+        app.toggle_performance();
+        assert!(!app.show_performance(), "Performance should be hidden after second toggle");
+    }
+
+    // ===== Toast Notification Tests =====
+
+    #[test]
+    fn test_toast_info() {
+        let mut app = App::new();
+        app.toast_info("Information message");
+        // Should not panic
+    }
+
+    #[test]
+    fn test_toast_success() {
+        let mut app = App::new();
+        app.toast_success("Success message");
+        // Should not panic
+    }
+
+    #[test]
+    fn test_toast_warning() {
+        let mut app = App::new();
+        app.toast_warning("Warning message");
+        // Should not panic
+    }
+
+    #[test]
+    fn test_toast_error() {
+        let mut app = App::new();
+        app.toast_error("Error message");
+        // Should not panic
+    }
+
+    #[test]
+    fn test_toast_with_string_types() {
+        let mut app = App::new();
+        app.toast_info(String::from("String message"));
+        app.toast_success("&str message");
+        app.toast_warning(format!("Formatted {}", "message"));
+        // Should handle various Into<String> types
+    }
+}

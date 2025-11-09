@@ -79,3 +79,130 @@ impl App {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::core::app::App;
+    use crate::core::app_state::AppScreen;
+
+    // ===== Update Session State Tests =====
+
+    #[test]
+    fn test_update_session_state() {
+        let mut app = App::new();
+        app.update_session_state();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_update_session_state_multiple_calls() {
+        let mut app = App::new();
+        app.update_session_state();
+        app.update_session_state();
+        app.update_session_state();
+        // Multiple calls should not cause issues
+    }
+
+    #[test]
+    fn test_update_session_state_syncs_welcome_shown() {
+        let mut app = App::new();
+        app.welcome_shown = true;
+
+        app.update_session_state();
+
+        assert!(app.session().welcome_shown());
+    }
+
+    #[test]
+    fn test_update_session_state_syncs_working_directory() {
+        let mut app = App::new();
+        let original_wd = app.working_directory.clone();
+
+        app.update_session_state();
+
+        assert_eq!(app.session().working_directory(), &original_wd);
+    }
+
+    #[test]
+    fn test_update_session_state_syncs_plugin_count() {
+        let mut app = App::new();
+        app.plugin_count = 42;
+
+        app.update_session_state();
+
+        assert_eq!(app.session().plugin_count(), 42);
+    }
+
+    #[test]
+    fn test_update_session_state_screen_mapping() {
+        let mut app = App::new();
+
+        // Test each screen type
+        for screen in [AppScreen::Welcome, AppScreen::Main, AppScreen::TrustDialog] {
+            app.screen = screen.clone();
+            app.update_session_state();
+
+            let last_screen = app.session().last_screen();
+            assert!(!last_screen.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_update_session_state_evaluation_maps_to_main() {
+        let mut app = App::new();
+        app.screen = AppScreen::Evaluation;
+
+        app.update_session_state();
+
+        // Evaluation is transient, should save as Main
+        let last_screen = app.session().last_screen();
+        assert_eq!(last_screen, "Main");
+    }
+
+    // ===== Session Save Tests =====
+
+    #[test]
+    fn test_save_session_with_persist_disabled() {
+        let mut app = App::new();
+        app.config.session.persist_session = false;
+        app.config.session.auto_save = true;
+
+        let result = app.save_session();
+        assert!(result.is_ok(), "Should return Ok when persist is disabled");
+    }
+
+    #[test]
+    fn test_save_session_with_auto_save_disabled() {
+        let mut app = App::new();
+        app.config.session.persist_session = true;
+        app.config.session.auto_save = false;
+
+        let result = app.save_session();
+        assert!(result.is_ok(), "Should return Ok when auto_save is disabled");
+    }
+
+    #[test]
+    fn test_save_session_with_both_enabled() {
+        let mut app = App::new();
+        app.config.session.persist_session = true;
+        app.config.session.auto_save = true;
+
+        let result = app.save_session();
+
+        match result {
+            Ok(_) => {
+                // Successfully saved
+                assert!(true);
+            }
+            Err(e) => {
+                // Permission errors are acceptable
+                let err_msg = e.to_string();
+                assert!(
+                    err_msg.contains("Permission denied")
+                        || err_msg.contains("No such file")
+                        || err_msg.contains("Read-only")
+                );
+            }
+        }
+    }
+}

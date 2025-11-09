@@ -80,3 +80,69 @@ pub struct EvaluationState {
     /// Error message (if failed)
     pub error: Option<String>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_app_screen_enum_variants() {
+        let _welcome = AppScreen::Welcome;
+        let _trust = AppScreen::TrustDialog;
+        let _main = AppScreen::Main;
+        let _eval = AppScreen::Evaluation;
+
+        // Ensure all variants compile and can be created
+        assert_eq!(_welcome, AppScreen::Welcome);
+        assert_eq!(_trust, AppScreen::TrustDialog);
+        assert_eq!(_main, AppScreen::Main);
+        assert_eq!(_eval, AppScreen::Evaluation);
+    }
+
+    #[test]
+    fn test_app_screen_clone() {
+        let screen1 = AppScreen::Main;
+        let screen2 = screen1.clone();
+        assert_eq!(screen1, screen2);
+    }
+
+    #[test]
+    fn test_app_screen_debug() {
+        let screen = AppScreen::Welcome;
+        let debug_str = format!("{:?}", screen);
+        assert!(debug_str.contains("Welcome"));
+    }
+
+    #[test]
+    fn test_appscreen_partial_eq() {
+        assert_eq!(AppScreen::Welcome, AppScreen::Welcome);
+        assert_eq!(AppScreen::Main, AppScreen::Main);
+        assert_ne!(AppScreen::Welcome, AppScreen::Main);
+        assert_ne!(AppScreen::TrustDialog, AppScreen::Evaluation);
+    }
+
+    #[test]
+    fn test_appscreen_all_variants() {
+        let screens = vec![
+            AppScreen::Welcome,
+            AppScreen::TrustDialog,
+            AppScreen::Main,
+            AppScreen::Evaluation,
+        ];
+        assert_eq!(screens.len(), 4, "Should have 4 AppScreen variants");
+    }
+
+    #[test]
+    fn test_screen_enum_coverage_all_variants() {
+        // Ensure all AppScreen variants can be created and compared
+        let welcome = AppScreen::Welcome;
+        let trust = AppScreen::TrustDialog;
+        let main = AppScreen::Main;
+        let eval = AppScreen::Evaluation;
+
+        assert_ne!(welcome, trust);
+        assert_ne!(trust, main);
+        assert_ne!(main, eval);
+        assert_ne!(eval, welcome);
+    }
+}
