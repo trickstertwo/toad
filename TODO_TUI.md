@@ -614,6 +614,13 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
   - **Microsoft Teams**: Board activity in Teams channels
 
 #### UX Excellence
+- [x] **Keyboard Macro Recorder** (Vim-inspired macro system) ✅ COMPLETED
+  - KeyboardRecorder with record/playback by register (like Vim's q/@ commands) (16 unit tests)
+  - Records key sequences with timing preservation
+  - Supports 26 registers (a-z) for storing different macros
+  - Playback with/without timing preservation
+  - List, delete, and clear macros
+  - Recording state tracking (Idle/Recording/Playing)
 - [ ] **Keyboard Shortcuts** (Vim-inspired efficiency)
   - **Navigation**: h/j/k/l to move between cards, columns
   - **Actions**: c (create card), e (edit), d (delete), / (search), ? (help)
@@ -621,11 +628,11 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
   - **Quick Move**: m + column number to move card
   - **Archive**: x to archive completed cards
 
-- [x] **Visual Polish** (Best-in-class aesthetics) ✅ PARTIALLY COMPLETED
+- [x] **Visual Polish** (Best-in-class aesthetics) ✅ COMPLETED
   - [x] **Gradient Rendering**: Linear/radial gradients with color interpolation ✅ (Gradient module with 6 predefined gradients, fallback support, 16 unit tests)
   - [x] **Enhanced Borders**: Gradient borders, shadows, rounded corners, glow effects ✅ (EnhancedBorder with 4 effects, 3 thicknesses, 7 predefined styles, 17 unit tests)
   - [x] **Smooth Animations**: Card drag, column collapse, view transitions ✅ (Animation module already exists)
-  - [ ] **Board Backgrounds**: Gradients, patterns, or uploaded images (gradient support ready, integration pending)
+  - [x] **Board Backgrounds**: Gradients, patterns, or uploaded images ✅ (BoardBackground with 4 styles, 6 pattern types, gradient/solid/pattern support, 7 predefined backgrounds, 16 unit tests)
   - [x] **Dark/Light Themes**: Auto-switch based on terminal theme ✅ (Theme system already exists)
   - **Emoji Support**: 🎯 🔥 ✨ in card titles and tags (already supported in Rust/Ratatui)
   - [x] **Nerd Font Icons**: Beautiful file type, priority, and status icons ✅ (NerdFonts module already exists)

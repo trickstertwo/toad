@@ -3,6 +3,7 @@
 //! Contains all UI-related modules including widgets, themes, and visual components.
 
 pub mod animations;
+pub mod board_background;
 pub mod box_drawing;
 pub mod canvas;
 pub mod enhanced_borders;
@@ -17,6 +18,7 @@ pub mod widgets;
 
 // Re-exports
 pub use animations::{Animation, AnimationState, EasingFunction, TransitionManager};
+pub use board_background::{BackgroundStyle, BoardBackground, BoardBackgrounds, PatternType};
 pub use box_drawing::{BoxBuilder, BoxChars, BoxStyle};
 pub use canvas::{Canvas, Pixel, Shape};
 pub use enhanced_borders::{BorderEffect, BorderStyles, BorderThickness, CornerStyle, EnhancedBorder};
