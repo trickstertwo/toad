@@ -5,6 +5,7 @@
 
 pub mod achievements;
 pub mod advanced_mouse;
+pub mod ai_task_intelligence;
 pub mod async_ops;
 pub mod background_tasks;
 pub mod batch_ops;
@@ -33,6 +34,7 @@ pub mod keyboard_shortcuts;
 pub mod keybinds;
 pub mod mouse;
 pub mod multiple_views;
+pub mod plugin_system;
 pub mod project_management;
 pub mod rich_task_cards;
 pub mod task_dependencies;
@@ -48,6 +50,10 @@ pub use achievements::{
     UnlockedAchievement, UserStats,
 };
 pub use advanced_mouse::{AdvancedMouseHandler, MouseButton, MouseGesture};
+pub use ai_task_intelligence::{
+    AITaskIntelligence, Bottleneck, BurndownForecast, CategorySuggestion, EffortEstimation,
+    PrioritySuggestion, SuggestedPriority,
+};
 pub use async_ops::{AsyncOperation, AsyncOperationManager, OperationId, OperationStatus};
 pub use background_tasks::{BackgroundTask, BackgroundTaskManager, TaskId, TaskStatus};
 pub use batch_ops::{
@@ -109,6 +115,10 @@ pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
 pub use multiple_views::{
     CalendarMode, GroupBy, MindMapOrientation, SortBy, SortOrder, TimelineZoom, ViewConfig,
     ViewManager, ViewSettings, ViewType,
+};
+pub use plugin_system::{
+    Plugin, PluginCapability, PluginHook, PluginManager, PluginMetadata, PluginRuntime,
+    PluginState,
 };
 pub use project_management::{
     Project, ProjectManager, ProjectStatus, ProjectTemplate, Workspace,
