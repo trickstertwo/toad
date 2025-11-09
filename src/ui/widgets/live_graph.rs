@@ -684,4 +684,390 @@ mod tests {
             assert_eq!(graph.data_points(), 3);
         }
     }
+
+    // ============ COMPREHENSIVE EDGE CASE TESTS ============
+
+    #[test]
+    fn test_live_graph_with_very_long_title() {
+        let long_title = "A".repeat(10000);
+        let graph = LiveGraph::new(GraphType::Line).with_title(long_title.clone());
+        assert_eq!(graph.title, Some(long_title));
+    }
+
+    #[test]
+    fn test_live_graph_with_unicode_title() {
+        let graph = LiveGraph::new(GraphType::Line).with_title("📊 ライブグラフ 🎯");
+        assert!(graph.title.clone().unwrap().contains("📊"));
+        assert!(graph.title.clone().unwrap().contains("ライブグラフ"));
+    }
+
+    #[test]
+    fn test_live_graph_with_empty_title() {
+        let graph = LiveGraph::new(GraphType::Line).with_title("");
+        assert_eq!(graph.title, Some("".to_string()));
+    }
+
+    #[test]
+    fn test_live_graph_with_very_long_y_label() {
+        let long_label = "Y".repeat(1000);
+        let graph = LiveGraph::new(GraphType::Line).with_y_label(long_label.clone());
+        assert_eq!(graph.y_label, Some(long_label));
+    }
+
+    #[test]
+    fn test_live_graph_with_unicode_y_label() {
+        let graph = LiveGraph::new(GraphType::Bar).with_y_label("値 📈");
+        assert!(graph.y_label.clone().unwrap().contains("値"));
+    }
+
+    #[test]
+    fn test_live_graph_with_empty_y_label() {
+        let graph = LiveGraph::new(GraphType::Line).with_y_label("");
+        assert_eq!(graph.y_label, Some("".to_string()));
+    }
+
+    #[test]
+    fn test_live_graph_with_zero_max_points() {
+        let mut graph = LiveGraph::new(GraphType::Line).with_max_points(0);
+        graph.add_points(&[1.0, 2.0, 3.0]);
+        assert_eq!(graph.data_points(), 0);
+    }
+
+    #[test]
+    fn test_live_graph_with_one_max_point() {
+        let mut graph = LiveGraph::new(GraphType::Line).with_max_points(1);
+        graph.add_points(&[1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(graph.data_points(), 1);
+        assert_eq!(graph.latest(), Some(4.0));
+    }
+
+    #[test]
+    fn test_live_graph_with_very_large_max_points() {
+        let graph = LiveGraph::new(GraphType::Line).with_max_points(1_000_000);
+        assert_eq!(graph.max_points, 1_000_000);
+    }
+
+    #[test]
+    fn test_live_graph_with_many_data_points() {
+        let mut graph = LiveGraph::new(GraphType::Line).with_max_points(10_000);
+        for i in 0..10_000 {
+            graph.add_point(i as f64);
+        }
+        assert_eq!(graph.data_points(), 10_000);
+        assert_eq!(graph.latest(), Some(9_999.0));
+    }
+
+    #[test]
+    fn test_add_point_with_extreme_positive_value() {
+        let mut graph = LiveGraph::new(GraphType::Line);
+        graph.add_point(f64::MAX);
+        assert_eq!(graph.latest(), Some(f64::MAX));
+        assert_eq!(graph.max(), Some(f64::MAX));
+    }
+
+    #[test]
+    fn test_add_point_with_extreme_negative_value() {
+        let mut graph = LiveGraph::new(GraphType::Line);
+        graph.add_point(f64::MIN);
+        assert_eq!(graph.latest(), Some(f64::MIN));
+        assert_eq!(graph.min(), Some(f64::MIN));
+    }
+
+    #[test]
+    fn test_add_points_with_negative_values() {
+        let mut graph = LiveGraph::new(GraphType::Line);
+        graph.add_points(&[-100.0, -50.0, -75.0]);
+        assert_eq!(graph.min(), Some(-100.0));
+        assert_eq!(graph.max(), Some(-50.0));
+        assert_eq!(graph.average(), Some(-75.0));
+    }
+
+    #[test]
+    fn test_add_points_with_zero_values() {
+        let mut graph = LiveGraph::new(GraphType::Line);
+        graph.add_points(&[0.0, 0.0, 0.0]);
+        assert_eq!(graph.min(), Some(0.0));
+        assert_eq!(graph.max(), Some(0.0));
+        assert_eq!(graph.average(), Some(0.0));
+    }
+
+    #[test]
+    fn test_add_points_with_mixed_values() {
+        let mut graph = LiveGraph::new(GraphType::Line);
+        graph.add_points(&[-10.0, 0.0, 10.0, -5.0, 5.0]);
+        assert_eq!(graph.min(), Some(-10.0));
+        assert_eq!(graph.max(), Some(10.0));
+    }
+
+    #[test]
+    fn test_add_points_with_fractional_values() {
+        let mut graph = LiveGraph::new(GraphType::Line);
+        graph.add_points(&[0.123456789, 3.141592653, 2.718281828]);
+        assert_eq!(graph.data_points(), 3);
+        let avg = graph.average().unwrap();
+        let expected_avg = (0.123456789 + 3.141592653 + 2.718281828) / 3.0;
+        assert!((avg - expected_avg).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_add_points_empty_slice() {
+        let mut graph = LiveGraph::new(GraphType::Line);
+        graph.add_points(&[]);
+        assert_eq!(graph.data_points(), 0);
+    }
+
+    #[test]
+    fn test_windowing_with_single_point_overflow() {
+        let mut graph = LiveGraph::new(GraphType::Line).with_max_points(1);
+        for i in 0..100 {
+            graph.add_point(i as f64);
+        }
+        assert_eq!(graph.data_points(), 1);
+        assert_eq!(graph.latest(), Some(99.0));
+    }
+
+    #[test]
+    fn test_clear_after_many_points() {
+        let mut graph = LiveGraph::new(GraphType::Line).with_max_points(1000);
+        for i in 0..1000 {
+            graph.add_point(i as f64);
+        }
+        assert_eq!(graph.data_points(), 1000);
+        graph.clear();
+        assert_eq!(graph.data_points(), 0);
+        assert_eq!(graph.latest(), None);
+        assert_eq!(graph.min(), None);
+        assert_eq!(graph.max(), None);
+        assert_eq!(graph.average(), None);
+    }
+
+    #[test]
+    fn test_with_extreme_y_bounds() {
+        let graph = LiveGraph::new(GraphType::Line).with_y_bounds(f64::MIN, f64::MAX);
+        assert_eq!(graph.y_bounds, Some((f64::MIN, f64::MAX)));
+        assert!(!graph.auto_scale);
+    }
+
+    #[test]
+    fn test_with_negative_y_bounds() {
+        let graph = LiveGraph::new(GraphType::Line).with_y_bounds(-100.0, -10.0);
+        assert_eq!(graph.y_bounds, Some((-100.0, -10.0)));
+    }
+
+    #[test]
+    fn test_with_zero_sized_y_bounds() {
+        let graph = LiveGraph::new(GraphType::Line).with_y_bounds(50.0, 50.0);
+        assert_eq!(graph.y_bounds, Some((50.0, 50.0)));
+    }
+
+    #[test]
+    fn test_with_inverted_y_bounds() {
+        let graph = LiveGraph::new(GraphType::Line).with_y_bounds(100.0, 0.0);
+        assert_eq!(graph.y_bounds, Some((100.0, 0.0)));
+    }
+
+    #[test]
+    fn test_with_very_short_update_interval() {
+        let interval = Duration::from_nanos(1);
+        let graph = LiveGraph::new(GraphType::Line).with_update_interval(interval);
+        assert_eq!(graph.update_interval, interval);
+    }
+
+    #[test]
+    fn test_with_very_long_update_interval() {
+        let interval = Duration::from_secs(3600);
+        let graph = LiveGraph::new(GraphType::Line).with_update_interval(interval);
+        assert_eq!(graph.update_interval, interval);
+    }
+
+    #[test]
+    fn test_graph_type_equality() {
+        assert_eq!(GraphType::Line, GraphType::Line);
+        assert_eq!(GraphType::Bar, GraphType::Bar);
+        assert_eq!(GraphType::Scatter, GraphType::Scatter);
+        assert_ne!(GraphType::Line, GraphType::Bar);
+        assert_ne!(GraphType::Bar, GraphType::Scatter);
+        assert_ne!(GraphType::Scatter, GraphType::Line);
+    }
+
+    #[test]
+    fn test_graph_type_copy() {
+        let original = GraphType::Line;
+        let copied = original;
+        assert_eq!(original, copied);
+    }
+
+    #[test]
+    fn test_set_type_all_combinations() {
+        let mut graph = LiveGraph::new(GraphType::Line);
+
+        graph.set_type(GraphType::Bar);
+        assert_eq!(graph.graph_type, GraphType::Bar);
+
+        graph.set_type(GraphType::Scatter);
+        assert_eq!(graph.graph_type, GraphType::Scatter);
+
+        graph.set_type(GraphType::Line);
+        assert_eq!(graph.graph_type, GraphType::Line);
+    }
+
+    #[test]
+    fn test_clone() {
+        let mut original = LiveGraph::new(GraphType::Line)
+            .with_title("Original")
+            .with_max_points(50);
+        original.add_points(&[1.0, 2.0, 3.0]);
+
+        let cloned = original.clone();
+        assert_eq!(original.title, cloned.title);
+        assert_eq!(original.max_points, cloned.max_points);
+        assert_eq!(original.data_points(), cloned.data_points());
+        assert_eq!(original.latest(), cloned.latest());
+    }
+
+    #[test]
+    fn test_multiple_title_calls() {
+        let graph = LiveGraph::new(GraphType::Line)
+            .with_title("First")
+            .with_title("Second")
+            .with_title("Third");
+        assert_eq!(graph.title, Some("Third".to_string()));
+    }
+
+    #[test]
+    fn test_multiple_y_label_calls() {
+        let graph = LiveGraph::new(GraphType::Line)
+            .with_y_label("First")
+            .with_y_label("Second")
+            .with_y_label("Third");
+        assert_eq!(graph.y_label, Some("Third".to_string()));
+    }
+
+    #[test]
+    fn test_multiple_max_points_calls() {
+        let graph = LiveGraph::new(GraphType::Line)
+            .with_max_points(10)
+            .with_max_points(50)
+            .with_max_points(100);
+        assert_eq!(graph.max_points, 100);
+    }
+
+    #[test]
+    fn test_multiple_y_bounds_calls() {
+        let graph = LiveGraph::new(GraphType::Line)
+            .with_y_bounds(0.0, 10.0)
+            .with_y_bounds(10.0, 50.0)
+            .with_y_bounds(50.0, 100.0);
+        assert_eq!(graph.y_bounds, Some((50.0, 100.0)));
+    }
+
+    #[test]
+    fn test_average_with_single_point() {
+        let mut graph = LiveGraph::new(GraphType::Line);
+        graph.add_point(42.0);
+        assert_eq!(graph.average(), Some(42.0));
+    }
+
+    #[test]
+    fn test_average_with_extreme_values() {
+        let mut graph = LiveGraph::new(GraphType::Line);
+        graph.add_points(&[f64::MIN, f64::MAX]);
+        let avg = graph.average();
+        assert!(avg.is_some());
+    }
+
+    #[test]
+    fn test_min_max_with_single_point() {
+        let mut graph = LiveGraph::new(GraphType::Line);
+        graph.add_point(42.0);
+        assert_eq!(graph.min(), Some(42.0));
+        assert_eq!(graph.max(), Some(42.0));
+    }
+
+    #[test]
+    fn test_min_max_with_duplicate_values() {
+        let mut graph = LiveGraph::new(GraphType::Line);
+        graph.add_points(&[42.0, 42.0, 42.0]);
+        assert_eq!(graph.min(), Some(42.0));
+        assert_eq!(graph.max(), Some(42.0));
+    }
+
+    #[test]
+    fn test_auto_scale_toggle() {
+        let graph1 = LiveGraph::new(GraphType::Line);
+        assert!(graph1.auto_scale);
+
+        let graph2 = LiveGraph::new(GraphType::Line).with_y_bounds(0.0, 100.0);
+        assert!(!graph2.auto_scale);
+
+        let graph3 = LiveGraph::new(GraphType::Line)
+            .with_y_bounds(0.0, 100.0)
+            .with_auto_scale(true);
+        assert!(graph3.auto_scale);
+        assert_eq!(graph3.y_bounds, None);
+    }
+
+    #[test]
+    fn test_builder_pattern_chaining_complete() {
+        let mut graph = LiveGraph::new(GraphType::Scatter)
+            .with_title("Complete Test 📊")
+            .with_y_label("Values 📈")
+            .with_max_points(100)
+            .with_color(Color::Magenta)
+            .with_update_interval(Duration::from_millis(250))
+            .with_y_bounds(-10.0, 110.0);
+
+        graph.add_points(&[10.0, 20.0, 30.0, 40.0, 50.0]);
+
+        assert_eq!(graph.graph_type, GraphType::Scatter);
+        assert_eq!(graph.title, Some("Complete Test 📊".to_string()));
+        assert_eq!(graph.y_label, Some("Values 📈".to_string()));
+        assert_eq!(graph.max_points, 100);
+        assert_eq!(graph.color, Color::Magenta);
+        assert_eq!(graph.update_interval, Duration::from_millis(250));
+        assert_eq!(graph.y_bounds, Some((-10.0, 110.0)));
+        assert_eq!(graph.data_points(), 5);
+    }
+
+    #[test]
+    fn test_all_graph_types_with_data() {
+        for graph_type in [GraphType::Line, GraphType::Bar, GraphType::Scatter] {
+            let mut graph = LiveGraph::new(graph_type)
+                .with_title("Test")
+                .with_y_label("Value")
+                .with_max_points(50);
+
+            graph.add_points(&[10.0, 20.0, 30.0, 40.0, 50.0]);
+
+            assert_eq!(graph.data_points(), 5);
+            assert_eq!(graph.min(), Some(10.0));
+            assert_eq!(graph.max(), Some(50.0));
+            assert_eq!(graph.average(), Some(30.0));
+        }
+    }
+
+    #[test]
+    fn test_default_configuration() {
+        let graph = LiveGraph::default();
+        assert_eq!(graph.graph_type, GraphType::Line);
+        assert_eq!(graph.max_points, 100);
+        assert_eq!(graph.color, Color::Cyan);
+        assert_eq!(graph.update_interval, Duration::from_millis(100));
+        assert!(graph.auto_scale);
+        assert_eq!(graph.y_bounds, None);
+        assert_eq!(graph.title, None);
+        assert_eq!(graph.y_label, None);
+        assert_eq!(graph.data_points(), 0);
+    }
+
+    #[test]
+    fn test_rapid_updates() {
+        let mut graph = LiveGraph::new(GraphType::Line).with_max_points(1000);
+        for i in 0..1000 {
+            graph.add_point(i as f64 * 0.1);
+        }
+        assert_eq!(graph.data_points(), 1000);
+        assert_eq!(graph.min(), Some(0.0));
+        assert!((graph.max().unwrap() - 99.9).abs() < 1e-10);
+    }
 }
