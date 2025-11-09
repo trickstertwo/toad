@@ -413,10 +413,10 @@ mod tests {
     fn test_cache_filenames() {
         assert_eq!(
             DatasetSource::Verified.cache_filename(),
-            "swe_bench_verified.jsonl"
+            "swe_bench_verified.parquet"
         );
-        assert_eq!(DatasetSource::Lite.cache_filename(), "swe_bench_lite.jsonl");
-        assert_eq!(DatasetSource::Full.cache_filename(), "swe_bench_full.jsonl");
+        assert_eq!(DatasetSource::Lite.cache_filename(), "swe_bench_lite.parquet");
+        assert_eq!(DatasetSource::Full.cache_filename(), "swe_bench_full.parquet");
     }
 
     #[test]

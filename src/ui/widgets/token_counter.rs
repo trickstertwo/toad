@@ -419,9 +419,14 @@ mod tests {
     #[test]
     fn test_budget_tracking() {
         let mut counter = TokenCounter::new().with_budget(1.0);
-        counter.add_usage(TokenUsage::new(100_000, 50_000));
+        // Cost calculation: 50k input @ $3/1M + 25k output @ $15/1M = $0.15 + $0.375 = $0.525
+        counter.add_usage(TokenUsage::new(50_000, 25_000));
 
         let cost = counter.session_cost();
-        assert!(cost < 1.0);
+        assert!(cost < 1.0, "Expected cost < $1.0, got ${:.3}", cost);
+        assert!(cost > 0.0, "Expected cost > $0.0, got ${:.3}", cost);
+
+        // Verify cost is approximately $0.525
+        assert!((cost - 0.525).abs() < 0.001, "Expected ~$0.525, got ${:.3}", cost);
     }
 }
