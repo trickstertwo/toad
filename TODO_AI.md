@@ -67,11 +67,15 @@
 
 ---
 
-## ✅ Milestone 1: Simple Baseline Agent
+## ⚠️ Milestone 1: Simple Baseline Agent
 
-**Status:** COMPLETE (90 tests passing, 1 ignored)
+**Status:** 80% COMPLETE (88 tests passing, 2 failing, 1 ignored)
 **Commits:** 6 commits (99a2279 → b722f8d)
 **Target Accuracy:** 55-60% on SWE-bench
+
+**Missing Features:**
+- [ ] Prompt caching implementation (flag exists, not wired to API)
+- [ ] Tree-sitter validation (flag exists, not implemented in WriteTool)
 
 ### Tool System (8 Tools - 42 tests)
 - [x] Tool trait with async execution
@@ -133,25 +137,39 @@
 
 ---
 
-## 🔄 Milestone 2: Context + Routing
+## ⚠️ Milestone 2: Context + Routing
 
-**Status:** NOT STARTED (0%)
+**Status:** 40% COMPLETE (54 AST tests passing)
+**Commits:** 4 commits (f05ae9f → a8e3e11)
 **Prerequisites:** M1 baseline measured
 **Target:** +5% accuracy vs M1 (60-65%)
 
-### AST-Based Context (Feature: context_ast)
-- [ ] Add tree-sitter dependency
-- [ ] Implement AST parser for common languages
-    - [ ] Python parser
-    - [ ] JavaScript/TypeScript parser
-    - [ ] Rust parser (optional)
-- [ ] Context extraction from AST
-    - [ ] Function definitions
-    - [ ] Class structures
-    - [ ] Import statements
-- [ ] AST-based code search
-- [ ] Integration with PromptBuilder
-- [ ] Tests (target: 15 tests)
+**Completed:**
+- [x] AST infrastructure with tree-sitter
+- [x] Python/JavaScript/TypeScript parsers
+- [x] ContextBuilder with fluent API
+- [x] PromptBuilder integration
+
+**Missing:**
+- [ ] Wire AST to Agent.execute_task() (feature flag check)
+- [ ] Smart test selection (required by M2 config)
+- [ ] Integration tests for Agent + AST
+
+### AST-Based Context (Feature: context_ast) - ✅ INFRASTRUCTURE READY
+- [x] Add tree-sitter dependency (54 tests)
+- [x] Implement AST parser for common languages
+    - [x] Python parser (5 tests)
+    - [x] JavaScript/TypeScript parser (12 tests)
+    - [ ] Rust parser (optional - grammar already added)
+- [x] Context extraction from AST
+    - [x] Function definitions with signatures
+    - [x] Class structures with docstrings
+    - [x] Import statements
+- [x] ExtractorRegistry for auto-detection (11 tests)
+- [x] ContextBuilder with fluent API (8 tests)
+- [x] Integration with PromptBuilder (1 test)
+- [ ] **Wire to Agent** - Agent doesn't use AST yet!
+- [ ] Tests (54/15 target ✅ infrastructure, 0 integration)
 
 ### Semantic Routing (Feature: routing_semantic)
 - [ ] Implement routing logic

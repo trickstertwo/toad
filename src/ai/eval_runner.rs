@@ -231,7 +231,10 @@ async fn run_single_task(task: &Task, config: &ToadConfig) -> anyhow::Result<Tas
 
     // Create LLM client using provider factory
     use crate::ai::llm::LLMProvider;
-    let llm_client = LLMProvider::create(&config.provider)?;
+    let llm_client = LLMProvider::create_with_features(
+        &config.provider,
+        config.features.prompt_caching,
+    )?;
 
     // Create tool registry
     let tool_registry = ToolRegistry::m1_baseline();

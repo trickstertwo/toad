@@ -73,6 +73,7 @@ pub struct AnthropicClient {
     thinking: Option<ThinkingConfig>,
     service_tier: Option<ServiceTier>,
     beta_features: Vec<String>,
+    prompt_caching_enabled: bool,
 }
 
 impl AnthropicClient {
@@ -93,6 +94,7 @@ impl AnthropicClient {
             thinking: None,
             service_tier: None,
             beta_features: Vec::new(),
+            prompt_caching_enabled: false,
         }
     }
 
@@ -179,6 +181,18 @@ impl AnthropicClient {
         self.beta_features.extend(features);
         self
     }
+
+    /// Enable prompt caching (90% cost reduction)
+    ///
+    /// When enabled, adds cache breakpoints to system and tool messages
+    /// to reuse computation across requests. Requires beta header.
+    pub fn with_prompt_caching(mut self, enabled: bool) -> Self {
+        self.prompt_caching_enabled = enabled;
+        if enabled && !self.beta_features.contains(&"prompt-caching-2024-07-31".to_string()) {
+            self.beta_features.push("prompt-caching-2024-07-31".to_string());
+        }
+        self
+    }
 }
 
 #[async_trait::async_trait]
@@ -197,7 +211,16 @@ impl LLMClient for AnthropicClient {
 
         // Add optional parameters if set
         if let Some(ref system) = self.system {
-            body["system"] = json!(system);
+            // Use cache-friendly system format when caching enabled
+            if self.prompt_caching_enabled {
+                body["system"] = json!([{
+                    "type": "text",
+                    "text": system,
+                    "cache_control": {"type": "ephemeral"}
+                }]);
+            } else {
+                body["system"] = json!(system);
+            }
         }
 
         if let Some(temperature) = self.temperature {
@@ -233,8 +256,16 @@ impl LLMClient for AnthropicClient {
         }
 
         // Add tools if provided
-        if let Some(tools_list) = tools {
+        if let Some(mut tools_list) = tools {
             if !tools_list.is_empty() {
+                // Add cache_control to last tool when caching enabled
+                if self.prompt_caching_enabled {
+                    if let Some(last_tool) = tools_list.last_mut() {
+                        if let Some(obj) = last_tool.as_object_mut() {
+                            obj.insert("cache_control".to_string(), json!({"type": "ephemeral"}));
+                        }
+                    }
+                }
                 body["tools"] = json!(tools_list);
             }
         }
@@ -352,7 +383,16 @@ impl LLMClient for AnthropicClient {
 
         // Add optional parameters if set
         if let Some(ref system) = self.system {
-            body["system"] = json!(system);
+            // Use cache-friendly system format when caching enabled
+            if self.prompt_caching_enabled {
+                body["system"] = json!([{
+                    "type": "text",
+                    "text": system,
+                    "cache_control": {"type": "ephemeral"}
+                }]);
+            } else {
+                body["system"] = json!(system);
+            }
         }
 
         if let Some(temperature) = self.temperature {
@@ -388,8 +428,16 @@ impl LLMClient for AnthropicClient {
         }
 
         // Add tools if provided
-        if let Some(tools_list) = tools {
+        if let Some(mut tools_list) = tools {
             if !tools_list.is_empty() {
+                // Add cache_control to last tool when caching enabled
+                if self.prompt_caching_enabled {
+                    if let Some(last_tool) = tools_list.last_mut() {
+                        if let Some(obj) = last_tool.as_object_mut() {
+                            obj.insert("cache_control".to_string(), json!({"type": "ephemeral"}));
+                        }
+                    }
+                }
                 body["tools"] = json!(tools_list);
             }
         }
@@ -646,6 +694,32 @@ mod tests {
         let json = serde_json::to_value(&tool).unwrap();
         assert_eq!(json["type"], "tool");
         assert_eq!(json["name"], "calculator");
+    }
+
+    #[test]
+    fn test_prompt_caching_disabled_by_default() {
+        let client = AnthropicClient::new("test-key".to_string());
+        assert!(!client.prompt_caching_enabled);
+        assert!(!client.beta_features.contains(&"prompt-caching-2024-07-31".to_string()));
+    }
+
+    #[test]
+    fn test_prompt_caching_enabled() {
+        let client = AnthropicClient::new("test-key".to_string())
+            .with_prompt_caching(true);
+
+        assert!(client.prompt_caching_enabled);
+        assert!(client.beta_features.contains(&"prompt-caching-2024-07-31".to_string()));
+    }
+
+    #[test]
+    fn test_prompt_caching_with_system() {
+        let client = AnthropicClient::new("test-key".to_string())
+            .with_system("You are helpful")
+            .with_prompt_caching(true);
+
+        assert_eq!(client.system.as_ref().unwrap(), "You are helpful");
+        assert!(client.prompt_caching_enabled);
     }
 
     // Note: Integration tests with real API would require API key

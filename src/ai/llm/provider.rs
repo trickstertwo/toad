@@ -128,6 +128,16 @@ pub struct LLMProvider;
 impl LLMProvider {
     /// Create an LLM client based on configuration
     pub fn create(config: &ProviderConfig) -> Result<Box<dyn LLMClient>> {
+        Self::create_with_features(config, false)
+    }
+
+    /// Create an LLM client with optional feature flags
+    ///
+    /// For Anthropic: enables prompt caching if requested
+    pub fn create_with_features(
+        config: &ProviderConfig,
+        enable_prompt_caching: bool,
+    ) -> Result<Box<dyn LLMClient>> {
         match config.provider {
             ProviderType::Anthropic => {
                 let api_key = config.resolve_api_key("ANTHROPIC_API_KEY")?;
@@ -137,6 +147,10 @@ impl LLMProvider {
 
                 if let Some(temp) = config.temperature {
                     client = client.with_temperature(temp);
+                }
+
+                if enable_prompt_caching {
+                    client = client.with_prompt_caching(true);
                 }
 
                 Ok(Box::new(client))
