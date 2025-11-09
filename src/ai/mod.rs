@@ -26,7 +26,10 @@ pub use evaluation::{
     DatasetManager, DatasetSource, EvaluationHarness, EvaluationResults, Task, TaskLoader,
     TaskResult,
 };
-pub use llm::{AnthropicClient, LLMClient, LLMResponse, Message, Usage};
+pub use llm::{
+    AnthropicClient, DeterministicLLMClient, LLMClient, LLMResponse, Message,
+    MockResponseBuilder, SequencedMockClient, Usage,
+};
 pub use metrics::{Metrics, MetricsCollector, QualityMetrics};
 pub use stats::{ComparisonResult, StatisticalTest};
 pub use test_selection::{
