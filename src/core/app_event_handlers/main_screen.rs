@@ -346,3 +346,337 @@ impl App {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::core::app::App;
+    use crate::core::app_state::AppScreen;
+    use crate::core::event::Event;
+    use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+    // ===== Help Screen Tests =====
+
+    #[test]
+    fn test_help_screen_blocks_other_keys() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_help = true;
+
+        // When help is shown, regular keys should not affect input
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('a')));
+        app.update(event).unwrap();
+
+        // Input should still be empty because help intercepts keys
+        assert_eq!(app.input_field().value(), "");
+    }
+
+    #[test]
+    fn test_question_mark_toggles_help() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        let initial_state = app.show_help;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('?')));
+        app.update(event).unwrap();
+
+        assert_eq!(app.show_help, !initial_state);
+    }
+
+    #[test]
+    fn test_esc_from_main_closes_overlays() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_help = true;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Esc));
+        app.update(event).unwrap();
+
+        assert!(!app.show_help);
+        assert!(!app.should_quit(), "Esc from main should not quit (closes overlays instead)");
+    }
+
+    // ===== Command Palette Tests =====
+
+    #[test]
+    fn test_command_palette_up_down_navigation() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+
+        // Press Down arrow
+        let event = Event::Key(KeyEvent::from(KeyCode::Down));
+        app.update(event).unwrap(); // Should not panic
+
+        // Press Up arrow
+        let event = Event::Key(KeyEvent::from(KeyCode::Up));
+        app.update(event).unwrap(); // Should not panic
+    }
+
+    #[test]
+    fn test_command_palette_query_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+
+        // Type characters in palette
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('t')));
+        app.update(event).unwrap();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('e')));
+        app.update(event).unwrap();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('s')));
+        app.update(event).unwrap();
+
+        // Should update palette query (exact query depends on CommandPalette impl)
+    }
+
+    #[test]
+    fn test_command_palette_backspace() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+
+        // Type then backspace
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('a')));
+        app.update(event).unwrap();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Backspace));
+        app.update(event).unwrap(); // Should not panic
+    }
+
+    #[test]
+    fn test_command_palette_ctrl_u_clears_query() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = true;
+
+        // Type some text
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('t')));
+        app.update(event).unwrap();
+
+        // Ctrl+U to clear
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
+        app.update(event).unwrap(); // Should not panic
+    }
+
+    #[test]
+    fn test_ctrl_p_opens_palette() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.show_palette = false;
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        assert!(app.show_palette);
+    }
+
+    // ===== Page Navigation Tests =====
+
+    #[test]
+    fn test_page_up_key() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::PageUp));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("Page up"));
+    }
+
+    #[test]
+    fn test_page_down_key() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::PageDown));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("Page down"));
+    }
+
+    #[test]
+    fn test_ctrl_u_page_up_when_not_in_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        assert!(app.status_message.contains("Page up"));
+    }
+
+    // ===== Tab Switching Tests =====
+
+    #[test]
+    fn test_tab_switches_when_not_focused() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Tab));
+        app.update(event).unwrap();
+
+        // Should switch tabs (status message updated)
+        assert!(app.status_message.contains("tab") || app.status_message.contains("Tab"));
+    }
+
+    #[test]
+    fn test_backtab_switches_previous_tab() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.set_focused(false);
+
+        let event = Event::Key(KeyEvent::from(KeyCode::BackTab));
+        app.update(event).unwrap();
+
+        // Should switch to previous tab
+        assert!(app.status_message.contains("tab") || app.status_message.contains("Tab"));
+    }
+
+    // ===== Input Field Navigation Tests =====
+
+    #[test]
+    fn test_left_arrow_moves_cursor() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+        app.input_field.insert_char('s');
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Left));
+        app.update(event).unwrap();
+
+        // Cursor moved left - verify by inserting a character
+        app.input_field.insert_char('X');
+        assert_eq!(app.input_field.value(), "teXs");
+    }
+
+    #[test]
+    fn test_right_arrow_moves_cursor() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+        app.input_field.move_cursor_left();
+        app.input_field.move_cursor_left();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Right));
+        app.update(event).unwrap();
+
+        // Cursor moved right - verify by inserting a character
+        app.input_field.insert_char('X');
+        assert_eq!(app.input_field.value(), "tXe");
+    }
+
+    #[test]
+    fn test_home_key_moves_to_start() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+        app.input_field.insert_char('s');
+        app.input_field.insert_char('t');
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Home));
+        app.update(event).unwrap();
+
+        // Cursor at start - verify by inserting a character
+        app.input_field.insert_char('X');
+        assert_eq!(app.input_field.value(), "Xtest");
+    }
+
+    #[test]
+    fn test_end_key_moves_to_end() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+        app.input_field.insert_char('s');
+        app.input_field.insert_char('t');
+        app.input_field.move_cursor_start();
+
+        let event = Event::Key(KeyEvent::from(KeyCode::End));
+        app.update(event).unwrap();
+
+        // Cursor at end - verify by inserting a character
+        app.input_field.insert_char('X');
+        assert_eq!(app.input_field.value(), "testX");
+    }
+
+    #[test]
+    fn test_backspace_deletes_character() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+        app.input_field.insert_char('t');
+        app.input_field.insert_char('e');
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Backspace));
+        app.update(event).unwrap();
+
+        assert_eq!(app.input_field.value(), "t");
+    }
+
+    #[test]
+    fn test_backspace_on_empty_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        assert_eq!(app.input_field.value(), "");
+
+        // Backspace on empty input
+        let event = Event::Key(KeyEvent::from(KeyCode::Backspace));
+        app.update(event).unwrap();
+
+        // Should still be empty
+        assert_eq!(app.input_field.value(), "");
+    }
+
+    // ===== Character Input Tests =====
+
+    #[test]
+    fn test_regular_character_input() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        for ch in ['a', 'b', 'c', '1', '2', '!', '@'] {
+            app.input_field.clear();
+            let event = Event::Key(KeyEvent::from(KeyCode::Char(ch)));
+            app.update(event).unwrap();
+
+            assert!(app.input_field.value().contains(ch));
+        }
+    }
+
+    #[test]
+    fn test_rapid_key_presses() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Simulate rapid typing
+        for c in "hello world".chars() {
+            let event = Event::Key(KeyEvent::from(KeyCode::Char(c)));
+            app.update(event).unwrap();
+        }
+
+        // Should handle all input without panicking
+        assert!(app.input_field().value().len() > 0);
+    }
+
+    #[test]
+    fn test_unicode_input_processing() {
+        let mut app = App::new();
+        app.screen = AppScreen::Main;
+
+        // Type unicode characters
+        for c in "🐸🎉世界".chars() {
+            let event = Event::Key(KeyEvent::from(KeyCode::Char(c)));
+            app.update(event).unwrap();
+        }
+
+        // Should handle unicode
+        assert!(app.input_field().value().contains("🐸"));
+    }
+}

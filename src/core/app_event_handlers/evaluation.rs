@@ -73,3 +73,69 @@ impl App {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::core::app::App;
+    use crate::core::app_state::AppScreen;
+    use crate::core::event::Event;
+    use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+    // ===== Evaluation Screen Tests =====
+
+    #[test]
+    fn test_evaluation_screen_esc_when_complete() {
+        let mut app = App::new();
+        app.screen = AppScreen::Evaluation;
+        // Set evaluation_state to None to simulate completed evaluation
+        app.evaluation_state = None;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Esc));
+        app.update(event).unwrap();
+
+        // Should return to Main screen
+        assert_eq!(app.screen, AppScreen::Main);
+    }
+
+    #[test]
+    fn test_evaluation_screen_q_when_complete() {
+        let mut app = App::new();
+        app.screen = AppScreen::Evaluation;
+        // Set evaluation_state to None to simulate completed evaluation
+        app.evaluation_state = None;
+
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('q')));
+        app.update(event).unwrap();
+
+        // Should return to Main screen
+        assert_eq!(app.screen, AppScreen::Main);
+    }
+
+    #[test]
+    fn test_evaluation_screen_ctrl_c_when_complete() {
+        let mut app = App::new();
+        app.screen = AppScreen::Evaluation;
+        // Set evaluation_state to None to simulate completed evaluation
+        app.evaluation_state = None;
+
+        let event = Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL));
+        app.update(event).unwrap();
+
+        // Should return to Main screen
+        assert_eq!(app.screen, AppScreen::Main);
+    }
+
+    #[test]
+    fn test_evaluation_screen_ignores_other_keys() {
+        let mut app = App::new();
+        app.screen = AppScreen::Evaluation;
+        app.evaluation_state = None;
+
+        // Type regular characters - should be ignored
+        let event = Event::Key(KeyEvent::from(KeyCode::Char('a')));
+        app.update(event).unwrap();
+
+        // Should still be on evaluation screen
+        assert_eq!(app.screen, AppScreen::Evaluation);
+    }
+}
