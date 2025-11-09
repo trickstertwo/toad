@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Agent coordination: Declare work BEFORE starting to prevent conflicts -->
 <!-- Format: - [Module/Feature] Brief description (@agent-name or @username) -->
 <!-- Remove from this section when complete and move to appropriate category below -->
+- [M4 Cascading Routing] Adding cascade metadata tracking and integration tests (@claude)
 
 <!-- COMPLETED 2025-11-08: Agent system restructured -->
 <!-- COMPLETED 2025-11-08: Domain-driven restructure + Phase 0 TUI-AI integration -->
