@@ -10,8 +10,10 @@ pub mod background_tasks;
 pub mod batch_ops;
 pub mod calendar_integration;
 pub mod clipboard;
+pub mod communication_integrations;
 pub mod custom_keybindings;
 pub mod custom_reports;
+pub mod dashboard_metrics;
 pub mod data_portability;
 pub mod diff;
 pub mod errors;
@@ -45,10 +47,19 @@ pub use calendar_integration::{
     CalendarEvent, CalendarExporter, EventPriority, EventStatus, Recurrence,
 };
 pub use clipboard::Clipboard;
+pub use communication_integrations::{
+    DiscordMessage, EmailConfig, EmailMessage, EventType, IntegrationManager,
+    IntegrationPlatform, NotificationEvent, SlackMessage, TeamsMessage, WebhookConfig,
+};
 pub use custom_keybindings::{ContextualBinding, CustomKeybindings, KeybindingContext};
 pub use custom_reports::{
     Report, ReportBuilder, ReportFilter, ReportFormat, ReportFrequency, ReportManager,
     ReportRow, ReportTemplate, ReportType, ScheduledReport,
+};
+pub use dashboard_metrics::{
+    BlockedTask, BurndownData, BurnupData, ChartType, CumulativeFlowData, CycleTimeMetric,
+    DashboardMetrics, DataPoint, LeadTimeMetric, TeamMemberMetrics, TimePeriod, TimeInStageMetric,
+    VelocityMetric, WipMetric,
 };
 pub use data_portability::{DataExporter, DataFormat, DataImporter};
 pub use diff::{ChunkHeader, DiffHunk, DiffLine, DiffLineType, DiffParser, DiffStats, FileDiff};
