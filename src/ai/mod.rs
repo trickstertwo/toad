@@ -11,6 +11,7 @@ pub mod evaluation;
 pub mod llm;
 pub mod metrics;
 pub mod stats;
+pub mod test_selection;
 pub mod tools;
 
 // Re-exports
@@ -28,4 +29,8 @@ pub use evaluation::{
 pub use llm::{AnthropicClient, LLMClient, LLMResponse, Message, Usage};
 pub use metrics::{Metrics, MetricsCollector, QualityMetrics};
 pub use stats::{ComparisonResult, StatisticalTest};
+pub use test_selection::{
+    DependencyMapper, TestDiscovery, TestExecutionResult, TestExecutor, TestSelection,
+    TestSelector,
+};
 pub use tools::{Tool, ToolRegistry, ToolResult};
