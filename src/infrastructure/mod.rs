@@ -13,6 +13,7 @@ pub mod calendar_integration;
 pub mod card_comments;
 pub mod clipboard;
 pub mod communication_integrations;
+pub mod cross_window_context;
 pub mod custom_keybindings;
 pub mod custom_reports;
 pub mod dashboard_metrics;
@@ -23,6 +24,7 @@ pub mod fallback_mode;
 pub mod file_attachments;
 pub mod file_ops;
 pub mod filtering_search;
+pub mod git_card_integration;
 pub mod history;
 pub mod import_export;
 pub mod key_sequences;
@@ -66,6 +68,10 @@ pub use communication_integrations::{
     DiscordMessage, EmailConfig, EmailMessage, EventType, IntegrationManager,
     IntegrationPlatform, NotificationEvent, SlackMessage, TeamsMessage, WebhookConfig,
 };
+pub use cross_window_context::{
+    ClipboardContentType, ClipboardEntry, CrossWindowContextManager, DragDropOperation,
+    DragDropStatus, SharedAgentContext, WindowContextReference,
+};
 pub use custom_keybindings::{ContextualBinding, CustomKeybindings, KeybindingContext};
 pub use custom_reports::{
     Report, ReportBuilder, ReportFilter, ReportFormat, ReportFrequency, ReportManager,
@@ -85,6 +91,10 @@ pub use file_ops::{FileOpResult, FileOps};
 pub use filtering_search::{
     Filter, FilterCondition, FilterField, FilterManager, FilterOperator, LogicalOperator,
     QuickFilter, SearchParser,
+};
+pub use git_card_integration::{
+    CardBranch, CardCommit, CardReviewWorkflow, GitCardIntegrationManager, GitCardLink,
+    GitEntityType, ReviewStatus,
 };
 pub use history::History;
 pub use import_export::{
