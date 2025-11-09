@@ -531,4 +531,367 @@ mod tests {
         assert!(!chart.show_values);
         assert_eq!(chart.max_value, Some(50.0));
     }
+
+    // ============ COMPREHENSIVE EDGE CASE TESTS ============
+
+    #[test]
+    fn test_bar_data_with_very_long_label() {
+        let long_label = "A".repeat(10000);
+        let bar = BarData::new(long_label.clone(), 42.0);
+        assert_eq!(bar.label, long_label);
+        assert_eq!(bar.value, 42.0);
+    }
+
+    #[test]
+    fn test_bar_data_with_unicode_label() {
+        let bar = BarData::new("📊 売上 🎉", 100.0);
+        assert!(bar.label.contains("📊"));
+        assert!(bar.label.contains("売上"));
+        assert_eq!(bar.value, 100.0);
+    }
+
+    #[test]
+    fn test_bar_data_with_empty_label() {
+        let bar = BarData::new("", 10.0);
+        assert_eq!(bar.label, "");
+    }
+
+    #[test]
+    fn test_bar_data_with_whitespace_only_label() {
+        let bar = BarData::new("     ", 10.0);
+        assert_eq!(bar.label, "     ");
+    }
+
+    #[test]
+    fn test_bar_data_with_special_characters() {
+        let bar = BarData::new("Test<>&\"'\\|/*?", 10.0);
+        assert!(bar.label.contains("<>"));
+    }
+
+    #[test]
+    fn test_bar_data_with_negative_value() {
+        let bar = BarData::new("Negative", -50.0);
+        assert_eq!(bar.value, -50.0);
+    }
+
+    #[test]
+    fn test_bar_data_with_zero_value() {
+        let bar = BarData::new("Zero", 0.0);
+        assert_eq!(bar.value, 0.0);
+    }
+
+    #[test]
+    fn test_bar_data_with_extreme_positive_value() {
+        let bar = BarData::new("Max", f64::MAX);
+        assert_eq!(bar.value, f64::MAX);
+    }
+
+    #[test]
+    fn test_bar_data_with_extreme_negative_value() {
+        let bar = BarData::new("Min", f64::MIN);
+        assert_eq!(bar.value, f64::MIN);
+    }
+
+    #[test]
+    fn test_bar_data_clone() {
+        let original = BarData::new("Original", 42.0).with_color(Color::Red);
+        let cloned = original.clone();
+        assert_eq!(original.label, cloned.label);
+        assert_eq!(original.value, cloned.value);
+        assert_eq!(original.color, cloned.color);
+    }
+
+    #[test]
+    fn test_bar_direction_equality() {
+        assert_eq!(BarDirection::Vertical, BarDirection::Vertical);
+        assert_eq!(BarDirection::Horizontal, BarDirection::Horizontal);
+        assert_ne!(BarDirection::Vertical, BarDirection::Horizontal);
+    }
+
+    #[test]
+    fn test_bar_direction_copy() {
+        let original = BarDirection::Vertical;
+        let copied = original;
+        assert_eq!(original, copied);
+    }
+
+    #[test]
+    fn test_bar_chart_with_many_bars() {
+        let data: Vec<BarData> = (0..100).map(|i| BarData::new(format!("Bar{}", i), i as f64)).collect();
+        let chart = BarChart::new(data);
+        assert_eq!(chart.bar_count(), 100);
+    }
+
+    #[test]
+    fn test_bar_chart_with_single_bar() {
+        let chart = BarChart::new(vec![BarData::new("Only", 42.0)]);
+        assert_eq!(chart.bar_count(), 1);
+    }
+
+    #[test]
+    fn test_bar_chart_with_unicode_title() {
+        let chart = BarChart::new(vec![]).with_title("📊 グラフ 🎉");
+        assert!(chart.title.clone().unwrap().contains("📊"));
+        assert!(chart.title.clone().unwrap().contains("グラフ"));
+    }
+
+    #[test]
+    fn test_bar_chart_with_very_long_title() {
+        let long_title = "B".repeat(10000);
+        let chart = BarChart::new(vec![]).with_title(long_title.clone());
+        assert_eq!(chart.title, Some(long_title));
+    }
+
+    #[test]
+    fn test_bar_chart_with_empty_title() {
+        let chart = BarChart::new(vec![]).with_title("");
+        assert_eq!(chart.title, Some("".to_string()));
+    }
+
+    #[test]
+    fn test_bar_chart_with_unicode_value_label() {
+        let chart = BarChart::new(vec![]).with_value_label("値 💯");
+        assert!(chart.value_label.clone().unwrap().contains("値"));
+    }
+
+    #[test]
+    fn test_bar_chart_with_very_long_value_label() {
+        let long_label = "C".repeat(1000);
+        let chart = BarChart::new(vec![]).with_value_label(long_label.clone());
+        assert_eq!(chart.value_label, Some(long_label));
+    }
+
+    #[test]
+    fn test_bar_chart_clone() {
+        let original = BarChart::new(vec![BarData::new("Test", 10.0)])
+            .with_title("Title")
+            .with_max_value(100.0);
+        let cloned = original.clone();
+        assert_eq!(original.bar_count(), cloned.bar_count());
+        assert_eq!(original.title, cloned.title);
+        assert_eq!(original.max_value, cloned.max_value);
+    }
+
+    #[test]
+    fn test_bar_chart_calculate_max_with_all_zeros() {
+        let data = vec![
+            BarData::new("A", 0.0),
+            BarData::new("B", 0.0),
+            BarData::new("C", 0.0),
+        ];
+        let chart = BarChart::new(data);
+        assert_eq!(chart.calculate_max_value(), 0.0);
+    }
+
+    #[test]
+    fn test_bar_chart_calculate_max_with_negative_values() {
+        let data = vec![
+            BarData::new("A", -10.0),
+            BarData::new("B", -25.0),
+            BarData::new("C", -5.0),
+        ];
+        let chart = BarChart::new(data);
+        assert_eq!(chart.calculate_max_value(), -5.0);
+    }
+
+    #[test]
+    fn test_bar_chart_calculate_max_with_mixed_values() {
+        let data = vec![
+            BarData::new("A", -10.0),
+            BarData::new("B", 25.0),
+            BarData::new("C", -5.0),
+            BarData::new("D", 15.0),
+        ];
+        let chart = BarChart::new(data);
+        assert_eq!(chart.calculate_max_value(), 25.0);
+    }
+
+    #[test]
+    fn test_bar_chart_render_with_zero_dimensions() {
+        let data = vec![BarData::new("A", 10.0)];
+        let chart = BarChart::new(data);
+        let _lines = chart.render_lines(0, 0);
+        // Just verify it doesn't crash
+    }
+
+    #[test]
+    fn test_bar_chart_render_with_very_small_dimensions() {
+        let data = vec![BarData::new("A", 10.0)];
+        let chart = BarChart::new(data);
+        let lines = chart.render_lines(1, 1);
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_bar_chart_render_with_very_large_dimensions() {
+        let data = vec![BarData::new("A", 10.0), BarData::new("B", 20.0)];
+        let chart = BarChart::new(data);
+        let lines = chart.render_lines(1000, 1000);
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_bar_chart_render_vertical_with_empty_data() {
+        let chart = BarChart::new(vec![]).with_direction(BarDirection::Vertical);
+        let lines = chart.render_lines(40, 20);
+        assert!(!lines.is_empty());
+        // Should contain "No data"
+    }
+
+    #[test]
+    fn test_bar_chart_render_horizontal_with_empty_data() {
+        let chart = BarChart::new(vec![]).with_direction(BarDirection::Horizontal);
+        let lines = chart.render_lines(40, 20);
+        assert!(!lines.is_empty());
+        // Should contain "No data"
+    }
+
+    #[test]
+    fn test_bar_chart_render_vertical_with_many_bars() {
+        let data: Vec<BarData> = (0..50).map(|i| BarData::new(format!("B{}", i), i as f64)).collect();
+        let chart = BarChart::new(data).with_direction(BarDirection::Vertical);
+        let lines = chart.render_lines(200, 50);
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_bar_chart_render_horizontal_with_many_bars() {
+        let data: Vec<BarData> = (0..50).map(|i| BarData::new(format!("B{}", i), i as f64)).collect();
+        let chart = BarChart::new(data).with_direction(BarDirection::Horizontal);
+        let lines = chart.render_lines(100, 100);
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_bar_chart_render_with_values_hidden() {
+        let data = vec![BarData::new("A", 10.0), BarData::new("B", 20.0)];
+        let chart = BarChart::new(data).with_values(false);
+        let lines = chart.render_lines(40, 20);
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_bar_chart_render_with_unicode_labels() {
+        let data = vec![
+            BarData::new("売上 📊", 100.0),
+            BarData::new("利益 💰", 50.0),
+            BarData::new("費用 📉", 75.0),
+        ];
+        let chart = BarChart::new(data).with_title("日本語グラフ");
+        let lines = chart.render_lines(80, 30);
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_bar_chart_render_with_very_long_labels() {
+        let long_label = "X".repeat(100);
+        let data = vec![
+            BarData::new(long_label.clone(), 10.0),
+            BarData::new("B", 20.0),
+        ];
+        let chart = BarChart::new(data);
+        let lines = chart.render_lines(40, 20);
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_bar_chart_builder_pattern_chaining_complete() {
+        let data = vec![
+            BarData::new("A", 10.0).with_color(Color::Red),
+            BarData::new("B", 20.0).with_color(Color::Green),
+        ];
+        let chart = BarChart::new(data)
+            .with_title("Test Chart")
+            .with_value_label("Count")
+            .with_direction(BarDirection::Horizontal)
+            .with_values(true)
+            .with_max_value(100.0);
+
+        assert_eq!(chart.bar_count(), 2);
+        assert_eq!(chart.title, Some("Test Chart".to_string()));
+        assert_eq!(chart.value_label, Some("Count".to_string()));
+        assert_eq!(chart.direction, BarDirection::Horizontal);
+        assert!(chart.show_values);
+        assert_eq!(chart.max_value, Some(100.0));
+    }
+
+    #[test]
+    fn test_bar_chart_multiple_title_calls() {
+        let chart = BarChart::new(vec![])
+            .with_title("First")
+            .with_title("Second")
+            .with_title("Third");
+        assert_eq!(chart.title, Some("Third".to_string()));
+    }
+
+    #[test]
+    fn test_bar_chart_multiple_max_value_calls() {
+        let chart = BarChart::new(vec![])
+            .with_max_value(10.0)
+            .with_max_value(50.0)
+            .with_max_value(100.0);
+        assert_eq!(chart.max_value, Some(100.0));
+    }
+
+    #[test]
+    fn test_bar_chart_render_with_extreme_max_value() {
+        let data = vec![BarData::new("A", 10.0)];
+        let chart = BarChart::new(data).with_max_value(f64::MAX);
+        let lines = chart.render_lines(40, 20);
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_bar_chart_with_all_same_values() {
+        let data = vec![
+            BarData::new("A", 42.0),
+            BarData::new("B", 42.0),
+            BarData::new("C", 42.0),
+        ];
+        let chart = BarChart::new(data);
+        assert_eq!(chart.calculate_max_value(), 42.0);
+    }
+
+    #[test]
+    fn test_bar_chart_with_fractional_values() {
+        let data = vec![
+            BarData::new("A", 0.123456789),
+            BarData::new("B", 3.141592653),
+            BarData::new("C", 2.718281828),
+        ];
+        let chart = BarChart::new(data);
+        assert_eq!(chart.bar_count(), 3);
+        let max = chart.calculate_max_value();
+        assert!((max - 3.141592653).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_bar_data_default_color() {
+        let bar = BarData::new("Test", 10.0);
+        assert_eq!(bar.color, Color::Cyan);
+    }
+
+    #[test]
+    fn test_bar_chart_default_values() {
+        let chart = BarChart::new(vec![BarData::new("A", 10.0)]);
+        assert_eq!(chart.direction, BarDirection::Vertical);
+        assert!(chart.show_values);
+        assert_eq!(chart.title, None);
+        assert_eq!(chart.value_label, None);
+        assert_eq!(chart.max_value, None);
+    }
+
+    #[test]
+    fn test_bar_chart_render_with_title_and_labels() {
+        let data = vec![BarData::new("A", 10.0), BarData::new("B", 20.0)];
+        let chart = BarChart::new(data)
+            .with_title("📊 Chart Title")
+            .with_value_label("Values (%)");
+        let lines_vertical = chart.clone().with_direction(BarDirection::Vertical).render_lines(60, 25);
+        let lines_horizontal = chart.with_direction(BarDirection::Horizontal).render_lines(60, 25);
+
+        assert!(!lines_vertical.is_empty());
+        assert!(!lines_horizontal.is_empty());
+    }
 }
+
