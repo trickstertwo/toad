@@ -3,14 +3,21 @@
 //! Contains the fundamental TUI architecture following Elm pattern:
 //! - Model (app.rs): Application state
 //! - Message (event.rs): Events and messages
-//! - Update (app.rs): State transitions
+//! - Update (app.rs, app_event_handlers): State transitions
 //! - View (ui.rs): Rendering logic
 
 pub mod app;
+pub mod app_evaluation;
+pub mod app_accessors;
+pub mod app_commands;
+pub mod app_session;
+pub mod app_event_handlers;
+pub mod app_state;
 pub mod event;
 pub mod tui;
 pub mod ui;
 
-pub use app::{App, AppScreen, EvaluationState};
+pub use app::App;
+pub use app_state::{AppScreen, EvaluationState};
 pub use event::{EvaluationProgress, Event, EventHandler};
 pub use tui::Tui;

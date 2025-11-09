@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Remove from this section when complete and move to appropriate category below -->
 - [M5 Phase 1] Implementing 5 enhanced features for world-class accuracy (@claude)
   - Vector Embeddings, Code Graph, Semantic Caching, Failure Memory, Context Re-ranking
+- [Codebase Cleanup] Refactoring bloated files and applying Rust best practices (@claude)
+  - Split app.rs (3,683→~720 lines), widget files (10+ files over 1,000 lines)
+  - Remove debug artifacts (bug.py, fixed.rs)
+  - Resolve duplicate file names, verify folder structure
 
 <!-- COMPLETED 2025-11-08: Agent system restructured -->
 <!-- COMPLETED 2025-11-08: Domain-driven restructure + Phase 0 TUI-AI integration -->
