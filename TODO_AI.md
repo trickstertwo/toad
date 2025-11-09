@@ -16,8 +16,8 @@
 - [ ] **M4: Advanced Features** (0%)
 - [ ] **M5: Production Ready** (0%)
 
-**Current Status:** ✅ M1 + M2 Implementation Complete, Ready for Quality Gates
-**Total Tests:** 1635 passing (1620 base + 15 smart test selection)
+**Current Status:** ✅ M1 + M2 Implementation Complete, Evaluation Wired, Ready for Quality Gates
+**Total Tests:** 1637 passing (1622 base + 15 smart test selection)
 
 ---
 
@@ -70,8 +70,8 @@
 
 ## ✅ Milestone 1: Simple Baseline Agent
 
-**Status:** 100% IMPLEMENTATION COMPLETE (1619 tests passing)
-**Commits:** 9 commits (99a2279 → 6a3472e)
+**Status:** 100% IMPLEMENTATION COMPLETE (1621 tests passing)
+**Commits:** 10 commits (99a2279 → e03773e)
 **Target Accuracy:** 55-60% on SWE-bench
 
 **Completed Features:**
@@ -79,6 +79,7 @@
   - Cache control on system + tools
   - Beta header auto-added
   - Wired to config.features.prompt_caching
+  - ✅ FIXED: Evaluation harness now actually uses this flag (e03773e)
   - 90% cost reduction on repeated prompts
 
 - [x] Tree-sitter validation: IMPLEMENTED ✅ (6 new tests)
@@ -86,6 +87,13 @@
   - Prevents writing syntactically invalid code
   - Graceful fallback for unsupported file types
   - Wired to config.features.tree_sitter_validation
+  - ✅ FIXED: Evaluation harness now actually uses this flag (e03773e)
+
+- [x] Evaluation harness wiring: CRITICAL FIX ✅ (+2 new tests)
+  - Fixed: Evaluation was ignoring ToadConfig feature flags
+  - Now uses config.features.prompt_caching for LLM client
+  - Now uses ToolRegistry::m1_with_features() for proper tool setup
+  - Added 2 verification tests for M1 config correctness
 
 ### Tool System (8 Tools - 48 tests)
 - [x] Tool trait with async execution
