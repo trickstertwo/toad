@@ -41,7 +41,7 @@
 /// ```
 use super::{LLMClient, LLMResponse, Message, MessageStream, StopReason, Usage};
 use anyhow::{Context, Result};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::task::JoinHandle;
 
@@ -156,6 +156,7 @@ pub enum SelectionStrategy {
 /// - Models are `Box<dyn LLMClient>` which require `Send + Sync`
 /// - Racing uses `Arc` for shared state
 /// - Tokio tasks are spawned, not borrowed across await points
+#[derive(Clone)]
 pub struct RacingClient {
     /// Models to race (must implement LLMClient)
     /// Using Arc for shared ownership across async tasks
@@ -166,6 +167,10 @@ pub struct RacingClient {
 
     /// Model names for logging/metrics (cached from models)
     model_names: Vec<String>,
+
+    /// Last race result (for metrics extraction)
+    /// Stored after each send_message call for evaluation harness to retrieve
+    last_race_result: Arc<Mutex<Option<RaceResult>>>,
 }
 
 impl RacingClient {
@@ -200,7 +205,16 @@ impl RacingClient {
             models,
             strategy: SelectionStrategy::FirstComplete,
             model_names,
+            last_race_result: Arc::new(Mutex::new(None)),
         }
+    }
+
+    /// Get the last race result (for metrics extraction)
+    ///
+    /// Returns None if no race has been run yet.
+    /// This is used by the evaluation harness to extract race metadata.
+    pub fn get_last_race_result(&self) -> Option<RaceResult> {
+        self.last_race_result.lock().unwrap().clone()
     }
 
     /// Create a racing client from configuration
@@ -369,7 +383,11 @@ impl LLMClient for RacingClient {
             race_result.total_wasted_cost()
         );
 
-        Ok(race_result.response)
+        // Store race result for metrics extraction
+        let response = race_result.response.clone();
+        *self.last_race_result.lock().unwrap() = Some(race_result);
+
+        Ok(response)
     }
 
     async fn send_message_stream(

@@ -308,6 +308,9 @@ impl EvaluationHarness {
         // Get API key (may be optional for local-only cascading)
         let api_key = get_api_key().ok();
 
+        // Track if we're using racing (for metrics extraction)
+        let mut racing_client_ref: Option<std::sync::Arc<crate::ai::llm::RacingClient>> = None;
+
         // Create LLM client based on routing strategy
         let llm_client: Box<dyn crate::ai::llm::LLMClient> = if config.features.routing_cascade {
             // M4: Use cascading router (cheap local → expensive cloud)
@@ -350,7 +353,13 @@ impl EvaluationHarness {
                 config.racing_models.join(", ")
             );
 
-            Box::new(racing_client)
+            // Store Arc reference for metrics extraction later
+            let racing_arc = std::sync::Arc::new(racing_client);
+            racing_client_ref = Some(racing_arc.clone());
+
+            // Clone the Arc into a Box for the agent
+            // We use Arc::new + Arc::clone to share ownership
+            Box::new((*racing_arc).clone())
         } else {
             // M1/M2: Use direct Anthropic client
             let api_key = api_key
@@ -438,6 +447,31 @@ impl EvaluationHarness {
         result.api_calls = final_metrics.api_calls;
         result.total_tokens = final_metrics.total_tokens();
         result.metrics = final_metrics;
+
+        // Extract race metadata if M3 racing was used
+        if let Some(racing_client) = racing_client_ref {
+            if let Some(race_result) = racing_client.get_last_race_result() {
+                let latency_improvement = race_result.latency_improvement()
+                    .map(|d| d.as_millis() as i64)
+                    .unwrap_or(0);
+
+                result.race_metadata = Some(RaceMetadata {
+                    winner_model: race_result.winner_model.clone(),
+                    total_cost_usd: race_result.total_cost(),
+                    wasted_cost_usd: race_result.total_wasted_cost(),
+                    latency_improvement_ms: latency_improvement,
+                    race_duration_ms: race_result.race_duration.as_millis() as u64,
+                });
+
+                tracing::info!(
+                    "M3 Race metadata: winner={}, total_cost=${:.4}, wasted=${:.4}, latency_improvement={}ms",
+                    race_result.winner_model,
+                    race_result.total_cost(),
+                    race_result.total_wasted_cost(),
+                    latency_improvement
+                );
+            }
+        }
 
         // For M1: We consider a task "solved" if agent completed successfully
         // In M2+, we'd validate against test_patch
@@ -679,5 +713,81 @@ mod tests {
         let deserialized: TaskResult = serde_json::from_str(&json).unwrap();
         assert!(deserialized.race_metadata.is_some());
         assert_eq!(deserialized.race_metadata.unwrap().winner_model, "model-1");
+    }
+
+    /// End-to-end integration test for M3 racing setup
+    ///
+    /// Tests that M3 configuration properly creates RacingClient
+    /// Note: Full racing is tested in racing.rs module tests
+    #[test]
+    fn test_m3_racing_client_creation() {
+        use crate::ai::llm::{RacingClient, LLMClient, mock::MockResponseBuilder};
+        use std::sync::Arc;
+
+        // Create mock models for racing
+        let model1 = Arc::new(
+            MockResponseBuilder::new()
+                .with_text("Model 1 response")
+                .build()
+        );
+        let model2 = Arc::new(
+            MockResponseBuilder::new()
+                .with_text("Model 2 response")
+                .build()
+        );
+
+        // Create racing client
+        let racing = RacingClient::new(vec![model1, model2]);
+
+        // Verify racing client is set up correctly
+        assert_eq!(racing.model_name(), "racing-ensemble");
+
+        // Verify initial state (no race result yet)
+        let race_result = racing.get_last_race_result();
+        assert!(race_result.is_none());
+    }
+
+    /// Test that M3 config creates proper racing client configuration
+    #[test]
+    fn test_m3_config_racing_client_setup() {
+        let config = ToadConfig::for_milestone(3);
+
+        // Verify M3 has racing enabled
+        assert!(config.features.routing_multi_model);
+
+        // Verify racing models are configured
+        assert_eq!(config.racing_models.len(), 2);
+        assert_eq!(config.racing_models[0], "claude-sonnet-4-20250514");
+        assert_eq!(config.racing_models[1], "claude-sonnet-3-5-20241022");
+
+        // Verify M3 inherits M2 features
+        assert!(config.features.context_ast);
+        assert!(config.features.smart_test_selection);
+        assert!(config.features.prompt_caching);
+
+        // Verify M3 doesn't have M4 features
+        assert!(!config.features.routing_cascade);
+    }
+
+    /// Test race metadata calculation correctness
+    #[test]
+    fn test_race_metadata_cost_calculations() {
+        let metadata = RaceMetadata {
+            winner_model: "claude-sonnet-4-20250514".to_string(),
+            total_cost_usd: 0.05,
+            wasted_cost_usd: 0.01,
+            latency_improvement_ms: 500,
+            race_duration_ms: 1500,
+        };
+
+        // Verify cost breakdown makes sense
+        assert!(metadata.total_cost_usd > metadata.wasted_cost_usd);
+
+        // Winner cost = total - wasted
+        let winner_cost = metadata.total_cost_usd - metadata.wasted_cost_usd;
+        assert_eq!(winner_cost, 0.04);
+
+        // Verify latency improvement is positive (racing was faster)
+        assert!(metadata.latency_improvement_ms > 0);
     }
 }
