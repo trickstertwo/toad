@@ -668,4 +668,526 @@ mod tests {
         let preview = PreviewPane::new("Content").title(long_title.clone());
         assert_eq!(preview.title.as_deref(), Some(long_title.as_str()));
     }
+
+    // ============ Default Trait Test ============
+
+    #[test]
+    fn test_preview_default() {
+        let preview = PreviewPane::default();
+        assert_eq!(preview.content(), "");
+        assert_eq!(preview.get_scroll_offset(), 0);
+        assert!(!preview.show_line_numbers);
+        assert!(preview.wrap_lines);
+        assert_eq!(preview.title, None);
+    }
+
+    // ============ Extreme Stress Tests (10k operations) ============
+
+    #[test]
+    fn test_preview_extreme_scroll_down_10k() {
+        let mut preview = PreviewPane::new("Content");
+
+        for _ in 0..10000 {
+            preview.scroll_down(1);
+        }
+
+        assert_eq!(preview.get_scroll_offset(), 10000);
+    }
+
+    #[test]
+    fn test_preview_extreme_content_changes_10k() {
+        let mut preview = PreviewPane::new("Initial");
+
+        for i in 0..10000 {
+            preview.set_content(format!("Content iteration {}", i));
+            assert_eq!(preview.get_scroll_offset(), 0);
+        }
+
+        assert_eq!(preview.content(), "Content iteration 9999");
+    }
+
+    #[test]
+    fn test_preview_extreme_mixed_operations_10k() {
+        let mut preview = PreviewPane::new("Initial");
+
+        for i in 0..10000 {
+            match i % 4 {
+                0 => preview.scroll_down(1),
+                1 => preview.scroll_up(1),
+                2 => preview.scroll_to_top(),
+                _ => preview.set_scroll_offset((i % 100) as u16),
+            }
+        }
+
+        // Final state depends on last operation (i=9999, 9999%4=3)
+        assert_eq!(preview.get_scroll_offset(), (9999 % 100) as u16);
+    }
+
+    #[test]
+    fn test_preview_extreme_builder_chaining() {
+        let mut preview = PreviewPane::new("Initial");
+
+        for i in 0..1000 {
+            preview = preview
+                .title(format!("Title {}", i))
+                .scroll_offset((i % 100) as u16)
+                .show_line_numbers(i % 2 == 0)
+                .wrap_lines(i % 3 == 0);
+        }
+
+        assert_eq!(preview.title.as_deref(), Some("Title 999"));
+        assert_eq!(preview.get_scroll_offset(), 99);
+        // 999 % 2 == 1, so show_line_numbers = false
+        assert!(!preview.show_line_numbers);
+        // 999 % 3 == 0, so wrap_lines = true
+        assert!(preview.wrap_lines);
+    }
+
+    // ============ Scroll Boundary Edge Cases ============
+
+    #[test]
+    fn test_preview_scroll_operations_at_max() {
+        let mut preview = PreviewPane::new("Content");
+        preview.set_scroll_offset(u16::MAX);
+
+        preview.scroll_up(1);
+        assert_eq!(preview.get_scroll_offset(), u16::MAX - 1);
+
+        preview.scroll_up(u16::MAX - 1);
+        assert_eq!(preview.get_scroll_offset(), 0);
+
+        preview.set_scroll_offset(u16::MAX);
+        preview.scroll_to_top();
+        assert_eq!(preview.get_scroll_offset(), 0);
+    }
+
+    #[test]
+    fn test_preview_scroll_near_max_boundary() {
+        let mut preview = PreviewPane::new("Content");
+        preview.set_scroll_offset(u16::MAX - 100);
+
+        preview.scroll_down(50);
+        assert_eq!(preview.get_scroll_offset(), u16::MAX - 50);
+
+        preview.scroll_down(50);
+        assert_eq!(preview.get_scroll_offset(), u16::MAX);
+    }
+
+    #[test]
+    fn test_preview_scroll_large_increments() {
+        let mut preview = PreviewPane::new("Content");
+
+        preview.scroll_down(10000);
+        assert_eq!(preview.get_scroll_offset(), 10000);
+
+        preview.scroll_down(20000);
+        assert_eq!(preview.get_scroll_offset(), 30000);
+
+        preview.scroll_up(15000);
+        assert_eq!(preview.get_scroll_offset(), 15000);
+    }
+
+    // ============ Special Characters ============
+
+    #[test]
+    fn test_preview_content_with_null_bytes() {
+        let content = "Line 1\0Line 2\0Line 3";
+        let preview = PreviewPane::new(content);
+        assert!(preview.content().contains('\0'));
+        assert_eq!(preview.line_count(), 1); // Null bytes don't create new lines
+    }
+
+    #[test]
+    fn test_preview_content_with_control_chars() {
+        let content = "Line 1\x01\x02\x03\nLine 2\x1B[31m\nLine 3";
+        let preview = PreviewPane::new(content);
+        assert_eq!(preview.line_count(), 3);
+        assert!(preview.content().contains('\x01'));
+    }
+
+    #[test]
+    fn test_preview_content_with_mixed_special_chars() {
+        let content = "Tab\there\nNull\0byte\nControl\x1Bchar\nEmoji🚀end";
+        let preview = PreviewPane::new(content);
+        assert_eq!(preview.line_count(), 4);
+    }
+
+    #[test]
+    fn test_preview_content_with_backspace_and_formfeed() {
+        let content = "Line\x08\x0C1\nLine\x08\x0C2";
+        let preview = PreviewPane::new(content);
+        assert_eq!(preview.line_count(), 2);
+        assert!(preview.content().contains('\x08'));
+    }
+
+    // ============ State Transition Tests ============
+
+    #[test]
+    fn test_preview_wrap_lines_state_transitions() {
+        let mut preview = PreviewPane::new("Content").wrap_lines(true);
+        assert!(preview.wrap_lines);
+
+        preview = preview.wrap_lines(false);
+        assert!(!preview.wrap_lines);
+
+        preview = preview.wrap_lines(true);
+        assert!(preview.wrap_lines);
+    }
+
+    #[test]
+    fn test_preview_show_line_numbers_state_transitions() {
+        let mut preview = PreviewPane::new("Content").show_line_numbers(false);
+        assert!(!preview.show_line_numbers);
+
+        preview = preview.show_line_numbers(true);
+        assert!(preview.show_line_numbers);
+
+        preview = preview.show_line_numbers(false);
+        assert!(!preview.show_line_numbers);
+    }
+
+    #[test]
+    fn test_preview_combined_state_transitions() {
+        let mut preview = PreviewPane::new("Content");
+
+        for i in 0..100 {
+            preview = preview
+                .show_line_numbers(i % 2 == 0)
+                .wrap_lines(i % 3 == 0);
+        }
+
+        // i=99: 99%2==1 (false), 99%3==0 (true)
+        assert!(!preview.show_line_numbers);
+        assert!(preview.wrap_lines);
+    }
+
+    // ============ Combined Edge Cases ============
+
+    #[test]
+    fn test_preview_large_title_large_content_rapid_scroll() {
+        let long_title = "x".repeat(10000);
+        let mut lines = Vec::new();
+        for i in 0..10000 {
+            lines.push(format!("Line {}", i));
+        }
+        let content = lines.join("\n");
+
+        let mut preview = PreviewPane::new(content).title(long_title.clone());
+
+        for _ in 0..100 {
+            preview.scroll_down(10);
+        }
+
+        assert_eq!(preview.get_scroll_offset(), 1000);
+        assert_eq!(preview.title.as_deref(), Some(long_title.as_str()));
+        assert_eq!(preview.line_count(), 10000);
+    }
+
+    #[test]
+    fn test_preview_unicode_title_unicode_content_scroll() {
+        let title = "🚀 日本語 مرحبا";
+        let content = "Line 1: 日本語\nLine 2: مرحبا\nLine 3: 🚀";
+
+        let mut preview = PreviewPane::new(content).title(title);
+        preview.scroll_down(1);
+
+        assert_eq!(preview.get_scroll_offset(), 1);
+        assert_eq!(preview.title.as_deref(), Some(title));
+        assert_eq!(preview.line_count(), 3);
+    }
+
+    #[test]
+    fn test_preview_all_flags_enabled_large_content() {
+        let mut lines = Vec::new();
+        for i in 0..1000 {
+            lines.push(format!("Line {} content", i));
+        }
+
+        let preview = PreviewPane::new(lines.join("\n"))
+            .title("All Flags Test")
+            .show_line_numbers(true)
+            .wrap_lines(true)
+            .scroll_offset(50);
+
+        assert!(preview.show_line_numbers);
+        assert!(preview.wrap_lines);
+        assert_eq!(preview.get_scroll_offset(), 50);
+        assert_eq!(preview.line_count(), 1000);
+    }
+
+    // ============ More Unicode Extremes ============
+
+    #[test]
+    fn test_preview_100k_unicode_chars() {
+        let content = "日本語🚀".repeat(20000); // Each repeat is 5 chars
+        let preview = PreviewPane::new(content);
+        assert!(preview.content().len() > 100000); // Multi-byte chars
+    }
+
+    #[test]
+    fn test_preview_mixed_line_endings() {
+        let content = "Line 1\nLine 2\r\nLine 3";
+        let preview = PreviewPane::new(content);
+        // lines() treats \n and \r\n as line separators (but not standalone \r)
+        assert_eq!(preview.line_count(), 3);
+    }
+
+    #[test]
+    fn test_preview_unicode_in_every_position() {
+        let content = "🚀Start\nMiddle日本語Text\nEnd مرحبا";
+        let preview = PreviewPane::new(content);
+        assert_eq!(preview.line_count(), 3);
+        assert!(preview.content().contains('🚀'));
+        assert!(preview.content().contains("日本語"));
+        assert!(preview.content().contains("مرحبا"));
+    }
+
+    // ============ Multi-Phase Comprehensive Workflow (10 phases) ============
+
+    #[test]
+    fn test_preview_10_phase_comprehensive_workflow() {
+        // Phase 1: Initial setup
+        let mut preview = PreviewPane::new("Initial content");
+        assert_eq!(preview.content(), "Initial content");
+        assert_eq!(preview.get_scroll_offset(), 0);
+
+        // Phase 2: Set large content
+        let mut lines = Vec::new();
+        for i in 0..5000 {
+            lines.push(format!("Line {}", i));
+        }
+        preview.set_content(lines.join("\n"));
+        assert_eq!(preview.line_count(), 5000);
+        assert_eq!(preview.get_scroll_offset(), 0);
+
+        // Phase 3: Scroll operations
+        preview.scroll_down(100);
+        assert_eq!(preview.get_scroll_offset(), 100);
+        preview.scroll_up(30);
+        assert_eq!(preview.get_scroll_offset(), 70);
+
+        // Phase 4: Builder pattern modifications
+        preview = preview
+            .title("Phase 4 Title")
+            .show_line_numbers(true)
+            .wrap_lines(false);
+        assert_eq!(preview.title.as_deref(), Some("Phase 4 Title"));
+        assert!(preview.show_line_numbers);
+        assert!(!preview.wrap_lines);
+
+        // Phase 5: Unicode content
+        preview.set_content("🚀 日本語 مرحبا\n".repeat(100));
+        assert_eq!(preview.line_count(), 100);
+        assert_eq!(preview.get_scroll_offset(), 0); // Reset on set_content
+
+        // Phase 6: Extreme scrolling
+        preview.scroll_down(1000);
+        assert_eq!(preview.get_scroll_offset(), 1000);
+        preview.scroll_to_top();
+        assert_eq!(preview.get_scroll_offset(), 0);
+
+        // Phase 7: State transitions
+        preview = preview.show_line_numbers(false).wrap_lines(true);
+        assert!(!preview.show_line_numbers);
+        assert!(preview.wrap_lines);
+
+        // Phase 8: Empty content
+        preview.set_content("");
+        assert_eq!(preview.line_count(), 0);
+        assert_eq!(preview.get_scroll_offset(), 0);
+
+        // Phase 9: Single character content
+        preview.set_content("x");
+        assert_eq!(preview.line_count(), 1);
+        preview.scroll_down(5);
+        assert_eq!(preview.get_scroll_offset(), 5);
+
+        // Phase 10: Clone and verify
+        let cloned = preview.clone();
+        assert_eq!(cloned.content(), "x");
+        assert_eq!(cloned.get_scroll_offset(), 5);
+        assert!(!cloned.show_line_numbers);
+        assert!(cloned.wrap_lines);
+        assert_eq!(cloned.title.as_deref(), Some("Phase 4 Title"));
+    }
+
+    // ============ Boundary Conditions ============
+
+    #[test]
+    fn test_preview_content_exactly_at_boundaries() {
+        // Test content at various size boundaries
+        let content_255 = "x".repeat(255);
+        let preview = PreviewPane::new(content_255);
+        assert_eq!(preview.content().len(), 255);
+
+        let content_256 = "x".repeat(256);
+        let preview = PreviewPane::new(content_256);
+        assert_eq!(preview.content().len(), 256);
+
+        let content_65535 = "x".repeat(65535);
+        let preview = PreviewPane::new(content_65535);
+        assert_eq!(preview.content().len(), 65535);
+    }
+
+    #[test]
+    fn test_preview_line_count_at_boundaries() {
+        // Test line counts at u16 boundaries
+        let lines_255 = (0..255).map(|i| format!("L{}", i)).collect::<Vec<_>>().join("\n");
+        let preview = PreviewPane::new(lines_255);
+        assert_eq!(preview.line_count(), 255);
+
+        let lines_256 = (0..256).map(|i| format!("L{}", i)).collect::<Vec<_>>().join("\n");
+        let preview = PreviewPane::new(lines_256);
+        assert_eq!(preview.line_count(), 256);
+    }
+
+    #[test]
+    fn test_preview_scroll_at_boundaries() {
+        let mut preview = PreviewPane::new("Content");
+
+        preview.set_scroll_offset(255);
+        assert_eq!(preview.get_scroll_offset(), 255);
+
+        preview.set_scroll_offset(256);
+        assert_eq!(preview.get_scroll_offset(), 256);
+
+        preview.set_scroll_offset(65535);
+        assert_eq!(preview.get_scroll_offset(), 65535);
+
+        preview.set_scroll_offset(u16::MAX);
+        assert_eq!(preview.get_scroll_offset(), u16::MAX);
+    }
+
+    // ============ Rapid State Changes ============
+
+    #[test]
+    fn test_preview_rapid_title_changes() {
+        let mut preview = PreviewPane::new("Content");
+
+        for i in 0..1000 {
+            preview = preview.title(format!("Title {}", i));
+        }
+
+        assert_eq!(preview.title.as_deref(), Some("Title 999"));
+    }
+
+    #[test]
+    fn test_preview_alternating_flags() {
+        let mut preview = PreviewPane::new("Content");
+
+        for i in 0..1000 {
+            preview = preview
+                .show_line_numbers(i % 2 == 0)
+                .wrap_lines(i % 2 == 1);
+        }
+
+        // i=999: odd, so show_line_numbers=false, wrap_lines=true
+        assert!(!preview.show_line_numbers);
+        assert!(preview.wrap_lines);
+    }
+
+    // ============ Content Preservation Tests ============
+
+    #[test]
+    fn test_preview_content_preserved_through_scroll() {
+        let content = "Original content with special chars: 🚀 日本語";
+        let mut preview = PreviewPane::new(content);
+
+        preview.scroll_down(100);
+        preview.scroll_up(50);
+        preview.scroll_to_top();
+
+        assert_eq!(preview.content(), content);
+    }
+
+    #[test]
+    fn test_preview_content_preserved_through_flag_changes() {
+        let content = "Preserved content";
+        let mut preview = PreviewPane::new(content);
+
+        preview = preview
+            .show_line_numbers(true)
+            .wrap_lines(false)
+            .show_line_numbers(false)
+            .wrap_lines(true);
+
+        assert_eq!(preview.content(), content);
+    }
+
+    #[test]
+    fn test_preview_title_preserved_through_scroll() {
+        let title = "Preserved Title 🚀";
+        let mut preview = PreviewPane::new("Content").title(title);
+
+        preview.scroll_down(50);
+        preview.scroll_up(25);
+        preview.scroll_to_top();
+
+        assert_eq!(preview.title.as_deref(), Some(title));
+    }
+
+    // ============ Edge Case Combinations ============
+
+    #[test]
+    fn test_preview_empty_title_empty_content() {
+        let preview = PreviewPane::new("").title("");
+        assert_eq!(preview.content(), "");
+        assert_eq!(preview.title.as_deref(), Some(""));
+        assert_eq!(preview.line_count(), 0);
+    }
+
+    #[test]
+    fn test_preview_max_scroll_empty_content() {
+        let mut preview = PreviewPane::new("");
+        preview.set_scroll_offset(u16::MAX);
+
+        assert_eq!(preview.get_scroll_offset(), u16::MAX);
+        assert_eq!(preview.line_count(), 0);
+    }
+
+    #[test]
+    fn test_preview_all_features_with_empty_content() {
+        let preview = PreviewPane::new("")
+            .title("Empty Content Preview")
+            .show_line_numbers(true)
+            .wrap_lines(false)
+            .scroll_offset(100);
+
+        assert_eq!(preview.content(), "");
+        assert_eq!(preview.line_count(), 0);
+        assert_eq!(preview.get_scroll_offset(), 100);
+        assert!(preview.show_line_numbers);
+        assert!(!preview.wrap_lines);
+    }
+
+    // ============ Clone Preservation Tests ============
+
+    #[test]
+    fn test_preview_clone_after_many_operations() {
+        let mut preview = PreviewPane::new("Initial");
+
+        for i in 0..100 {
+            preview.scroll_down(1);
+            preview = preview.title(format!("T{}", i));
+        }
+
+        let cloned = preview.clone();
+        assert_eq!(cloned.get_scroll_offset(), preview.get_scroll_offset());
+        assert_eq!(cloned.title, preview.title);
+        assert_eq!(cloned.content(), preview.content());
+    }
+
+    #[test]
+    fn test_preview_clone_independence() {
+        let mut original = PreviewPane::new("Original");
+        let mut cloned = original.clone();
+
+        original.set_content("Modified");
+        cloned.scroll_down(50);
+
+        assert_eq!(original.content(), "Modified");
+        assert_eq!(cloned.content(), "Original");
+        assert_eq!(original.get_scroll_offset(), 0);
+        assert_eq!(cloned.get_scroll_offset(), 50);
+    }
 }
