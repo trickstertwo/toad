@@ -559,4 +559,459 @@ mod tests {
         assert!(path_str.contains("toad"));
         assert!(path_str.contains("history.json"));
     }
+
+    // ========================================
+    // MEDIUM TIER EDGE CASE TESTS
+    // ========================================
+
+    // Max Size Edge Cases
+    #[test]
+    fn test_history_max_size_zero() {
+        let mut history = History::new(0);
+        history.add("test".to_string());
+        assert_eq!(history.len(), 0); // Can't store anything
+    }
+
+    #[test]
+    fn test_history_max_size_one() {
+        let mut history = History::new(1);
+        history.add("first".to_string());
+        assert_eq!(history.len(), 1);
+
+        history.add("second".to_string());
+        assert_eq!(history.len(), 1);
+        assert_eq!(history.get(0), Some(&"second".to_string()));
+    }
+
+    #[test]
+    fn test_history_very_large_max_size() {
+        let history = History::new(1_000_000);
+        assert_eq!(history.max_size(), 1_000_000);
+    }
+
+    #[test]
+    fn test_history_fill_to_max() {
+        let mut history = History::new(10);
+
+        for i in 0..10 {
+            history.add(format!("entry {}", i));
+        }
+
+        assert_eq!(history.len(), 10);
+
+        // Add one more - should evict oldest
+        history.add("new entry".to_string());
+        assert_eq!(history.len(), 10);
+        assert_eq!(history.get(9), Some(&"entry 1".to_string())); // entry 0 evicted
+    }
+
+    // Unicode/Emoji Edge Cases
+    #[test]
+    fn test_history_unicode_entries() {
+        let mut history = History::new(10);
+
+        history.add("日本語コマンド".to_string());
+        history.add("中文命令".to_string());
+        history.add("العربية الأمر".to_string());
+
+        assert_eq!(history.len(), 3);
+        assert_eq!(history.get(0), Some(&"العربية الأمر".to_string()));
+    }
+
+    #[test]
+    fn test_history_emoji_entries() {
+        let mut history = History::new(10);
+
+        history.add("🐸 frog command".to_string());
+        history.add("🎉 party time".to_string());
+        history.add("👨‍💻 coding".to_string());
+
+        assert_eq!(history.len(), 3);
+    }
+
+    #[test]
+    fn test_history_very_long_entry() {
+        let mut history = History::new(10);
+        let long_entry = "command ".repeat(1000);
+
+        history.add(long_entry.clone());
+        assert_eq!(history.len(), 1);
+        assert_eq!(history.get(0), Some(&long_entry));
+    }
+
+    // Rapid Operations
+    #[test]
+    fn test_history_rapid_addition() {
+        let mut history = History::new(1000);
+
+        for i in 0..500 {
+            history.add(format!("cmd {}", i));
+        }
+
+        assert_eq!(history.len(), 500);
+    }
+
+    #[test]
+    fn test_history_rapid_addition_with_overflow() {
+        let mut history = History::new(50);
+
+        for i in 0..200 {
+            history.add(format!("cmd {}", i));
+        }
+
+        assert_eq!(history.len(), 50);
+        // Most recent should be cmd 199
+        assert_eq!(history.get(0), Some(&"cmd 199".to_string()));
+    }
+
+    // Navigation Edge Cases
+    #[test]
+    fn test_navigation_on_empty_history() {
+        let mut history = History::new(10);
+
+        assert_eq!(history.older(), None);
+        assert_eq!(history.newer(), None);
+        assert_eq!(history.position(), 0);
+    }
+
+    #[test]
+    fn test_navigation_single_entry() {
+        let mut history = History::new(10);
+        history.add("only one".to_string());
+
+        assert_eq!(history.older(), Some(&"only one".to_string()));
+        assert_eq!(history.older(), None);
+
+        assert_eq!(history.newer(), None); // Already at newest
+    }
+
+    #[test]
+    fn test_navigation_boundaries() {
+        let mut history = History::new(10);
+        history.add("first".to_string());
+        history.add("second".to_string());
+        history.add("third".to_string());
+
+        // Navigate to end
+        history.older();
+        history.older();
+        history.older();
+        assert_eq!(history.older(), None);
+        assert_eq!(history.older(), None); // Still None
+
+        // Navigate back to start
+        history.newer();
+        history.newer();
+        history.newer();
+        assert_eq!(history.newer(), None);
+        assert_eq!(history.newer(), None); // Still None
+    }
+
+    #[test]
+    fn test_position_resets_on_add() {
+        let mut history = History::new(10);
+        history.add("first".to_string());
+        history.add("second".to_string());
+
+        history.older();
+        history.older();
+        assert_eq!(history.position(), 2);
+
+        history.add("third".to_string());
+        assert_eq!(history.position(), 0); // Reset
+    }
+
+    #[test]
+    fn test_multiple_navigation_cycles() {
+        let mut history = History::new(5);
+        for i in 0..5 {
+            history.add(format!("entry {}", i));
+        }
+
+        // Cycle back and forth multiple times
+        for _ in 0..3 {
+            for _ in 0..5 {
+                history.older();
+            }
+            for _ in 0..4 {
+                history.newer();
+            }
+        }
+
+        // Should be in consistent state
+        assert!(history.position() <= history.len());
+    }
+
+    // Search Edge Cases
+    #[test]
+    fn test_search_empty_history() {
+        let history = History::new(10);
+        let matches = history.search("test");
+        assert_eq!(matches.len(), 0);
+    }
+
+    #[test]
+    fn test_search_no_matches() {
+        let mut history = History::new(10);
+        history.add("cargo build".to_string());
+        history.add("cargo test".to_string());
+
+        let matches = history.search("git");
+        assert_eq!(matches.len(), 0);
+    }
+
+    #[test]
+    fn test_search_empty_query() {
+        let mut history = History::new(10);
+        history.add("test".to_string());
+        history.add("other".to_string());
+
+        let matches = history.search("");
+        assert_eq!(matches.len(), 2); // Empty string matches everything
+    }
+
+    #[test]
+    fn test_search_case_sensitive() {
+        let mut history = History::new(10);
+        history.add("Cargo Build".to_string());
+        history.add("cargo test".to_string());
+
+        let matches = history.search("Cargo");
+        assert_eq!(matches.len(), 1);
+
+        let matches = history.search("cargo");
+        assert_eq!(matches.len(), 1);
+    }
+
+    #[test]
+    fn test_search_with_unicode() {
+        let mut history = History::new(10);
+        history.add("日本語 test".to_string());
+        history.add("test 中文".to_string());
+        history.add("other".to_string());
+
+        let matches = history.search("test");
+        assert_eq!(matches.len(), 2);
+
+        let matches = history.search("日本");
+        assert_eq!(matches.len(), 1);
+    }
+
+    #[test]
+    fn test_search_special_characters() {
+        let mut history = History::new(10);
+        history.add("git commit -m \"test\"".to_string());
+        history.add("echo $HOME".to_string());
+        history.add("ls -la".to_string());
+
+        let matches = history.search("\"");
+        assert_eq!(matches.len(), 1);
+
+        let matches = history.search("$");
+        assert_eq!(matches.len(), 1);
+    }
+
+    // Deduplication Edge Cases
+    #[test]
+    fn test_deduplication_exact_match() {
+        let mut history = History::new(10);
+        history.add("test".to_string());
+        history.add("other".to_string());
+        history.add("test".to_string());
+
+        assert_eq!(history.len(), 2);
+        assert_eq!(history.get(0), Some(&"test".to_string()));
+        assert_eq!(history.get(1), Some(&"other".to_string()));
+    }
+
+    #[test]
+    fn test_deduplication_moves_to_front() {
+        let mut history = History::new(10);
+        history.add("first".to_string());
+        history.add("second".to_string());
+        history.add("third".to_string());
+        history.add("first".to_string()); // Move to front
+
+        assert_eq!(history.len(), 3);
+        assert_eq!(history.get(0), Some(&"first".to_string()));
+        assert_eq!(history.get(1), Some(&"third".to_string()));
+        assert_eq!(history.get(2), Some(&"second".to_string()));
+    }
+
+    #[test]
+    fn test_deduplication_with_whitespace() {
+        let mut history = History::new(10);
+        history.add("test".to_string());
+        history.add("test ".to_string()); // Different (trailing space)
+
+        assert_eq!(history.len(), 2);
+    }
+
+    // Empty/Whitespace Edge Cases
+    #[test]
+    fn test_add_only_whitespace() {
+        let mut history = History::new(10);
+        history.add("   ".to_string());
+        history.add("\t".to_string());
+        history.add("\n".to_string());
+
+        assert_eq!(history.len(), 0);
+    }
+
+    #[test]
+    fn test_add_entry_with_leading_trailing_whitespace() {
+        let mut history = History::new(10);
+        history.add("  test  ".to_string());
+
+        // It stores the entry as-is (doesn't trim)
+        assert_eq!(history.len(), 1);
+        assert_eq!(history.get(0), Some(&"  test  ".to_string()));
+    }
+
+    // Load/Save Edge Cases
+    #[test]
+    fn test_save_load_cycle() {
+        let mut history = History::new(10);
+        history.add("first".to_string());
+        history.add("second".to_string());
+
+        let temp_file = std::env::temp_dir().join("test_history.json");
+        history.save(&temp_file).unwrap();
+
+        let loaded = History::load(&temp_file).unwrap();
+        assert_eq!(loaded.len(), 2);
+        assert_eq!(loaded.max_size(), 10);
+        assert_eq!(loaded.get(0), Some(&"second".to_string()));
+
+        let _ = std::fs::remove_file(&temp_file);
+    }
+
+    #[test]
+    fn test_load_nonexistent_file() {
+        let result = History::load(Path::new("/nonexistent/path/history.json"));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_save_creates_directory() {
+        let temp_dir = std::env::temp_dir()
+            .join("toad_test_nested")
+            .join("deep")
+            .join("path");
+        let temp_file = temp_dir.join("history.json");
+
+        let _ = std::fs::remove_dir_all(&temp_dir.parent().unwrap().parent().unwrap());
+
+        let mut history = History::new(5);
+        history.add("test".to_string());
+        history.save(&temp_file).unwrap();
+
+        assert!(temp_file.exists());
+
+        let _ = std::fs::remove_dir_all(&temp_dir.parent().unwrap().parent().unwrap());
+    }
+
+    #[test]
+    fn test_load_or_new_fallback() {
+        let history = History::load_or_new(100);
+        assert_eq!(history.max_size(), 100);
+    }
+
+    // Trait Tests
+    #[test]
+    fn test_history_clone() {
+        let mut history1 = History::new(10);
+        history1.add("test".to_string());
+
+        let history2 = history1.clone();
+
+        assert_eq!(history1.len(), history2.len());
+        assert_eq!(history1.max_size(), history2.max_size());
+        assert_eq!(history1.get(0), history2.get(0));
+    }
+
+    #[test]
+    fn test_history_debug() {
+        let history = History::new(10);
+        let debug_str = format!("{:?}", history);
+        assert!(debug_str.contains("History"));
+    }
+
+    #[test]
+    fn test_history_serialization() {
+        let mut history = History::new(10);
+        history.add("test1".to_string());
+        history.add("test2".to_string());
+
+        let json = serde_json::to_string(&history).unwrap();
+        let deserialized: History = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(history.len(), deserialized.len());
+        assert_eq!(history.max_size(), deserialized.max_size());
+    }
+
+    // Complex Scenarios
+    #[test]
+    fn test_interleaved_add_navigate_search() {
+        let mut history = History::new(10);
+
+        history.add("cmd1".to_string());
+        history.older();
+        history.add("cmd2".to_string());
+        let matches = history.search("cmd");
+        history.older();
+        history.add("cmd3".to_string());
+
+        assert_eq!(matches.len(), 2);
+        assert_eq!(history.len(), 3);
+        assert_eq!(history.position(), 0); // Reset by last add
+    }
+
+    #[test]
+    fn test_clear_resets_position() {
+        let mut history = History::new(10);
+        history.add("test".to_string());
+        history.older();
+
+        assert_eq!(history.position(), 1);
+
+        history.clear();
+        assert_eq!(history.position(), 0);
+    }
+
+    #[test]
+    fn test_entries_returns_correct_slice() {
+        let mut history = History::new(10);
+        history.add("first".to_string());
+        history.add("second".to_string());
+
+        let entries = history.entries();
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0], "second");
+        assert_eq!(entries[1], "first");
+    }
+
+    #[test]
+    fn test_multiple_deduplication_cycles() {
+        let mut history = History::new(5);
+
+        for _ in 0..10 {
+            history.add("repeat".to_string());
+            history.add("other".to_string());
+        }
+
+        assert_eq!(history.len(), 2);
+    }
+
+    #[test]
+    fn test_navigation_after_clear() {
+        let mut history = History::new(10);
+        history.add("test".to_string());
+        history.older();
+
+        history.clear();
+
+        assert_eq!(history.older(), None);
+        assert_eq!(history.newer(), None);
+    }
 }
