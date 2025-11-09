@@ -990,4 +990,261 @@ mod tests {
         let model = ModelInfo::new("id", "Name", "Provider");
         assert!(model.capabilities.is_empty());
     }
+
+    // ============ Extreme Stress Tests (10k operations) ============
+
+    #[test]
+    fn test_selector_10k_next_navigation() {
+        let mut selector = ModelSelector::new();
+        for _ in 0..10000 {
+            selector.next();
+        }
+        // Should still be functional
+        assert!(selector.selected_model().is_some());
+    }
+
+    #[test]
+    fn test_selector_10k_previous_navigation() {
+        let mut selector = ModelSelector::new();
+        for _ in 0..10000 {
+            selector.previous();
+        }
+        assert!(selector.selected_model().is_some());
+    }
+
+    #[test]
+    fn test_selector_10k_mixed_operations() {
+        let mut selector = ModelSelector::new();
+        for i in 0..10000 {
+            match i % 4 {
+                0 => selector.next(),
+                1 => selector.previous(),
+                2 => selector.toggle_details(),
+                _ => {
+                    selector.select(i % selector.models.len());
+                }
+            }
+        }
+        assert!(selector.selected_model().is_some());
+    }
+
+    #[test]
+    fn test_model_10k_capability_additions() {
+        let mut model = ModelInfo::new("test", "Test", "Provider");
+        for i in 0..10000 {
+            model = model.with_capability(format!("cap{}", i));
+        }
+        assert_eq!(model.capabilities.len(), 10000);
+    }
+
+    // ============ Selection State Preservation ============
+
+    #[test]
+    fn test_selector_state_after_model_replacement() {
+        let mut selector = ModelSelector::new();
+        selector.select(2);
+        assert_eq!(selector.selected, 2);
+
+        // Replace with fewer models
+        let new_models = vec![
+            ModelInfo::new("m1", "Model 1", "P1"),
+        ];
+        selector = selector.with_models(new_models);
+
+        // Should adjust selection to valid index
+        assert_eq!(selector.selected, 0);
+    }
+
+    #[test]
+    fn test_selector_state_after_model_expansion() {
+        let mut selector = ModelSelector::new();
+        selector.select(1);
+
+        // Add more models
+        for i in 0..50 {
+            selector.add_model(ModelInfo::new(format!("m{}", i), format!("Model {}", i), "P"));
+        }
+
+        // Selection should remain at 1
+        assert_eq!(selector.selected, 1);
+    }
+
+    // ============ Capability Filtering Edge Cases ============
+
+    #[test]
+    fn test_filter_with_empty_string() {
+        let mut selector = ModelSelector::new();
+        selector.set_filter(Some("".to_string()));
+        assert_eq!(selector.filter, Some("".to_string()));
+    }
+
+    #[test]
+    fn test_filter_with_unicode_capability() {
+        let mut selector = ModelSelector::new();
+        selector.add_model(
+            ModelInfo::new("test", "Test", "Provider")
+                .with_capability("日本語処理")
+        );
+
+        selector.set_filter(Some("日本語処理".to_string()));
+
+        let filtered_count = selector
+            .models
+            .iter()
+            .filter(|m| {
+                if let Some(ref f) = selector.filter {
+                    m.capabilities.contains(f)
+                } else {
+                    true
+                }
+            })
+            .count();
+
+        assert_eq!(filtered_count, 1);
+    }
+
+    #[test]
+    fn test_filter_case_sensitivity() {
+        let selector = ModelSelector::new();
+        // Filter is case-sensitive by default
+        let filtered = selector
+            .models
+            .iter()
+            .filter(|m| m.capabilities.contains(&"CODING".to_string()))
+            .count();
+
+        // Should be 0 because capabilities use lowercase "coding"
+        assert_eq!(filtered, 0);
+    }
+
+    // ============ Indicator Edge Cases ============
+
+    #[test]
+    fn test_cost_indicator_boundary_values() {
+        // Test exact boundary values for cost indicator
+        let model1 = ModelInfo::new("t", "T", "P").with_cost(0.25); // Should be $
+        let model2 = ModelInfo::new("t", "T", "P").with_cost(0.5);  // Should be $$
+        let model3 = ModelInfo::new("t", "T", "P").with_cost(1.0);  // Should be $$$$
+        let model4 = ModelInfo::new("t", "T", "P").with_cost(1.25); // Should be $$$$$
+
+        assert_eq!(model1.cost_indicator(), "$");
+        assert_eq!(model2.cost_indicator(), "$$");
+        assert_eq!(model3.cost_indicator(), "$$$$");
+        assert_eq!(model4.cost_indicator(), "$$$$$");
+    }
+
+    #[test]
+    fn test_speed_indicator_boundary_values() {
+        let model1 = ModelInfo::new("t", "T", "P").with_speed(0.33); // ceil(0.33*3) = ceil(0.99) = 1 → ⚡
+        let model2 = ModelInfo::new("t", "T", "P").with_speed(0.66); // ceil(0.66*3) = ceil(1.98) = 2 → ⚡⚡
+        let model3 = ModelInfo::new("t", "T", "P").with_speed(1.0);  // ceil(1.0*3) = ceil(3.0) = 3 → ⚡⚡⚡
+
+        assert_eq!(model1.speed_indicator(), "⚡");
+        assert_eq!(model2.speed_indicator(), "⚡⚡");
+        assert_eq!(model3.speed_indicator(), "⚡⚡⚡");
+    }
+
+    // ============ Multi-Phase Comprehensive Workflow (10 phases) ============
+
+    #[test]
+    fn test_selector_10_phase_comprehensive_workflow() {
+        let mut selector = ModelSelector::new();
+
+        // Phase 1: Initial state verification
+        assert!(selector.selected_model().is_some());
+        assert_eq!(selector.selected, 0);
+        assert!(selector.show_details);
+
+        // Phase 2: Add custom models with unicode
+        for i in 0..10 {
+            selector.add_model(
+                ModelInfo::new(format!("custom-{}", i), format!("日本語 Model {}", i), "🚀 Provider")
+                    .with_capability("coding")
+                    .with_capability(format!("cap-{}", i))
+            );
+        }
+        let total_models = selector.models.len();
+        assert!(total_models >= 10);
+
+        // Phase 3: Navigation stress
+        for _ in 0..100 {
+            selector.next();
+        }
+        assert!(selector.selected < total_models);
+
+        // Phase 4: Navigate to specific index
+        selector.select(total_models / 2);
+        assert_eq!(selector.selected, total_models / 2);
+
+        // Phase 5: Toggle details multiple times
+        selector.toggle_details();
+        assert!(!selector.show_details);
+        selector.toggle_details();
+        assert!(selector.show_details);
+
+        // Phase 6: Select by ID
+        assert!(selector.select_by_id("custom-5"));
+        assert!(selector.selected_id().unwrap().contains("custom-5"));
+
+        // Phase 7: Apply filter
+        selector.set_filter(Some("cap-3".to_string()));
+        let filtered = selector
+            .models
+            .iter()
+            .filter(|m| m.capabilities.contains(&"cap-3".to_string()))
+            .count();
+        assert_eq!(filtered, 1);
+
+        // Phase 8: Clear filter
+        selector.set_filter(None);
+        assert!(selector.filter.is_none());
+
+        // Phase 9: Backward navigation
+        for _ in 0..50 {
+            selector.previous();
+        }
+        assert!(selector.selected < total_models);
+
+        // Phase 10: Final state verification
+        assert!(selector.selected_model().is_some());
+        selector.select(0);
+        assert_eq!(selector.selected, 0);
+    }
+
+    // ============ Context Window Formatting Edge Cases ============
+
+    #[test]
+    fn test_formatted_context_exactly_1m() {
+        let model = ModelInfo::new("t", "T", "P").with_context_window(1_000_000);
+        assert_eq!(model.formatted_context(), "1M");
+    }
+
+    #[test]
+    fn test_formatted_context_exactly_1k() {
+        let model = ModelInfo::new("t", "T", "P").with_context_window(1_000);
+        assert_eq!(model.formatted_context(), "1K");
+    }
+
+    #[test]
+    fn test_formatted_context_999() {
+        let model = ModelInfo::new("t", "T", "P").with_context_window(999);
+        assert_eq!(model.formatted_context(), "999");
+    }
+
+    // ============ Clone Independence ============
+
+    #[test]
+    fn test_model_info_clone_independence() {
+        let mut model1 = ModelInfo::new("test", "Test", "Provider")
+            .with_capability("coding");
+
+        let mut model2 = model1.clone();
+
+        // Modify model2
+        model2 = model2.with_capability("reasoning");
+
+        // model1 should be unchanged (capabilities should be different)
+        assert_eq!(model1.capabilities.len(), 1);
+        assert_eq!(model2.capabilities.len(), 2);
+    }
 }
