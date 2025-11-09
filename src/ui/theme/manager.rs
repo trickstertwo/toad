@@ -857,4 +857,55 @@ accent = [50, 50, 50]
         // Path should be stored (verified by successful reload)
         assert!(manager.reload_custom_theme().is_ok());
     }
+
+    // ===== Custom Theme Name Test =====
+    #[test]
+    fn test_custom_theme_name_as_str() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        let mut manager = ThemeManager::new();
+
+        // Create temporary theme file
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(
+            temp_file,
+            r#"
+primary = [100, 100, 100]
+primary_bright = [120, 120, 120]
+primary_dark = [80, 80, 80]
+white = [255, 255, 255]
+light_gray = [200, 200, 200]
+gray = [150, 150, 150]
+dark_gray = [100, 100, 100]
+darker_gray = [50, 50, 50]
+black = [10, 10, 10]
+success = [0, 255, 0]
+error = [255, 0, 0]
+warning = [255, 255, 0]
+info = [0, 150, 255]
+red = [255, 0, 0]
+yellow = [255, 255, 0]
+blue = [0, 0, 255]
+green = [0, 255, 0]
+cyan = [0, 255, 255]
+magenta = [255, 0, 255]
+background = [10, 10, 10]
+foreground = [240, 240, 240]
+border = [50, 50, 50]
+border_focused = [100, 100, 100]
+title = [100, 100, 100]
+accent = [100, 100, 100]
+"#
+        )
+        .unwrap();
+
+        // Load custom theme
+        manager.load_custom_theme(temp_file.path()).unwrap();
+
+        // Verify custom theme name
+        let theme_name = manager.current_theme_name();
+        assert_eq!(theme_name, ThemeName::Custom);
+        assert_eq!(theme_name.as_str(), "Custom");
+    }
 }

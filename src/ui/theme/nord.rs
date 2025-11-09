@@ -183,19 +183,17 @@ mod tests {
     #[test]
     fn test_nord_background_is_dark() {
         let theme = NordTheme;
-        match theme.background() {
-            Color::Rgb(r, g, b) => assert!(r < 100 && g < 100 && b < 100),
-            _ => panic!("Expected RGB color"),
-        }
+        // Verify exact Nord0 background color
+        assert_eq!(theme.background(), Color::Rgb(46, 52, 64));
+        // Verified: all RGB values are < 100, confirming it's dark
     }
 
     #[test]
     fn test_nord_foreground_is_light() {
         let theme = NordTheme;
-        match theme.foreground() {
-            Color::Rgb(r, g, b) => assert!(r > 200 && g > 200 && b > 200),
-            _ => panic!("Expected RGB color"),
-        }
+        // Verify exact Nord4 foreground color
+        assert_eq!(theme.foreground(), Color::Rgb(216, 222, 233));
+        // Verified: all RGB values are > 200, confirming it's light
     }
 
     #[test]
@@ -231,14 +229,17 @@ mod tests {
     fn test_nord_all_colors_are_rgb() {
         let theme = NordTheme;
 
-        // Verify all colors are RGB variants
-        assert!(matches!(theme.primary(), Color::Rgb(..)));
-        assert!(matches!(theme.background(), Color::Rgb(..)));
-        assert!(matches!(theme.foreground(), Color::Rgb(..)));
-        assert!(matches!(theme.success(), Color::Rgb(..)));
-        assert!(matches!(theme.error(), Color::Rgb(..)));
-        assert!(matches!(theme.warning(), Color::Rgb(..)));
-        assert!(matches!(theme.info(), Color::Rgb(..)));
+        // Verify all colors return RGB variants (by checking exact values)
+        // Primary colors
+        assert_eq!(theme.primary(), Color::Rgb(143, 188, 187)); // Nord8
+        assert_eq!(theme.background(), Color::Rgb(46, 52, 64)); // Nord0
+        assert_eq!(theme.foreground(), Color::Rgb(216, 222, 233)); // Nord4
+
+        // Semantic colors
+        assert_eq!(theme.success(), Color::Rgb(163, 190, 140)); // Nord14
+        assert_eq!(theme.error(), Color::Rgb(191, 97, 106)); // Nord11
+        assert_eq!(theme.warning(), Color::Rgb(235, 203, 139)); // Nord13
+        assert_eq!(theme.info(), Color::Rgb(136, 192, 208)); // Nord8
     }
 
     #[test]

@@ -625,15 +625,6 @@ mod tests {
         assert_eq!(theme.border_focused(), Color::Rgb(64, 160, 43));
     }
 
-    #[test]
-    fn test_latte_background_is_bright() {
-        let theme = CatppuccinLatte;
-        match theme.background() {
-            Color::Rgb(r, g, b) => assert!(r > 200 && g > 200 && b > 200),
-            _ => panic!("Expected RGB color"),
-        }
-    }
-
     // ===== Cross-variant tests =====
     #[test]
     fn test_all_variants_have_unique_names() {
@@ -649,17 +640,23 @@ mod tests {
     }
 
     #[test]
-    fn test_dark_variants_have_dark_backgrounds() {
+    fn test_latte_background_brightness() {
+        let theme = CatppuccinLatte;
+        // Latte (light variant) should have bright background
+        assert_eq!(theme.background(), Color::Rgb(239, 241, 245));
+        // Verified: all RGB values (239, 241, 245) are > 200, confirming it's bright
+    }
+
+    #[test]
+    fn test_dark_variants_background_darkness() {
         let mocha = CatppuccinMocha;
         let macchiato = CatppuccinMacchiato;
         let frappe = CatppuccinFrappe;
 
-        for theme in [&mocha as &dyn Theme, &macchiato, &frappe] {
-            match theme.background() {
-                Color::Rgb(r, g, b) => assert!(r < 100 && g < 100 && b < 100),
-                _ => panic!("Expected RGB color"),
-            }
-        }
+        // Dark variants should have dark backgrounds - verify by comparing to known dark values
+        assert_eq!(mocha.background(), Color::Rgb(30, 30, 46));
+        assert_eq!(macchiato.background(), Color::Rgb(36, 39, 58));
+        assert_eq!(frappe.background(), Color::Rgb(48, 52, 70));
     }
 
     // ===== Mocha rainbow colors =====
