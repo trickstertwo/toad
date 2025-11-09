@@ -62,11 +62,12 @@ impl<T> IncrementalLoader<T> {
     /// ```
     pub fn new(items: Vec<T>, chunk_size: usize) -> Self {
         let chunk_size = chunk_size.max(1); // Ensure at least 1
+        let fully_loaded = items.is_empty(); // Empty is fully loaded
         Self {
             items,
             loaded_count: 0,
             chunk_size,
-            fully_loaded: false,
+            fully_loaded,
         }
     }
 

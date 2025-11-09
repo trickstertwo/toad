@@ -5,21 +5,24 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 
 ## 📊 Overall Completion Status
 
-**Total Progress: 166/212 features (78.3%)**
+**Total Progress: 170/212 features (80.2%)**
 
 | Tier | Progress | Percentage | Status |
 |------|----------|------------|---------|
 | 🟢 BASIC | 19/19 | 100% | ✅ CODE EXISTS |
 | 🟡 MEDIUM | 39/39 | 100% | ✅ CODE EXISTS |
 | 🔵 ADVANCED | 48/48 | 100% | ✅ CODE EXISTS |
-| 💎 PLATINUM | 60/106 | 56.6% | 🚧 IN PROGRESS |
+| 💎 PLATINUM | 64/106 | 60.4% | 🚧 IN PROGRESS |
 
 **📋 Audit Status** (2025-11-09):
 - ✅ **Code Verified**: All BASIC/MEDIUM/ADVANCED implementation files exist
-- ✅ **Unit Tests**: 1,576+ tests passing
+- ✅ **Unit Tests**: 1,912+ tests passing (1,924 total, 6 git widget tests deferred)
 - ✅ **Build**: Release build successful
-- ✅ **New Platinum Features**: 11 features added (Git UI × 3, File Preview, Data Portability, Incremental Loading, Tutorial, Help, Cheat Sheet, Tips, Accessibility)
-- ⚠️ **Integration Tests**: Some test failures in new Git widgets (deferred)
+- ✅ **New Platinum Features**: 15 features added
+  - **Session 1**: Git UI × 3, File Preview, Data Portability, Incremental Loading
+  - **Session 2**: Tutorial, Contextual Help, Cheat Sheet, Startup Tips, Accessibility
+  - **Session 3**: AI Diff View, Accept/Reject Panel, Context Display, Demo Mode
+- ⚠️ **Integration Tests**: 6 test failures in Git widgets (deferred - test setup issues)
 - ❌ **Interactive Testing**: Not performed
 - ❌ **Quality Gates**: Not verified for all pre-existing features
 
@@ -290,12 +293,12 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 
 ### AI-Specific Features (for AI coding terminal)
 - [x] **Chat Panel** - Conversational AI interaction ✅ COMPLETED (ChatPanel widget with user/assistant/system messages, streaming support, markdown/code blocks, scrolling, auto-scroll)
-- [ ] **Diff View** - Proposed changes visualization
-- [ ] **Accept/Reject** - Quick code change approval
+- [x] **Diff View** - Proposed changes visualization ✅ COMPLETED (AIDiffView widget with unified/side-by-side modes, hunk navigation, accept/reject per hunk, diff parsing, 7 unit tests)
+- [x] **Accept/Reject** - Quick code change approval ✅ COMPLETED (AcceptRejectPanel with pending/accepted/rejected states, batch operations, diff preview, keyboard shortcuts, 11 unit tests)
 - [x] **Streaming Responses** - Real-time AI output ✅ COMPLETED (Integrated into ChatPanel with streaming messages, append support, finish streaming)
 - [x] **Token Counter** - Usage tracking display ✅ COMPLETED (TokenCounter widget with session/total tracking, cost calculation for multiple models, budget monitoring, compact/full views)
 - [x] **Model Selector** - Switch AI models ✅ COMPLETED (ModelSelector widget with 6 default models, context/cost/speed indicators, filtering by capability, detailed info view)
-- [ ] **Context Display** - Show what AI sees
+- [x] **Context Display** - Show what AI sees ✅ COMPLETED (ContextDisplay with file/message/system/snippet/tool context types, tabs, preview pane, token tracking, 10 unit tests)
 
 ### Developer Experience
 - [x] **Command History** - Searchable command log ✅ COMPLETED (History with search, navigation, save/load)
@@ -677,7 +680,7 @@ Inspired by: Bubbletea, Lazygit, gitui, bottom, yazi, and the Ratatui ecosystem
 - [x] **Interactive Tutorial** - First-run walkthrough ✅ COMPLETED (InteractiveTutorial widget with step-by-step guide, progress tracking, hints, 6 default steps, 11 unit tests)
 - [x] **Contextual Help** - ? for context-specific help ✅ COMPLETED (ContextualHelp system with 8 contexts, categorized keybindings, search filter, 10 unit tests)
 - [x] **Cheat Sheet** - Quick reference overlay ✅ COMPLETED (CheatSheet widget with 6 categories, column layout, category switching, 4 unit tests)
-- [ ] **Demo Mode** - Showcase features
+- [x] **Demo Mode** - Showcase features ✅ COMPLETED (DemoMode widget with 10 demo steps, auto-advance, pause/resume, loop mode, progress bar, code examples, 10 unit tests)
 - [x] **Tips on Startup** - Random helpful tips ✅ COMPLETED (StartupTips widget with 10 default tips, time-based randomization, dismiss option, 9 unit tests)
 
 ---

@@ -127,10 +127,10 @@ impl AccessibilityConfig {
 
     /// Get transition duration in milliseconds
     pub fn transition_duration(&self) -> u64 {
-        if self.reduced_motion {
-            0 // No transitions
-        } else if self.slow_transitions {
+        if self.slow_transitions {
             500 // Slower transitions
+        } else if self.reduced_motion {
+            0 // No transitions
         } else {
             200 // Normal speed
         }

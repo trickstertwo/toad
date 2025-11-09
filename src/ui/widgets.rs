@@ -2,6 +2,8 @@
 //!
 //! Reusable UI components following Ratatui patterns
 
+pub mod accept_reject_panel;
+pub mod ai_diff_view;
 pub mod animation;
 pub mod bar_chart;
 pub mod borders;
@@ -12,8 +14,10 @@ pub mod chat_panel;
 pub mod cheat_sheet;
 pub mod collapsible;
 pub mod command_mode;
+pub mod context_display;
 pub mod context_menu;
 pub mod contextual_help;
+pub mod demo_mode;
 pub mod dialog;
 pub mod event_metrics;
 pub mod file_preview_manager;
@@ -66,6 +70,8 @@ pub mod vim_mode;
 pub mod welcome;
 pub mod workspace;
 
+pub use accept_reject_panel::{AcceptRejectPanel, ChangeState, ProposedChange};
+pub use ai_diff_view::{AIDiffView, AIDiffLine, AIDiffLineType, DiffHunk, DiffViewMode};
 pub use animation::{Animation, AnimationState, EasingFunction};
 pub use bar_chart::{BarChart as BarChartWidget, BarData, BarDirection};
 pub use borders::{BorderSet, BorderStyle};
@@ -76,8 +82,10 @@ pub use chat_panel::{ChatMessage, ChatPanel, MessageRole};
 pub use collapsible::{CollapsibleList, CollapsibleSection};
 pub use cheat_sheet::CheatSheet;
 pub use command_mode::CommandMode;
+pub use context_display::{ContextDisplay, ContextItem, ContextType};
 pub use context_menu::{ContextMenu, MenuItem};
 pub use contextual_help::{ContextualHelp, HelpContext, HelpEntry};
+pub use demo_mode::{DemoMode, DemoState, DemoStep};
 pub use dialog::{ConfirmDialog, DialogOption};
 pub use event_metrics::EventMetrics;
 pub use file_preview_manager::{FilePreviewManager, PreviewState};
