@@ -20,6 +20,7 @@ pub mod data_portability;
 pub mod diff;
 pub mod errors;
 pub mod fallback_mode;
+pub mod file_attachments;
 pub mod file_ops;
 pub mod filtering_search;
 pub mod history;
@@ -38,6 +39,7 @@ pub mod terminal_capabilities;
 pub mod text_truncation;
 pub mod time_tracking;
 pub mod validation;
+pub mod visual_kanban_board;
 
 pub use achievements::{
     Achievement, AchievementSystem, AchievementTier, AchievementType, LeaderboardEntry, Streak,
@@ -75,6 +77,7 @@ pub use dashboard_metrics::{
     VelocityMetric, WipMetric,
 };
 pub use data_portability::{DataExporter, DataFormat, DataImporter};
+pub use file_attachments::{Attachment, AttachmentManager, AttachmentType, AttachmentVersion};
 pub use diff::{ChunkHeader, DiffHunk, DiffLine, DiffLineType, DiffParser, DiffStats, FileDiff};
 pub use errors::{ErrorEntry, ErrorHandler, ErrorSeverity};
 pub use fallback_mode::{BoxChars, FallbackMode};
@@ -119,4 +122,7 @@ pub use time_tracking::{
 pub use validation::{
     CompositeValidator, InputValidator, LengthValidator, NotEmptyValidator, RegexValidator,
     ValidationResult, Validator,
+};
+pub use visual_kanban_board::{
+    BoardManager, CardPosition, KanbanBoard, KanbanColumn, Swimlane, SwimlaneGrouping,
 };
