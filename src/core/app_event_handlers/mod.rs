@@ -9,6 +9,7 @@
 //! - [`trust_dialog`]: Trust confirmation dialog event handling
 //! - [`main_screen`]: Main TUI interface event handling (largest handler)
 //! - [`evaluation`]: Evaluation progress/results screen event handling
+//! - [`psx_frogger`]: PSX Frogger game event handling (easter egg)
 //!
 //! # Architecture
 //!
@@ -25,10 +26,12 @@
 //!     TrustDialog  → handle_trust_dialog_key()
 //!     Main         → handle_main_key()
 //!     Evaluation   → handle_evaluation_key()
+//!     PSXFrogger   → handle_psx_frogger_key()
 //! }
 //! ```
 
 mod evaluation;
 mod main_screen;
+mod psx_frogger;
 mod trust_dialog;
 mod welcome;
