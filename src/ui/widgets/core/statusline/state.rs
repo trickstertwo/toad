@@ -1,12 +1,12 @@
 /// Statusline widget for bottom bar
 ///
 /// Displays app state, mode indicators, help text, and status information
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::text::Text, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::{Alignment, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
+    text::Span,
     widgets::Paragraph,
 };
 
@@ -161,12 +161,12 @@ impl Statusline {
         }
     }
 
-    /// Build a line from sections
+    /// Build a line from sections using Text atoms
     pub(super) fn build_line<'a>(
         &self,
         sections: &'a [StatusSection],
         default_separator: bool,
-    ) -> Vec<Span<'a>> {
+    ) -> Vec<Span<'static>> {
         let mut spans = Vec::new();
 
         for (i, section) in sections.iter().enumerate() {
@@ -178,14 +178,15 @@ impl Statusline {
                 Style::default().fg(section.level.color())
             };
 
-            spans.push(Span::styled(&section.text, style));
+            // Use Text atom for section text
+            let text = Text::new(&section.text).style(style);
+            spans.push(text.to_span());
 
             // Add separator if not last
             if default_separator && i < sections.len() - 1 {
-                spans.push(Span::styled(
-                    self.separator.clone(),
-                    Style::default().fg(ToadTheme::DARK_GRAY),
-                ));
+                let separator = Text::new(&self.separator)
+                    .style(Style::default().fg(ToadTheme::DARK_GRAY));
+                spans.push(separator.to_span());
             }
         }
 
@@ -211,7 +212,7 @@ impl Statusline {
         let available = area.width as usize;
         let used = left_width + right_width;
 
-        // Add padding between left and right
+        // Add padding between left and right using Text atoms
         if used < available {
             let padding = available - used - center_width;
             let left_padding = padding / 2;
@@ -219,19 +220,19 @@ impl Statusline {
 
             if !center_spans.is_empty() {
                 // Add left padding before center
-                left_spans.push(Span::raw(" ".repeat(left_padding)));
+                left_spans.push(Text::new(" ".repeat(left_padding)).to_span());
                 left_spans.extend(center_spans);
-                left_spans.push(Span::raw(" ".repeat(right_padding)));
+                left_spans.push(Text::new(" ".repeat(right_padding)).to_span());
             } else {
                 // Just pad between left and right
-                left_spans.push(Span::raw(" ".repeat(available - used)));
+                left_spans.push(Text::new(" ".repeat(available - used)).to_span());
             }
         }
 
         // Add right section
         left_spans.extend(right_spans);
 
-        let line = Line::from(left_spans);
+        let line = ratatui::text::Line::from(left_spans);
         let paragraph = Paragraph::new(line)
             .style(Style::default().bg(ToadTheme::DARK_GRAY))
             .alignment(Alignment::Left);

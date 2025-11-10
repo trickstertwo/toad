@@ -11,13 +11,15 @@
 /// let indicator = ModeIndicator::new(EditorMode::Normal);
 /// assert_eq!(indicator.mode(), EditorMode::Normal);
 /// ```
-use crate::ui::theme::ToadTheme;
+use crate::ui::{
+    atoms::{block::Block, text::Text},
+    theme::ToadTheme,
+};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    widgets::Paragraph,
 };
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -182,27 +184,32 @@ impl ModeIndicator {
         let mode_text = self.mode_text();
         let color = self.mode.color();
 
-        let span = match self.style {
-            IndicatorStyle::Full | IndicatorStyle::Short => Span::styled(
-                format!(" {} ", mode_text),
-                Style::default().fg(color).add_modifier(Modifier::BOLD),
-            ),
-            IndicatorStyle::Block => Span::styled(
-                format!(" {} ", mode_text),
-                Style::default()
-                    .fg(ToadTheme::BLACK)
-                    .bg(color)
-                    .add_modifier(Modifier::BOLD),
-            ),
+        // Use Text atom for mode text rendering
+        let text = match self.style {
+            IndicatorStyle::Full | IndicatorStyle::Short => {
+                Text::new(format!(" {} ", mode_text))
+                    .style(Style::default().fg(color).add_modifier(Modifier::BOLD))
+            }
+            IndicatorStyle::Block => {
+                Text::new(format!(" {} ", mode_text))
+                    .style(
+                        Style::default()
+                            .fg(ToadTheme::BLACK)
+                            .bg(color)
+                            .add_modifier(Modifier::BOLD),
+                    )
+            }
         };
 
-        let line = Line::from(vec![span]);
+        // Convert Text atom to Line for rendering
+        let line = text.to_line();
+
+        // Use Block atom for borders if enabled
         let paragraph = if self.show_border {
-            Paragraph::new(line).block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .border_style(Style::default().fg(color)),
-            )
+            let block = Block::new()
+                .border_style(Style::default().fg(color))
+                .to_ratatui();
+            Paragraph::new(line).block(block)
         } else {
             Paragraph::new(line)
         };

@@ -2,15 +2,16 @@
 //!
 //! Copilot-style confirmation dialogs with radio button selection
 
+use crate::ui::{
+    atoms::{block::Block, text::Text},
+    theme::ToadTheme,
+};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    widgets::Paragraph,
 };
-
-use crate::ui::theme::ToadTheme;
 
 /// A single option in a dialog
 #[derive(Debug, Clone)]
@@ -107,17 +108,12 @@ impl ConfirmDialog {
             height: dialog_height,
         };
 
-        // Outer container
-        let outer_block = Block::default()
-            .borders(Borders::ALL)
+        // Outer container using Block atom
+        let outer_block = Block::new()
+            .title(&self.title)
             .border_style(Style::default().fg(ToadTheme::BORDER_FOCUSED))
-            .title(self.title.as_str())
-            .title_style(
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
-                    .add_modifier(Modifier::BOLD),
-            )
-            .style(Style::default().bg(ToadTheme::BACKGROUND));
+            .style(Style::default().bg(ToadTheme::BACKGROUND))
+            .to_ratatui();
 
         let inner = outer_block.inner(dialog_area);
         frame.render_widget(outer_block, dialog_area);
@@ -144,11 +140,11 @@ impl ConfirmDialog {
 
         let mut chunk_idx = 1;
 
-        // Render info box if present
+        // Render info box if present using Block atom
         if let Some(info_text) = &self.info_box {
-            let info_block = Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(ToadTheme::DARK_GRAY));
+            let info_block = Block::new()
+                .border_style(Style::default().fg(ToadTheme::DARK_GRAY))
+                .to_ratatui();
 
             let info_paragraph = Paragraph::new(info_text.as_str())
                 .style(Style::default().fg(ToadTheme::GRAY))
@@ -159,15 +155,14 @@ impl ConfirmDialog {
             chunk_idx += 2; // Skip spacing
         }
 
-        // Render message
-        let message_lines: Vec<Line> = self
+        // Render message using Text atoms
+        let message_lines: Vec<_> = self
             .message
             .iter()
             .map(|msg| {
-                Line::from(Span::styled(
-                    msg,
-                    Style::default().fg(ToadTheme::FOREGROUND),
-                ))
+                Text::new(msg)
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_line()
             })
             .collect();
 
@@ -195,22 +190,24 @@ impl ConfirmDialog {
                 Style::default().fg(ToadTheme::GRAY)
             };
 
+            // Use Text atom for option rendering
             let option_text = format!("{}{}. {}", prefix, option.key, option.label);
-            let option_line = Line::from(Span::styled(option_text, style));
+            let option_line = Text::new(option_text).style(style).to_line();
             let option_paragraph = Paragraph::new(option_line);
 
             frame.render_widget(option_paragraph, option_area);
         }
         chunk_idx += 2; // Skip spacing
 
-        // Render help text
+        // Render help text using Text atom
         let help_text = "Confirm with number keys or ↑↓ keys and Enter, Cancel with Esc";
-        let help_line = Line::from(Span::styled(
-            help_text,
-            Style::default()
-                .fg(ToadTheme::DARK_GRAY)
-                .add_modifier(Modifier::ITALIC),
-        ));
+        let help_line = Text::new(help_text)
+            .style(
+                Style::default()
+                    .fg(ToadTheme::DARK_GRAY)
+                    .add_modifier(Modifier::ITALIC),
+            )
+            .to_line();
         let help_paragraph = Paragraph::new(help_line).alignment(Alignment::Center);
         frame.render_widget(help_paragraph, chunks[chunk_idx]);
     }
