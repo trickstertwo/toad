@@ -13,12 +13,13 @@
 //! assert_eq!(tutorial.current_step(), 0);
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text};
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Clear, Paragraph, Widget, Wrap},
+    text::Line,
+    widgets::{Borders, Clear, Paragraph, Widget, Wrap},
 };
 use serde::{Deserialize, Serialize};
 
@@ -365,47 +366,55 @@ impl Widget for &InteractiveTutorial {
             let progress_bar = "=".repeat((self.progress() * 40.0) as usize);
             let header_text = vec![
                 Line::from(vec![
-                    Span::styled(
-                        format!("Step {}/{}: ", self.current_step + 1, self.steps.len()),
-                        Style::default().fg(Color::Gray),
-                    ),
-                    Span::styled(
-                        &step.title,
-                        Style::default()
-                            .fg(Color::Cyan)
-                            .add_modifier(Modifier::BOLD),
-                    ),
+                    Text::new(format!("Step {}/{}: ", self.current_step + 1, self.steps.len()))
+                        .style(Style::default().fg(Color::Gray))
+                        .to_span(),
+                    Text::new(&step.title)
+                        .style(
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD),
+                        )
+                        .to_span(),
                 ]),
                 Line::from(vec![
-                    Span::styled("[", Style::default().fg(Color::Gray)),
-                    Span::styled(&progress_bar, Style::default().fg(Color::Green)),
-                    Span::styled(
-                        " ".repeat(40 - progress_bar.len()),
-                        Style::default().fg(Color::DarkGray),
-                    ),
-                    Span::styled("]", Style::default().fg(Color::Gray)),
+                    Text::new("[").style(Style::default().fg(Color::Gray)).to_span(),
+                    Text::new(&progress_bar)
+                        .style(Style::default().fg(Color::Green))
+                        .to_span(),
+                    Text::new(" ".repeat(40 - progress_bar.len()))
+                        .style(Style::default().fg(Color::DarkGray))
+                        .to_span(),
+                    Text::new("]").style(Style::default().fg(Color::Gray)).to_span(),
                 ]),
             ];
 
-            let header = Paragraph::new(header_text).block(Block::default().borders(Borders::ALL));
+            let header = Paragraph::new(header_text)
+                .block(AtomBlock::new().borders(Borders::ALL).to_ratatui());
             header.render(chunks[0], buf);
 
             // Render content
             let content = Paragraph::new(step.description.as_str())
-                .block(Block::default().borders(Borders::ALL).title("Tutorial"))
+                .block(
+                    AtomBlock::new()
+                        .borders(Borders::ALL)
+                        .title("Tutorial")
+                        .to_ratatui(),
+                )
                 .wrap(Wrap { trim: false })
                 .style(Style::default().fg(Color::White));
             content.render(chunks[1], buf);
 
             // Render action required
             let mut action_lines = vec![Line::from(vec![
-                Span::styled(
-                    "Action: ",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(&step.action),
+                Text::new("Action: ")
+                    .style(
+                        Style::default()
+                            .fg(Color::Yellow)
+                            .add_modifier(Modifier::BOLD),
+                    )
+                    .to_span(),
+                Text::new(&step.action).to_span(),
             ])];
 
             if self.show_hints
@@ -413,18 +422,21 @@ impl Widget for &InteractiveTutorial {
             {
                 action_lines.push(Line::from(""));
                 action_lines.push(Line::from(vec![
-                    Span::styled("💡 Hint: ", Style::default().fg(Color::Cyan)),
-                    Span::styled(
-                        hint,
-                        Style::default()
-                            .fg(Color::Gray)
-                            .add_modifier(Modifier::ITALIC),
-                    ),
+                    Text::new("💡 Hint: ")
+                        .style(Style::default().fg(Color::Cyan))
+                        .to_span(),
+                    Text::new(hint)
+                        .style(
+                            Style::default()
+                                .fg(Color::Gray)
+                                .add_modifier(Modifier::ITALIC),
+                        )
+                        .to_span(),
                 ]));
             }
 
             let action_widget = Paragraph::new(action_lines)
-                .block(Block::default().borders(Borders::ALL))
+                .block(AtomBlock::new().borders(Borders::ALL).to_ratatui())
                 .wrap(Wrap { trim: false });
             action_widget.render(chunks[2], buf);
 
@@ -436,7 +448,7 @@ impl Widget for &InteractiveTutorial {
             };
 
             let footer = Paragraph::new(footer_text)
-                .block(Block::default().borders(Borders::ALL))
+                .block(AtomBlock::new().borders(Borders::ALL).to_ratatui())
                 .style(Style::default().fg(Color::Gray))
                 .alignment(Alignment::Center);
             footer.render(chunks[3], buf);
