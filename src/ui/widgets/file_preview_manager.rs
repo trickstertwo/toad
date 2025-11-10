@@ -19,7 +19,7 @@
 //! # }
 //! ```
 
-use crate::ui::syntax::Language;
+use crate::{services::FilesystemService, ui::syntax::Language};
 use anyhow::Result;
 use ratatui::{
     buffer::Buffer,
@@ -29,7 +29,6 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph, Widget, Wrap},
 };
 use std::path::{Path, PathBuf};
-use tokio::fs;
 
 /// File preview state
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -76,6 +75,8 @@ pub struct FilePreviewManager {
     max_size: usize,
     /// Whether file was truncated
     truncated: bool,
+    /// Filesystem service for I/O operations
+    fs_service: FilesystemService,
 }
 
 impl FilePreviewManager {
@@ -100,6 +101,7 @@ impl FilePreviewManager {
             language: Language::PlainText,
             max_size: 1024 * 1024, // 1MB default
             truncated: false,
+            fs_service: FilesystemService::new(),
         }
     }
 
@@ -128,8 +130,8 @@ impl FilePreviewManager {
         self.language =
             Language::from_extension(path.extension().and_then(|s| s.to_str()).unwrap_or(""));
 
-        // Check file size
-        match fs::metadata(path).await {
+        // Check file size using FilesystemService
+        match self.fs_service.read_file_metadata(path).await {
             Ok(metadata) => {
                 let size = metadata.len() as usize;
                 if size > self.max_size {
@@ -147,8 +149,8 @@ impl FilePreviewManager {
                         }
                     }
                 } else {
-                    // Normal load
-                    match fs::read_to_string(path).await {
+                    // Normal load using FilesystemService
+                    match self.fs_service.read_file_to_string(path).await {
                         Ok(content) => {
                             self.content = content;
                             self.state = PreviewState::Loaded;
@@ -173,7 +175,7 @@ impl FilePreviewManager {
 
     /// Load partial file content
     async fn load_partial(&self, path: &Path, max_bytes: usize) -> Result<String> {
-        let bytes = fs::read(path).await?;
+        let bytes = self.fs_service.read_file(path).await?;
         let truncated_bytes = &bytes[..max_bytes.min(bytes.len())];
 
         // Try to convert to string, replacing invalid UTF-8
@@ -383,6 +385,7 @@ impl FilePreviewManager {
 mod tests {
     use super::*;
     use tempfile::TempDir;
+    use tokio::fs;
 
     #[test]
     fn test_file_preview_manager_new() {

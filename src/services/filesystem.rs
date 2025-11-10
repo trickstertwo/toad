@@ -28,6 +28,7 @@
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
+use tokio::fs as async_fs;
 
 /// Directory entry information
 ///
@@ -198,6 +199,92 @@ impl FilesystemService {
     /// ```
     pub fn is_file(&self, path: &Path) -> bool {
         path.is_file()
+    }
+
+    // ===== Async File Operations =====
+
+    /// Get file metadata asynchronously
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - Path to the file
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(fs::Metadata)` - File metadata
+    /// * `Err(io::Error)` - If metadata cannot be read
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use toad::services::FilesystemService;
+    /// # use std::path::Path;
+    /// #
+    /// # async fn example() -> std::io::Result<()> {
+    /// let service = FilesystemService::new();
+    /// let metadata = service.read_file_metadata(Path::new("Cargo.toml")).await?;
+    /// println!("File size: {} bytes", metadata.len());
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn read_file_metadata(&self, path: &Path) -> io::Result<fs::Metadata> {
+        async_fs::metadata(path).await
+    }
+
+    /// Read a file to string asynchronously
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - Path to the file
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(String)` - File contents as UTF-8 string
+    /// * `Err(io::Error)` - If file cannot be read or is not valid UTF-8
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use toad::services::FilesystemService;
+    /// # use std::path::Path;
+    /// #
+    /// # async fn example() -> std::io::Result<()> {
+    /// let service = FilesystemService::new();
+    /// let content = service.read_file_to_string(Path::new("Cargo.toml")).await?;
+    /// println!("File content: {}", content);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn read_file_to_string(&self, path: &Path) -> io::Result<String> {
+        async_fs::read_to_string(path).await
+    }
+
+    /// Read a file as bytes asynchronously
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - Path to the file
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(Vec<u8>)` - File contents as bytes
+    /// * `Err(io::Error)` - If file cannot be read
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use toad::services::FilesystemService;
+    /// # use std::path::Path;
+    /// #
+    /// # async fn example() -> std::io::Result<()> {
+    /// let service = FilesystemService::new();
+    /// let bytes = service.read_file(Path::new("image.png")).await?;
+    /// println!("File size: {} bytes", bytes.len());
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn read_file(&self, path: &Path) -> io::Result<Vec<u8>> {
+        async_fs::read(path).await
     }
 }
 
