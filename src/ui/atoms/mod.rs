@@ -14,16 +14,21 @@
 //! # Atoms
 //!
 //! - [`text`]: Styled text primitive
-//! - More atoms to come (block, button, icon, etc.)
+//! - [`block`]: Bordered container primitive
+//! - More atoms to come (button, icon, etc.)
 //!
 //! # Examples
 //!
 //! ```
 //! use toad::ui::atoms::text::Text;
+//! use toad::ui::atoms::block::Block;
 //!
 //! let text = Text::new("Hello").bold();
+//! let block = Block::themed("Panel");
 //! ```
 
+pub mod block;
 pub mod text;
 
+pub use block::Block;
 pub use text::Text;
