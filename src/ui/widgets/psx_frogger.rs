@@ -19,6 +19,9 @@ use std::time::{Duration, Instant};
 // Game constants
 const GAME_WIDTH: usize = 60;
 const GAME_HEIGHT: usize = 18;
+
+// 3D rendering constants for "polygonal origami" style
+const USE_3D_RENDERING: bool = true; // Enable PSX-style 3D graphics
 const GOAL_ROW: i32 = 0;
 const WATER_START: i32 = 1;
 const WATER_END: i32 = 8;
@@ -37,6 +40,143 @@ const PSX_LILYPAD_PINK: Color = Color::Rgb(255, 105, 180);  // Hot pink
 const PSX_TOXIC_GREEN: Color = Color::Rgb(57, 255, 20);     // Toxic green
 const PSX_DESERT_SAND: Color = Color::Rgb(238, 203, 173);   // Sand
 const PSX_JUNGLE_GREEN: Color = Color::Rgb(34, 139, 34);    // Forest green
+
+// Shading colors for 3D effect
+const SHADE_DARK: Color = Color::Rgb(20, 20, 20);
+const SHADE_MID: Color = Color::Rgb(60, 60, 60);
+const SHADE_LIGHT: Color = Color::Rgb(120, 120, 120);
+
+/// 3D Block rendering for "polygonal origami" PSX style
+///
+/// Uses Unicode block characters to create faceted, low-poly 3D look:
+/// - Full blocks (█) for solid surfaces
+/// - Shaded blocks (▓ ▒ ░) for depth gradients
+/// - Half blocks (▀ ▄) for top/bottom faces
+/// - Quarter blocks (▌ ▐) for left/right faces
+#[derive(Debug, Clone, Copy)]
+struct Block3D {
+    /// Top face character
+    top: char,
+    /// Front face character
+    front: char,
+    /// Side face character
+    side: char,
+    /// Shading level (0=darkest, 3=brightest)
+    shade: u8,
+}
+
+impl Block3D {
+    /// Create a 3D block with isometric shading
+    fn new(top: char, front: char, side: char, shade: u8) -> Self {
+        Self { top, front, side, shade }
+    }
+
+    /// Full cube (solid block)
+    fn cube() -> Self {
+        Self::new('▀', '█', '▌', 2)
+    }
+
+    /// Platform/log (elongated horizontal block)
+    fn platform() -> Self {
+        Self::new('▀', '▓', '▒', 2)
+    }
+
+    /// Car/vehicle (low profile block)
+    fn vehicle() -> Self {
+        Self::new('▄', '█', '▐', 1)
+    }
+
+    /// Water surface (animated)
+    fn water(frame: usize) -> char {
+        match frame % 4 {
+            0 => '≈',
+            1 => '∼',
+            2 => '≈',
+            3 => '~',
+            _ => '≈',
+        }
+    }
+
+    /// Get shading color based on shade level and base color
+    fn shade_color(&self, base: Color) -> Color {
+        match self.shade {
+            0 => Self::darken_color(base, 0.3),
+            1 => Self::darken_color(base, 0.6),
+            2 => base,
+            3 => Self::lighten_color(base, 1.3),
+            _ => base,
+        }
+    }
+
+    fn darken_color(color: Color, factor: f32) -> Color {
+        match color {
+            Color::Rgb(r, g, b) => Color::Rgb(
+                (r as f32 * factor) as u8,
+                (g as f32 * factor) as u8,
+                (b as f32 * factor) as u8,
+            ),
+            _ => color,
+        }
+    }
+
+    fn lighten_color(color: Color, factor: f32) -> Color {
+        match color {
+            Color::Rgb(r, g, b) => Color::Rgb(
+                ((r as f32 * factor).min(255.0)) as u8,
+                ((g as f32 * factor).min(255.0)) as u8,
+                ((b as f32 * factor).min(255.0)) as u8,
+            ),
+            _ => color,
+        }
+    }
+}
+
+/// 3D Frog rendering with polygonal origami style
+#[derive(Debug, Clone)]
+struct Frog3D {
+    /// Body segment (blocky geometric shapes)
+    body: Vec<(char, i8, i8)>, // (char, x_offset, y_offset)
+    /// Current hop animation phase (0-1)
+    hop_phase: f32,
+}
+
+impl Frog3D {
+    fn new() -> Self {
+        Self {
+            // PSX-style blocky frog made of geometric shapes
+            body: vec![
+                ('●', 0, 0),   // Body center
+                ('▲', 0, -1),  // Head
+                ('◄', -1, 0),  // Left leg
+                ('►', 1, 0),   // Right leg
+                ('▼', 0, 1),   // Back legs
+            ],
+            hop_phase: 0.0,
+        }
+    }
+
+    fn update_hop(&mut self, hop_height: f32) {
+        self.hop_phase = hop_height;
+    }
+
+    /// Get frog character based on animation state
+    fn get_char(&self, part_idx: usize) -> char {
+        if part_idx < self.body.len() {
+            // Rotate body parts during hop for 3D effect
+            if self.hop_phase > 0.5 {
+                match part_idx {
+                    0 => '◆', // Rotated body
+                    1 => '▲',
+                    _ => self.body[part_idx].0,
+                }
+            } else {
+                self.body[part_idx].0
+            }
+        } else {
+            '●'
+        }
+    }
+}
 
 /// Level themes matching PSX Frogger stages
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -162,6 +302,9 @@ pub struct PSXFroggerGame {
 
     // Animation
     animation_frame: usize,
+
+    // 3D rendering (polygonal origami style)
+    frog_3d: Frog3D,
 }
 
 impl PSXFroggerGame {
@@ -182,6 +325,7 @@ impl PSXFroggerGame {
             update_interval: Duration::from_millis(100),
             level_time_left: 60.0, // 60 seconds per level
             animation_frame: 0,
+            frog_3d: Frog3D::new(),
         };
         game.init_level();
         game
@@ -297,6 +441,9 @@ impl PSXFroggerGame {
                 self.player_hop_height = 0.0;
             }
         }
+
+        // Update 3D frog animation
+        self.frog_3d.update_hop(self.player_hop_height);
 
         // Update obstacles
         for obstacle in &mut self.obstacles {
@@ -589,34 +736,53 @@ impl Widget for &PSXFroggerGame {
                     }
                 }
                 WATER_START..=WATER_END => {
-                    // Water with platforms (PSX blocky style)
-                    let mut row_chars = vec![self.theme.water_char(); GAME_WIDTH];
-                    let mut platform_mask = vec![false; GAME_WIDTH];
+                    // Water with 3D platforms (polygonal origami style)
+                    let water_char = Block3D::water(self.animation_frame);
+                    let mut row_chars = vec![water_char; GAME_WIDTH];
+                    let mut platform_mask = vec![None; GAME_WIDTH];
 
-                    // Draw platforms
+                    // Draw platforms with 3D effect
                     for obs in &self.obstacles {
                         if obs.row == row as i32 && obs.is_safe {
                             for i in 0..obs.width {
                                 let x = (obs.x + i as i32).rem_euclid(GAME_WIDTH as i32) as usize;
                                 if x < GAME_WIDTH {
-                                    // PSX blocky platform
-                                    row_chars[x] = if i == 0 || i == obs.width - 1 { '▓' } else { '▒' };
-                                    platform_mask[x] = true;
+                                    // Create 3D platform block with depth
+                                    let block = Block3D::platform();
+                                    if i == 0 {
+                                        // Front edge (darker)
+                                        row_chars[x] = block.front;
+                                        platform_mask[x] = Some(1);
+                                    } else if i == obs.width - 1 {
+                                        // Back edge (lighter)
+                                        row_chars[x] = block.side;
+                                        platform_mask[x] = Some(3);
+                                    } else {
+                                        // Top surface
+                                        row_chars[x] = block.top;
+                                        platform_mask[x] = Some(2);
+                                    }
                                 }
                             }
                         }
                     }
 
                     for (x, ch) in row_chars.iter().enumerate() {
-                        let color = if platform_mask[x] {
-                            PSX_LOG_BROWN
+                        let (color, bold) = if let Some(shade) = platform_mask[x] {
+                            // 3D shaded platform
+                            let base_color = PSX_LOG_BROWN;
+                            let shaded = Block3D::new(' ', ' ', ' ', shade).shade_color(base_color);
+                            (shaded, true)
                         } else {
-                            self.theme.primary_color()
+                            // Animated water
+                            (self.theme.primary_color(), false)
                         };
-                        line_spans.push(Span::styled(
-                            ch.to_string(),
-                            Style::default().fg(color).add_modifier(Modifier::BOLD),
-                        ));
+                        let style = if bold {
+                            Style::default().fg(color).add_modifier(Modifier::BOLD)
+                        } else {
+                            Style::default().fg(color)
+                        };
+                        line_spans.push(Span::styled(ch.to_string(), style));
                     }
                 }
                 MEDIAN_ROW => {
@@ -630,43 +796,55 @@ impl Widget for &PSXFroggerGame {
                     }
                 }
                 ROAD_START..=ROAD_END => {
-                    // Road with hazards (PSX blocky cars)
+                    // Road with 3D hazards (polygonal origami style)
                     let mut row_chars = vec!['·'; GAME_WIDTH];
-                    let mut hazard_mask = vec![false; GAME_WIDTH];
+                    let mut hazard_mask = vec![None; GAME_WIDTH];
 
-                    // Draw hazards
+                    // Draw hazards with 3D vehicle blocks
                     for obs in &self.obstacles {
                         if obs.row == row as i32 && !obs.is_safe {
                             for i in 0..obs.width {
                                 let x = (obs.x + i as i32).rem_euclid(GAME_WIDTH as i32) as usize;
                                 if x < GAME_WIDTH {
-                                    // PSX blocky hazard
-                                    row_chars[x] = if i == 0 {
-                                        self.theme.obstacle_char(true)
+                                    // 3D vehicle with depth
+                                    let vehicle = Block3D::vehicle();
+                                    if i == 0 {
+                                        // Front bumper (bright highlight)
+                                        row_chars[x] = self.theme.obstacle_char(true);
+                                        hazard_mask[x] = Some(3);
                                     } else if i == obs.width - 1 {
-                                        self.theme.obstacle_char(false)
+                                        // Rear (darker shadow)
+                                        row_chars[x] = self.theme.obstacle_char(false);
+                                        hazard_mask[x] = Some(1);
                                     } else {
-                                        '▓'
-                                    };
-                                    hazard_mask[x] = true;
+                                        // Body (mid-tone)
+                                        row_chars[x] = vehicle.front;
+                                        hazard_mask[x] = Some(2);
+                                    }
                                 }
                             }
                         }
                     }
 
                     for (x, ch) in row_chars.iter().enumerate() {
-                        let color = if hazard_mask[x] {
-                            match self.theme {
+                        let (color, bold) = if let Some(shade) = hazard_mask[x] {
+                            // 3D shaded vehicle
+                            let base = match self.theme {
                                 LevelTheme::ToxicWaste => PSX_TOXIC_GREEN,
                                 _ => PSX_CAR_RED,
-                            }
+                            };
+                            let shaded = Block3D::new(' ', ' ', ' ', shade).shade_color(base);
+                            (shaded, true)
                         } else {
-                            PSX_ROAD_GRAY
+                            // Road surface
+                            (PSX_ROAD_GRAY, false)
                         };
-                        line_spans.push(Span::styled(
-                            ch.to_string(),
-                            Style::default().fg(color).add_modifier(Modifier::BOLD),
-                        ));
+                        let style = if bold {
+                            Style::default().fg(color).add_modifier(Modifier::BOLD)
+                        } else {
+                            Style::default().fg(color)
+                        };
+                        line_spans.push(Span::styled(ch.to_string(), style));
                     }
                 }
                 START_ROW => {
@@ -707,24 +885,50 @@ impl Widget for &PSXFroggerGame {
             }
         }
 
-        // Render player (PSX frog with hop animation)
+        // Render player (3D polygonal origami frog)
         if self.player_y >= 0 && self.player_y < GAME_HEIGHT as i32 {
-            let player_x = x_offset + self.player_x as u16;
-            let player_y = game_y_offset + self.player_y as u16;
+            let base_x = x_offset + self.player_x as u16;
+            let base_y = game_y_offset + self.player_y as u16;
 
             // Apply hop animation offset
             let hop_offset = (self.player_hop_height * -1.0) as i16;
-            let final_y = (player_y as i16 + hop_offset).max(game_y_offset as i16) as u16;
 
-            if final_y < inner.y + inner.height && player_x < inner.x + inner.width {
-                let char = if self.player_hop_height > 0.5 { '▲' } else { '●' };
-                buf.set_string(
-                    player_x, final_y, &char.to_string(),
-                    Style::default()
-                        .fg(PSX_FROG_GREEN)
-                        .bg(Color::Black)
-                        .add_modifier(Modifier::BOLD),
-                );
+            if USE_3D_RENDERING {
+                // Render multi-part 3D frog
+                for (idx, &(_, dx, dy)) in self.frog_3d.body.iter().enumerate() {
+                    let part_x = (base_x as i32 + dx as i32) as u16;
+                    let part_y = ((base_y as i16 + dy as i16 + hop_offset).max(game_y_offset as i16)) as u16;
+
+                    if part_y < inner.y + inner.height && part_x < inner.x + inner.width {
+                        let char = self.frog_3d.get_char(idx);
+                        // Highlight effect during hop (brighter color)
+                        let color = if self.player_hop_height > 0.3 {
+                            Block3D::new(' ', ' ', ' ', 3).shade_color(PSX_FROG_GREEN)
+                        } else {
+                            PSX_FROG_GREEN
+                        };
+                        buf.set_string(
+                            part_x, part_y, &char.to_string(),
+                            Style::default()
+                                .fg(color)
+                                .bg(Color::Black)
+                                .add_modifier(Modifier::BOLD),
+                        );
+                    }
+                }
+            } else {
+                // Fallback 2D rendering
+                let final_y = (base_y as i16 + hop_offset).max(game_y_offset as i16) as u16;
+                if final_y < inner.y + inner.height && base_x < inner.x + inner.width {
+                    let char = if self.player_hop_height > 0.5 { '▲' } else { '●' };
+                    buf.set_string(
+                        base_x, final_y, &char.to_string(),
+                        Style::default()
+                            .fg(PSX_FROG_GREEN)
+                            .bg(Color::Black)
+                            .add_modifier(Modifier::BOLD),
+                    );
+                }
             }
         }
 
