@@ -2,15 +2,15 @@
 //!
 //! Multi-column table with headers, sorting, and selection
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::block::Block as AtomBlock, theme::ToadTheme};
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Modifier, Style},
     widgets::{
-        Block, Borders, Row, Scrollbar, ScrollbarOrientation, ScrollbarState,
-        Table as RatatuiTable, TableState,
+        Borders, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, Table as RatatuiTable,
+        TableState,
     },
+    Frame,
 };
 
 /// Column alignment
@@ -163,8 +163,9 @@ impl DataTable {
 
     /// Render the table
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
-        let block = Block::default()
-            .title(format!(" {} ", self.title))
+        // Use Block atom for table border
+        let block_atom = AtomBlock::new()
+            .title(&format!(" {} ", self.title))
             .title_style(
                 Style::default()
                     .fg(ToadTheme::TOAD_GREEN)
@@ -173,6 +174,7 @@ impl DataTable {
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::TOAD_GREEN));
 
+        let block = block_atom.to_ratatui();
         let inner = block.inner(area);
 
         // Build header

@@ -15,11 +15,11 @@
 
 use crate::ui::{atoms::text::Text, theme::ToadTheme};
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Modifier, Style},
     text::Line,
     widgets::Paragraph,
-    Frame,
 };
 
 /// Pure input state (Model in Elm Architecture)

@@ -58,6 +58,8 @@ pub struct Block {
     borders: Borders,
     /// Border style
     border_style: Option<Style>,
+    /// Title text style
+    title_style: Option<Style>,
     /// Block background style
     style: Option<Style>,
 }
@@ -77,6 +79,7 @@ impl Block {
             title: None,
             borders: Borders::ALL,
             border_style: None,
+            title_style: None,
             style: None,
         }
     }
@@ -124,6 +127,26 @@ impl Block {
     /// ```
     pub fn border_style(mut self, style: Style) -> Self {
         self.border_style = Some(style);
+        self
+    }
+
+    /// Set the title text style
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::atoms::block::Block;
+    /// use toad::ui::theme::ToadTheme;
+    /// use ratatui::style::{Style, Modifier};
+    ///
+    /// let block = Block::new()
+    ///     .title("Important")
+    ///     .title_style(Style::default()
+    ///         .fg(ToadTheme::TOAD_GREEN_BRIGHT)
+    ///         .add_modifier(Modifier::BOLD));
+    /// ```
+    pub fn title_style(mut self, style: Style) -> Self {
+        self.title_style = Some(style);
         self
     }
 
@@ -177,6 +200,10 @@ impl Block {
 
         if let Some(border_style) = self.border_style {
             block = block.border_style(border_style);
+        }
+
+        if let Some(title_style) = self.title_style {
+            block = block.title_style(title_style);
         }
 
         if let Some(style) = self.style {
@@ -267,6 +294,7 @@ mod tests {
         assert_eq!(block.title_text(), None);
         assert_eq!(block.borders, Borders::ALL);
         assert_eq!(block.border_style, None);
+        assert_eq!(block.title_style, None);
         assert_eq!(block.style, None);
     }
 
@@ -393,5 +421,46 @@ mod tests {
         let long_title = "A".repeat(1000);
         let block = Block::new().title(&long_title);
         assert_eq!(block.title_text(), Some(long_title.as_str()));
+    }
+
+    #[test]
+    fn test_block_with_title_style() {
+        use ratatui::style::Modifier;
+        let style = Style::default()
+            .fg(ToadTheme::TOAD_GREEN_BRIGHT)
+            .add_modifier(Modifier::BOLD);
+        let block = Block::new().title_style(style);
+        assert_eq!(block.title_style, Some(style));
+    }
+
+    #[test]
+    fn test_block_title_and_title_style() {
+        use ratatui::style::Modifier;
+        let style = Style::default()
+            .fg(ToadTheme::TOAD_GREEN)
+            .add_modifier(Modifier::BOLD);
+        let block = Block::new().title("Styled Title").title_style(style);
+        assert_eq!(block.title_text(), Some("Styled Title"));
+        assert_eq!(block.title_style, Some(style));
+    }
+
+    #[test]
+    fn test_block_chaining_with_title_style() {
+        use ratatui::style::Modifier;
+        let border_style = Style::default().fg(ToadTheme::TOAD_GREEN);
+        let title_style = Style::default()
+            .fg(ToadTheme::TOAD_GREEN_BRIGHT)
+            .add_modifier(Modifier::BOLD);
+
+        let block = Block::new()
+            .title("Complete")
+            .borders(Borders::ALL)
+            .border_style(border_style)
+            .title_style(title_style);
+
+        assert_eq!(block.title_text(), Some("Complete"));
+        assert_eq!(block.borders, Borders::ALL);
+        assert_eq!(block.border_style, Some(border_style));
+        assert_eq!(block.title_style, Some(title_style));
     }
 }
