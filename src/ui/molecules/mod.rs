@@ -14,18 +14,24 @@
 //! # Molecules
 //!
 //! - [`metric_card`]: Labeled metric with optional icon (composes Text + Icon)
+//! - [`task_item`]: Task list item with icon and status (composes Icon + Text)
 //!
 //! # Examples
 //!
 //! ```
 //! use toad::ui::molecules::metric_card::MetricCard;
+//! use toad::ui::molecules::task_item::TaskItem;
 //! use toad::ui::atoms::icon::Icon;
 //! use toad::ui::nerd_fonts::UiIcon;
 //!
 //! let card = MetricCard::new("Accuracy", "85.2%")
 //!     .icon(Icon::ui(UiIcon::Success));
+//!
+//! let task = TaskItem::completed("Build project").status("2.3s");
 //! ```
 
 pub mod metric_card;
+pub mod task_item;
 
 pub use metric_card::MetricCard;
+pub use task_item::TaskItem;
