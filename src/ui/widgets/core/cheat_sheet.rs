@@ -13,12 +13,13 @@
 //! assert!(sheet.is_visible());
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text};
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Clear, Paragraph, Wrap, Widget},
+    text::Line,
+    widgets::{Clear, Paragraph, Widget, Wrap},
 };
 
 /// Cheat sheet widget
@@ -165,14 +166,24 @@ impl Widget for &CheatSheet {
         ])
         .split(overlay_area);
 
-        // Render title
-        let title = Paragraph::new(vec![Line::from(vec![
-            Span::styled("TOAD Cheat Sheet", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-            Span::raw(" - "),
-            Span::styled("Quick Reference", Style::default().fg(Color::Gray)),
-        ])])
-        .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(Color::Cyan)));
+        // Render title using Text atoms
+        let title_text = Text::new("TOAD Cheat Sheet")
+            .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD));
+        let separator = Text::new(" - ");
+        let subtitle_text = Text::new("Quick Reference")
+            .style(Style::default().fg(Color::Gray));
 
+        let title_line = Line::from(vec![
+            title_text.to_span(),
+            separator.to_span(),
+            subtitle_text.to_span(),
+        ]);
+
+        let title_block = AtomBlock::new()
+            .border_style(Style::default().fg(Color::Cyan))
+            .to_ratatui();
+
+        let title = Paragraph::new(vec![title_line]).block(title_block);
         title.render(chunks[0], buf);
 
         // Render content in columns
@@ -194,33 +205,34 @@ impl Widget for &CheatSheet {
 
         let columns = Layout::horizontal(column_constraints).split(chunks[1]);
 
-        // Render each category in columns
+        // Render each category in columns using Text atoms
         for (idx, (category_name, bindings)) in categories_to_show.iter().enumerate() {
             if idx >= columns.len() {
                 break;
             }
 
-            let mut lines = vec![
-                Line::from(vec![Span::styled(
-                    *category_name,
-                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
-                )]),
-                Line::from(""),
-            ];
+            let category_header = Text::new(*category_name)
+                .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD));
+
+            let mut lines = vec![Line::from(category_header.to_span()), Line::from("")];
 
             for (key, desc) in bindings {
+                let key_text = Text::new(format!("{:12}", key))
+                    .style(Style::default().fg(Color::Green));
+                let separator = Text::new(" → ");
+                let desc_text =
+                    Text::new(*desc).style(Style::default().fg(Color::White));
+
                 lines.push(Line::from(vec![
-                    Span::styled(
-                        format!("{:12}", key),
-                        Style::default().fg(Color::Green),
-                    ),
-                    Span::raw(" → "),
-                    Span::styled(*desc, Style::default().fg(Color::White)),
+                    key_text.to_span(),
+                    separator.to_span(),
+                    desc_text.to_span(),
                 ]));
             }
 
+            let block = AtomBlock::new().to_ratatui();
             let para = Paragraph::new(lines)
-                .block(Block::default().borders(Borders::ALL))
+                .block(block)
                 .wrap(Wrap { trim: false });
 
             para.render(columns[idx], buf);
