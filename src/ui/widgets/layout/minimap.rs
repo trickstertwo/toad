@@ -15,12 +15,12 @@ use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    text::Line,
+    widgets::{Borders, Paragraph, Wrap},
 };
 use serde::{Deserialize, Serialize};
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::{block::Block as AtomBlock, text::Text}, theme::ToadTheme};
 
 /// Minimap display mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -256,13 +256,17 @@ impl Minimap {
                 }
             };
 
-            let span = Span::styled(line_text, style);
-            lines_to_render.push(Line::from(vec![span]));
+            let text = Text::new(line_text).style(style);
+            lines_to_render.push(Line::from(vec![text.to_span()]));
         }
 
         let paragraph = if self.show_border {
+            let block = AtomBlock::new()
+                .borders(Borders::ALL)
+                .title("Minimap")
+                .to_ratatui();
             Paragraph::new(lines_to_render)
-                .block(Block::default().borders(Borders::ALL).title("Minimap"))
+                .block(block)
                 .wrap(Wrap { trim: false })
         } else {
             Paragraph::new(lines_to_render).wrap(Wrap { trim: false })

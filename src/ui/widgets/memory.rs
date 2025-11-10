@@ -16,12 +16,12 @@
 
 use std::fmt;
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Style},
-    text::Span,
-    widgets::{Block, Paragraph, Widget},
+    widgets::{Paragraph, Widget},
 };
 
 /// Memory usage statistics
@@ -370,8 +370,9 @@ impl Widget for &MemoryMonitor {
         let text = self.render_string();
         let color = self.memory_color();
 
-        let paragraph =
-            Paragraph::new(Span::styled(text, Style::default().fg(color))).block(Block::default());
+        let text_atom = Text::new(text).style(Style::default().fg(color));
+        let block = AtomBlock::new().to_ratatui();
+        let paragraph = Paragraph::new(text_atom.to_span()).block(block);
 
         paragraph.render(area, buf);
     }

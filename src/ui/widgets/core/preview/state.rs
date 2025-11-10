@@ -10,13 +10,13 @@
 /// let preview = PreviewPane::new("File contents here...");
 /// assert_eq!(preview.content(), "File contents here...");
 /// ```
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::{block::Block as AtomBlock, text::Text}, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    text::Line,
+    widgets::{Borders, Paragraph, Wrap},
 };
 
 /// Preview pane widget
@@ -132,7 +132,7 @@ impl PreviewPane {
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let title = self.title.as_deref().unwrap_or("Preview");
 
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::DARK_GRAY))
             .title(title)
@@ -140,7 +140,8 @@ impl PreviewPane {
                 Style::default()
                     .fg(ToadTheme::TOAD_GREEN)
                     .add_modifier(Modifier::BOLD),
-            );
+            )
+            .to_ratatui();
 
         if self.show_line_numbers {
             self.render_with_line_numbers(frame, area, block);
@@ -150,7 +151,7 @@ impl PreviewPane {
     }
 
     /// Render without line numbers
-    fn render_plain(&self, frame: &mut Frame, area: Rect, block: Block) {
+    fn render_plain(&self, frame: &mut Frame, area: Rect, block: ratatui::widgets::Block<'static>) {
         let mut paragraph = Paragraph::new(self.content.as_str())
             .block(block)
             .style(Style::default().fg(ToadTheme::FOREGROUND))
@@ -164,7 +165,7 @@ impl PreviewPane {
     }
 
     /// Render with line numbers
-    fn render_with_line_numbers(&self, frame: &mut Frame, area: Rect, block: Block) {
+    fn render_with_line_numbers(&self, frame: &mut Frame, area: Rect, block: ratatui::widgets::Block<'static>) {
         let lines: Vec<Line> = self
             .content
             .lines()
@@ -172,15 +173,14 @@ impl PreviewPane {
             .skip(self.scroll_offset as usize)
             .map(|(idx, line)| {
                 let line_num = idx + 1;
-                Line::from(vec![
-                    Span::styled(
-                        format!("{:4} ", line_num),
+                let line_num_text = Text::new(format!("{:4} ", line_num))
+                    .style(
                         Style::default()
                             .fg(ToadTheme::DARK_GRAY)
                             .add_modifier(Modifier::DIM),
-                    ),
-                    Span::styled(line, Style::default().fg(ToadTheme::FOREGROUND)),
-                ])
+                    );
+                let line_text = Text::new(line).style(Style::default().fg(ToadTheme::FOREGROUND));
+                Line::from(vec![line_num_text.to_span(), line_text.to_span()])
             })
             .collect();
 
