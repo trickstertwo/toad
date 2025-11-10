@@ -155,7 +155,7 @@ impl NerdFonts {
     /// assert_eq!(NerdFonts::folder_icon("src", false), "");
     /// assert_eq!(NerdFonts::folder_icon("src", true), "");
     /// ```
-    pub fn folder_icon(name: &str, open: bool) -> &'static str {
+    pub fn folder_icon(name: &str, _open: bool) -> &'static str {
         let name_lower = name.to_lowercase();
 
         // Special folder names

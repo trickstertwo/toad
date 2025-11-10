@@ -6,7 +6,6 @@
 ///
 /// Evidence: AutoCodeRover proven, +3-5 points accuracy improvement
 use anyhow::{Context, Result};
-use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 pub mod discovery;

@@ -250,7 +250,7 @@ impl AIDiffView {
 
                 current_hunk = Some(DiffHunk::new(line));
             } else if let Some(hunk) = &mut current_hunk {
-                let (line_type, content) = if line.starts_with('+') {
+                let (_line_type, content) = if line.starts_with('+') {
                     let content = line[1..].to_string();
                     let diff_line = AIDiffLine {
                         content,
@@ -428,7 +428,7 @@ impl Widget for &mut AIDiffView {
 
         // Render diff hunks
         if !self.hunks.is_empty() {
-            let items: Vec<ListItem> = self.hunks.iter().enumerate().map(|(idx, hunk)| {
+            let items: Vec<ListItem> = self.hunks.iter().enumerate().map(|(_idx, hunk)| {
                 let mut lines = vec![Line::from(vec![
                     Span::styled(&hunk.header, Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
                 ])];

@@ -19,8 +19,8 @@
 //! # }
 //! ```
 
-use crate::ui::syntax::{Language, SyntaxHighlighter};
-use anyhow::{Context, Result};
+use crate::ui::syntax::Language;
+use anyhow::Result;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,

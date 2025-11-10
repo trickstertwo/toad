@@ -2,7 +2,6 @@
 use crate::ai::context::{AstCache, AstContext, ExtractorRegistry, FileContext};
 use anyhow::{Context as _, Result};
 use std::path::{Path, PathBuf};
-use std::time::SystemTime;
 use tokio::fs;
 
 /// Builder for constructing AstContext from multiple source files

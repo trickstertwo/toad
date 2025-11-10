@@ -7,7 +7,6 @@ use crate::ai::eval_commands::{CompareArgs, EvalArgs};
 use crate::ai::evaluation::{
     DatasetManager, EvaluationResults, Task, TaskLoader, TaskResult,
 };
-use crate::ai::llm::anthropic::AnthropicClient;
 use crate::ai::tools::ToolRegistry;
 use crate::config::ToadConfig;
 use crate::core::event::{EvaluationProgress, Event};

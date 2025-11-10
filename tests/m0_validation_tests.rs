@@ -5,7 +5,7 @@
 
 #[cfg(test)]
 mod m0_validation_tests {
-    use std::path::PathBuf;
+    
     use tempfile::TempDir;
     use toad::config::{FeatureFlags, ToadConfig};
     use toad::{EvaluationHarness, ExperimentManager, ExperimentStatus, task_loader};
@@ -208,7 +208,7 @@ mod m0_validation_tests {
     /// Test metrics collection completeness
     #[test]
     fn test_metrics_completeness() {
-        use toad::{Metrics, MetricsCollector, QualityMetrics};
+        use toad::{MetricsCollector, QualityMetrics};
 
         let mut collector = MetricsCollector::new();
         collector.start();

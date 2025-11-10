@@ -9,7 +9,7 @@ use crate::core::event::Event;
 use crate::performance::PerformanceMetrics;
 use crate::ui::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, ToastManager};
 use crate::workspace::{LayoutManager, SessionState, TabManager};
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::KeyEvent;
 use std::path::PathBuf;
 
 /// Application state (Model in Elm Architecture)

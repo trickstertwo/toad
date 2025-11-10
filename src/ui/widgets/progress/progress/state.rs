@@ -3,10 +3,9 @@
 use crate::ui::theme::ToadTheme;
 use ratatui::{
     Frame,
-    buffer::Buffer,
     layout::Rect,
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Gauge, Widget},
+    widgets::{Block, Borders, Gauge},
 };
 use std::time::{Duration, Instant};
 

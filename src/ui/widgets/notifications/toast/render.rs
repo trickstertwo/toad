@@ -1,6 +1,6 @@
 //! Toast rendering implementations
 
-use super::{Toast, ToastLevel, ToastManager};
+use super::{Toast, ToastManager};
 use crate::ui::theme::ToadTheme;
 use ratatui::{
     Frame,

@@ -457,7 +457,7 @@ impl EvaluationHarness {
             // Try to build context from current directory (task workspace)
             // In real evaluation, this would be the cloned repo directory
             match ContextBuilder::new() {
-                Ok(mut builder) => {
+                Ok(builder) => {
                     match builder.add_directory(".", &["py", "js", "ts", "tsx", "rs"]).await {
                         Ok(builder) => {
                             let context = builder.build();

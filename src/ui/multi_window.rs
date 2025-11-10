@@ -379,7 +379,7 @@ impl WindowManager {
 
     /// Close window
     pub fn close_window(&mut self, id: WindowId) -> bool {
-        if let Some(window) = self.windows.remove(&id) {
+        if let Some(_window) = self.windows.remove(&id) {
             self.mru_order.retain(|&x| x != id);
 
             // If closing active window, switch to next

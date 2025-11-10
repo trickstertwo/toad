@@ -1,6 +1,6 @@
 /// Test execution with smart selection
 use super::{TestSelector, TestSelection};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 /// Test execution result

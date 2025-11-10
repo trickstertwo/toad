@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 /// Integration tests for TOAD evaluation framework
 use toad::config::{FeatureFlags, ToadConfig};
-use toad::{Complexity, EvaluationHarness, Task, task_loader};
+use toad::{Complexity, EvaluationHarness, task_loader};
 use toad::Metrics;
 use toad::ComparisonResult;
 

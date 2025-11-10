@@ -735,7 +735,7 @@ fn test_complete_editor_workflow() {
     let mut stack = UndoStack::new();
 
     // Setup vim motions
-    let mut motions = VimMotions::new("fn main() { println!(\"Hello\"); }");
+    let motions = VimMotions::new("fn main() { println!(\"Hello\"); }");
 
     // Setup UI indicators
     let mut spinner = Spinner::new(SpinnerStyle::Dots).label("Processing...");

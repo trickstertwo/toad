@@ -2,7 +2,7 @@
 ///
 /// Implements the LLMClient trait for Ollama local models
 /// API Documentation: https://github.com/ollama/ollama/blob/main/docs/api.md
-use super::{LLMClient, LLMResponse, Message, StopReason, ToolUse, Usage};
+use super::{LLMClient, LLMResponse, Message, StopReason, Usage};
 use anyhow::{Context, Result, anyhow};
 use serde::{Deserialize, Serialize};
 use serde_json::json;

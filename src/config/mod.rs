@@ -6,7 +6,7 @@ pub mod accessibility;
 pub use accessibility::AccessibilityConfig;
 pub use tui_config::{AiConfig, Config, EditorConfig, SessionConfig, UiConfig};
 
-use crate::ai::llm::{ProviderConfig, ProviderType};
+use crate::ai::llm::ProviderConfig;
 use serde::{Deserialize, Serialize};
 
 /// Feature flags for experimental A/B testing

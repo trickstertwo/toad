@@ -15,7 +15,7 @@
 //! recorder.play('a');
 //! ```
 
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::KeyEvent;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 

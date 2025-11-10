@@ -39,7 +39,7 @@
 /// # Ok(())
 /// # }
 /// ```
-use super::{LLMClient, LLMResponse, Message, MessageStream, StopReason, Usage};
+use super::{LLMClient, LLMResponse, Message, MessageStream};
 use anyhow::{Context, Result};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -307,7 +307,7 @@ impl RacingClient {
         // Keep racing until we have a winner or all tasks have completed/failed
         while !pending_tasks.is_empty() && winner.is_none() {
             // Use futures to race all pending tasks
-            let (result, index, remaining) = futures::future::select_all(pending_tasks).await;
+            let (result, _index, remaining) = futures::future::select_all(pending_tasks).await;
 
             match result {
                 Ok(Ok((idx, response, latency))) => {
