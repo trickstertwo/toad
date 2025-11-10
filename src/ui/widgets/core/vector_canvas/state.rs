@@ -23,12 +23,13 @@
 //! canvas.circle(0.0, 0.0, 3.0, Color::Green);
 //! ```
 
+use crate::ui::atoms::block::Block as AtomBlock;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::Color,
     text::Line,
-    widgets::{Block, Borders, Widget},
+    widgets::{Borders, Widget},
 };
 
 /// Shape to draw on canvas
@@ -721,7 +722,7 @@ impl Canvas {
 impl Widget for &Canvas {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let lines = self.render_lines(area.width, area.height);
-        let block = Block::default().borders(Borders::ALL);
+        let block = AtomBlock::new().borders(Borders::ALL).to_ratatui();
         let inner = block.inner(area);
 
         block.render(area, buf);
