@@ -230,11 +230,10 @@ impl CardCommit {
         }
 
         // Try [CARD-XXX] pattern
-        if let Some(idx) = message.find("[CARD-") {
-            if let Some(end_idx) = message[idx..].find(']') {
+        if let Some(idx) = message.find("[CARD-")
+            && let Some(end_idx) = message[idx..].find(']') {
                 return Some(message[idx + 1..idx + end_idx].to_string());
             }
-        }
 
         None
     }
@@ -394,7 +393,7 @@ impl GitCardIntegrationManager {
 
         self.card_links
             .entry(card_id)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(id.clone());
 
         self.links.insert(id.clone(), link);
@@ -452,7 +451,7 @@ impl GitCardIntegrationManager {
 
         self.card_branches
             .entry(card_id)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(branch.clone());
 
         branch
@@ -493,7 +492,7 @@ impl GitCardIntegrationManager {
         let card_id = commit.card_id.clone();
         self.card_commits
             .entry(card_id)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(commit);
     }
 

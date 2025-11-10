@@ -260,8 +260,8 @@ impl DemoMode {
             return;
         }
 
-        if let Some(start_time) = self.step_start_time {
-            if let Some(step) = self.steps.get(self.current_step) {
+        if let Some(start_time) = self.step_start_time
+            && let Some(step) = self.steps.get(self.current_step) {
                 let elapsed = start_time.elapsed();
                 let duration = Duration::from_millis(step.duration_ms);
 
@@ -269,7 +269,6 @@ impl DemoMode {
                     self.next_step();
                 }
             }
-        }
     }
 
     /// Get current step

@@ -241,29 +241,27 @@ impl RichTaskCard {
 
     /// Marks a subtask as completed
     pub fn complete_subtask(&mut self, subtask_id: &str) -> bool {
-        if let Some(subtask) = self.subtasks.iter_mut().find(|s| s.id == subtask_id) {
-            if !subtask.completed {
+        if let Some(subtask) = self.subtasks.iter_mut().find(|s| s.id == subtask_id)
+            && !subtask.completed {
                 subtask.completed = true;
                 subtask.completed_at = Some(Utc::now());
                 self.update_progress();
                 self.updated_at = Utc::now();
                 return true;
             }
-        }
         false
     }
 
     /// Marks a subtask as incomplete
     pub fn uncomplete_subtask(&mut self, subtask_id: &str) -> bool {
-        if let Some(subtask) = self.subtasks.iter_mut().find(|s| s.id == subtask_id) {
-            if subtask.completed {
+        if let Some(subtask) = self.subtasks.iter_mut().find(|s| s.id == subtask_id)
+            && subtask.completed {
                 subtask.completed = false;
                 subtask.completed_at = None;
                 self.update_progress();
                 self.updated_at = Utc::now();
                 return true;
             }
-        }
         false
     }
 

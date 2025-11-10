@@ -173,7 +173,7 @@ impl Comment {
 
         self.reactions
             .entry(reaction)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(entry);
         self.updated_at = Utc::now();
     }
@@ -391,11 +391,10 @@ impl CommentManager {
         let mut thread = Vec::new();
 
         // Add root comment
-        if let Some(comment) = self.get_comment(comment_id) {
-            if !comment.deleted {
+        if let Some(comment) = self.get_comment(comment_id)
+            && !comment.deleted {
                 thread.push(comment);
             }
-        }
 
         // Recursively add replies
         self.collect_replies(comment_id, &mut thread);

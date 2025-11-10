@@ -12,7 +12,7 @@
 //! assert_eq!(layout.screen_size(), ScreenSize::Medium);
 //! ```
 
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::layout::{Constraint, Layout, Rect};
 
 /// Screen size categories based on terminal dimensions
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

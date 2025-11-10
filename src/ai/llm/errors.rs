@@ -5,6 +5,11 @@
 /// - Network errors (timeouts, connectivity)
 /// - Parse errors (invalid responses)
 /// - Configuration errors (missing keys, invalid models)
+///
+/// # Related Modules
+///
+/// For error display and handling infrastructure (severity levels, error history,
+/// UI presentation), see [`crate::infrastructure::errors`].
 use thiserror::Error;
 
 #[derive(Error, Debug)]

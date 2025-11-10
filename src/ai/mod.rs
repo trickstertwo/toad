@@ -24,16 +24,16 @@ pub use eval_commands::{
 };
 pub use eval_runner::{EvaluationHandle, start_comparison, start_evaluation};
 pub use evaluation::{
-    DatasetManager, DatasetSource, EvaluationHarness, EvaluationResults, Task, TaskLoader,
-    TaskResult,
+    Complexity, DatasetManager, DatasetSource, EvaluationHarness, EvaluationResults,
+    ExperimentManager, ExperimentStatus, Task, TaskLoader, TaskResult, task_loader,
 };
 pub use llm::{
     AnthropicClient, DeterministicLLMClient, LLMClient, LLMResponse, Message,
     MockResponseBuilder, SequencedMockClient, Usage,
 };
-pub use metrics::{Metrics, MetricsCollector, QualityMetrics};
+pub use metrics::{AggregateMetrics, Metrics, MetricsCollector, QualityMetrics};
 pub use routing::{CascadingRouter, Difficulty, ModelTier, Router, TaskClassifier};
-pub use stats::{ComparisonResult, StatisticalTest};
+pub use stats::{ComparisonResult, Recommendation, StatisticalTest};
 pub use test_selection::{
     DependencyMapper, TestDiscovery, TestExecutionResult, TestExecutor, TestSelection,
     TestSelector,

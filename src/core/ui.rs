@@ -3,7 +3,8 @@
 //! This module contains the rendering logic that displays
 //! the application state to the terminal.
 
-use crate::core::app::{App, AppScreen};
+use crate::core::app::App;
+use crate::core::app_state::AppScreen;
 use crate::ui::theme::ToadTheme;
 use crate::ui::widgets::WelcomeScreen;
 use ratatui::{

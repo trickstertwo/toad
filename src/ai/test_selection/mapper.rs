@@ -25,7 +25,7 @@ impl DependencyMapper {
     /// 3. Fallback: if test directory changed, run all tests
     pub async fn map_files_to_tests(
         &self,
-        workspace_root: &Path,
+        _workspace_root: &Path,
         changed_files: &[PathBuf],
         all_tests: &[PathBuf],
     ) -> Result<Vec<PathBuf>> {

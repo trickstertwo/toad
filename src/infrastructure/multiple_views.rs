@@ -341,7 +341,7 @@ impl ViewManager {
         // Add to board_views
         self.board_views
             .entry(board_id.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(id.clone());
 
         // Set as active if first view for board
@@ -377,13 +377,12 @@ impl ViewManager {
 
     /// Sets the active view for a board
     pub fn set_active_view(&mut self, board_id: String, view_id: String) -> bool {
-        if let Some(view) = self.views.get_mut(&view_id) {
-            if view.board_id == board_id {
+        if let Some(view) = self.views.get_mut(&view_id)
+            && view.board_id == board_id {
                 view.touch();
                 self.active_views.insert(board_id, view_id);
                 return true;
             }
-        }
         false
     }
 
@@ -449,9 +448,9 @@ impl ViewManager {
         }
 
         // If this was the active view, switch to another
-        if let Some(active_id) = self.active_views.get(&view.board_id) {
-            if active_id == view_id {
-                if let Some(view_ids) = self.board_views.get(&view.board_id) {
+        if let Some(active_id) = self.active_views.get(&view.board_id)
+            && active_id == view_id
+                && let Some(view_ids) = self.board_views.get(&view.board_id) {
                     if let Some(first_id) = view_ids.first() {
                         self.active_views
                             .insert(view.board_id.clone(), first_id.clone());
@@ -459,8 +458,6 @@ impl ViewManager {
                         self.active_views.remove(&view.board_id);
                     }
                 }
-            }
-        }
 
         Some(view)
     }

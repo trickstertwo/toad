@@ -5,7 +5,7 @@
 
 use ratatui::style::Color;
 use toad::editor::{UndoStack, VimMotions};
-use toad::ui::widgets::{DataSeries, LineChartWidget, Sparkline, SparklineStyle, Spinner, SpinnerStyle};
+use toad::ui::widgets::{DataSeries, LineChart, Sparkline, SparklineStyle, Spinner, SpinnerStyle};
 
 // ============================================================================
 // Spinner Integration Tests
@@ -297,13 +297,13 @@ fn test_data_series_empty() {
 
 #[test]
 fn test_line_chart_creation() {
-    let chart = LineChartWidget::new();
+    let chart = LineChart::new();
     assert_eq!(chart.series_count(), 0);
 }
 
 #[test]
 fn test_line_chart_add_series() {
-    let mut chart = LineChartWidget::new();
+    let mut chart = LineChart::new();
 
     let series1 = DataSeries::new("Series 1", vec![1.0, 2.0, 3.0]);
     chart = chart.add_series(series1);
@@ -316,13 +316,13 @@ fn test_line_chart_add_series() {
 
 #[test]
 fn test_line_chart_with_title() {
-    let chart = LineChartWidget::new().with_title("Temperature Over Time");
+    let chart = LineChart::new().with_title("Temperature Over Time");
     assert_eq!(chart.series_count(), 0);
 }
 
 #[test]
 fn test_line_chart_with_labels() {
-    let chart = LineChartWidget::new()
+    let chart = LineChart::new()
         .with_x_label("Time")
         .with_y_label("Temperature (°C)");
     assert_eq!(chart.series_count(), 0);
@@ -333,7 +333,7 @@ fn test_line_chart_builder_pattern() {
     let series1 = DataSeries::new("Temp", vec![20.0, 22.0, 21.0]).with_color(Color::Red);
     let series2 = DataSeries::new("Humidity", vec![60.0, 65.0, 62.0]).with_color(Color::Blue);
 
-    let chart = LineChartWidget::new()
+    let chart = LineChart::new()
         .add_series(series1)
         .add_series(series2)
         .with_title("Weather")
@@ -345,7 +345,7 @@ fn test_line_chart_builder_pattern() {
 
 #[test]
 fn test_line_chart_multiple_series() {
-    let mut chart = LineChartWidget::new();
+    let mut chart = LineChart::new();
 
     for i in 0..5 {
         let data = vec![i as f64, (i + 1) as f64, (i + 2) as f64];
@@ -693,7 +693,7 @@ fn test_line_chart_with_sparkline_preview() {
     // Create detailed line chart
     let data = vec![1.0, 3.0, 2.0, 5.0, 4.0, 6.0];
     let series = DataSeries::new("Temperature", data.clone()).with_color(Color::Red);
-    let chart = LineChartWidget::new().add_series(series);
+    let chart = LineChart::new().add_series(series);
 
     // Create sparkline preview of same data
     let sparkline = Sparkline::new(data.clone()).style(SparklineStyle::Bars);
@@ -735,7 +735,7 @@ fn test_complete_editor_workflow() {
     let mut stack = UndoStack::new();
 
     // Setup vim motions
-    let mut motions = VimMotions::new("fn main() { println!(\"Hello\"); }");
+    let motions = VimMotions::new("fn main() { println!(\"Hello\"); }");
 
     // Setup UI indicators
     let mut spinner = Spinner::new(SpinnerStyle::Dots).label("Processing...");

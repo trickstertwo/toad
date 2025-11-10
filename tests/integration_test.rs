@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 /// Integration tests for TOAD evaluation framework
 use toad::config::{FeatureFlags, ToadConfig};
-use toad::{Complexity, EvaluationHarness, Task, task_loader};
+use toad::{Complexity, EvaluationHarness, task_loader};
 use toad::Metrics;
 use toad::ComparisonResult;
 
@@ -145,7 +145,7 @@ async fn test_save_and_load_results() {
     // Check that file was created
     let entries: Vec<_> = std::fs::read_dir(temp_dir.path()).unwrap().collect();
 
-    assert!(entries.len() > 0);
+    assert!(!entries.is_empty());
 }
 
 #[test]
@@ -154,6 +154,6 @@ fn test_config_serialization() {
     let json = serde_json::to_string(&config).unwrap();
     let deserialized: ToadConfig = serde_json::from_str(&json).unwrap();
 
-    assert_eq!(config.model, deserialized.model);
+    assert_eq!(config.provider.model, deserialized.provider.model);
     assert_eq!(config.max_context_tokens, deserialized.max_context_tokens);
 }

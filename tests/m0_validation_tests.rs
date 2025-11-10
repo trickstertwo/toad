@@ -5,7 +5,7 @@
 
 #[cfg(test)]
 mod m0_validation_tests {
-    use std::path::PathBuf;
+    
     use tempfile::TempDir;
     use toad::config::{FeatureFlags, ToadConfig};
     use toad::{EvaluationHarness, ExperimentManager, ExperimentStatus, task_loader};
@@ -163,6 +163,7 @@ mod m0_validation_tests {
             context_reranking: true,
             routing_semantic: true,
             routing_multi_model: true,
+            routing_cascade: true,
             routing_speculative: true,
             smart_test_selection: true,
             failure_memory: true,
@@ -172,7 +173,7 @@ mod m0_validation_tests {
             tree_sitter_validation: true,
         };
 
-        assert_eq!(all_flags.enabled_count(), 13);
+        assert_eq!(all_flags.enabled_count(), 14);
     }
 
     /// Test dataset manager with different sources
@@ -207,7 +208,7 @@ mod m0_validation_tests {
     /// Test metrics collection completeness
     #[test]
     fn test_metrics_completeness() {
-        use toad::{Metrics, MetricsCollector, QualityMetrics};
+        use toad::{MetricsCollector, QualityMetrics};
 
         let mut collector = MetricsCollector::new();
         collector.start();
@@ -317,7 +318,7 @@ mod m0_validation_tests {
         let json = serde_json::to_string(&original).unwrap();
         let deserialized: ToadConfig = serde_json::from_str(&json).unwrap();
 
-        assert_eq!(original.model, deserialized.model);
+        assert_eq!(original.provider.model, deserialized.provider.model);
         assert_eq!(original.max_context_tokens, deserialized.max_context_tokens);
         assert_eq!(
             original.features.context_ast,
@@ -355,14 +356,14 @@ mod m0_validation_tests {
             .unwrap()
             .collect();
 
-        assert!(result_files.len() > 0);
+        assert!(!result_files.is_empty());
 
         // 5. Load results back
         for entry in result_files {
             let entry = entry.unwrap();
             if entry.path().extension().and_then(|s| s.to_str()) == Some("json") {
                 let content = std::fs::read_to_string(entry.path()).unwrap();
-                let _: toad::evaluation::EvaluationResults =
+                let _: toad::EvaluationResults =
                     serde_json::from_str(&content).unwrap();
             }
         }

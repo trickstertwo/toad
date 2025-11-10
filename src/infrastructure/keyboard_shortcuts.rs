@@ -424,7 +424,7 @@ impl ShortcutRegistry {
         self.by_key.insert(shortcut.key, shortcut.action);
         self.by_action
             .entry(shortcut.action)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(shortcut.key);
         self.shortcuts.push(shortcut);
     }

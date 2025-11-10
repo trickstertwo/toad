@@ -3,84 +3,82 @@
 //! Tests for data visualization (LineChart) and user input (InputField, Dialog) widgets.
 
 use ratatui::style::Color;
-use toad::ui::widgets::{ConfirmDialog, DialogOption, InputField, LineChart, LineStyle};
+use toad::ui::widgets::{ConfirmDialog, DataSeries, DialogOption, InputField, LineChart};
 
 // ==================== LineChart Tests ====================
 
 #[test]
 fn test_line_chart_creation() {
-    let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-    let chart = LineChart::new(data);
-
-    assert_eq!(chart.data().len(), 5);
+    let chart = LineChart::new();
+    assert_eq!(chart.series_count(), 0);
 }
 
 #[test]
 fn test_line_chart_builder() {
-    let chart = LineChart::new(vec![10.0, 20.0, 15.0, 25.0, 30.0])
+    let series = DataSeries::new("Temperature", vec![10.0, 20.0, 15.0, 25.0, 30.0])
+        .with_color(Color::Red);
+
+    let chart = LineChart::new()
+        .add_series(series)
         .with_title("Temperature Chart")
-        .with_color(Color::Red)
-        .with_border(true)
-        .with_axes(true)
-        .with_values(true);
+        .with_x_label("Time")
+        .with_y_label("°C");
 
-    assert_eq!(chart.data().len(), 5);
+    assert_eq!(chart.series_count(), 1);
 }
 
 #[test]
-fn test_line_chart_set_data() {
-    let mut chart = LineChart::new(vec![1.0, 2.0, 3.0]);
-    assert_eq!(chart.data().len(), 3);
+fn test_line_chart_add_series() {
+    let series1 = DataSeries::new("Series 1", vec![1.0, 2.0, 3.0]);
+    let series2 = DataSeries::new("Series 2", vec![10.0, 20.0, 30.0, 40.0]);
 
-    chart.set_data(vec![10.0, 20.0, 30.0, 40.0]);
-    assert_eq!(chart.data().len(), 4);
+    let chart = LineChart::new()
+        .add_series(series1)
+        .add_series(series2);
+
+    assert_eq!(chart.series_count(), 2);
 }
 
 #[test]
-fn test_line_chart_add_point() {
-    let mut chart = LineChart::new(vec![1.0, 2.0, 3.0]);
-    assert_eq!(chart.data().len(), 3);
+fn test_line_chart_multiple_series() {
+    let series1 = DataSeries::new("A", vec![1.0, 2.0, 3.0]);
+    let series2 = DataSeries::new("B", vec![4.0, 5.0]);
+    let series3 = DataSeries::new("C", vec![6.0, 7.0, 8.0, 9.0]);
 
-    chart.add_point(4.0);
-    assert_eq!(chart.data().len(), 4);
+    let chart = LineChart::new()
+        .add_series(series1)
+        .add_series(series2)
+        .add_series(series3);
 
-    chart.add_point(5.0);
-    assert_eq!(chart.data().len(), 5);
+    assert_eq!(chart.series_count(), 3);
 }
 
 #[test]
-fn test_line_chart_line_styles() {
-    let solid = LineChart::new(vec![1.0, 2.0, 3.0]).with_line_style(LineStyle::Solid);
-
-    let dotted = LineChart::new(vec![1.0, 2.0, 3.0]).with_line_style(LineStyle::Dotted);
-
-    let dashed = LineChart::new(vec![1.0, 2.0, 3.0]).with_line_style(LineStyle::Dashed);
-
-    let stepped = LineChart::new(vec![1.0, 2.0, 3.0]).with_line_style(LineStyle::Stepped);
-
-    assert_eq!(solid.data().len(), 3);
-    assert_eq!(dotted.data().len(), 3);
-    assert_eq!(dashed.data().len(), 3);
-    assert_eq!(stepped.data().len(), 3);
+fn test_data_series_creation() {
+    let series = DataSeries::new("Test", vec![1.0, 2.0, 3.0]);
+    assert_eq!(series.name, "Test");
+    assert_eq!(series.data.len(), 3);
 }
 
 #[test]
 fn test_line_chart_empty_data() {
-    let chart = LineChart::new(vec![]);
-    assert_eq!(chart.data().len(), 0);
+    let series = DataSeries::new("Empty", vec![]);
+    let chart = LineChart::new().add_series(series);
+    assert_eq!(chart.series_count(), 1);
 }
 
 #[test]
 fn test_line_chart_single_point() {
-    let chart = LineChart::new(vec![42.0]);
-    assert_eq!(chart.data().len(), 1);
-    assert_eq!(chart.data()[0], 42.0);
+    let series = DataSeries::new("Single", vec![42.0]);
+    let chart = LineChart::new().add_series(series);
+    assert_eq!(chart.series_count(), 1);
 }
 
 #[test]
 fn test_line_chart_negative_values() {
-    let chart = LineChart::new(vec![-10.0, -5.0, 0.0, 5.0, 10.0]);
-    assert_eq!(chart.data().len(), 5);
+    let series = DataSeries::new("Negatives", vec![-10.0, -5.0, 0.0, 5.0, 10.0]);
+    let chart = LineChart::new().add_series(series);
+    assert_eq!(chart.series_count(), 1);
 }
 
 // ==================== InputField Tests ====================
@@ -290,13 +288,14 @@ fn test_chart_data_analysis_workflow() {
     assert_eq!(cpu_min, 30.0);
 
     // Create visualization
-    let cpu_chart = LineChart::new(cpu_data)
+    let series = DataSeries::new("CPU Usage", cpu_data).with_color(Color::Red);
+    let cpu_chart = LineChart::new()
+        .add_series(series)
         .with_title("CPU Usage %")
-        .with_color(Color::Red)
-        .with_border(true)
-        .with_axes(true);
+        .with_x_label("Time")
+        .with_y_label("%");
 
-    assert_eq!(cpu_chart.data().len(), 7);
+    assert_eq!(cpu_chart.series_count(), 1);
 }
 
 #[test]
@@ -344,25 +343,31 @@ fn test_multi_chart_dashboard() {
     // Create multiple charts for a dashboard
 
     // Chart 1: Temperature over time
-    let temp_chart = LineChart::new(vec![20.0, 22.0, 25.0, 23.0, 21.0])
+    let temp_series = DataSeries::new("Temperature", vec![20.0, 22.0, 25.0, 23.0, 21.0])
+        .with_color(Color::Red);
+    let temp_chart = LineChart::new()
+        .add_series(temp_series)
         .with_title("Temperature (°C)")
-        .with_color(Color::Red)
-        .with_border(true);
+        .with_y_label("°C");
 
     // Chart 2: Network traffic (download)
-    let network_chart = LineChart::new(vec![5.0, 6.2, 7.5, 6.8, 5.5])
+    let network_series = DataSeries::new("Download", vec![5.0, 6.2, 7.5, 6.8, 5.5])
+        .with_color(Color::Blue);
+    let network_chart = LineChart::new()
+        .add_series(network_series)
         .with_title("Network Download (MB/s)")
-        .with_color(Color::Blue)
-        .with_axes(true);
+        .with_y_label("MB/s");
 
     // Chart 3: System load (1 min average)
-    let load_chart = LineChart::new(vec![1.5, 2.0, 2.5, 2.2, 1.8])
-        .with_title("System Load (1 min)")
+    let load_series = DataSeries::new("Load", vec![1.5, 2.0, 2.5, 2.2, 1.8])
         .with_color(Color::Green);
+    let load_chart = LineChart::new()
+        .add_series(load_series)
+        .with_title("System Load (1 min)");
 
-    assert_eq!(temp_chart.data().len(), 5);
-    assert_eq!(network_chart.data().len(), 5);
-    assert_eq!(load_chart.data().len(), 5);
+    assert_eq!(temp_chart.series_count(), 1);
+    assert_eq!(network_chart.series_count(), 1);
+    assert_eq!(load_chart.series_count(), 1);
 }
 
 // ==================== Real-World Scenario Tests ====================
@@ -379,14 +384,15 @@ fn test_scenario_performance_monitoring() {
     assert_eq!(max_response, 200.0); // Detected spike
 
     // Create visualization
-    let chart = LineChart::new(response_times)
+    let series = DataSeries::new("Response Time", response_times).with_color(Color::Blue);
+    let chart = LineChart::new()
+        .add_series(series)
         .with_title("Response Time (ms)")
-        .with_color(Color::Blue)
-        .with_border(true)
-        .with_axes(true)
-        .with_values(true);
+        .with_x_label("Request #")
+        .with_y_label("ms")
+        .with_grid(true);
 
-    assert_eq!(chart.data().len(), 8);
+    assert_eq!(chart.series_count(), 1);
 }
 
 #[test]
@@ -442,15 +448,24 @@ fn test_scenario_data_comparison_charts() {
     assert_eq!(max3, 155.0); // Upward trend!
 
     // Create charts for each week
-    let chart1 = LineChart::new(week1_sales).with_title("Week 1 Sales").with_color(Color::Red);
+    let series1 = DataSeries::new("Week 1", week1_sales).with_color(Color::Red);
+    let chart1 = LineChart::new()
+        .add_series(series1)
+        .with_title("Week 1 Sales");
 
-    let chart2 = LineChart::new(week2_sales).with_title("Week 2 Sales").with_color(Color::Green);
+    let series2 = DataSeries::new("Week 2", week2_sales).with_color(Color::Green);
+    let chart2 = LineChart::new()
+        .add_series(series2)
+        .with_title("Week 2 Sales");
 
-    let chart3 = LineChart::new(week3_sales).with_title("Week 3 Sales").with_color(Color::Blue);
+    let series3 = DataSeries::new("Week 3", week3_sales).with_color(Color::Blue);
+    let chart3 = LineChart::new()
+        .add_series(series3)
+        .with_title("Week 3 Sales");
 
-    assert_eq!(chart1.data().len(), 7);
-    assert_eq!(chart2.data().len(), 7);
-    assert_eq!(chart3.data().len(), 7);
+    assert_eq!(chart1.series_count(), 1);
+    assert_eq!(chart2.series_count(), 1);
+    assert_eq!(chart3.series_count(), 1);
 }
 
 #[test]

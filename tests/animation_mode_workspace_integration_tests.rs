@@ -163,7 +163,7 @@ fn test_animation_multiple_easing_types() {
         anim.tick(Duration::from_millis(50));
 
         let value = anim.current_value();
-        assert!(value >= 0.0 && value <= 100.0);
+        assert!((0.0..=100.0).contains(&value));
     }
 }
 

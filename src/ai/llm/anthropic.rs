@@ -256,19 +256,16 @@ impl LLMClient for AnthropicClient {
         }
 
         // Add tools if provided
-        if let Some(mut tools_list) = tools {
-            if !tools_list.is_empty() {
+        if let Some(mut tools_list) = tools
+            && !tools_list.is_empty() {
                 // Add cache_control to last tool when caching enabled
-                if self.prompt_caching_enabled {
-                    if let Some(last_tool) = tools_list.last_mut() {
-                        if let Some(obj) = last_tool.as_object_mut() {
+                if self.prompt_caching_enabled
+                    && let Some(last_tool) = tools_list.last_mut()
+                        && let Some(obj) = last_tool.as_object_mut() {
                             obj.insert("cache_control".to_string(), json!({"type": "ephemeral"}));
                         }
-                    }
-                }
                 body["tools"] = json!(tools_list);
             }
-        }
 
         // Build request with headers
         let mut request = self
@@ -428,19 +425,16 @@ impl LLMClient for AnthropicClient {
         }
 
         // Add tools if provided
-        if let Some(mut tools_list) = tools {
-            if !tools_list.is_empty() {
+        if let Some(mut tools_list) = tools
+            && !tools_list.is_empty() {
                 // Add cache_control to last tool when caching enabled
-                if self.prompt_caching_enabled {
-                    if let Some(last_tool) = tools_list.last_mut() {
-                        if let Some(obj) = last_tool.as_object_mut() {
+                if self.prompt_caching_enabled
+                    && let Some(last_tool) = tools_list.last_mut()
+                        && let Some(obj) = last_tool.as_object_mut() {
                             obj.insert("cache_control".to_string(), json!({"type": "ephemeral"}));
                         }
-                    }
-                }
                 body["tools"] = json!(tools_list);
             }
-        }
 
         // Build request with headers
         let mut request = self

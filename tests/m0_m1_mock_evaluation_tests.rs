@@ -5,9 +5,8 @@
 use toad::ai::{
     Agent, DeterministicLLMClient, MetricsCollector, MockResponseBuilder, ToolRegistry,
 };
-use toad::ai::evaluation::{EvaluationHarness, Task};
-use toad::config::{FeatureFlags, ToadConfig};
-use std::path::PathBuf;
+use toad::ai::evaluation::Task;
+use toad::config::ToadConfig;
 use tempfile::TempDir;
 
 /// Test M0 evaluation framework with mock LLM - single task

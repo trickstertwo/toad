@@ -13,7 +13,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 /// Permission level for board access
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -433,12 +433,11 @@ impl CollaborationManager {
 
     /// Remove a board member
     pub fn remove_board_member(&mut self, board_id: &str, user_id: &str) -> bool {
-        if let Some(members) = self.board_members.get_mut(board_id) {
-            if let Some(pos) = members.iter().position(|m| m.user_id == user_id) {
+        if let Some(members) = self.board_members.get_mut(board_id)
+            && let Some(pos) = members.iter().position(|m| m.user_id == user_id) {
                 members.remove(pos);
                 return true;
             }
-        }
         false
     }
 
@@ -469,12 +468,11 @@ impl CollaborationManager {
 
     /// Remove a watcher from a task
     pub fn remove_watcher(&mut self, task_id: &str, user_id: &str) -> bool {
-        if let Some(watchers) = self.task_watchers.get_mut(task_id) {
-            if let Some(pos) = watchers.iter().position(|w| w.user_id == user_id) {
+        if let Some(watchers) = self.task_watchers.get_mut(task_id)
+            && let Some(pos) = watchers.iter().position(|w| w.user_id == user_id) {
                 watchers.remove(pos);
                 return true;
             }
-        }
         false
     }
 
@@ -564,12 +562,11 @@ impl CollaborationManager {
 
     /// Mark notification as read
     pub fn mark_notification_read(&mut self, user_id: &str, notification_id: &str) -> bool {
-        if let Some(notifications) = self.notifications.get_mut(user_id) {
-            if let Some(notif) = notifications.iter_mut().find(|n| n.id == notification_id) {
+        if let Some(notifications) = self.notifications.get_mut(user_id)
+            && let Some(notif) = notifications.iter_mut().find(|n| n.id == notification_id) {
                 notif.mark_read();
                 return true;
             }
-        }
         false
     }
 
