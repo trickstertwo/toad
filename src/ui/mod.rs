@@ -20,6 +20,7 @@ pub mod logo;
 pub mod molecules;
 pub mod multi_window;
 pub mod nerd_fonts;
+pub mod organisms;
 pub mod pixel_canvas;
 pub mod responsive_layout;
 pub mod syntax;
