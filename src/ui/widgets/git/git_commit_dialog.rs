@@ -17,14 +17,14 @@
 //! # }
 //! ```
 
-use crate::git::GitService;
+use crate::{git::GitService, ui::atoms::{block::Block as AtomBlock, text::Text as AtomText}};
 use anyhow::Result;
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, Paragraph, Widget, Wrap},
+    text::{Line, Text},
+    widgets::{Borders, Clear, Paragraph, Widget, Wrap},
 };
 
 /// Git commit dialog state
@@ -335,27 +335,34 @@ impl Widget for &GitCommitDialog {
 
         // Header with file count
         let header_text = vec![Line::from(vec![
-            Span::styled("Staged files: ", Style::default().fg(Color::Gray)),
-            Span::styled(
-                format!("{}", self.staged_count),
-                Style::default()
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled("  |  ", Style::default().fg(Color::Gray)),
-            Span::styled("Length: ", Style::default().fg(Color::Gray)),
-            Span::styled(
-                format!("{}", self.message.len()),
-                Style::default().fg(Color::Cyan),
-            ),
+            AtomText::new("Staged files: ")
+                .style(Style::default().fg(Color::Gray))
+                .to_span(),
+            AtomText::new(format!("{}", self.staged_count))
+                .style(
+                    Style::default()
+                        .fg(Color::Green)
+                        .add_modifier(Modifier::BOLD),
+                )
+                .to_span(),
+            AtomText::new("  |  ")
+                .style(Style::default().fg(Color::Gray))
+                .to_span(),
+            AtomText::new("Length: ")
+                .style(Style::default().fg(Color::Gray))
+                .to_span(),
+            AtomText::new(format!("{}", self.message.len()))
+                .style(Style::default().fg(Color::Cyan))
+                .to_span(),
         ])];
 
         let header = Paragraph::new(header_text)
             .block(
-                Block::default()
+                AtomBlock::new()
                     .borders(Borders::ALL)
                     .title(title)
-                    .title_style(title_style.add_modifier(Modifier::BOLD)),
+                    .title_style(title_style.add_modifier(Modifier::BOLD))
+                    .to_ratatui(),
             )
             .alignment(Alignment::Center);
 
@@ -363,17 +370,19 @@ impl Widget for &GitCommitDialog {
 
         // Message editor area
         let message_text = if self.state == CommitDialogState::Success {
-            Text::from(vec![Line::from(vec![Span::styled(
+            Text::from(vec![Line::from(vec![AtomText::new(
                 self.result_message
                     .as_deref()
                     .unwrap_or("Committed successfully!"),
-                Style::default().fg(Color::Green),
-            )])])
+            )
+            .style(Style::default().fg(Color::Green))
+            .to_span()])])
         } else if self.state == CommitDialogState::Error {
-            Text::from(vec![Line::from(vec![Span::styled(
+            Text::from(vec![Line::from(vec![AtomText::new(
                 self.error_message.as_deref().unwrap_or("An error occurred"),
-                Style::default().fg(Color::Red),
-            )])])
+            )
+            .style(Style::default().fg(Color::Red))
+            .to_span()])])
         } else {
             // Render message with cursor indicator
             let mut lines = vec![];
@@ -386,12 +395,11 @@ impl Widget for &GitCommitDialog {
                     let after = &line[cursor_col.min(line.len())..];
 
                     lines.push(Line::from(vec![
-                        Span::raw(before),
-                        Span::styled(
-                            cursor_char.to_string(),
-                            Style::default().bg(Color::White).fg(Color::Black),
-                        ),
-                        Span::raw(after),
+                        AtomText::new(before).to_span(),
+                        AtomText::new(cursor_char.to_string())
+                            .style(Style::default().bg(Color::White).fg(Color::Black))
+                            .to_span(),
+                        AtomText::new(after).to_span(),
                     ]));
                 } else {
                     lines.push(Line::from(line.to_string()));
@@ -401,17 +409,21 @@ impl Widget for &GitCommitDialog {
             // If message is empty or cursor is at end after newline, show cursor
             let (cursor_line, cursor_col) = self.cursor_line_col();
             if self.message.is_empty() || (cursor_line >= lines.len() && cursor_col == 0) {
-                lines.push(Line::from(vec![Span::styled(
-                    " ",
-                    Style::default().bg(Color::White).fg(Color::Black),
-                )]));
+                lines.push(Line::from(vec![AtomText::new(" ")
+                    .style(Style::default().bg(Color::White).fg(Color::Black))
+                    .to_span()]));
             }
 
             Text::from(lines)
         };
 
         let message_editor = Paragraph::new(message_text)
-            .block(Block::default().borders(Borders::ALL).title("Message"))
+            .block(
+                AtomBlock::new()
+                    .borders(Borders::ALL)
+                    .title("Message")
+                    .to_ratatui(),
+            )
             .wrap(Wrap { trim: false })
             .scroll((0, 0));
 
@@ -419,17 +431,19 @@ impl Widget for &GitCommitDialog {
 
         // Guidelines
         let guidelines = vec![Line::from(vec![
-            Span::styled(
-                "Tip: ",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::raw("First line is summary (50 chars max), then blank line, then details"),
+            AtomText::new("Tip: ")
+                .style(
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                )
+                .to_span(),
+            AtomText::new("First line is summary (50 chars max), then blank line, then details")
+                .to_span(),
         ])];
 
         let guidelines_widget = Paragraph::new(guidelines)
-            .block(Block::default().borders(Borders::ALL))
+            .block(AtomBlock::new().borders(Borders::ALL).to_ratatui())
             .wrap(Wrap { trim: false });
 
         guidelines_widget.render(chunks[2], buf);
@@ -437,23 +451,22 @@ impl Widget for &GitCommitDialog {
         // Footer with keybindings
         let footer_text = if self.state == CommitDialogState::Editing {
             if let Some(err) = self.validation_error() {
-                vec![Line::from(vec![Span::styled(
-                    err,
-                    Style::default().fg(Color::Red),
-                )])]
+                vec![Line::from(vec![AtomText::new(err)
+                    .style(Style::default().fg(Color::Red))
+                    .to_span()])]
             } else {
                 vec![Line::from(vec![
-                    Span::raw("Ctrl+Enter: Commit | "),
-                    Span::raw("Enter: New line | "),
-                    Span::raw("Esc: Cancel"),
+                    AtomText::new("Ctrl+Enter: Commit | ").to_span(),
+                    AtomText::new("Enter: New line | ").to_span(),
+                    AtomText::new("Esc: Cancel").to_span(),
                 ])]
             }
         } else {
-            vec![Line::from(vec![Span::raw("Press Esc to close")])]
+            vec![Line::from(vec![AtomText::new("Press Esc to close").to_span()])]
         };
 
         let footer = Paragraph::new(footer_text)
-            .block(Block::default().borders(Borders::ALL))
+            .block(AtomBlock::new().borders(Borders::ALL).to_ratatui())
             .style(Style::default().fg(Color::Gray))
             .alignment(Alignment::Center);
 
