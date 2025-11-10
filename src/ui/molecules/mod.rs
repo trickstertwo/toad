@@ -15,12 +15,14 @@
 //!
 //! - [`metric_card`]: Labeled metric with optional icon (composes Text + Icon)
 //! - [`task_item`]: Task list item with icon and status (composes Icon + Text)
+//! - [`progress_bar`]: Progress bar with label and percentage (composes Text atoms)
 //!
 //! # Examples
 //!
 //! ```
 //! use toad::ui::molecules::metric_card::MetricCard;
 //! use toad::ui::molecules::task_item::TaskItem;
+//! use toad::ui::molecules::progress_bar::ProgressBar;
 //! use toad::ui::atoms::icon::Icon;
 //! use toad::ui::nerd_fonts::UiIcon;
 //!
@@ -28,10 +30,14 @@
 //!     .icon(Icon::ui(UiIcon::Success));
 //!
 //! let task = TaskItem::completed("Build project").status("2.3s");
+//!
+//! let progress = ProgressBar::success("Tasks", 7, 10);
 //! ```
 
 pub mod metric_card;
+pub mod progress_bar;
 pub mod task_item;
 
 pub use metric_card::MetricCard;
+pub use progress_bar::ProgressBar;
 pub use task_item::TaskItem;
