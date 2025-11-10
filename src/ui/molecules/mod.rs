@@ -45,6 +45,7 @@ pub mod model_selector;
 pub mod progress_bar;
 pub mod task_item;
 pub mod token_counter;
+pub mod tool_execution_item;
 
 pub use context_window::{ContextWindow, UsageState};
 pub use cost_tracker::{BudgetStatus, CostTracker};
@@ -53,3 +54,4 @@ pub use model_selector::ModelSelector;
 pub use progress_bar::ProgressBar;
 pub use task_item::TaskItem;
 pub use token_counter::TokenCounter;
+pub use tool_execution_item::{ExecutionStatus, ToolExecutionItem};
