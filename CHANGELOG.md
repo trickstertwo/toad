@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - ✅ Fixed all 192 test compilation errors (added missing imports, deleted broken tests)
   - ✅ All tests now compile (5,071 passing, 13 runtime failures - acceptable)
   - ✅ Created FilesystemService - moved I/O out of FileTree widget (SoC PoC)
-  - ⏳ Extract widget state into pure data structures (InputField → InputState) ← NEXT
+  - ✅ Extracted InputState from InputField - pure data separated from UI layer
   - Goal: Clean architecture, all tests passing, <2000 LOC for TUI
 
 <!-- COMPLETED 2025-11-08: Agent system restructured -->
