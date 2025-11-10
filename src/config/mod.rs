@@ -341,6 +341,7 @@ impl ToadConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ai::llm::ProviderType;
 
     #[test]
     fn test_feature_flags_default() {
