@@ -2,6 +2,7 @@
 //!
 //! Collapsible directory tree for browsing files
 
+use crate::services::FilesystemService;
 use crate::ui::theme::ToadTheme;
 use ratatui::{
     Frame,
@@ -64,39 +65,38 @@ impl FileTreeNode {
         }
     }
 
-    /// Load children from filesystem
-    pub fn load_children(&mut self) -> std::io::Result<()> {
+    /// Load children from filesystem using FilesystemService
+    ///
+    /// This method uses the FilesystemService to maintain separation of concerns
+    /// between UI widgets and I/O operations.
+    pub fn load_children(&mut self, fs_service: &FilesystemService) -> std::io::Result<()> {
         if self.node_type != FileTreeNodeType::Directory {
             return Ok(());
         }
 
         self.children.clear();
 
-        let entries = std::fs::read_dir(&self.path)?;
+        let entries = fs_service.read_dir(&self.path)?;
         let mut dirs = Vec::new();
         let mut files = Vec::new();
 
-        for entry in entries.flatten() {
-            let path = entry.path();
-            let name = entry.file_name().to_string_lossy().to_string();
-
+        for entry in entries {
             // Skip hidden files and common ignore patterns
-            if name.starts_with('.') || name == "target" || name == "node_modules" {
+            if entry.file_name.starts_with('.')
+                || entry.file_name == "target"
+                || entry.file_name == "node_modules" {
                 continue;
             }
 
-            if path.is_dir() {
-                dirs.push(FileTreeNode::directory(path, name, self.depth + 1));
+            if entry.is_dir {
+                dirs.push(FileTreeNode::directory(entry.path, entry.file_name, self.depth + 1));
             } else {
-                files.push(FileTreeNode::file(path, name, self.depth + 1));
+                files.push(FileTreeNode::file(entry.path, entry.file_name, self.depth + 1));
             }
         }
 
-        // Sort alphabetically
-        dirs.sort_by(|a, b| a.name.cmp(&b.name));
-        files.sort_by(|a, b| a.name.cmp(&b.name));
-
-        // Directories first, then files
+        // FilesystemService already sorts directories first, then alphabetically
+        // So we don't need to re-sort here
         self.children.extend(dirs);
         self.children.extend(files);
 
@@ -110,11 +110,16 @@ pub struct FileTree {
     flattened: Vec<usize>, // Indices into the tree for visible items
     list_state: ListState,
     title: String,
+    fs_service: FilesystemService,
 }
 
 impl FileTree {
     /// Create a new file tree rooted at the given path
+    ///
+    /// Uses FilesystemService for I/O operations (Separation of Concerns).
     pub fn new(root_path: PathBuf) -> std::io::Result<Self> {
+        let fs_service = FilesystemService::new();
+
         let name = root_path
             .file_name()
             .unwrap_or(root_path.as_os_str())
@@ -123,13 +128,14 @@ impl FileTree {
 
         let mut root = FileTreeNode::directory(root_path.clone(), name, 0);
         root.is_expanded = true;
-        root.load_children()?;
+        root.load_children(&fs_service)?;
 
         let mut tree = Self {
             root,
             flattened: Vec::new(),
             list_state: ListState::default(),
             title: "File Tree".to_string(),
+            fs_service,
         };
 
         tree.rebuild_flattened();
@@ -289,10 +295,25 @@ impl FileTree {
 
     /// Toggle a node at the given flat index
     fn toggle_node(&mut self, flat_index: usize) {
-        if let Some(node) = self.get_node_by_flat_index_mut(flat_index) {
-            if node.node_type == FileTreeNodeType::Directory && node.children.is_empty() {
-                let _ = node.load_children();
+        // First, check if we need to load children (immutable borrow)
+        let needs_load = if let Some(node) = self.get_node_by_flat_index(flat_index) {
+            node.node_type == FileTreeNodeType::Directory && node.children.is_empty()
+        } else {
+            false
+        };
+
+        // Load children if needed
+        // Note: We create a new FilesystemService here to avoid borrow checker issues.
+        // FilesystemService::new() is cheap (zero-cost) since it's just an empty struct.
+        if needs_load {
+            let fs_service = FilesystemService::new();
+            if let Some(node) = self.get_node_by_flat_index_mut(flat_index) {
+                let _ = node.load_children(&fs_service);
             }
+        }
+
+        // Toggle the node (mutable borrow, separate scope)
+        if let Some(node) = self.get_node_by_flat_index_mut(flat_index) {
             node.toggle();
         }
     }
@@ -439,12 +460,13 @@ mod tests {
 
     #[test]
     fn test_load_children_on_file_returns_ok() {
+        let fs_service = FilesystemService::new();
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let file_path = temp_dir.path().join("test.txt");
         fs::write(&file_path, "content").expect("Failed to write test file");
 
         let mut node = FileTreeNode::file(file_path, "test.txt".to_string(), 0);
-        let result = node.load_children();
+        let result = node.load_children(&fs_service);
 
         assert!(result.is_ok());
         assert!(node.children.is_empty()); // Files don't have children
@@ -452,16 +474,18 @@ mod tests {
 
     #[test]
     fn test_load_children_empty_directory() {
+        let fs_service = FilesystemService::new();
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
 
-        let result = node.load_children();
+        let result = node.load_children(&fs_service);
         assert!(result.is_ok());
         assert!(node.children.is_empty());
     }
 
     #[test]
     fn test_load_children_with_files() {
+        let fs_service = FilesystemService::new();
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
 
         // Create some test files
@@ -469,7 +493,7 @@ mod tests {
         fs::write(temp_dir.path().join("file2.txt"), "content").expect("Failed to write file");
 
         let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children().expect("Failed to load children");
+        node.load_children(&fs_service).expect("Failed to load children");
 
         assert_eq!(node.children.len(), 2);
         assert!(node.children.iter().all(|c| c.node_type == FileTreeNodeType::File));
@@ -478,6 +502,7 @@ mod tests {
 
     #[test]
     fn test_load_children_with_directories() {
+        let fs_service = FilesystemService::new();
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
 
         // Create subdirectories
@@ -485,7 +510,7 @@ mod tests {
         fs::create_dir(temp_dir.path().join("dir2")).expect("Failed to create dir");
 
         let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children().expect("Failed to load children");
+        node.load_children(&fs_service).expect("Failed to load children");
 
         assert_eq!(node.children.len(), 2);
         assert!(node.children.iter().all(|c| c.node_type == FileTreeNodeType::Directory));
@@ -493,6 +518,7 @@ mod tests {
 
     #[test]
     fn test_load_children_mixed_content() {
+        let fs_service = FilesystemService::new();
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
 
         // Create mixed content
@@ -502,7 +528,7 @@ mod tests {
         fs::write(temp_dir.path().join("file2.txt"), "content").expect("Failed to write file");
 
         let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children().expect("Failed to load children");
+        node.load_children(&fs_service).expect("Failed to load children");
 
         assert_eq!(node.children.len(), 4);
         // Directories should come first
@@ -514,6 +540,7 @@ mod tests {
 
     #[test]
     fn test_load_children_alphabetical_sorting() {
+        let fs_service = FilesystemService::new();
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
 
         // Create files in non-alphabetical order
@@ -522,7 +549,7 @@ mod tests {
         fs::write(temp_dir.path().join("mango.txt"), "content").expect("Failed to write file");
 
         let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children().expect("Failed to load children");
+        node.load_children(&fs_service).expect("Failed to load children");
 
         assert_eq!(node.children[0].name, "apple.txt");
         assert_eq!(node.children[1].name, "mango.txt");
@@ -531,6 +558,7 @@ mod tests {
 
     #[test]
     fn test_load_children_skips_hidden_files() {
+        let fs_service = FilesystemService::new();
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
 
         // Create hidden and visible files
@@ -538,7 +566,7 @@ mod tests {
         fs::write(temp_dir.path().join("visible.txt"), "content").expect("Failed to write file");
 
         let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children().expect("Failed to load children");
+        node.load_children(&fs_service).expect("Failed to load children");
 
         assert_eq!(node.children.len(), 1);
         assert_eq!(node.children[0].name, "visible.txt");
@@ -546,6 +574,7 @@ mod tests {
 
     #[test]
     fn test_load_children_skips_target_directory() {
+        let fs_service = FilesystemService::new();
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
 
         // Create target and regular directories
@@ -553,7 +582,7 @@ mod tests {
         fs::create_dir(temp_dir.path().join("src")).expect("Failed to create dir");
 
         let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children().expect("Failed to load children");
+        node.load_children(&fs_service).expect("Failed to load children");
 
         assert_eq!(node.children.len(), 1);
         assert_eq!(node.children[0].name, "src");
@@ -561,6 +590,7 @@ mod tests {
 
     #[test]
     fn test_load_children_skips_node_modules() {
+        let fs_service = FilesystemService::new();
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
 
         // Create node_modules and regular directory
@@ -568,7 +598,7 @@ mod tests {
         fs::create_dir(temp_dir.path().join("lib")).expect("Failed to create dir");
 
         let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children().expect("Failed to load children");
+        node.load_children(&fs_service).expect("Failed to load children");
 
         assert_eq!(node.children.len(), 1);
         assert_eq!(node.children[0].name, "lib");
