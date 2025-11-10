@@ -1,12 +1,11 @@
 /// Breadcrumbs navigation widget
 ///
 /// Shows hierarchical navigation path with clickable segments
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::text::Text, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    text::{Line, Span},
     widgets::Paragraph,
 };
 
@@ -121,7 +120,7 @@ impl Breadcrumbs {
         self.hovered = None;
     }
 
-    /// Render the breadcrumbs
+    /// Render the breadcrumbs using Text atoms
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         if self.segments.is_empty() {
             return;
@@ -130,15 +129,14 @@ impl Breadcrumbs {
         let mut spans = Vec::new();
 
         for (i, segment) in self.segments.iter().enumerate() {
-            // Add icon if present
+            // Add icon if present using Text atom
             if let Some(icon) = &segment.icon {
-                spans.push(Span::styled(
-                    format!("{} ", icon),
-                    Style::default().fg(ToadTheme::GRAY),
-                ));
+                let icon_text = Text::new(format!("{} ", icon))
+                    .style(Style::default().fg(ToadTheme::GRAY));
+                spans.push(icon_text.to_span());
             }
 
-            // Add label
+            // Add label using Text atom
             let is_last = i == self.segments.len() - 1;
             let is_hovered = self.hovered == Some(i);
 
@@ -160,18 +158,19 @@ impl Breadcrumbs {
                 Style::default().fg(ToadTheme::GRAY)
             };
 
-            spans.push(Span::styled(&segment.label, style));
+            let label_text = Text::new(&segment.label).style(style);
+            spans.push(label_text.to_span());
 
-            // Add separator if not last
+            // Add separator if not last using Text atom
             if !is_last {
-                spans.push(Span::styled(
-                    &self.separator,
-                    Style::default().fg(ToadTheme::DARK_GRAY),
-                ));
+                let separator_text = Text::new(&self.separator)
+                    .style(Style::default().fg(ToadTheme::DARK_GRAY));
+                spans.push(separator_text.to_span());
             }
         }
 
-        let paragraph = Paragraph::new(Line::from(spans));
+        let line = ratatui::text::Line::from(spans);
+        let paragraph = Paragraph::new(line);
         frame.render_widget(paragraph, area);
     }
 }
