@@ -13,11 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Remove from this section when complete and move to appropriate category below -->
 - [Phase 1: AI Commanding Center] Atomic UI refactoring (@claude) - 2025-11-10
   - ✅ Text atom created (271 lines, 15 tests, 100% API coverage)
-  - ⏳ Block atom (next)
-  - ⏳ Icon atom
-  - ⏳ Molecules (metric_card, task_item, progress_bar)
+  - ✅ Block atom created (315 lines, 18 tests, 100% API coverage)
+  - ✅ Icon atom created (218 lines, 15 tests, 100% API coverage)
+  - ⏳ Molecules (metric_card, task_item, progress_bar) - NEXT
   - ⏳ Evaluation screen (core Phase 1 feature)
-  - Goal: <850 LOC new Atomic UI, real-time eval progress display
+  - Progress: 804 LOC of 850 target (94% complete for atoms)
 
 <!-- COMPLETED 2025-11-10: Phase 0 Foundation - Architecture cleanup and SoC patterns -->
 <!-- COMPLETED 2025-11-08: Agent system restructured -->

@@ -15,20 +15,25 @@
 //!
 //! - [`text`]: Styled text primitive
 //! - [`block`]: Bordered container primitive
-//! - More atoms to come (button, icon, etc.)
+//! - [`icon`]: Nerd Font icon primitive
 //!
 //! # Examples
 //!
 //! ```
 //! use toad::ui::atoms::text::Text;
 //! use toad::ui::atoms::block::Block;
+//! use toad::ui::atoms::icon::Icon;
+//! use toad::ui::nerd_fonts::UiIcon;
 //!
 //! let text = Text::new("Hello").bold();
 //! let block = Block::themed("Panel");
+//! let icon = Icon::ui(UiIcon::Success);
 //! ```
 
 pub mod block;
+pub mod icon;
 pub mod text;
 
 pub use block::Block;
+pub use icon::Icon;
 pub use text::Text;
