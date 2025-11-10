@@ -13,6 +13,7 @@
 //!
 //! # Screens
 //!
+//! - [`welcome`]: Welcome splash screen with logo and quick tips
 //! - [`evaluation`]: Real-time evaluation progress display
 //!
 //! # Examples
@@ -40,5 +41,7 @@
 //! ```
 
 pub mod evaluation;
+pub mod welcome;
 
 pub use evaluation::EvaluationScreen;
+pub use welcome::WelcomeScreen;
