@@ -25,9 +25,10 @@ use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Style},
-    text::Span,
-    widgets::{Block, Paragraph, Widget},
+    widgets::{Paragraph, Widget},
 };
+
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text};
 
 /// FPS counter with rolling average
 ///
@@ -357,11 +358,16 @@ impl Default for FpsCounter {
 
 impl Widget for &FpsCounter {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let text = self.render_string();
+        let text_content = self.render_string();
         let color = self.fps_color();
 
-        let paragraph =
-            Paragraph::new(Span::styled(text, Style::default().fg(color))).block(Block::default());
+        // Use Text atom for styled text
+        let text = Text::new(text_content).style(Style::default().fg(color));
+
+        // Use Block atom for border
+        let block = AtomBlock::new().to_ratatui();
+
+        let paragraph = Paragraph::new(text.to_span()).block(block);
 
         paragraph.render(area, buf);
     }

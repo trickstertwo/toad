@@ -17,8 +17,10 @@ use ratatui::{
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Widget},
+    widgets::{Borders, Clear, List, ListItem, Paragraph, Widget},
 };
+
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -401,18 +403,30 @@ impl Widget for &ContextualHelp {
 
         // Render title
         let context_name = format!("{:?}", self.context);
+
+        // Use Text atoms for title components
+        let help_text = Text::new("Help: ").style(Style::default().fg(Color::Gray));
+        let context_text = Text::new(&context_name)
+            .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD));
+        let space_text = Text::new(" ");
+        let bindings_text = Text::new(format!("({} bindings)", self.entry_count()))
+            .style(Style::default().fg(Color::Gray));
+
         let title_text = vec![Line::from(vec![
-            Span::styled("Help: ", Style::default().fg(Color::Gray)),
-            Span::styled(&context_name, Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-            Span::raw(" "),
-            Span::styled(
-                format!("({} bindings)", self.entry_count()),
-                Style::default().fg(Color::Gray),
-            ),
+            help_text.to_span(),
+            context_text.to_span(),
+            space_text.to_span(),
+            bindings_text.to_span(),
         ])];
 
+        // Use Block atom for title border
+        let title_block = AtomBlock::new()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Cyan))
+            .to_ratatui();
+
         let title = Paragraph::new(title_text)
-            .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(Color::Cyan)))
+            .block(title_block)
             .alignment(Alignment::Center);
         title.render(chunks[0], buf);
 
@@ -422,24 +436,34 @@ impl Widget for &ContextualHelp {
             .iter()
             .map(|entry| {
                 let category_str = entry.category.as_deref().unwrap_or("General");
+
+                // Use Text atoms for each component
+                let key_text = Text::new(format!("{:15}", entry.keybinding))
+                    .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD));
+                let separator_text = Text::new(" │ ");
+                let desc_text = Text::new(&entry.description)
+                    .style(Style::default().fg(Color::White));
+                let space_text = Text::new(" ");
+                let category_text = Text::new(format!("[{}]", category_str))
+                    .style(Style::default().fg(Color::DarkGray));
+
                 ListItem::new(Line::from(vec![
-                    Span::styled(
-                        format!("{:15}", entry.keybinding),
-                        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
-                    ),
-                    Span::raw(" │ "),
-                    Span::styled(&entry.description, Style::default().fg(Color::White)),
-                    Span::raw(" "),
-                    Span::styled(
-                        format!("[{}]", category_str),
-                        Style::default().fg(Color::DarkGray),
-                    ),
+                    key_text.to_span(),
+                    separator_text.to_span(),
+                    desc_text.to_span(),
+                    space_text.to_span(),
+                    category_text.to_span(),
                 ]))
             })
             .collect();
 
-        let list = List::new(items)
-            .block(Block::default().borders(Borders::ALL).title("Keybindings"));
+        // Use Block atom for list border
+        let list_block = AtomBlock::new()
+            .borders(Borders::ALL)
+            .title("Keybindings")
+            .to_ratatui();
+
+        let list = List::new(items).block(list_block);
 
         list.render(chunks[1], buf);
 
@@ -450,8 +474,13 @@ impl Widget for &ContextualHelp {
             &format!("Filtering: '{}' | Esc: Clear filter", self.search_filter)
         };
 
+        // Use Block atom for footer border
+        let footer_block = AtomBlock::new()
+            .borders(Borders::ALL)
+            .to_ratatui();
+
         let footer = Paragraph::new(footer_text)
-            .block(Block::default().borders(Borders::ALL))
+            .block(footer_block)
             .style(Style::default().fg(Color::Gray))
             .alignment(Alignment::Center);
         footer.render(chunks[2], buf);
