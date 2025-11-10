@@ -5,6 +5,7 @@
 
 use crate::ai::eval_commands::{CompareArgs, EvalArgs};
 use crate::ai::evaluation::{EvaluationResults, TaskResult};
+use crate::ai::llm::Message;
 use crossterm::event::{self, KeyEvent, KeyEventKind, MouseEvent};
 use std::time::Duration;
 
@@ -44,6 +45,13 @@ pub enum Event {
 
     /// Cancel running evaluation
     CancelEvaluation,
+
+    // AI chat events
+    /// AI response received
+    AIResponse(Message),
+
+    /// AI error occurred
+    AIError(String),
 }
 
 /// Progress information for a running evaluation

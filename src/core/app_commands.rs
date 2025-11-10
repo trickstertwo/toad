@@ -86,9 +86,8 @@ impl App {
                         self.toast_error(format!("Command error: {}", e));
                         self.status_message = format!("Error: {}", e);
                     } else {
-                        // Regular query/request
-                        self.status_message = format!("Processing: {}", input);
-                        self.toast_info("AI query processing coming soon");
+                        // Regular AI query/request
+                        self.process_ai_query(input.to_string());
                     }
                 }
             }
