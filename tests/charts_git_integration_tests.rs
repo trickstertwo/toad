@@ -4,11 +4,11 @@
 
 use ratatui::style::Color;
 use toad::ui::widgets::{
-    BarChartWidget, BarData, BarDirection, DiffLine, DiffLineType, FileStatus, GitCommit, GitDiffViewer,
-    GitFile, GitGraph, GitStatusPanel, GraphType, LiveGraph, ScatterPlot, ScatterPlotWidget, ScatterSeries,
+    BarChart, BarData, BarDirection, DiffLine, DiffLineType, FileStatus, GitCommit, GitDiffViewer,
+    GitFile, GitGraph, GitStatusPanel, GraphType, LiveGraph, ScatterPlot, ScatterPlot, ScatterSeries,
 };
 
-// ==================== BarChartWidget Tests ====================
+// ==================== BarChart Tests ====================
 
 #[test]
 fn test_bar_chart_creation() {
@@ -18,7 +18,7 @@ fn test_bar_chart_creation() {
         BarData::new("Q3", 120.0),
     ];
 
-    let _chart = BarChartWidget::new(bars);
+    let _chart = BarChart::new(bars);
 }
 
 #[test]
@@ -28,7 +28,7 @@ fn test_bar_chart_builder() {
         BarData::new("B", 75.0).with_color(Color::Green),
     ];
 
-    let _chart = BarChartWidget::new(bars)
+    let _chart = BarChart::new(bars)
         .with_title("Sales")
         .with_value_label("Revenue")
         .with_direction(BarDirection::Vertical)
@@ -39,8 +39,8 @@ fn test_bar_chart_builder() {
 fn test_bar_direction() {
     let bars = vec![BarData::new("Test", 50.0)];
 
-    let _vertical = BarChartWidget::new(bars.clone()).with_direction(BarDirection::Vertical);
-    let _horizontal = BarChartWidget::new(bars).with_direction(BarDirection::Horizontal);
+    let _vertical = BarChart::new(bars.clone()).with_direction(BarDirection::Vertical);
+    let _horizontal = BarChart::new(bars).with_direction(BarDirection::Horizontal);
 }
 
 // ==================== ScatterPlot Tests (simple from chart.rs) ====================
@@ -57,11 +57,11 @@ fn test_scatter_plot_simple_builder() {
     let _plot = ScatterPlot::new(data).with_title("Analysis");
 }
 
-// ==================== ScatterPlotWidget Tests (with series) ====================
+// ==================== ScatterPlot Tests (with series) ====================
 
 #[test]
 fn test_scatter_plot_widget_creation() {
-    let plot = ScatterPlotWidget::new();
+    let plot = ScatterPlot::new();
 
     assert_eq!(plot.series_count(), 0);
 }
@@ -71,7 +71,7 @@ fn test_scatter_plot_widget_add_series() {
     let points = vec![(1.0, 2.0), (2.0, 4.0), (3.0, 6.0)];
     let series = ScatterSeries::new("Linear", points);
 
-    let plot = ScatterPlotWidget::new().add_series(series);
+    let plot = ScatterPlot::new().add_series(series);
 
     assert_eq!(plot.series_count(), 1);
 }
@@ -82,7 +82,7 @@ fn test_scatter_plot_widget_builder() {
         .with_color(Color::Red)
         .with_marker('●');
 
-    let plot = ScatterPlotWidget::new()
+    let plot = ScatterPlot::new()
         .add_series(series)
         .with_title("Analysis")
         .with_x_label("X")
@@ -414,10 +414,10 @@ fn test_charts_dashboard() {
         BarData::new("A", 100.0),
         BarData::new("B", 150.0),
     ];
-    let _bar_chart = BarChartWidget::new(bars).with_title("Sales");
+    let _bar_chart = BarChart::new(bars).with_title("Sales");
 
     let series = ScatterSeries::new("Data", vec![(1.0, 100.0), (2.0, 200.0)]);
-    let scatter = ScatterPlotWidget::new().add_series(series);
+    let scatter = ScatterPlot::new().add_series(series);
 
     let mut live = LiveGraph::new(GraphType::Line).with_max_points(30);
     for i in 0..30 {
