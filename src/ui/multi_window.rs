@@ -314,11 +314,10 @@ impl WindowManager {
     pub fn switch_to(&mut self, id: WindowId) -> bool {
         if self.windows.contains_key(&id) {
             // Update previous active window state
-            if let Some(prev_id) = self.active_window {
-                if let Some(window) = self.windows.get_mut(&prev_id) {
+            if let Some(prev_id) = self.active_window
+                && let Some(window) = self.windows.get_mut(&prev_id) {
                     window.set_state(WindowState::Background);
                 }
-            }
 
             // Update MRU order
             self.mru_order.retain(|&x| x != id);
@@ -385,11 +384,10 @@ impl WindowManager {
             // If closing active window, switch to next
             if self.active_window == Some(id) {
                 self.active_window = self.mru_order.first().copied();
-                if let Some(new_active) = self.active_window {
-                    if let Some(win) = self.windows.get_mut(&new_active) {
+                if let Some(new_active) = self.active_window
+                    && let Some(win) = self.windows.get_mut(&new_active) {
                         win.set_state(WindowState::Active);
                     }
-                }
             }
 
             true

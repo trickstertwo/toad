@@ -1,6 +1,5 @@
 //! Vim mode tests
 
-use super::*;
 use ratatui::style::Color;
     use super::*;
 

@@ -1,6 +1,5 @@
 //! Session manager tests
 
-use super::*;
 use std::collections::HashMap;
     use super::*;
 

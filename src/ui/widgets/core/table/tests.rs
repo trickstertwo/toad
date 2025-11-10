@@ -1,7 +1,5 @@
 //\! Table widget tests
 
-use super::*;
-use super::*;
 
 #[test]
 fn test_table_creation() {

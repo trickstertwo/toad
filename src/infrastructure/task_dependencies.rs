@@ -161,9 +161,7 @@ impl DependencyManager {
         if dependency_type.affects_scheduling()
             && self.would_create_cycle(&from_task, &to_task, dependency_type)
         {
-            return Err(format!(
-                "Creating this dependency would create a circular dependency chain"
-            ));
+            return Err("Creating this dependency would create a circular dependency chain".to_string());
         }
 
         let id = format!("dep-{}", self.next_dependency_id);
@@ -177,11 +175,11 @@ impl DependencyManager {
         // Add to task_dependencies
         self.task_dependencies
             .entry(from_task.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(id.clone());
         self.task_dependencies
             .entry(to_task.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(id.clone());
 
         Ok(id)
@@ -238,11 +236,10 @@ impl DependencyManager {
 
         if let Some(dep_ids) = self.task_dependencies.get(task_id) {
             for dep_id in dep_ids {
-                if let Some(dep) = self.dependencies.get(dep_id) {
-                    if dep.from_task == task_id && dep.dependency_type == DependencyType::Blocks {
+                if let Some(dep) = self.dependencies.get(dep_id)
+                    && dep.from_task == task_id && dep.dependency_type == DependencyType::Blocks {
                         blocked.push(dep.to_task.clone());
                     }
-                }
             }
         }
 
@@ -397,7 +394,7 @@ impl DependencyManager {
                 *in_degree.entry(dep.to_task.clone()).or_insert(0) += 1;
                 adj_list
                     .entry(dep.from_task.clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(dep.to_task.clone());
             }
         }

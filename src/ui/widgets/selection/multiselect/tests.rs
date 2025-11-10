@@ -1,6 +1,5 @@
 //! Multiselect widget tests
 
-use super::*;
     use super::*;
 
     #[test]

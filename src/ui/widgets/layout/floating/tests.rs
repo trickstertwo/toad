@@ -1,7 +1,6 @@
 //! Floating window tests
 
 use super::*;
-use ratatui::layout::Rect;
 
 #[cfg(test)]
 mod tests {

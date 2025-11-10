@@ -343,7 +343,7 @@ impl TimeTracker {
         self.entries.push(entry);
         self.by_task
             .entry(task_id)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(index);
 
         self.next_id += 1;

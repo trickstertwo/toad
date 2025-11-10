@@ -428,7 +428,7 @@ impl Widget for &mut AIDiffView {
 
         // Render diff hunks
         if !self.hunks.is_empty() {
-            let items: Vec<ListItem> = self.hunks.iter().enumerate().map(|(_idx, hunk)| {
+            let items: Vec<ListItem> = self.hunks.iter().map(|hunk| {
                 let mut lines = vec![Line::from(vec![
                     Span::styled(&hunk.header, Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
                 ])];

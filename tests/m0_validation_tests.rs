@@ -356,7 +356,7 @@ mod m0_validation_tests {
             .unwrap()
             .collect();
 
-        assert!(result_files.len() > 0);
+        assert!(!result_files.is_empty());
 
         // 5. Load results back
         for entry in result_files {

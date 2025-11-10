@@ -266,11 +266,10 @@ impl AdvancedMouseHandler {
         }
 
         // Check if we've hovered long enough
-        if let Some(last_time) = self.last_hover_time {
-            if now.duration_since(last_time) >= self.hover_delay {
+        if let Some(last_time) = self.last_hover_time
+            && now.duration_since(last_time) >= self.hover_delay {
                 return Some(MouseGesture::Hover);
             }
-        }
 
         None
     }
@@ -298,14 +297,13 @@ impl AdvancedMouseHandler {
 
     /// Check for long press
     pub fn check_long_press(&mut self) -> Option<MouseGesture> {
-        if let Some(drag) = &self.drag_state {
-            if !drag.is_active {
+        if let Some(drag) = &self.drag_state
+            && !drag.is_active {
                 let now = Instant::now();
                 if now.duration_since(drag.started) >= self.long_press_threshold {
                     return Some(MouseGesture::LongPress);
                 }
             }
-        }
         None
     }
 

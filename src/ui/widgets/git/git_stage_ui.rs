@@ -230,25 +230,23 @@ impl GitStageUI {
 
     /// Stage the currently selected file
     pub async fn stage_selected(&mut self) -> Result<()> {
-        if let Some(idx) = self.unstaged_state.selected() {
-            if let Some(entry) = self.unstaged.get(idx) {
+        if let Some(idx) = self.unstaged_state.selected()
+            && let Some(entry) = self.unstaged.get(idx) {
                 self.service.stage(&entry.path).await?;
                 self.message = Some(format!("Staged: {}", entry.path.display()));
                 self.refresh().await?;
             }
-        }
         Ok(())
     }
 
     /// Unstage the currently selected file
     pub async fn unstage_selected(&mut self) -> Result<()> {
-        if let Some(idx) = self.staged_state.selected() {
-            if let Some(entry) = self.staged.get(idx) {
+        if let Some(idx) = self.staged_state.selected()
+            && let Some(entry) = self.staged.get(idx) {
                 self.service.unstage(&entry.path).await?;
                 self.message = Some(format!("Unstaged: {}", entry.path.display()));
                 self.refresh().await?;
             }
-        }
         Ok(())
     }
 
@@ -286,18 +284,16 @@ impl GitStageUI {
     pub fn move_up(&mut self) {
         match self.focus {
             StagePane::Unstaged => {
-                if let Some(selected) = self.unstaged_state.selected() {
-                    if selected > 0 {
+                if let Some(selected) = self.unstaged_state.selected()
+                    && selected > 0 {
                         self.unstaged_state.select(Some(selected - 1));
                     }
-                }
             }
             StagePane::Staged => {
-                if let Some(selected) = self.staged_state.selected() {
-                    if selected > 0 {
+                if let Some(selected) = self.staged_state.selected()
+                    && selected > 0 {
                         self.staged_state.select(Some(selected - 1));
                     }
-                }
             }
         }
     }
@@ -306,18 +302,16 @@ impl GitStageUI {
     pub fn move_down(&mut self) {
         match self.focus {
             StagePane::Unstaged => {
-                if let Some(selected) = self.unstaged_state.selected() {
-                    if selected + 1 < self.unstaged.len() {
+                if let Some(selected) = self.unstaged_state.selected()
+                    && selected + 1 < self.unstaged.len() {
                         self.unstaged_state.select(Some(selected + 1));
                     }
-                }
             }
             StagePane::Staged => {
-                if let Some(selected) = self.staged_state.selected() {
-                    if selected + 1 < self.staged.len() {
+                if let Some(selected) = self.staged_state.selected()
+                    && selected + 1 < self.staged.len() {
                         self.staged_state.select(Some(selected + 1));
                     }
-                }
             }
         }
     }

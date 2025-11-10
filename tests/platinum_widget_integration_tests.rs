@@ -207,8 +207,8 @@ fn test_chat_panel_state_persistence_across_clears() {
 
     // Build up conversation
     for i in 0..10 {
-        chat.add_user_message(&format!("Q{}", i));
-        chat.add_assistant_message(&format!("A{}", i));
+        chat.add_user_message(format!("Q{}", i));
+        chat.add_assistant_message(format!("A{}", i));
     }
 
     assert_eq!(chat.message_count(), 20);
@@ -385,7 +385,7 @@ fn test_chat_panel_performance_with_max_history() {
 
     // Add 2000 messages (should trim to 1000)
     for i in 0..2000 {
-        chat.add_user_message(&format!("Message {}", i));
+        chat.add_user_message(format!("Message {}", i));
     }
 
     // Should be capped

@@ -390,7 +390,7 @@ impl CrossWindowContextManager {
 
         self.context_references
             .entry(window_id)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(reference);
 
         Ok(())

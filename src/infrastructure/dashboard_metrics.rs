@@ -123,7 +123,7 @@ impl CumulativeFlowData {
                 points
                     .iter()
                     .filter(|p| p.timestamp <= timestamp)
-                    .last()
+                    .next_back()
                     .map(|p| p.value as usize)
             })
             .sum()

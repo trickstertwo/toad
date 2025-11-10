@@ -1,5 +1,4 @@
 use super::*;
-use ratatui::style::Color;
 
 
     #[test]

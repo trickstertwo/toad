@@ -145,7 +145,7 @@ async fn test_save_and_load_results() {
     // Check that file was created
     let entries: Vec<_> = std::fs::read_dir(temp_dir.path()).unwrap().collect();
 
-    assert!(entries.len() > 0);
+    assert!(!entries.is_empty());
 }
 
 #[test]

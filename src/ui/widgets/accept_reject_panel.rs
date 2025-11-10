@@ -199,11 +199,10 @@ impl AcceptRejectPanel {
 
     /// Reset current change to pending
     pub fn reset_current(&mut self) {
-        if let Some(idx) = self.list_state.selected() {
-            if let Some(change) = self.changes.get_mut(idx) {
+        if let Some(idx) = self.list_state.selected()
+            && let Some(change) = self.changes.get_mut(idx) {
                 change.reset();
             }
-        }
     }
 
     /// Accept all pending changes
@@ -386,9 +385,9 @@ impl StatefulWidget for &AcceptRejectPanel {
         StatefulWidget::render(list, list_area, buf, &mut list_state);
 
         // Render diff preview if enabled
-        if let Some(preview_rect) = preview_area {
-            if let Some(change) = self.current_change() {
-                if let Some(diff) = &change.diff {
+        if let Some(preview_rect) = preview_area
+            && let Some(change) = self.current_change()
+                && let Some(diff) = &change.diff {
                     let preview = Paragraph::new(diff.as_str())
                         .block(
                             Block::default()
@@ -400,8 +399,6 @@ impl StatefulWidget for &AcceptRejectPanel {
 
                     preview.render(preview_rect, buf);
                 }
-            }
-        }
 
         // Render footer with keybindings
         if area.height > 2 {

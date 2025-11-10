@@ -475,8 +475,8 @@ impl Widget for &ContextDisplay {
         StatefulWidget::render(list, list_area, buf, &mut list_state);
 
         // Render preview if enabled
-        if let Some(preview_rect) = preview_area {
-            if let Some(item) = self.current_item() {
+        if let Some(preview_rect) = preview_area
+            && let Some(item) = self.current_item() {
                 let preview = Paragraph::new(item.content.as_str())
                     .block(
                         Block::default()
@@ -489,7 +489,6 @@ impl Widget for &ContextDisplay {
 
                 preview.render(preview_rect, buf);
             }
-        }
 
         // Render footer
         if area.height > 5 {

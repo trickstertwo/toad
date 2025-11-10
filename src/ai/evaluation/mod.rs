@@ -511,8 +511,8 @@ impl EvaluationHarness {
         result.metrics = final_metrics;
 
         // Extract race metadata if M3 racing was used
-        if let Some(racing_client) = racing_client_ref {
-            if let Some(race_result) = racing_client.get_last_race_result() {
+        if let Some(racing_client) = racing_client_ref
+            && let Some(race_result) = racing_client.get_last_race_result() {
                 let latency_improvement = race_result.latency_improvement()
                     .map(|d| d.as_millis() as i64)
                     .unwrap_or(0);
@@ -533,7 +533,6 @@ impl EvaluationHarness {
                     latency_improvement
                 );
             }
-        }
 
         // Extract cascade metadata if M4 cascading was used
         if cascade_difficulty.is_some() && cascade_tier.is_some() {

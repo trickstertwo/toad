@@ -463,7 +463,7 @@ impl AchievementSystem {
         let now = Utc::now();
 
         // Update stats
-        let stats = self.stats.entry(user_id.clone()).or_insert_with(UserStats::default);
+        let stats = self.stats.entry(user_id.clone()).or_default();
         stats.tasks_completed += 1;
         stats.tasks_today += 1;
 
@@ -524,7 +524,7 @@ impl AchievementSystem {
 
         self.unlocked
             .entry(user_id.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(unlocked);
 
         // Update stats

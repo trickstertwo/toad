@@ -299,7 +299,7 @@ impl Report {
             for (key, value) in &self.summary {
                 output.push_str(&format!("- **{}**: {}\n", key, value));
             }
-            output.push_str("\n");
+            output.push('\n');
         }
 
         // Table

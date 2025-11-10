@@ -128,14 +128,13 @@ impl Tool for WriteTool {
         let path_buf = PathBuf::from(path);
 
         // Validate syntax if enabled
-        if self.validate_syntax {
-            if let Err(e) = Self::validate_syntax(&path_buf, content) {
+        if self.validate_syntax
+            && let Err(e) = Self::validate_syntax(&path_buf, content) {
                 return Ok(ToolResult::error(
                     self.name(),
                     format!("Validation failed: {}", e),
                 ));
             }
-        }
 
         // Create parent directories if they don't exist
         if let Some(parent) = path_buf.parent()

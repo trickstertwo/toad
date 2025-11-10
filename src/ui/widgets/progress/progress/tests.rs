@@ -1,7 +1,6 @@
 //! Progress widget tests
 
 use super::*;
-use ratatui::style::Color;
 use std::time::Duration;
 
 mod tests {

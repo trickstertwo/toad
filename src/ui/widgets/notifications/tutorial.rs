@@ -401,15 +401,14 @@ impl Widget for &InteractiveTutorial {
                 Span::raw(&step.action),
             ])];
 
-            if self.show_hints {
-                if let Some(hint) = &step.hint {
+            if self.show_hints
+                && let Some(hint) = &step.hint {
                     action_lines.push(Line::from(""));
                     action_lines.push(Line::from(vec![
                         Span::styled("💡 Hint: ", Style::default().fg(Color::Cyan)),
                         Span::styled(hint, Style::default().fg(Color::Gray).add_modifier(Modifier::ITALIC)),
                     ]));
                 }
-            }
 
             let action_widget = Paragraph::new(action_lines)
                 .block(Block::default().borders(Borders::ALL))

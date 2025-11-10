@@ -46,7 +46,7 @@ impl ChatMessage {
     pub fn new(role: MessageRole, content: impl Into<String>) -> Self {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap_or_else(|_| Duration::ZERO)
+            .unwrap_or(Duration::ZERO)
             .as_secs();
 
         let content = content.into();

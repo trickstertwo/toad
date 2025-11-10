@@ -180,13 +180,11 @@ impl ContextBuilder {
                     if recursive {
                         self.scan_directory_impl(&path, extensions, recursive, files).await?;
                     }
-                } else if metadata.is_file() {
-                    if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-                        if extensions.contains(&ext) {
+                } else if metadata.is_file()
+                    && let Some(ext) = path.extension().and_then(|e| e.to_str())
+                        && extensions.contains(&ext) {
                             files.push(path);
                         }
-                    }
-                }
             }
 
             Ok(())

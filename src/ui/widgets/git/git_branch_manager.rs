@@ -154,11 +154,10 @@ impl GitBranchManager {
             self.message = Some(String::from("Enter new branch name:"));
         } else if mode == BranchMode::Rename {
             self.message = Some(String::from("Enter new branch name:"));
-        } else if mode == BranchMode::Delete {
-            if let Some(selected) = self.selected_branch() {
+        } else if mode == BranchMode::Delete
+            && let Some(selected) = self.selected_branch() {
                 self.message = Some(format!("Delete branch '{}'? (y/n)", selected.name));
             }
-        }
     }
 
     /// Cancel current operation and return to browse mode
@@ -176,20 +175,18 @@ impl GitBranchManager {
 
     /// Move selection up
     pub fn move_up(&mut self) {
-        if let Some(selected) = self.list_state.selected() {
-            if selected > 0 {
+        if let Some(selected) = self.list_state.selected()
+            && selected > 0 {
                 self.list_state.select(Some(selected - 1));
             }
-        }
     }
 
     /// Move selection down
     pub fn move_down(&mut self) {
-        if let Some(selected) = self.list_state.selected() {
-            if selected + 1 < self.branches.len() {
+        if let Some(selected) = self.list_state.selected()
+            && selected + 1 < self.branches.len() {
                 self.list_state.select(Some(selected + 1));
             }
-        }
     }
 
     /// Jump to top of list

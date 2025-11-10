@@ -1,7 +1,5 @@
 //! Preview widget tests
 
-use super::*;
-use ratatui::style::Color;
     use super::*;
 
     #[test]

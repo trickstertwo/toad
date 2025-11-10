@@ -1,8 +1,6 @@
 //! Statusline widget tests
 
-use super::*;
 use crate::ui::theme::ToadTheme;
-use ratatui::style::Color;
     use super::*;
 
     #[test]

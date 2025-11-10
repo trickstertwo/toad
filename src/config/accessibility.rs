@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 
 /// Accessibility configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct AccessibilityConfig {
     /// Enable high contrast colors for better visibility
     pub high_contrast_mode: bool,
@@ -137,20 +138,6 @@ impl AccessibilityConfig {
     }
 }
 
-impl Default for AccessibilityConfig {
-    fn default() -> Self {
-        Self {
-            high_contrast_mode: false,
-            reduced_motion: false,
-            large_text_mode: false,
-            keyboard_only_mode: false,
-            screen_reader_support: false,
-            slow_transitions: false,
-            visual_bell: false,
-            focus_indicators: false,
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {

@@ -254,7 +254,7 @@ impl AttachmentManager {
 
         self.card_attachments
             .entry(card_id)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(id.clone());
 
         id
@@ -354,12 +354,11 @@ impl AttachmentManager {
 
     /// Sets the size for the current version of an attachment
     pub fn set_attachment_size(&mut self, attachment_id: &str, size_bytes: u64) -> bool {
-        if let Some(attachment) = self.get_attachment_mut(attachment_id) {
-            if let Some(version) = attachment.versions.last_mut() {
+        if let Some(attachment) = self.get_attachment_mut(attachment_id)
+            && let Some(version) = attachment.versions.last_mut() {
                 version.size_bytes = Some(size_bytes);
                 return true;
             }
-        }
         false
     }
 }
