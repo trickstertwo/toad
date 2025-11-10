@@ -17,6 +17,7 @@
 //! - [`task_item`]: Task list item with icon and status (composes Icon + Text)
 //! - [`progress_bar`]: Progress bar with label and percentage (composes Text atoms)
 //! - [`token_counter`]: API token usage display (composes Text + Icon)
+//! - [`message_bubble`]: Chat message display with role-based styling (composes Text atoms)
 //!
 //! # Examples
 //!
@@ -42,6 +43,7 @@ pub mod agent_step_item;
 pub mod api_call_metrics;
 pub mod context_window;
 pub mod cost_tracker;
+pub mod message_bubble;
 pub mod metric_card;
 pub mod model_selector;
 pub mod progress_bar;
@@ -53,6 +55,7 @@ pub use agent_step_item::{AgentStepItem, StepStatus};
 pub use api_call_metrics::{APICallMetrics, ThrottleStatus};
 pub use context_window::{ContextWindow, UsageState};
 pub use cost_tracker::{BudgetStatus, CostTracker};
+pub use message_bubble::MessageBubble;
 pub use metric_card::MetricCard;
 pub use model_selector::ModelSelector;
 pub use progress_bar::ProgressBar;

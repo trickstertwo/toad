@@ -24,13 +24,15 @@
 //! ```
 
 use crate::ai::llm::{Message, Role};
+use crate::ui::atoms::Block;
+use crate::ui::molecules::MessageBubble;
 use crate::ui::theme::ToadTheme;
 use ratatui::{
     Frame,
     layout::{Alignment, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState},
+    widgets::{Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState},
 };
 
 /// Conversation view displaying chat history
@@ -193,16 +195,12 @@ impl ConversationView {
 
     /// Render the conversation view
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
-        // Create border
-        let block = Block::default()
-            .title("Conversation")
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(ToadTheme::TOAD_GREEN));
-
+        // Create border using Block atom
+        let block = Block::themed("Conversation").to_ratatui();
         let inner = block.inner(area);
         frame.render_widget(block, area);
 
-        // Convert messages to lines
+        // Convert messages to lines using MessageBubble molecule
         let mut lines = Vec::new();
 
         if self.messages.is_empty() {
@@ -214,69 +212,13 @@ impl ConversationView {
                     .add_modifier(Modifier::ITALIC),
             )]));
         } else {
+            let max_width = inner.width.saturating_sub(2) as usize;
+
             for message in &self.messages {
-                // Role label
-                let (role_label, role_style) = match message.role {
-                    Role::User => (
-                        "You",
-                        Style::default()
-                            .fg(ToadTheme::TOAD_GREEN)
-                            .add_modifier(Modifier::BOLD),
-                    ),
-                    Role::Assistant => (
-                        "Assistant",
-                        Style::default()
-                            .fg(ToadTheme::BLUE)
-                            .add_modifier(Modifier::BOLD),
-                    ),
-                };
-
-                // Add role header
-                lines.push(Line::from(vec![Span::styled(
-                    format!("{}:", role_label),
-                    role_style,
-                )]));
-
-                // Add message content (wrap long lines)
-                let content_style = Style::default().fg(ToadTheme::FOREGROUND);
-                for content_line in message.content.lines() {
-                    if content_line.is_empty() {
-                        lines.push(Line::from(""));
-                    } else {
-                        // Simple word wrapping
-                        let max_width = inner.width.saturating_sub(2) as usize;
-                        if content_line.len() <= max_width {
-                            lines.push(Line::from(vec![Span::styled(
-                                format!("  {}", content_line),
-                                content_style,
-                            )]));
-                        } else {
-                            // Wrap long lines
-                            let words: Vec<&str> = content_line.split_whitespace().collect();
-                            let mut current_line = String::from("  ");
-                            for word in words {
-                                if current_line.len() + word.len() + 1 <= max_width {
-                                    if current_line.len() > 2 {
-                                        current_line.push(' ');
-                                    }
-                                    current_line.push_str(word);
-                                } else {
-                                    lines.push(Line::from(vec![Span::styled(
-                                        current_line.clone(),
-                                        content_style,
-                                    )]));
-                                    current_line = format!("  {}", word);
-                                }
-                            }
-                            if current_line.len() > 2 {
-                                lines.push(Line::from(vec![Span::styled(current_line, content_style)]));
-                            }
-                        }
-                    }
-                }
-
-                // Add spacing between messages
-                lines.push(Line::from(""));
+                // Use MessageBubble molecule to render each message
+                let bubble = MessageBubble::new(message);
+                let message_lines = bubble.to_lines(max_width);
+                lines.extend(message_lines);
             }
         }
 
