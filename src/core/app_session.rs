@@ -41,7 +41,6 @@ impl App {
             AppScreen::TrustDialog => "TrustDialog",
             AppScreen::Main => "Main",
             AppScreen::Evaluation => "Main", // Save as Main since Evaluation is transient
-            AppScreen::PSXFrogger => "Main", // Save as Main since PSXFrogger is transient
         };
         self.session.set_last_screen(screen_str.to_string());
     }

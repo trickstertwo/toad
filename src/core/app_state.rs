@@ -34,8 +34,6 @@ pub enum AppScreen {
     Main,
     /// Evaluation running screen
     Evaluation,
-    /// PSX Frogger game (easter egg)
-    PSXFrogger,
 }
 
 /// State of a running or completed evaluation
@@ -130,9 +128,8 @@ mod tests {
             AppScreen::TrustDialog,
             AppScreen::Main,
             AppScreen::Evaluation,
-            AppScreen::PSXFrogger,
         ];
-        assert_eq!(screens.len(), 5, "Should have 5 AppScreen variants");
+        assert_eq!(screens.len(), 4, "Should have 4 AppScreen variants");
     }
 
     #[test]

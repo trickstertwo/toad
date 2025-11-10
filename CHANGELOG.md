@@ -11,12 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Agent coordination: Declare work BEFORE starting to prevent conflicts -->
 <!-- Format: - [Module/Feature] Brief description (@agent-name or @username) -->
 <!-- Remove from this section when complete and move to appropriate category below -->
-- [M5 Phase 1] Implementing 5 enhanced features for world-class accuracy (@claude)
-  - Vector Embeddings, Code Graph, Semantic Caching, Failure Memory, Context Re-ranking
-- [Codebase Cleanup] Refactoring bloated files and applying Rust best practices (@claude)
-  - Split app.rs (3,683→~720 lines), widget files (10+ files over 1,000 lines)
-  - Remove debug artifacts (bug.py, fixed.rs)
-  - Resolve duplicate file names, verify folder structure
+- [Phase 0: Foundation] Architecture overhaul and cleanup (@claude) - 2025-11-10
+  - ✅ Deleted non-essential code (easter eggs: psx_frogger.rs, demo_mode.rs - 1,527 LOC removed)
+  - ✅ Created Atomic UI directory structure (atoms/molecules/organisms/screens)
+  - ⏳ Fix compilation errors and separation of concerns violations
+  - ⏳ Move I/O out of UI widgets (create filesystem service)
+  - ⏳ Extract widget state into pure data structures
+  - Goal: Clean architecture, all tests passing, <2000 LOC for TUI
 
 <!-- COMPLETED 2025-11-08: Agent system restructured -->
 <!-- COMPLETED 2025-11-08: Domain-driven restructure + Phase 0 TUI-AI integration -->
@@ -95,6 +96,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `devops-infra-expert` (Overkill for CLI tool, no K8s/Docker deployment)
   - `testing-qa-expert` (Replaced with `rust-testing-expert`)
   - `security-expert` (Replaced with `rust-security-auditor` for CLI-specific threats)
+
+### Removed
+- **Easter Eggs** (Phase 0: Foundation cleanup)
+  - PSX Frogger game (851 lines) - fun but not aligned with Phase 1 goals
+  - Demo Mode widget (592 lines) - not actively used
+  - Event handlers and UI rendering for easter eggs (84 lines)
+  - Total cleanup: 1,527 LOC removed, zero compilation errors
+  - Atomic UI directory structure created (atoms/molecules/organisms/screens)
 
 ### Fixed
 

@@ -7,7 +7,7 @@ use crate::config::Config;
 use crate::core::app_state::{AppScreen, EvaluationState};
 use crate::core::event::Event;
 use crate::performance::PerformanceMetrics;
-use crate::ui::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, PSXFroggerGame, ToastManager};
+use crate::ui::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, ToastManager};
 use crate::workspace::{LayoutManager, SessionState, TabManager};
 use crossterm::event::KeyEvent;
 use std::path::PathBuf;
@@ -83,9 +83,6 @@ pub struct App {
 
     /// Current evaluation state
     pub(crate) evaluation_state: Option<EvaluationState>,
-
-    /// PSX Frogger game instance (easter egg)
-    pub(crate) psx_frogger: PSXFroggerGame,
 }
 
 impl Default for App {
@@ -141,7 +138,6 @@ impl Default for App {
             toasts: ToastManager::new(),
             event_tx: None,
             evaluation_state: None,
-            psx_frogger: PSXFroggerGame::new(),
         }
     }
 }
@@ -171,10 +167,6 @@ impl App {
                 Ok(())
             }
             Event::Tick => {
-                // Update PSX Frogger game if playing
-                if self.screen == crate::core::app_state::AppScreen::PSXFrogger {
-                    self.psx_frogger.update();
-                }
                 // Toasts are automatically cleaned up during render
                 Ok(())
             }
@@ -243,7 +235,6 @@ impl App {
             AppScreen::TrustDialog => self.handle_trust_dialog_key(key),
             AppScreen::Main => self.handle_main_key(key),
             AppScreen::Evaluation => self.handle_evaluation_key(key),
-            AppScreen::PSXFrogger => self.handle_psx_frogger_key(key),
         }
     }
 

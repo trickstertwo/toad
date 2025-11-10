@@ -9,7 +9,7 @@ use crate::core::app::App;
 use crate::core::app_state::{AppScreen, EvaluationState};
 use crate::core::event::Event;
 use crate::performance::PerformanceMetrics;
-use crate::ui::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, PSXFroggerGame, ToastManager};
+use crate::ui::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, ToastManager};
 use crate::workspace::{LayoutManager, SessionState, TabManager};
 use std::path::PathBuf;
 
@@ -227,16 +227,6 @@ impl App {
     /// Get mutable reference to tab manager
     pub fn tabs_mut(&mut self) -> &mut TabManager {
         &mut self.tabs
-    }
-
-    /// Get reference to PSX Frogger game
-    pub fn psx_frogger(&self) -> &PSXFroggerGame {
-        &self.psx_frogger
-    }
-
-    /// Get mutable reference to PSX Frogger game
-    pub fn psx_frogger_mut(&mut self) -> &mut PSXFroggerGame {
-        &mut self.psx_frogger
     }
 }
 
