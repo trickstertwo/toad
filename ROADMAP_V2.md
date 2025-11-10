@@ -147,47 +147,46 @@ src/ui/
   - [ ] Refactor `MainScreen` → `screens/main.rs` (use atoms)
   - [ ] NEW: `screens/evaluation.rs` (Phase 1 core)
 
-- [ ] **Week 3: Archive The Bloat**
-  - [ ] Create `src/ui/archived/` directory
-  - [ ] Move non-essential widgets to archive:
-    - **Project Management Features** (Phase 3):
-      - Rich task cards, Kanban boards, dependencies
-      - Team collaboration, comments, attachments
-      - Automation, time tracking, achievements
-      - Dashboard, analytics, calendar integration
-      - Communication integrations (Slack, Discord)
-    - **Developer Tools** (Phase 2):
-      - Git widgets (status, diff, graph) - 72 tests
-      - File management (tree, preview, operations)
-      - Editor features (vim motions, macros, marks)
-      - Advanced search, bookmarks, recent files
-    - **Polish Features** (Phase 2):
-      - Animations, sparklines, charts, canvas
-      - Multi-window system, cross-window context
-      - Floating windows, collapsible sections
-      - Performance monitoring widgets
+- [ ] **Week 3: Clean Non-Essential Code**
+  - [ ] Delete only truly non-essential widgets (no refactoring value):
     - **Easter Eggs**:
-      - psx_frogger.rs (851 lines)
-      - demo_mode.rs (592 lines)
-  - [ ] Document archived features with restoration plan
-  - [ ] Update imports to remove archived widget references
+      - psx_frogger.rs (851 lines) - delete permanently
+      - demo_mode.rs (592 lines) - delete permanently
+    - **Redundant Infrastructure**:
+      - render_profiler.rs - use performance module instead
+  - [ ] Document refactoring plan for remaining widgets:
+    - **Phase 1**: BASIC tier (19 widgets) + AI PLATINUM (7 widgets)
+    - **Phase 2**: Developer widgets (~25 widgets)
+    - **Phase 3**: Project Management widgets (~40 widgets)
+  - [ ] Update imports to remove deleted easter egg references
 
-**Archive Summary:**
+**Refactoring Strategy:**
 ```
-Archive → Phase 3 (Automation Platform):
-- Project Management: ~40 widgets (Kanban, tasks, collaboration, automation)
+DELETE Now (Non-Essential Only):
+- psx_frogger.rs (easter egg - 851 lines)
+- demo_mode.rs (not needed - 592 lines)
+- render_profiler.rs (redundant)
 
-Archive → Phase 2 (Developer Productivity):
-- Git Integration: ~6 widgets (72 tests)
-- File Management: ~6 widgets
-- Editor Features: ~8 widgets
-- Search & Navigation: ~4 widgets
-- Charts & Visualization: ~5 widgets
+REFACTOR in Phase 1, then delete old:
+- BASIC tier: 19 widgets → atoms/molecules
+- AI PLATINUM: 7 widgets → molecules/organisms
+- After refactoring complete → delete old widget files
 
-Delete (Non-essential):
-- psx_frogger.rs (easter egg)
-- demo_mode.rs (not needed for Phase 1)
-- render_profiler.rs (use performance module instead)
+REFACTOR in Phase 2, then delete old:
+- Git widgets: ~6 files (72 tests)
+- File management: ~6 files
+- Editor features: ~8 files
+- Search & navigation: ~4 files
+- Charts & visualization: ~5 files
+- After refactoring complete → delete old widget files
+
+REFACTOR in Phase 3, then delete old:
+- Project Management: ~40 files (300+ tests)
+- Kanban, tasks, collaboration, automation, analytics
+- After refactoring complete → delete old widget files
+
+KEEP Throughout (Infrastructure):
+- theme, session, config, performance modules
 ```
 
 **Time Estimate:** 2-3 weeks (parallel with fix work)
@@ -246,11 +245,11 @@ Delete (Non-essential):
 - ✅ All tests passing (2,500+ tests documented)
 - ✅ Zero I/O in UI widgets
 - ✅ App state is pure data (no widgets)
-- ✅ Atomic UI implemented (atoms + molecules + organisms)
-- ✅ Widget count: <20 files for Phase 1
-- ✅ Total UI LOC: <2000
+- ✅ Atomic UI structure prepared (atoms/molecules/organisms/screens directories)
+- ✅ Easter eggs deleted (psx_frogger, demo_mode)
+- ✅ Refactoring plan documented (Phase 1/2/3 widgets identified)
+- ✅ Total UI LOC: ~10,000 (unchanged - refactoring happens in Phase 1/2/3)
 - ✅ Honest documentation
-- ✅ Archive plan executed (100+ widgets archived with restoration docs)
 
 **Quality Gates:**
 ```bash
@@ -258,9 +257,9 @@ Delete (Non-essential):
 cargo test --lib --all          # ✅ 0 errors, 2500+ tests pass
 cargo clippy -- -D warnings     # ✅ 0 warnings
 cargo fmt --check               # ✅ Formatted
-tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens  # ✅ <2000 LOC total
-find src/ui -name "*.rs" -not -path "*/archived/*" | wc -l  # ✅ <20 files active
-grep "std::fs\|tokio::fs" src/ui/widgets/*.rs  # ✅ 0 matches (all archived or refactored)
+tokei src/ui/                   # ✅ ~10,000 LOC (will reduce in Phase 1/2/3 refactoring)
+grep "std::fs\|tokio::fs" src/ui/widgets/*.rs  # ✅ 0 matches (moved to services)
+ls src/ui/atoms/ src/ui/molecules/ src/ui/organisms/ src/ui/screens/  # ✅ Directories exist
 ```
 
 ---
@@ -310,102 +309,102 @@ grep "std::fs\|tokio::fs" src/ui/widgets/*.rs  # ✅ 0 matches (all archived or 
 ---
 
 ### 🟡 MEDIUM Tier (Select Features Only)
-**Status:** 39/39 features complete, but archive most for Phase 2
-**Action:** Keep only essentials for AI commanding center
+**Status:** 39/39 features complete
+**Action:** Refactor essentials for AI commanding center in Phase 1, defer others to Phase 2
 
-**KEEP for Phase 1:**
-- [x] Input Field - REFACTOR → atoms/input.rs
-- [x] Progress Bars - REFACTOR → molecules/progress_bar.rs
-- [x] Modal System (dialogs) - KEEP
-- [x] Vim-style Keybindings (basic) - KEEP
-- [x] Configuration File - KEEP
+**REFACTOR in Phase 1:**
+- [x] Input Field - REFACTOR → atoms/input.rs, then delete old
+- [x] Progress Bars - REFACTOR → molecules/progress_bar.rs, then delete old
+- [x] Modal System (dialogs) - REFACTOR to Atomic UI, then delete old
+- [x] Vim-style Keybindings (basic) - KEEP infrastructure
+- [x] Configuration File - KEEP infrastructure
 - [x] State Persistence - KEEP (Session module)
-- [x] File Logging - KEEP
-- [x] Toast Notifications - KEEP
-- [x] Performance Metrics - KEEP
+- [x] File Logging - KEEP infrastructure
+- [x] Toast Notifications - REFACTOR, then delete old
+- [x] Performance Metrics - KEEP infrastructure
 
-**ARCHIVE to Phase 2:**
-- [ ] ~~List Widget~~ - Defer (not needed for eval screen)
-- [ ] ~~Table Widget~~ - Defer
-- [ ] ~~Scrollbar~~ - Defer (keep simple for now)
-- [ ] ~~Textarea~~ - Defer (use simple input for Phase 1)
-- [ ] ~~Split Panes~~ - Defer
-- [ ] ~~Panel Focus System~~ - Defer
-- [ ] ~~Tab Switching~~ - Defer
-- [ ] ~~Search (/)~~ - Defer
-- [ ] ~~Autocomplete~~ - Defer
+**REFACTOR in Phase 2 (defer):**
+- [x] List Widget - refactor in Phase 2
+- [x] Table Widget - refactor in Phase 2
+- [x] Scrollbar - refactor in Phase 2
+- [x] Textarea - refactor in Phase 2
+- [x] Split Panes - refactor in Phase 2
+- [x] Panel Focus System - refactor in Phase 2
+- [x] Tab Switching - refactor in Phase 2
+- [x] Search (/) - refactor in Phase 2
+- [x] Autocomplete - refactor in Phase 2
 
 ---
 
 ### 💎 PLATINUM Tier (AI-Specific Only)
-**Status:** Select AI features for Phase 1, defer rest
-**Action:** Keep 5-7 AI features, archive 90+ project management features
+**Status:** Select AI features for Phase 1, defer rest to Phase 2/3
+**Action:** Refactor 5-7 AI features in Phase 1, defer 90+ other features to Phase 2/3
 
-**KEEP for Phase 1 (AI Features):**
-- [x] **Chat Panel** - Conversational AI interaction (refactor)
-- [x] **Streaming Responses** - Real-time AI output (keep)
-- [x] **Token Counter** - Usage tracking (refactor → molecule)
-- [x] **Model Selector** - Switch AI models (refactor → molecule)
-- [x] **Context Display** - Show what AI sees (refactor)
-- [ ] **Diff View** - AI proposed changes (implement in Phase 1)
-- [ ] **Accept/Reject Panel** - Code change approval (implement in Phase 1)
+**REFACTOR in Phase 1 (AI Features):**
+- [x] **Chat Panel** - Conversational AI interaction (refactor, then delete old)
+- [x] **Streaming Responses** - Real-time AI output (refactor, then delete old)
+- [x] **Token Counter** - Usage tracking (refactor → molecule, then delete old)
+- [x] **Model Selector** - Switch AI models (refactor → molecule, then delete old)
+- [x] **Context Display** - Show what AI sees (refactor, then delete old)
+- [x] **Diff View** - AI proposed changes (refactor, then delete old)
+- [x] **Accept/Reject Panel** - Code change approval (refactor, then delete old)
 
-**ARCHIVE to Phase 2 (Developer Tools):**
-- [ ] ~~Git Status Panel~~ - 72 tests, archive entire git/ module
-- [ ] ~~Commit Graph~~ - Archive
-- [ ] ~~Diff Viewer~~ - Archive (separate from AI Diff View)
-- [ ] ~~File Tree View~~ - Archive
-- [ ] ~~File Preview~~ - Archive
-- [ ] ~~Syntax Highlighting~~ - Archive (keep simple for Phase 1)
-- [ ] ~~Vim Modal Editing~~ - Archive (keep basic vim keys only)
-- [ ] ~~Command Mode (:)~~ - Archive
-- [ ] ~~Macros~~ - Archive
-- [ ] ~~Marks~~ - Archive
-- [ ] ~~Undo/Redo~~ - Archive
-- [ ] ~~Search & Filter~~ - Archive
-- [ ] ~~Bookmarks~~ - Archive
-- [ ] ~~Recent Files~~ - Archive
-- [ ] ~~Canvas Drawing~~ - Archive
-- [ ] ~~Line/Bar/Scatter Charts~~ - Archive
-- [ ] ~~Live Graphs~~ - Archive
-- [ ] ~~Sparklines~~ - Archive
-- [ ] ~~Animations~~ - Archive
-- [ ] ~~Loading Spinners~~ - Archive (use simple indicator)
-- [ ] ~~Nerd Font Icons~~ - KEEP module, use sparingly
-- [ ] ~~Multi-cursor~~ - Archive
-- [ ] ~~Clipboard Integration~~ - Archive
-- [ ] ~~Fuzzy Finding~~ - Archive
-- [ ] ~~Mouse Support~~ - Archive
-- [ ] ~~Tab System~~ - Archive
-- [ ] ~~Floating Windows~~ - Archive
-- [ ] ~~Minimap~~ - Archive
-- [ ] ~~Breadcrumbs~~ - Archive
+**REFACTOR in Phase 2 (Developer Tools):**
+- [x] Git Status Panel - 72 tests, refactor entire git/ module
+- [x] Commit Graph
+- [x] Diff Viewer (separate from AI Diff View)
+- [x] File Tree View
+- [x] File Preview
+- [x] Syntax Highlighting
+- [x] Vim Modal Editing (advanced features)
+- [x] Command Mode (:)
+- [x] Macros
+- [x] Marks
+- [x] Undo/Redo
+- [x] Search & Filter
+- [x] Bookmarks
+- [x] Recent Files
+- [x] Canvas Drawing
+- [x] Line/Bar/Scatter Charts
+- [x] Live Graphs
+- [x] Sparklines
+- [x] Animations
+- [x] Loading Spinners
+- [x] Nerd Font Icons (already refactored)
+- [x] Multi-cursor
+- [x] Clipboard Integration
+- [x] Fuzzy Finding
+- [x] Mouse Support
+- [x] Tab System
+- [x] Floating Windows
+- [x] Minimap
+- [x] Breadcrumbs
 
-**ARCHIVE to Phase 3 (Project Management - MASSIVE):**
-- [ ] ~~Visual Kanban Board~~ - 16 tests, archive entire BoardManager
-- [ ] ~~Multiple Views~~ - 18 tests, archive ViewManager
-- [ ] ~~Rich Task Cards~~ - 20 tests, archive RichTaskCardManager
-- [ ] ~~Task Dependencies~~ - 17 tests, archive DependencyManager
-- [ ] ~~File Attachments~~ - 18 tests, archive AttachmentManager
-- [ ] ~~Card Comments System~~ - 23 tests, archive CommentManager
-- [ ] ~~Team Collaboration~~ - 21 tests, archive CollaborationManager
-- [ ] ~~Built-in Automation~~ - 21 tests, archive AutomationManager
-- [ ] ~~AI Task Intelligence~~ - 23 tests, archive AITaskIntelligence
-- [ ] ~~Dashboard & Metrics~~ - 21 tests, archive DashboardMetrics
-- [ ] ~~Custom Reports~~ - 25 tests, archive ReportManager
-- [ ] ~~Integrated Time Tracking~~ - 24 tests, archive TimeTracker
-- [ ] ~~Achievement System~~ - 24 tests, archive AchievementSystem
-- [ ] ~~Projects & Workspaces~~ - 25 tests (archive, conflicts with Phase 1 workspace)
-- [ ] ~~Filtering & Search~~ - 27 tests, archive FilterManager
-- [ ] ~~Import/Export~~ - 30 tests, archive Importer/Exporter
-- [ ] ~~Calendar Integration~~ - 24 tests, archive CalendarEvent
-- [ ] ~~Communication Integrations~~ - 25 tests (Slack/Discord/Teams/Email)
-- [ ] ~~Git Card Integration~~ - 26 tests, archive GitCardIntegrationManager
-- [ ] ~~Cross-Window Context~~ - 22 tests, archive CrossWindowContextManager
-- [ ] ~~Window Management~~ - 15 tests, archive WindowManager
-- [ ] ~~GitHub OAuth Integration~~ - NOT STARTED, defer entirely
+**REFACTOR in Phase 3 (Project Management):**
+- [x] Visual Kanban Board - 16 tests, refactor BoardManager
+- [x] Multiple Views - 18 tests, refactor ViewManager
+- [x] Rich Task Cards - 20 tests, refactor RichTaskCardManager
+- [x] Task Dependencies - 17 tests, refactor DependencyManager
+- [x] File Attachments - 18 tests, refactor AttachmentManager
+- [x] Card Comments System - 23 tests, refactor CommentManager
+- [x] Team Collaboration - 21 tests, refactor CollaborationManager
+- [x] Built-in Automation - 21 tests, refactor AutomationManager
+- [x] AI Task Intelligence - 23 tests, refactor AITaskIntelligence
+- [x] Dashboard & Metrics - 21 tests, refactor DashboardMetrics
+- [x] Custom Reports - 25 tests, refactor ReportManager
+- [x] Integrated Time Tracking - 24 tests, refactor TimeTracker
+- [x] Achievement System - 24 tests, refactor AchievementSystem
+- [x] Projects & Workspaces - 25 tests
+- [x] Filtering & Search - 27 tests, refactor FilterManager
+- [x] Import/Export - 30 tests, refactor Importer/Exporter
+- [x] Calendar Integration - 24 tests, refactor CalendarEvent
+- [x] Communication Integrations - 25 tests (Slack/Discord/Teams/Email)
+- [x] Git Card Integration - 26 tests, refactor GitCardIntegrationManager
+- [x] Cross-Window Context - 22 tests, refactor CrossWindowContextManager
+- [x] Window Management - 15 tests, refactor WindowManager
+- [ ] GitHub OAuth Integration - NOT STARTED, implement in Phase 3
 
-**Total Archive:** ~90+ widgets, ~500+ tests (keep passing but not active in Phase 1)
+**Refactoring Summary:** ~90+ widgets, ~500+ tests (all refactored incrementally across phases)
 
 ---
 
@@ -680,9 +679,9 @@ grep "std::fs\|tokio::fs" src/ui/widgets/*.rs  # ✅ 0 matches (all archived or 
 
 ---
 
-**Total TUI LOC:** ~850 lines (vs original 12,000+)
-**Total Time:** 2 weeks
-**Archive Status:** 100+ widgets archived with 500+ passing tests preserved
+**Total NEW Atomic UI LOC:** ~850 lines (new atoms/molecules/organisms/screens)
+**Total Time:** 2 weeks refactoring
+**Deletion After Refactoring:** Old widget files deleted as new Atomic UI replaces them
 
 **Quality Gates:**
 - [ ] Frame rate: 60 FPS
@@ -771,11 +770,11 @@ grep "std::fs\|tokio::fs" src/ui/widgets/*.rs  # ✅ 0 matches (all archived or 
 - ✅ M0-M4 validated with real results
 - ✅ M5 features implemented and tested
 - ✅ Target accuracy achieved: 76-78% on SWE-bench
-- ✅ TUI works flawlessly (<850 LOC active)
+- ✅ TUI refactored to Atomic UI (<850 LOC new code)
+- ✅ Old Phase 1 widgets deleted after refactoring complete
 - ✅ 4 core commands work
 - ✅ Documentation complete
 - ✅ 5+ early adopters using it
-- ✅ Archive system works (100+ widgets preserved but inactive)
 
 **Quality Gates:**
 ```bash
@@ -790,11 +789,14 @@ cargo run --release -- eval --swebench verified --count 100 --milestone 5
 # TUI: 60 FPS, <50MB RAM, <100ms startup
 
 # Tests
-cargo test --all  # ✅ 2,500+ tests passing (including archived features)
+cargo test --all  # ✅ 2,500+ tests passing (all widgets refactored)
 
-# Active Code
+# Active Code (New Atomic UI)
 tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
-# Expected: <850 LOC active UI code
+# Expected: ~850 LOC new Atomic UI code
+
+# Verify old widgets deleted
+ls src/ui/widgets/  # Should only contain Phase 2/3 widgets (not yet refactored)
 ```
 
 **Launch Checklist:**
@@ -812,54 +814,77 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 > **Duration:** 6-8 weeks
 > **Target Users:** 100-500 developers
 > **Focus:** Real-world coding tasks, not just SWE-bench
-> **TUI Features:** Restore MEDIUM + Developer ADVANCED/PLATINUM from archive
+> **TUI Features:** Refactor MEDIUM + Developer ADVANCED/PLATINUM widgets into Atomic UI
 
-## Restore from Archive (Week 1)
+## Refactor Developer Widgets (Week 1)
 
-### Milestone 2.0: Restore Core Developer Widgets
-**Status:** Archived in Phase 0, need restoration
-**Action:** Unarchive and integrate ~25 developer-focused widgets
+### Milestone 2.0: Refactor Core Developer Widgets into Atomic UI
+**Status:** Old widgets exist, need refactoring to Atomic UI
+**Action:** Refactor ~25 developer-focused widgets, then delete old implementations
 
-**Restore List:**
+**Refactor List (old → new Atomic UI):**
 - [ ] **Git Integration** (6 widgets, 72 tests):
-  - GitStatusPanel, CommitGraph, DiffViewer
-  - GitStageUI, GitCommitDialog, GitBranchManager
+  - GitStatusPanel → organisms/git_status.rs
+  - CommitGraph → organisms/commit_graph.rs
+  - DiffViewer → organisms/diff_viewer.rs
+  - GitStageUI → molecules/git_stage.rs
+  - GitCommitDialog → molecules/commit_dialog.rs
+  - GitBranchManager → molecules/branch_selector.rs
+  - **After refactoring complete:** Delete old git widget files
 
 - [ ] **File Management** (6 widgets):
-  - FileTree, FilePreviewManager, FileOps
-  - BookmarkManager, RecentFiles
+  - FileTree → organisms/file_tree.rs (pure state-based)
+  - FilePreviewManager → organisms/file_preview.rs
+  - FileOps → molecules/file_operations.rs
+  - BookmarkManager → molecules/bookmarks.rs
+  - RecentFiles → molecules/recent_files.rs
+  - **After refactoring complete:** Delete old file widget files
 
 - [ ] **Editor Features** (8 widgets):
-  - Textarea (multi-line), VimMotions, MacroManager
-  - MarksManager, UndoStack, MultiCursor
-  - CommandMode, AliasManager
+  - Textarea → organisms/text_editor.rs
+  - VimMotions → Keep as infrastructure (not a widget)
+  - MacroManager → molecules/macro_panel.rs
+  - MarksManager → molecules/marks_panel.rs
+  - UndoStack → Keep as infrastructure
+  - MultiCursor → Keep as infrastructure
+  - CommandMode → molecules/command_palette.rs
+  - AliasManager → molecules/alias_panel.rs
+  - **After refactoring complete:** Delete old editor widget files
 
 - [ ] **Search & Navigation** (4 widgets):
-  - FuzzyFinder, AdvancedSearch, FilterManager
-  - Breadcrumbs
+  - FuzzyFinder → organisms/fuzzy_finder.rs
+  - AdvancedSearch → organisms/search_panel.rs
+  - FilterManager → molecules/filter_bar.rs
+  - Breadcrumbs → molecules/breadcrumbs.rs
+  - **After refactoring complete:** Delete old search widget files
 
 - [ ] **Layout Features** (5 widgets):
-  - Split panes, TabManager, TabBar
-  - FloatingWindows, CollapsibleSections
+  - Split panes → organisms/split_layout.rs
+  - TabManager → molecules/tab_bar.rs
+  - TabBar → atoms/tab.rs
+  - FloatingWindows → organisms/floating_window.rs
+  - CollapsibleSections → molecules/collapsible.rs
+  - **After refactoring complete:** Delete old layout widget files
 
-**Time Estimate:** 1 week (integration testing)
+**Time Estimate:** 1 week (refactoring + integration testing + deletion)
 
 ---
 
 ## P0: Essential Developer Features (Weeks 2-5)
 
 ### Milestone 2.1: Git Integration 🔧
-**Status:** Widgets exist (archived in Phase 0), 72 tests passing
-**Target:** Visual git workflow in TUI
+**Status:** Old widgets exist, 72 tests passing
+**Target:** Visual git workflow in TUI with Atomic UI
 
-**Features:**
-- [ ] Restore GitStatusPanel (19 tests)
-- [ ] Restore CommitGraph + GitGraphService (43 tests)
-- [ ] Restore DiffViewer (10 tests)
-- [ ] Stage/unstage files (GitStageUI)
-- [ ] Commit with message (GitCommitDialog)
-- [ ] Branch switching (GitBranchManager)
-- [ ] Merge conflict helper (ConflictResolver - 10 tests)
+**Refactoring Tasks:**
+- [ ] Refactor GitStatusPanel → organisms/git_status.rs (19 tests)
+- [ ] Refactor CommitGraph + GitGraphService → organisms/commit_graph.rs (43 tests)
+- [ ] Refactor DiffViewer → organisms/diff_viewer.rs (10 tests)
+- [ ] Refactor GitStageUI → molecules/git_stage.rs (stage/unstage files)
+- [ ] Refactor GitCommitDialog → molecules/commit_dialog.rs
+- [ ] Refactor GitBranchManager → molecules/branch_selector.rs
+- [ ] Refactor ConflictResolver → organisms/conflict_resolver.rs (10 tests)
+- [ ] **Delete old git widget files after refactoring**
 
 **Time Estimate:** 2 weeks
 **Tests:** 72 existing + 10 integration
@@ -870,13 +895,14 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 **Status:** FileTree exists but violates SoC (does I/O)
 **Target:** Fast, keyboard-driven file navigation
 
-**Tasks:**
-- [ ] Refactor `FileTree` to use `FilesystemService` (from Phase 0)
-- [ ] Pure state-based tree widget
+**Refactoring Tasks:**
+- [ ] Refactor `FileTree` → organisms/file_tree.rs (use `FilesystemService` from Phase 0)
+- [ ] Pure state-based tree widget (no I/O in widget)
 - [ ] Keyboard navigation (vim keys)
-- [ ] Restore FuzzyFinder integration (archived)
-- [ ] File preview pane (restore FilePreviewManager)
+- [ ] Refactor FuzzyFinder → organisms/fuzzy_finder.rs
+- [ ] Refactor FilePreviewManager → organisms/file_preview.rs
 - [ ] Quick file open (Ctrl+P)
+- [ ] **Delete old FileTree, FuzzyFinder, FilePreviewManager after refactoring**
 
 **Time Estimate:** 1-2 weeks
 **Tests Required:** 15+
@@ -884,17 +910,18 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 ---
 
 ### Milestone 2.3: Enhanced Chat Mode 💬
-**Status:** `ChatPanel` widget exists (archived)
+**Status:** `ChatPanel` widget exists
 **Target:** Conversational AI for coding
 
-**Features:**
-- [ ] Restore `ChatPanel` (refactor with atomic UI if needed)
-- [ ] Streaming responses (word-by-word) - already exists
-- [ ] Code block syntax highlighting (use existing SyntaxHighlighter)
-- [ ] Copy code to clipboard (restore Clipboard integration)
+**Refactoring Tasks:**
+- [ ] Refactor `ChatPanel` → organisms/chat_panel.rs (use Atomic UI)
+- [ ] Streaming responses (word-by-word) - refactor existing
+- [ ] Code block syntax highlighting (refactor existing SyntaxHighlighter)
+- [ ] Copy code to clipboard (refactor Clipboard integration)
 - [ ] Chat history persistence
 - [ ] Context from open files
 - [ ] @-mention files for context (NEW feature)
+- [ ] **Delete old ChatPanel, SyntaxHighlighter, Clipboard widgets after refactoring**
 
 **Time Estimate:** 2 weeks
 **Tests Required:** 12+
@@ -905,18 +932,17 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 **Status:** Partial (textarea exists, needs enhancement)
 **Target:** Vim-mode editing in TUI
 
-**Features:**
-- [ ] Restore vim motion support (VimMotions exists)
-- [ ] Syntax highlighting (tree-sitter based - already exists)
+**Refactoring Tasks:**
+- [ ] Refactor Textarea → organisms/text_editor.rs (enhanced version)
+- [ ] Refactor VimMotions → Keep as infrastructure module (not a widget)
+- [ ] Refactor MacroManager → molecules/macro_panel.rs
+- [ ] Refactor MarksManager → molecules/marks_panel.rs
+- [ ] Refactor MultiCursor → Keep as infrastructure
+- [ ] Refactor UndoStack → Keep as infrastructure
+- [ ] Syntax highlighting (tree-sitter based - refactor existing)
 - [ ] Line numbers + column indicator
 - [ ] Search and replace (regex)
-- [ ] Multi-cursor support (MultiCursor exists)
-- [ ] Undo/redo (UndoStack exists)
-
-**Restore from Archive:**
-- VimMotions, MacroManager, MarksManager
-- MultiCursor, UndoStack
-- Textarea widget (enhanced version)
+- [ ] **Delete old Textarea, MacroManager, MarksManager widgets after refactoring**
 
 **Time Estimate:** 2-3 weeks
 **Tests Required:** 25+
@@ -929,12 +955,14 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 **Status:** `SessionState` exists in workspace module
 **Target:** Resume work seamlessly
 
-**Features:**
-- [ ] Auto-save session state (already exists)
-- [ ] Restore open files + chat history
-- [ ] Multiple workspaces (WorkspaceManager exists - archived)
-- [ ] Session switcher
+**Refactoring Tasks:**
+- [ ] Refactor WorkspaceManager → organisms/workspace_manager.rs
+- [ ] Auto-save session state (keep existing infrastructure)
+- [ ] Restore open files + chat history (refactor existing)
+- [ ] Multiple workspaces (refactor into Atomic UI)
+- [ ] Session switcher (NEW molecule)
 - [ ] Export/import sessions
+- [ ] **Delete old WorkspaceManager widget after refactoring**
 
 **Time Estimate:** 1 week
 **Tests Required:** 10+
@@ -942,16 +970,17 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 ---
 
 ### Milestone 2.6: Search & Navigation 🔍
-**Status:** Infrastructure exists (archived)
+**Status:** Infrastructure exists
 **Target:** Find anything fast
 
-**Features:**
-- [ ] Fuzzy file finder (Ctrl+P) - restore FuzzyFinder
-- [ ] Global code search (Ctrl+Shift+F) - restore AdvancedSearch
-- [ ] Symbol search (classes, functions) - NEW
-- [ ] Go to definition - NEW
-- [ ] Find usages - NEW
-- [ ] Navigation history (back/forward) - NEW
+**Refactoring Tasks:**
+- [ ] Refactor FuzzyFinder → organisms/fuzzy_finder.rs (Ctrl+P)
+- [ ] Refactor AdvancedSearch → organisms/search_panel.rs (Ctrl+Shift+F)
+- [ ] Symbol search (classes, functions) - NEW molecule
+- [ ] Go to definition - NEW feature
+- [ ] Find usages - NEW feature
+- [ ] Navigation history (back/forward) - NEW molecule
+- [ ] **Delete old FuzzyFinder, AdvancedSearch widgets after refactoring**
 
 **Time Estimate:** 1-2 weeks
 **Tests Required:** 15+
@@ -978,16 +1007,17 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 ## P2: Advanced Features (Week 8)
 
 ### Milestone 2.8: Smart Suggestions 💡
-**Status:** SmartSuggestions widget exists (archived)
+**Status:** SmartSuggestions widget exists
 **Target:** Proactive AI assistance
 
-**Features:**
-- [ ] Restore SmartSuggestions widget
+**Refactoring Tasks:**
+- [ ] Refactor SmartSuggestions → organisms/smart_suggestions.rs
 - [ ] Inline code suggestions (like Copilot) - NEW
 - [ ] Error explanation + fixes - NEW
 - [ ] Refactoring suggestions - NEW
 - [ ] Performance optimization tips - NEW
 - [ ] Security vulnerability detection - NEW
+- [ ] **Delete old SmartSuggestions widget after refactoring**
 
 **Time Estimate:** 2 weeks
 **Tests Required:** 10+
@@ -1013,12 +1043,13 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 ## Phase 2 Success Criteria
 
 **Must Have:**
-- ✅ Git integration works smoothly
-- ✅ File browser is fast and intuitive
-- ✅ Chat mode provides real value
-- ✅ Code editor is usable for daily work
+- ✅ Git integration refactored to Atomic UI and working smoothly
+- ✅ File browser refactored and fast
+- ✅ Chat mode refactored and provides real value
+- ✅ Code editor refactored and usable for daily work
 - ✅ 100+ active users (dogfooding + community)
-- ✅ All archived developer widgets restored and working
+- ✅ All Phase 2 developer widgets refactored to Atomic UI
+- ✅ Old Phase 2 widget files deleted after refactoring complete
 
 **Quality Gates:**
 - [ ] User surveys: 8/10+ satisfaction
@@ -1042,54 +1073,56 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 > **Duration:** 12+ weeks
 > **Target Users:** 10,000+ users
 > **Vision:** "If it's repetitive, TOAD can automate it"
-> **TUI Features:** Restore PROJECT MANAGEMENT PLATINUM tier from archive
+> **TUI Features:** Refactor PROJECT MANAGEMENT PLATINUM tier widgets into Atomic UI
 
-## Restore from Archive (Week 1)
+## Refactor Project Management Widgets (Week 1)
 
-### Milestone 3.0: Restore Project Management Suite
-**Status:** Archived in Phase 0, 500+ tests passing
-**Action:** Unarchive and integrate ~40 project management widgets
+### Milestone 3.0: Refactor Project Management Suite into Atomic UI
+**Status:** Old widgets exist, 500+ tests passing
+**Action:** Refactor ~40 project management widgets into Atomic UI, then delete old files
 
-**Restore List:**
+**Refactor List (old → new Atomic UI):**
 - [ ] **Kanban System** (40+ widgets, 300+ tests):
-  - BoardManager (16 tests)
-  - ViewManager (18 tests) - 6 view types
-  - RichTaskCardManager (20 tests)
-  - DependencyManager (17 tests)
-  - AttachmentManager (18 tests)
-  - CommentManager (23 tests)
-  - CollaborationManager (21 tests)
-  - AutomationManager (21 tests)
-  - AITaskIntelligence (23 tests)
-  - DashboardMetrics (21 tests)
-  - ReportManager (25 tests)
-  - TimeTracker (24 tests)
-  - AchievementSystem (24 tests)
-  - ProjectManager (25 tests)
-  - FilterManager (27 tests)
-  - Importer/Exporter (30 tests)
-  - CalendarEvent (24 tests)
-  - IntegrationManager (25 tests) - Slack/Discord/Teams/Email
-  - GitCardIntegrationManager (26 tests)
-  - CrossWindowContextManager (22 tests)
-  - WindowManager (15 tests)
+  - BoardManager → organisms/kanban_board.rs (16 tests)
+  - ViewManager → organisms/view_switcher.rs (18 tests) - 6 view types
+  - RichTaskCardManager → organisms/task_card.rs (20 tests)
+  - DependencyManager → molecules/dependency_graph.rs (17 tests)
+  - AttachmentManager → molecules/attachments.rs (18 tests)
+  - CommentManager → organisms/comments.rs (23 tests)
+  - CollaborationManager → organisms/collaboration.rs (21 tests)
+  - AutomationManager → organisms/automation.rs (21 tests)
+  - AITaskIntelligence → organisms/ai_suggestions.rs (23 tests)
+  - DashboardMetrics → organisms/dashboard.rs (21 tests)
+  - ReportManager → organisms/reports.rs (25 tests)
+  - TimeTracker → molecules/time_tracking.rs (24 tests)
+  - AchievementSystem → organisms/achievements.rs (24 tests)
+  - ProjectManager → organisms/projects.rs (25 tests)
+  - FilterManager → molecules/filters.rs (27 tests)
+  - Importer/Exporter → organisms/import_export.rs (30 tests)
+  - CalendarEvent → molecules/calendar.rs (24 tests)
+  - IntegrationManager → organisms/integrations.rs (25 tests) - Slack/Discord/Teams/Email
+  - GitCardIntegrationManager → organisms/git_integration.rs (26 tests)
+  - CrossWindowContextManager → organisms/cross_window.rs (22 tests)
+  - WindowManager → organisms/windows.rs (15 tests)
+  - **After refactoring complete:** Delete all old PM widget files
 
-**Time Estimate:** 1-2 weeks (integration testing + UI refresh)
+**Time Estimate:** 1-2 weeks (refactoring + integration testing + deletion)
 
 ---
 
 ## P0: Platform Infrastructure (Weeks 2-5)
 
 ### Milestone 3.1: Plugin System 🔌
-**Status:** PluginManager exists (23 tests, archived)
+**Status:** PluginManager exists (23 tests)
 **Target:** Extensible architecture
 
-**Features:**
-- [ ] Restore PluginManager (already has 5 runtime types, 8 capabilities, 10 hooks)
+**Refactoring Tasks:**
+- [ ] Refactor PluginManager → organisms/plugin_manager.rs (has 5 runtime types, 8 capabilities, 10 hooks)
 - [ ] Plugin marketplace (web UI) - NEW
-- [ ] Sandboxed execution (already supported)
+- [ ] Sandboxed execution (keep existing)
 - [ ] Version management - NEW
 - [ ] Plugin discovery - NEW
+- [ ] **Delete old PluginManager widget after refactoring**
 
 **Examples:**
 - Email plugin
@@ -1106,14 +1139,16 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 **Status:** Partial (AutomationManager exists with 12 triggers, 11 actions)
 **Target:** Chain actions into automations
 
-**Features:**
+**Refactoring Tasks:**
+- [ ] Refactor AutomationManager → organisms/workflow_builder.rs
 - [ ] Visual workflow builder (TUI) - NEW
-- [ ] Trigger system (schedule, event-based) - EXISTS (restore)
-- [ ] Action library (send email, scrape web, etc.) - EXTEND
+- [ ] Trigger system (schedule, event-based) - refactor existing (12 triggers)
+- [ ] Action library (send email, scrape web, etc.) - extend existing (11 actions)
 - [ ] Conditional logic (if/else) - NEW
 - [ ] Loop support - NEW
 - [ ] Error handling + retries - NEW
 - [ ] Workflow templates - NEW
+- [ ] **Delete old AutomationManager widget after refactoring**
 
 **Time Estimate:** 3-4 weeks
 **Tests:** 21 existing + 30 new
@@ -1123,17 +1158,18 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 ## P1: Business Automation (Weeks 6-9)
 
 ### Milestone 3.3: Email Automation 📧
-**Status:** EmailConfig exists in IntegrationManager (archived)
+**Status:** EmailConfig exists in IntegrationManager
 **Target:** Smart email management
 
-**Features:**
-- [ ] Email client integration (IMAP/SMTP) - EXISTS (restore)
+**Refactoring Tasks:**
+- [ ] Refactor EmailConfig → organisms/email_client.rs (IMAP/SMTP integration)
 - [ ] AI-powered email drafting - NEW
 - [ ] Auto-categorization - NEW
 - [ ] Template management - NEW
 - [ ] Scheduled sending - NEW
 - [ ] Bulk email with personalization - NEW
 - [ ] Response suggestions - NEW
+- [ ] **Delete old EmailConfig from IntegrationManager after refactoring**
 
 **Time Estimate:** 2 weeks
 **Tests Required:** 15+
@@ -1161,13 +1197,14 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 **Status:** Partial (CSV/JSON export exists in Exporter)
 **Target:** Transform and analyze data
 
-**Features:**
-- [ ] CSV/JSON/Excel import - EXISTS (restore)
+**Refactoring Tasks:**
+- [ ] Refactor Importer/Exporter → organisms/data_processor.rs (CSV/JSON/Excel)
 - [ ] AI-powered data cleaning - NEW
 - [ ] Transformation pipeline builder - NEW
-- [ ] Visualization generation (use archived charts) - EXISTS (restore)
-- [ ] Export to multiple formats - EXISTS (restore)
+- [ ] Refactor chart widgets → organisms/charts.rs (from DashboardMetrics)
+- [ ] Export to multiple formats - refactor existing
 - [ ] Database integration (SQL) - NEW
+- [ ] **Delete old Importer/Exporter widgets after refactoring**
 
 **Time Estimate:** 2-3 weeks
 **Tests Required:** 18+
@@ -1215,13 +1252,14 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 **Status:** Partial (DashboardMetrics exists with 8 chart types)
 **Target:** Insights from data
 
-**Features:**
+**Refactoring Tasks:**
 - [ ] Connect to data sources (DB, APIs, files) - NEW
 - [ ] AI-powered query generation (natural language → SQL) - NEW
-- [ ] Chart generation - EXISTS (restore DashboardMetrics)
-- [ ] Dashboard builder - EXISTS (restore)
-- [ ] Report scheduling - EXISTS (restore ReportManager)
+- [ ] Refactor DashboardMetrics → organisms/dashboard.rs (8 chart types)
+- [ ] Refactor dashboard builder → organisms/dashboard_builder.rs
+- [ ] Refactor ReportManager → organisms/reports.rs (scheduling)
 - [ ] Anomaly detection - NEW
+- [ ] **Delete old DashboardMetrics, ReportManager widgets after refactoring**
 
 **Time Estimate:** 3 weeks
 **Tests:** 21 existing + 20 new
@@ -1229,58 +1267,69 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 ---
 
 ### Milestone 3.9: Project Management (Kanban & Beyond) 📋
-**Status:** Fully implemented (archived, 300+ tests)
-**Target:** Restore best-in-class Kanban system
+**Status:** Fully implemented (old widgets exist, 300+ tests)
+**Target:** Refactor best-in-class Kanban system into Atomic UI
 
-**Features (Restore from Archive):**
-- [ ] **Visual Kanban Board** (BoardManager - 16 tests)
+**Refactoring Tasks:**
+- [ ] **Visual Kanban Board** → organisms/kanban_board.rs (BoardManager - 16 tests)
   - Customizable columns, WIP limits, swimlanes
   - Drag & drop card movement
+  - **Delete old BoardManager after refactoring**
 
-- [ ] **Multiple Views** (ViewManager - 18 tests)
+- [ ] **Multiple Views** → organisms/view_switcher.rs (ViewManager - 18 tests)
   - Kanban, List, Calendar, Timeline/Gantt, Table, Mind Map
+  - **Delete old ViewManager after refactoring**
 
-- [ ] **Rich Task Cards** (RichTaskCardManager - 20 tests)
+- [ ] **Rich Task Cards** → organisms/task_card.rs (RichTaskCardManager - 20 tests)
   - Markdown descriptions, subtasks, assignees
   - Due dates, priorities, tags, effort estimation
   - Progress bars, custom fields, cover images
+  - **Delete old RichTaskCardManager after refactoring**
 
-- [ ] **Task Dependencies** (DependencyManager - 17 tests)
+- [ ] **Task Dependencies** → molecules/dependency_graph.rs (DependencyManager - 17 tests)
   - Blocks, BlockedBy, RelatesTo, Duplicates
   - Critical path calculation, topological sort
+  - **Delete old DependencyManager after refactoring**
 
-- [ ] **Collaboration** (CommentManager + CollaborationManager - 44 tests)
+- [ ] **Collaboration** → organisms/collaboration.rs (CommentManager + CollaborationManager - 44 tests)
   - Threaded comments, @mentions, reactions
   - Team members, permissions, watchers
   - Activity feed, notifications
+  - **Delete old CommentManager, CollaborationManager after refactoring**
 
-- [ ] **Automation** (AutomationManager - 21 tests)
+- [ ] **Automation** → organisms/automation.rs (AutomationManager - 21 tests)
   - When/then rules, recurring tasks
   - Task templates, bulk actions
+  - **Delete old AutomationManager after refactoring**
 
-- [ ] **Time Tracking** (TimeTracker - 24 tests)
+- [ ] **Time Tracking** → molecules/time_tracking.rs (TimeTracker - 24 tests)
   - Start/stop timer, manual entry
   - Billable hours, timesheet view
+  - **Delete old TimeTracker after refactoring**
 
-- [ ] **Analytics** (DashboardMetrics + ReportManager - 46 tests)
+- [ ] **Analytics** → organisms/analytics.rs (DashboardMetrics + ReportManager - 46 tests)
   - Cumulative flow, cycle time, lead time
   - Velocity, WIP, burndown/burnup charts
   - Custom reports, export options
+  - **Delete old DashboardMetrics, ReportManager after refactoring**
 
-- [ ] **Gamification** (AchievementSystem - 24 tests)
+- [ ] **Gamification** → organisms/achievements.rs (AchievementSystem - 24 tests)
   - Badges, streaks, leaderboards
   - Points system, hidden achievements
+  - **Delete old AchievementSystem after refactoring**
 
-- [ ] **Integrations** (IntegrationManager - 25 tests)
+- [ ] **Integrations** → organisms/integrations.rs (IntegrationManager - 25 tests)
   - Slack, Discord, Microsoft Teams, Email
   - Webhook management, event filtering
+  - **Delete old IntegrationManager after refactoring**
 
-- [ ] **Calendar Integration** (CalendarEvent - 24 tests)
+- [ ] **Calendar Integration** → molecules/calendar.rs (CalendarEvent - 24 tests)
   - iCal/Google Calendar export
   - Recurring events, priority colors
+  - **Delete old CalendarEvent after refactoring**
 
-**Time Estimate:** 2-3 weeks (restoration + UI polish)
-**Tests:** 300+ existing tests
+**Time Estimate:** 2-3 weeks (refactoring + UI polish + deletion)
+**Tests:** 300+ existing tests (all refactored to work with Atomic UI)
 
 ---
 
@@ -1358,8 +1407,9 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 | **Users** | Dev team | 5-10 early | 100-500 | 10,000+ |
 | **GitHub Stars** | - | 50+ | 500+ | 5,000+ |
 | **Tests Passing** | 2,500+ | 2,500+ | 2,500+ | 2,500+ |
-| **Active UI LOC** | - | <850 | ~2,000 | ~4,000 |
-| **Archived LOC** | - | ~11,000 | ~10,000 | ~8,000 |
+| **Atomic UI LOC** | - | ~850 | ~2,500 | ~4,500 |
+| **Old Widget LOC** | ~12,000 | ~10,000 | ~8,000 | 0 |
+| **Refactoring Progress** | 0% | ~15% | ~35% | 100% |
 | **Code Quality** | Tests broken | All passing | CI/CD | Production |
 | **Revenue** | $0 | $0 | $0 | $10k+ MRR |
 | **SWE-bench Accuracy** | Unknown | 76-78% | 76-78% | 76-78% |
@@ -1492,19 +1542,22 @@ tokei src/ui/atoms src/ui/molecules src/ui/organisms src/ui/screens
 
 ### Already Implemented (from TODO_TUI.md)
 
-**Phase 1 (Keep Active):**
+**Phase 1 (Refactor into Atomic UI):**
 - ✅ BASIC: 19/19 (100%) - Core architecture, widgets, theme
 - ✅ AI PLATINUM: 7 features (Chat, Streaming, Token Counter, Model Selector, Context Display, Diff View, Accept/Reject)
+- **Approach:** Refactor into atoms/molecules/organisms, delete old widgets
 
-**Phase 2 (Archived, Restore Later):**
+**Phase 2 (Refactor into Atomic UI):**
 - ✅ MEDIUM: 39/39 (100%) - Panels, modals, search, state
 - ✅ ADVANCED: 48/48 (100%) - Themes, input, fuzzy, performance, syntax
 - ✅ Dev PLATINUM: ~25 widgets (Git, file mgmt, editor, search)
+- **Approach:** Refactor into Atomic UI, delete old widgets after completion
 
-**Phase 3 (Archived, Restore Later):**
+**Phase 3 (Refactor into Atomic UI):**
 - ✅ PM PLATINUM: ~40 widgets (Kanban, tasks, collaboration, automation, analytics)
+- **Approach:** Refactor into Atomic UI, delete old widgets after completion
 
-**Total:** 197/212 features (92.9% implemented, strategically archived)
+**Total:** 197/212 features (92.9% implemented, all will be refactored incrementally)
 
 ---
 
