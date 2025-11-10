@@ -93,59 +93,9 @@ fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
 }
 
 /// Render the main content area
-fn render_main_content(_app: &mut App, frame: &mut Frame, area: Rect) {
-    let content_block = Block::default()
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(ToadTheme::BORDER))
-        .title("Main Content")
-        .title_style(Style::default().fg(ToadTheme::TOAD_GREEN));
-
-    let welcome_text = vec![
-        Line::from(vec![
-            Span::styled("Welcome to ", Style::default().fg(ToadTheme::FOREGROUND)),
-            Span::styled(
-                "Toad",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
-                    .add_modifier(Modifier::BOLD),
-            ),
-        ]),
-        Line::from(""),
-        Line::from(Span::styled(
-            "An AI-powered coding terminal with semi-autonomous agents",
-            Style::default().fg(ToadTheme::GRAY),
-        )),
-        Line::from(""),
-        Line::from(vec![
-            Span::styled("Built with ", Style::default().fg(ToadTheme::FOREGROUND)),
-            Span::styled(
-                "Rust",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(" + ", Style::default().fg(ToadTheme::FOREGROUND)),
-            Span::styled(
-                "Ratatui",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(" + ", Style::default().fg(ToadTheme::FOREGROUND)),
-            Span::styled(
-                "Crossterm",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_DARK)
-                    .add_modifier(Modifier::BOLD),
-            ),
-        ]),
-    ];
-
-    let paragraph = Paragraph::new(welcome_text)
-        .block(content_block)
-        .alignment(Alignment::Center);
-
-    frame.render_widget(paragraph, area);
+fn render_main_content(app: &mut App, frame: &mut Frame, area: Rect) {
+    // Render conversation view
+    app.conversation_view().render(frame, area);
 }
 
 /// Render the metadata line (path on left, model info on right)

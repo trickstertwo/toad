@@ -121,9 +121,9 @@ mod tests {
         let mut app = App::new();
 
         // Create mock client
-        let mock = SequencedMockClient::new(vec![MockResponseBuilder::new()
-            .content("Mock response")
-            .build()]);
+        let mock = MockResponseBuilder::new()
+            .with_text("Mock response")
+            .build();
 
         app.llm_client = Some(Arc::new(mock));
 

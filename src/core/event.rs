@@ -682,6 +682,8 @@ mod tests {
                 Event::EvaluationComplete(_) => {}
                 Event::EvaluationError(_) => {}
                 Event::CancelEvaluation => {}
+                Event::AIResponse(_) => {}
+                Event::AIError(_) => {}
             }
         }
     }

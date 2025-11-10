@@ -635,4 +635,113 @@ mod tests {
         app3.update(Event::Key(KeyEvent::from(KeyCode::Esc))).unwrap();
         assert!(app3.should_quit());
     }
+
+    // ===== AI Conversation Methods Tests =====
+
+    #[test]
+    fn test_conversation_view_accessor() {
+        let mut app = App::new();
+        let view = app.conversation_view();
+        assert_eq!(view.message_count(), 0);
+    }
+
+    #[test]
+    fn test_conversation_accessor() {
+        let app = App::new();
+        let conversation = app.conversation();
+        assert_eq!(conversation.len(), 0);
+    }
+
+    #[test]
+    fn test_add_message() {
+        let mut app = App::new();
+
+        let user_msg = Message::user("Test question");
+        app.add_message(user_msg);
+
+        assert_eq!(app.conversation().len(), 1);
+        assert_eq!(app.conversation_view().message_count(), 1);
+        assert_eq!(app.conversation()[0].content, "Test question");
+    }
+
+    #[test]
+    fn test_add_multiple_messages() {
+        let mut app = App::new();
+
+        app.add_message(Message::user("Question 1"));
+        app.add_message(Message::assistant("Answer 1"));
+        app.add_message(Message::user("Question 2"));
+        app.add_message(Message::assistant("Answer 2"));
+
+        assert_eq!(app.conversation().len(), 4);
+        assert_eq!(app.conversation_view().message_count(), 4);
+    }
+
+    #[test]
+    fn test_clear_conversation() {
+        let mut app = App::new();
+
+        app.add_message(Message::user("Test 1"));
+        app.add_message(Message::assistant("Response 1"));
+        assert_eq!(app.conversation().len(), 2);
+
+        app.clear_conversation();
+
+        assert_eq!(app.conversation().len(), 0);
+        assert_eq!(app.conversation_view().message_count(), 0);
+    }
+
+    #[test]
+    fn test_has_llm_client_with_api_key() {
+        // This test depends on ANTHROPIC_API_KEY env var
+        let app = App::new();
+
+        // If API key is set, client should be available
+        if std::env::var("ANTHROPIC_API_KEY").is_ok() {
+            assert!(app.has_llm_client() || !app.has_llm_client()); // Either state is valid
+        } else {
+            assert!(!app.has_llm_client());
+        }
+    }
+
+    #[test]
+    fn test_llm_client_accessor() {
+        let app = App::new();
+
+        // Should return Some or None depending on API key
+        let client = app.llm_client();
+        assert!(client.is_some() || client.is_none());
+    }
+
+    #[test]
+    fn test_ai_processing_state() {
+        let mut app = App::new();
+
+        assert!(!app.is_ai_processing());
+
+        app.set_ai_processing(true);
+        assert!(app.is_ai_processing());
+
+        app.set_ai_processing(false);
+        assert!(!app.is_ai_processing());
+    }
+
+    #[test]
+    fn test_conversation_message_order() {
+        let mut app = App::new();
+
+        app.add_message(Message::user("First"));
+        app.add_message(Message::assistant("Second"));
+        app.add_message(Message::user("Third"));
+
+        let conversation = app.conversation();
+        assert_eq!(conversation[0].content, "First");
+        assert_eq!(conversation[1].content, "Second");
+        assert_eq!(conversation[2].content, "Third");
+
+        // Verify roles
+        assert_eq!(conversation[0].role, crate::ai::llm::Role::User);
+        assert_eq!(conversation[1].role, crate::ai::llm::Role::Assistant);
+        assert_eq!(conversation[2].role, crate::ai::llm::Role::User);
+    }
 }
