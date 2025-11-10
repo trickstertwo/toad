@@ -159,7 +159,9 @@ impl TestSelector {
         base_ref: Option<&str>,
     ) -> Result<TestSelection> {
         // Get changed files from git
-        let changed_files = self.get_changed_files_from_git(workspace_root, base_ref).await?;
+        let changed_files = self
+            .get_changed_files_from_git(workspace_root, base_ref)
+            .await?;
 
         // Select tests based on changes
         self.select_tests(workspace_root, &changed_files).await

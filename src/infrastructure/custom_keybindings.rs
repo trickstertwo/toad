@@ -169,9 +169,10 @@ impl CustomKeybindings {
 
         // Check context-specific bindings
         if let Some(context_bindings) = self.bindings.get(&context)
-            && let Some(action) = context_bindings.get(actual_binding) {
-                return Some(action);
-            }
+            && let Some(action) = context_bindings.get(actual_binding)
+        {
+            return Some(action);
+        }
 
         // Fall back to global bindings
         if let Some(global_bindings) = self.bindings.get(&KeybindingContext::Global) {

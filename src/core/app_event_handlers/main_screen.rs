@@ -392,7 +392,10 @@ mod tests {
         app.update(event).unwrap();
 
         assert!(!app.show_help);
-        assert!(!app.should_quit(), "Esc from main should not quit (closes overlays instead)");
+        assert!(
+            !app.should_quit(),
+            "Esc from main should not quit (closes overlays instead)"
+        );
     }
 
     // ===== Command Palette Tests =====

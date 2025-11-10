@@ -392,11 +392,7 @@ mod tests {
 
     #[test]
     fn test_toast_custom_very_long_duration() {
-        let toast = Toast::new(
-            ToastLevel::Warning,
-            "Persistent",
-            Duration::from_secs(3600),
-        );
+        let toast = Toast::new(ToastLevel::Warning, "Persistent", Duration::from_secs(3600));
         assert!(toast.is_visible());
         assert!(toast.remaining_time() > Duration::from_secs(3599));
     }
@@ -818,11 +814,7 @@ mod tests {
     fn test_toast_manager_add_custom_with_various_durations() {
         let mut manager = ToastManager::new();
 
-        manager.add(Toast::new(
-            ToastLevel::Info,
-            "1sec",
-            Duration::from_secs(1),
-        ));
+        manager.add(Toast::new(ToastLevel::Info, "1sec", Duration::from_secs(1)));
         manager.add(Toast::new(
             ToastLevel::Success,
             "5sec",
@@ -1043,11 +1035,7 @@ mod tests {
     fn test_manager_add_custom_toast() {
         let mut manager = ToastManager::new();
 
-        let custom = Toast::new(
-            ToastLevel::Success,
-            "Custom toast",
-            Duration::from_secs(10),
-        );
+        let custom = Toast::new(ToastLevel::Success, "Custom toast", Duration::from_secs(10));
 
         manager.add(custom);
         assert_eq!(manager.len(), 1);
@@ -1195,4 +1183,3 @@ mod tests {
         assert_eq!(manager.len(), 2); // 3 and 4
     }
 }
-

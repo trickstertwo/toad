@@ -423,10 +423,7 @@ impl StatefulWidget for &GitDiffViewer {
 
         let (additions, deletions, _context) = self.stats();
         let title = if additions > 0 || deletions > 0 {
-            format!(
-                "{} (+{} -{}) ",
-                self.title, additions, deletions
-            )
+            format!("{} (+{} -{}) ", self.title, additions, deletions)
         } else {
             self.title.clone()
         };
@@ -456,4 +453,3 @@ impl Widget for &GitDiffViewer {
         StatefulWidget::render(self, area, buf, &mut state);
     }
 }
-

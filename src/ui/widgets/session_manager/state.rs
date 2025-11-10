@@ -420,4 +420,3 @@ impl SessionManager {
         Ok(name)
     }
 }
-

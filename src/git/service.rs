@@ -157,9 +157,7 @@ impl GitService {
                 ("M", "M") => FileChange::Modified(PathBuf::from(path)),
                 ("?", "?") => FileChange::Untracked(PathBuf::from(path)),
                 ("D", " ") | (" ", "D") => FileChange::Deleted(PathBuf::from(path)),
-                ("U", "U") | ("A", "A") | ("D", "D") => {
-                    FileChange::Conflicted(PathBuf::from(path))
-                }
+                ("U", "U") | ("A", "A") | ("D", "D") => FileChange::Conflicted(PathBuf::from(path)),
                 ("R", " ") => {
                     // Renamed files are shown as "old -> new"
                     if let Some((old, new)) = path.split_once(" -> ") {
@@ -207,9 +205,7 @@ impl GitService {
             anyhow::bail!("git branch failed: {}", stderr);
         }
 
-        let branch = String::from_utf8_lossy(&output.stdout)
-            .trim()
-            .to_string();
+        let branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
 
         Ok(branch)
     }
@@ -554,9 +550,9 @@ mod tests {
         let status = service.status().await.unwrap();
 
         // Find test.txt in status
-        let test_status = status.iter().find(|f| {
-            f.path().to_str().unwrap_or("").contains("test.txt")
-        });
+        let test_status = status
+            .iter()
+            .find(|f| f.path().to_str().unwrap_or("").contains("test.txt"));
         assert!(test_status.is_some());
         assert!(matches!(test_status.unwrap(), FileChange::Staged(_)));
 
@@ -565,9 +561,9 @@ mod tests {
         let status = service.status().await.unwrap();
 
         // Find test.txt in status
-        let test_status = status.iter().find(|f| {
-            f.path().to_str().unwrap_or("").contains("test.txt")
-        });
+        let test_status = status
+            .iter()
+            .find(|f| f.path().to_str().unwrap_or("").contains("test.txt"));
         assert!(test_status.is_some());
         assert!(matches!(test_status.unwrap(), FileChange::Untracked(_)));
     }

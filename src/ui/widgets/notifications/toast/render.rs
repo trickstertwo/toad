@@ -1,38 +1,43 @@
 //! Toast rendering implementations
 
 use super::{Toast, ToastManager};
-use crate::ui::theme::ToadTheme;
+use crate::ui::{
+    atoms::{block::Block, text::Text},
+    theme::ToadTheme,
+};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    widgets::Paragraph,
 };
 
 impl Toast {
-    /// Render a single toast
+    /// Render a single toast using Atomic Design (Text + Block atoms)
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let icon = self.level.icon();
         let color = self.level.border_color();
 
-        let block = Block::default()
-            .borders(Borders::ALL)
+        // Use Block atom for toast border
+        let block = Block::new()
             .border_style(Style::default().fg(color))
-            .style(Style::default().bg(ToadTheme::BLACK));
+            .style(Style::default().bg(ToadTheme::BLACK))
+            .to_ratatui();
 
         let inner = block.inner(area);
         frame.render_widget(block, area);
 
-        let text = Line::from(vec![
-            Span::styled(
-                format!("{} ", icon),
-                Style::default().fg(color).add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(&self.message, Style::default().fg(ToadTheme::FOREGROUND)),
-        ]);
+        // Use Text atoms for icon and message
+        let icon_text = Text::new(format!("{} ", icon))
+            .style(Style::default().fg(color).add_modifier(Modifier::BOLD));
 
-        let paragraph = Paragraph::new(text).alignment(Alignment::Left);
+        let message_text =
+            Text::new(&self.message).style(Style::default().fg(ToadTheme::FOREGROUND));
+
+        // Combine text atoms into a line
+        let line = ratatui::text::Line::from(vec![icon_text.to_span(), message_text.to_span()]);
+
+        let paragraph = Paragraph::new(line).alignment(Alignment::Left);
         frame.render_widget(paragraph, inner);
     }
 }

@@ -1,9 +1,9 @@
 //! Chat panel tests
 
+use super::*;
 use ratatui::style::Color;
-    use super::*;
 
-    #[test]
+#[test]
 fn test_chat_message_creation() {
     let msg = ChatMessage::new(MessageRole::User, "Hello");
     assert_eq!(msg.role, MessageRole::User);
@@ -171,10 +171,7 @@ fn test_message_japanese() {
 
 #[test]
 fn test_message_mixed_scripts() {
-    let msg = ChatMessage::new(
-        MessageRole::Assistant,
-        "Hello مرحبا שלום こんにちは 🚀",
-    );
+    let msg = ChatMessage::new(MessageRole::Assistant, "Hello مرحبا שלום こんにちは 🚀");
     assert!(msg.content.len() > 0);
 }
 
@@ -778,7 +775,10 @@ fn test_chat_panel_multiple_streaming_appends_concatenation() {
     }
     panel.finish_streaming();
     assert_eq!(panel.message_count(), 1);
-    assert_eq!(panel.messages[0].content, "chunk0 chunk1 chunk2 chunk3 chunk4 chunk5 chunk6 chunk7 chunk8 chunk9 ");
+    assert_eq!(
+        panel.messages[0].content,
+        "chunk0 chunk1 chunk2 chunk3 chunk4 chunk5 chunk6 chunk7 chunk8 chunk9 "
+    );
 }
 
 #[test]

@@ -3,7 +3,7 @@
 use super::*;
 use ratatui::style::Color;
 
-    #[test]
+#[test]
 fn test_scatter_series_new() {
     let points = vec![(1.0, 2.0), (3.0, 4.0)];
     let series = ScatterSeries::new("Test", points);
@@ -292,10 +292,7 @@ fn test_scatter_series_with_mixed_values() {
 
 #[test]
 fn test_scatter_series_with_fractional_values() {
-    let points = vec![
-        (0.123456789, 0.987654321),
-        (3.141592653, 2.718281828),
-    ];
+    let points = vec![(0.123456789, 0.987654321), (3.141592653, 2.718281828)];
     let series = ScatterSeries::new("Fractional", points);
     let (min_x, max_x) = series.x_bounds();
     assert!((min_x.unwrap() - 0.123456789).abs() < 1e-9);
@@ -349,8 +346,7 @@ fn test_scatter_plot_with_many_series() {
 
 #[test]
 fn test_scatter_plot_with_single_series() {
-    let plot = ScatterPlot::new()
-        .add_series(ScatterSeries::new("Only", vec![(1.0, 2.0)]));
+    let plot = ScatterPlot::new().add_series(ScatterSeries::new("Only", vec![(1.0, 2.0)]));
     assert_eq!(plot.series_count(), 1);
 }
 
@@ -396,9 +392,7 @@ fn test_scatter_plot_with_very_long_labels() {
 
 #[test]
 fn test_scatter_plot_with_empty_labels() {
-    let plot = ScatterPlot::new()
-        .with_x_label("")
-        .with_y_label("");
+    let plot = ScatterPlot::new().with_x_label("").with_y_label("");
     assert_eq!(plot.x_label, Some("".to_string()));
     assert_eq!(plot.y_label, Some("".to_string()));
 }
@@ -428,24 +422,22 @@ fn test_scatter_plot_default() {
 
 #[test]
 fn test_scatter_plot_render_with_zero_dimensions() {
-    let plot = ScatterPlot::new()
-        .add_series(ScatterSeries::new("Test", vec![(1.0, 2.0)]));
+    let plot = ScatterPlot::new().add_series(ScatterSeries::new("Test", vec![(1.0, 2.0)]));
     let _lines = plot.render_lines(0, 0);
     // Just verify it doesn't crash
 }
 
 #[test]
 fn test_scatter_plot_render_with_very_small_dimensions() {
-    let plot = ScatterPlot::new()
-        .add_series(ScatterSeries::new("Test", vec![(1.0, 2.0)]));
+    let plot = ScatterPlot::new().add_series(ScatterSeries::new("Test", vec![(1.0, 2.0)]));
     let lines = plot.render_lines(1, 1);
     assert!(!lines.is_empty());
 }
 
 #[test]
 fn test_scatter_plot_render_with_very_large_dimensions() {
-    let plot = ScatterPlot::new()
-        .add_series(ScatterSeries::new("Test", vec![(1.0, 2.0), (3.0, 4.0)]));
+    let plot =
+        ScatterPlot::new().add_series(ScatterSeries::new("Test", vec![(1.0, 2.0), (3.0, 4.0)]));
     let lines = plot.render_lines(1000, 1000);
     assert!(!lines.is_empty());
 }
@@ -557,8 +549,7 @@ fn test_scatter_plot_bounds_with_extreme_values() {
 
 #[test]
 fn test_scatter_plot_calculate_bounds_with_single_point() {
-    let plot = ScatterPlot::new()
-        .add_series(ScatterSeries::new("Test", vec![(5.0, 10.0)]));
+    let plot = ScatterPlot::new().add_series(ScatterSeries::new("Test", vec![(5.0, 10.0)]));
     let (x_min, x_max) = plot.calculate_x_bounds();
     let (y_min, y_max) = plot.calculate_y_bounds();
 
@@ -571,8 +562,10 @@ fn test_scatter_plot_calculate_bounds_with_single_point() {
 
 #[test]
 fn test_scatter_plot_calculate_bounds_with_same_points() {
-    let plot = ScatterPlot::new()
-        .add_series(ScatterSeries::new("Test", vec![(5.0, 10.0), (5.0, 10.0), (5.0, 10.0)]));
+    let plot = ScatterPlot::new().add_series(ScatterSeries::new(
+        "Test",
+        vec![(5.0, 10.0), (5.0, 10.0), (5.0, 10.0)],
+    ));
     let (x_min, x_max) = plot.calculate_x_bounds();
     let (y_min, y_max) = plot.calculate_y_bounds();
 

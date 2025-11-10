@@ -476,4 +476,3 @@ impl InputPrompt {
         frame.render_widget(help_paragraph, chunks[4]);
     }
 }
-

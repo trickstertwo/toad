@@ -15,8 +15,8 @@ fn test_line_chart_creation() {
 
 #[test]
 fn test_line_chart_builder() {
-    let series = DataSeries::new("Temperature", vec![10.0, 20.0, 15.0, 25.0, 30.0])
-        .with_color(Color::Red);
+    let series =
+        DataSeries::new("Temperature", vec![10.0, 20.0, 15.0, 25.0, 30.0]).with_color(Color::Red);
 
     let chart = LineChart::new()
         .add_series(series)
@@ -32,9 +32,7 @@ fn test_line_chart_add_series() {
     let series1 = DataSeries::new("Series 1", vec![1.0, 2.0, 3.0]);
     let series2 = DataSeries::new("Series 2", vec![10.0, 20.0, 30.0, 40.0]);
 
-    let chart = LineChart::new()
-        .add_series(series1)
-        .add_series(series2);
+    let chart = LineChart::new().add_series(series1).add_series(series2);
 
     assert_eq!(chart.series_count(), 2);
 }
@@ -343,24 +341,24 @@ fn test_multi_chart_dashboard() {
     // Create multiple charts for a dashboard
 
     // Chart 1: Temperature over time
-    let temp_series = DataSeries::new("Temperature", vec![20.0, 22.0, 25.0, 23.0, 21.0])
-        .with_color(Color::Red);
+    let temp_series =
+        DataSeries::new("Temperature", vec![20.0, 22.0, 25.0, 23.0, 21.0]).with_color(Color::Red);
     let temp_chart = LineChart::new()
         .add_series(temp_series)
         .with_title("Temperature (°C)")
         .with_y_label("°C");
 
     // Chart 2: Network traffic (download)
-    let network_series = DataSeries::new("Download", vec![5.0, 6.2, 7.5, 6.8, 5.5])
-        .with_color(Color::Blue);
+    let network_series =
+        DataSeries::new("Download", vec![5.0, 6.2, 7.5, 6.8, 5.5]).with_color(Color::Blue);
     let network_chart = LineChart::new()
         .add_series(network_series)
         .with_title("Network Download (MB/s)")
         .with_y_label("MB/s");
 
     // Chart 3: System load (1 min average)
-    let load_series = DataSeries::new("Load", vec![1.5, 2.0, 2.5, 2.2, 1.8])
-        .with_color(Color::Green);
+    let load_series =
+        DataSeries::new("Load", vec![1.5, 2.0, 2.5, 2.2, 1.8]).with_color(Color::Green);
     let load_chart = LineChart::new()
         .add_series(load_series)
         .with_title("System Load (1 min)");
@@ -380,7 +378,9 @@ fn test_scenario_performance_monitoring() {
     let response_times = vec![45.0, 52.0, 48.0, 150.0, 55.0, 50.0, 200.0, 53.0];
 
     // Detect anomalies
-    let max_response = response_times.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let max_response = response_times
+        .iter()
+        .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
     assert_eq!(max_response, 200.0); // Detected spike
 
     // Create visualization

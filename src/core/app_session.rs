@@ -41,7 +41,6 @@ impl App {
             AppScreen::TrustDialog => "TrustDialog",
             AppScreen::Main => "Main",
             AppScreen::Evaluation => "Main", // Save as Main since Evaluation is transient
-            AppScreen::PSXFrogger => "Main", // Save as Main since PSXFrogger is transient
         };
         self.session.set_last_screen(screen_str.to_string());
     }
@@ -179,7 +178,10 @@ mod tests {
         app.config.session.auto_save = false;
 
         let result = app.save_session();
-        assert!(result.is_ok(), "Should return Ok when auto_save is disabled");
+        assert!(
+            result.is_ok(),
+            "Should return Ok when auto_save is disabled"
+        );
     }
 
     #[test]

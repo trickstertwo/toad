@@ -104,7 +104,8 @@ impl PythonParser {
 
                 let signature = params.map(|p| format!("def {}{})", func_name, p));
 
-                let mut symbol = Symbol::new(func_name, SymbolKind::Function, (start_line, end_line));
+                let mut symbol =
+                    Symbol::new(func_name, SymbolKind::Function, (start_line, end_line));
                 if let Some(sig) = signature {
                     symbol = symbol.with_signature(sig);
                 }
@@ -242,8 +243,8 @@ impl AstParser for PythonParser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
     use std::io::Write;
+    use tempfile::NamedTempFile;
 
     #[tokio::test]
     async fn test_parse_simple_function() {
@@ -262,7 +263,13 @@ def hello_world():
         assert_eq!(context.symbols.len(), 1);
         assert_eq!(context.symbols[0].name, "hello_world");
         assert_eq!(context.symbols[0].kind, SymbolKind::Function);
-        assert!(context.symbols[0].docstring.as_ref().unwrap().contains("Say hello"));
+        assert!(
+            context.symbols[0]
+                .docstring
+                .as_ref()
+                .unwrap()
+                .contains("Say hello")
+        );
     }
 
     #[tokio::test]

@@ -341,10 +341,7 @@ impl ContextDisplay {
 
     /// Get total token count
     pub fn total_tokens(&self) -> usize {
-        self.items
-            .iter()
-            .filter_map(|item| item.token_count)
-            .sum()
+        self.items.iter().filter_map(|item| item.token_count).sum()
     }
 
     /// Clear all items
@@ -403,13 +400,14 @@ impl Widget for &ContextDisplay {
 
         // Determine if we should split for preview
         let (list_area, preview_area) = if self.show_preview
-            && self.current_item().map(|i| !i.content.is_empty()).unwrap_or(false)
+            && self
+                .current_item()
+                .map(|i| !i.content.is_empty())
+                .unwrap_or(false)
         {
-            let preview_chunks = Layout::horizontal([
-                Constraint::Percentage(40),
-                Constraint::Percentage(60),
-            ])
-            .split(chunks[1]);
+            let preview_chunks =
+                Layout::horizontal([Constraint::Percentage(40), Constraint::Percentage(60)])
+                    .split(chunks[1]);
             (preview_chunks[0], Some(preview_chunks[1]))
         } else {
             (chunks[1], None)
@@ -476,19 +474,20 @@ impl Widget for &ContextDisplay {
 
         // Render preview if enabled
         if let Some(preview_rect) = preview_area
-            && let Some(item) = self.current_item() {
-                let preview = Paragraph::new(item.content.as_str())
-                    .block(
-                        Block::default()
-                            .borders(Borders::ALL)
-                            .title(format!("Preview: {}", item.name))
-                            .border_style(Style::default().fg(Color::Cyan)),
-                    )
-                    .style(Style::default().fg(Color::White))
-                    .wrap(ratatui::widgets::Wrap { trim: false });
+            && let Some(item) = self.current_item()
+        {
+            let preview = Paragraph::new(item.content.as_str())
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title(format!("Preview: {}", item.name))
+                        .border_style(Style::default().fg(Color::Cyan)),
+                )
+                .style(Style::default().fg(Color::White))
+                .wrap(ratatui::widgets::Wrap { trim: false });
 
-                preview.render(preview_rect, buf);
-            }
+            preview.render(preview_rect, buf);
+        }
 
         // Render footer
         if area.height > 5 {

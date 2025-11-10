@@ -1,4 +1,4 @@
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::{block::Block as AtomBlock, text::Text}, theme::ToadTheme};
 /// Tab bar widget for displaying tabs
 ///
 /// Visual indicator showing all tabs with the active tab highlighted
@@ -20,8 +20,8 @@ use ratatui::{
     Frame,
     layout::{Alignment, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    text::Line,
+    widgets::{Borders, Paragraph},
 };
 
 /// Tab bar widget
@@ -96,9 +96,10 @@ impl<'a> TabBar<'a> {
 
     /// Render the tab bar
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::BOTTOM)
-            .border_style(Style::default().fg(ToadTheme::DARK_GRAY));
+            .border_style(Style::default().fg(ToadTheme::DARK_GRAY))
+            .to_ratatui();
 
         let inner = block.inner(area);
         frame.render_widget(block, area);
@@ -125,19 +126,21 @@ impl<'a> TabBar<'a> {
 
             // Add separator before tab (except first)
             if idx > 0 {
-                spans.push(Span::styled(
-                    " │ ",
-                    Style::default().fg(ToadTheme::DARK_GRAY),
-                ));
+                let separator = Text::new(" │ ").style(Style::default().fg(ToadTheme::DARK_GRAY));
+                spans.push(separator.to_span());
             }
 
             // Tab number (1-based for display)
-            spans.push(Span::styled(format!("{}", idx + 1), style));
-            spans.push(Span::raw(" "));
+            let tab_num = Text::new(format!("{}", idx + 1)).style(style);
+            spans.push(tab_num.to_span());
+
+            let space = Text::new(" ");
+            spans.push(space.to_span());
 
             // Icon if present
             if let Some(icon) = &tab.icon {
-                spans.push(Span::styled(format!("{} ", icon), style));
+                let icon_text = Text::new(format!("{} ", icon)).style(style);
+                spans.push(icon_text.to_span());
             }
 
             // Tab title
@@ -150,17 +153,20 @@ impl<'a> TabBar<'a> {
                 title.push_str("...");
             }
 
-            spans.push(Span::styled(title, style));
+            let title_text = Text::new(title).style(style);
+            spans.push(title_text.to_span());
 
             // Close button if closable and show_close is enabled
             if self.show_close && tab.closable {
-                spans.push(Span::raw(" "));
-                spans.push(Span::styled(
-                    "×",
+                let space = Text::new(" ");
+                spans.push(space.to_span());
+
+                let close_btn = Text::new("×").style(
                     Style::default()
                         .fg(ToadTheme::RED)
                         .add_modifier(Modifier::DIM),
-                ));
+                );
+                spans.push(close_btn.to_span());
             }
         }
 
@@ -400,9 +406,7 @@ mod tests {
     fn test_tabbar_builder_pattern() {
         let manager = TabManager::with_tab("Main");
 
-        let tabbar = TabBar::new(&manager)
-            .max_tab_width(25)
-            .show_close(false);
+        let tabbar = TabBar::new(&manager).max_tab_width(25).show_close(false);
 
         assert_eq!(tabbar.max_tab_width, 25);
         assert!(!tabbar.show_close);
@@ -873,18 +877,14 @@ mod tests {
         }
 
         // Create tabbar with various settings
-        let tabbar1 = TabBar::new(&manager)
-            .max_tab_width(20)
-            .show_close(true);
+        let tabbar1 = TabBar::new(&manager).max_tab_width(20).show_close(true);
 
         assert_eq!(tabbar1.tab_count(), 100);
         assert_eq!(tabbar1.max_tab_width, 20);
         assert!(tabbar1.show_close);
 
         // Test with different settings
-        let tabbar2 = TabBar::new(&manager)
-            .max_tab_width(50)
-            .show_close(false);
+        let tabbar2 = TabBar::new(&manager).max_tab_width(50).show_close(false);
 
         assert_eq!(tabbar2.tab_count(), 100);
         assert_eq!(tabbar2.max_tab_width, 50);

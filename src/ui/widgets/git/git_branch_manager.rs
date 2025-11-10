@@ -155,9 +155,10 @@ impl GitBranchManager {
         } else if mode == BranchMode::Rename {
             self.message = Some(String::from("Enter new branch name:"));
         } else if mode == BranchMode::Delete
-            && let Some(selected) = self.selected_branch() {
-                self.message = Some(format!("Delete branch '{}'? (y/n)", selected.name));
-            }
+            && let Some(selected) = self.selected_branch()
+        {
+            self.message = Some(format!("Delete branch '{}'? (y/n)", selected.name));
+        }
     }
 
     /// Cancel current operation and return to browse mode
@@ -170,23 +171,27 @@ impl GitBranchManager {
 
     /// Get the selected branch
     pub fn selected_branch(&self) -> Option<&BranchInfo> {
-        self.list_state.selected().and_then(|i| self.branches.get(i))
+        self.list_state
+            .selected()
+            .and_then(|i| self.branches.get(i))
     }
 
     /// Move selection up
     pub fn move_up(&mut self) {
         if let Some(selected) = self.list_state.selected()
-            && selected > 0 {
-                self.list_state.select(Some(selected - 1));
-            }
+            && selected > 0
+        {
+            self.list_state.select(Some(selected - 1));
+        }
     }
 
     /// Move selection down
     pub fn move_down(&mut self) {
         if let Some(selected) = self.list_state.selected()
-            && selected + 1 < self.branches.len() {
-                self.list_state.select(Some(selected + 1));
-            }
+            && selected + 1 < self.branches.len()
+        {
+            self.list_state.select(Some(selected + 1));
+        }
     }
 
     /// Jump to top of list
@@ -394,23 +399,34 @@ impl Widget for &mut GitBranchManager {
     fn render(self, area: Rect, buf: &mut Buffer) {
         // Split into header, list, input, footer
         let chunks = Layout::vertical([
-            Constraint::Length(3),  // Header
-            Constraint::Min(0),     // Branch list
-            Constraint::Length(3),  // Input/message area
-            Constraint::Length(1),  // Footer
+            Constraint::Length(3), // Header
+            Constraint::Min(0),    // Branch list
+            Constraint::Length(3), // Input/message area
+            Constraint::Length(1), // Footer
         ])
         .split(area);
 
         // Render header
         let header_text = vec![Line::from(vec![
             Span::styled("Current: ", Style::default().fg(Color::Gray)),
-            Span::styled(&self.current_branch, Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                &self.current_branch,
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled("  |  ", Style::default().fg(Color::Gray)),
-            Span::styled(format!("Branches: {}", self.branches.len()), Style::default().fg(Color::Cyan)),
+            Span::styled(
+                format!("Branches: {}", self.branches.len()),
+                Style::default().fg(Color::Cyan),
+            ),
         ])];
 
-        let header = Paragraph::new(header_text)
-            .block(Block::default().borders(Borders::ALL).title("Branch Manager"));
+        let header = Paragraph::new(header_text).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Branch Manager"),
+        );
         header.render(chunks[0], buf);
 
         // Render branch list
@@ -420,7 +436,9 @@ impl Widget for &mut GitBranchManager {
             .map(|branch| {
                 let marker = if branch.is_current { "* " } else { "  " };
                 let style = if branch.is_current {
-                    Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)
+                    Style::default()
+                        .fg(Color::Green)
+                        .add_modifier(Modifier::BOLD)
                 } else {
                     Style::default()
                 };
@@ -441,7 +459,11 @@ impl Widget for &mut GitBranchManager {
 
         let list = List::new(items)
             .block(Block::default().borders(Borders::ALL).title("Branches"))
-            .highlight_style(Style::default().bg(Color::DarkGray).add_modifier(Modifier::BOLD));
+            .highlight_style(
+                Style::default()
+                    .bg(Color::DarkGray)
+                    .add_modifier(Modifier::BOLD),
+            );
 
         StatefulWidget::render(list, chunks[1], buf, &mut self.list_state);
 
@@ -456,22 +478,29 @@ impl Widget for &mut GitBranchManager {
             }
             _ => {
                 if let Some(err) = &self.error {
-                    vec![Line::from(vec![Span::styled(err, Style::default().fg(Color::Red))])]
+                    vec![Line::from(vec![Span::styled(
+                        err,
+                        Style::default().fg(Color::Red),
+                    )])]
                 } else if let Some(msg) = &self.message {
-                    vec![Line::from(vec![Span::styled(msg, Style::default().fg(Color::Cyan))])]
+                    vec![Line::from(vec![Span::styled(
+                        msg,
+                        Style::default().fg(Color::Cyan),
+                    )])]
                 } else {
                     vec![Line::from("")]
                 }
             }
         };
 
-        let input_widget = Paragraph::new(input_text)
-            .block(Block::default().borders(Borders::ALL));
+        let input_widget = Paragraph::new(input_text).block(Block::default().borders(Borders::ALL));
         input_widget.render(chunks[2], buf);
 
         // Render footer
         let footer_text = match self.mode {
-            BranchMode::Browse => "Enter: Switch | n: New | d: Delete | r: Rename | j/k: Navigate | q: Quit",
+            BranchMode::Browse => {
+                "Enter: Switch | n: New | d: Delete | r: Rename | j/k: Navigate | q: Quit"
+            }
             BranchMode::Create | BranchMode::Rename => "Enter: Confirm | Esc: Cancel",
             BranchMode::Delete => "y: Confirm | n/Esc: Cancel",
         };
@@ -511,7 +540,9 @@ mod tests {
             .unwrap();
 
         // Create initial commit
-        tokio::fs::write(path.join("test.txt"), "content").await.unwrap();
+        tokio::fs::write(path.join("test.txt"), "content")
+            .await
+            .unwrap();
         Command::new("git")
             .current_dir(path)
             .args(["add", "."])
@@ -581,7 +612,10 @@ mod tests {
         assert_eq!(manager.list_state.selected(), Some(0));
 
         manager.jump_to_bottom();
-        assert_eq!(manager.list_state.selected(), Some(manager.branch_count() - 1));
+        assert_eq!(
+            manager.list_state.selected(),
+            Some(manager.branch_count() - 1)
+        );
 
         manager.jump_to_top();
         assert_eq!(manager.list_state.selected(), Some(0));

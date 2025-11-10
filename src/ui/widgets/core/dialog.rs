@@ -2,15 +2,16 @@
 //!
 //! Copilot-style confirmation dialogs with radio button selection
 
+use crate::ui::{
+    atoms::{block::Block, text::Text},
+    theme::ToadTheme,
+};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    widgets::Paragraph,
 };
-
-use crate::ui::theme::ToadTheme;
 
 /// A single option in a dialog
 #[derive(Debug, Clone)]
@@ -107,17 +108,12 @@ impl ConfirmDialog {
             height: dialog_height,
         };
 
-        // Outer container
-        let outer_block = Block::default()
-            .borders(Borders::ALL)
+        // Outer container using Block atom
+        let outer_block = Block::new()
+            .title(&self.title)
             .border_style(Style::default().fg(ToadTheme::BORDER_FOCUSED))
-            .title(self.title.as_str())
-            .title_style(
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
-                    .add_modifier(Modifier::BOLD),
-            )
-            .style(Style::default().bg(ToadTheme::BACKGROUND));
+            .style(Style::default().bg(ToadTheme::BACKGROUND))
+            .to_ratatui();
 
         let inner = outer_block.inner(dialog_area);
         frame.render_widget(outer_block, dialog_area);
@@ -144,11 +140,11 @@ impl ConfirmDialog {
 
         let mut chunk_idx = 1;
 
-        // Render info box if present
+        // Render info box if present using Block atom
         if let Some(info_text) = &self.info_box {
-            let info_block = Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(ToadTheme::DARK_GRAY));
+            let info_block = Block::new()
+                .border_style(Style::default().fg(ToadTheme::DARK_GRAY))
+                .to_ratatui();
 
             let info_paragraph = Paragraph::new(info_text.as_str())
                 .style(Style::default().fg(ToadTheme::GRAY))
@@ -159,15 +155,14 @@ impl ConfirmDialog {
             chunk_idx += 2; // Skip spacing
         }
 
-        // Render message
-        let message_lines: Vec<Line> = self
+        // Render message using Text atoms
+        let message_lines: Vec<_> = self
             .message
             .iter()
             .map(|msg| {
-                Line::from(Span::styled(
-                    msg,
-                    Style::default().fg(ToadTheme::FOREGROUND),
-                ))
+                Text::new(msg)
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_line()
             })
             .collect();
 
@@ -195,22 +190,24 @@ impl ConfirmDialog {
                 Style::default().fg(ToadTheme::GRAY)
             };
 
+            // Use Text atom for option rendering
             let option_text = format!("{}{}. {}", prefix, option.key, option.label);
-            let option_line = Line::from(Span::styled(option_text, style));
+            let option_line = Text::new(option_text).style(style).to_line();
             let option_paragraph = Paragraph::new(option_line);
 
             frame.render_widget(option_paragraph, option_area);
         }
         chunk_idx += 2; // Skip spacing
 
-        // Render help text
+        // Render help text using Text atom
         let help_text = "Confirm with number keys or ↑↓ keys and Enter, Cancel with Esc";
-        let help_line = Line::from(Span::styled(
-            help_text,
-            Style::default()
-                .fg(ToadTheme::DARK_GRAY)
-                .add_modifier(Modifier::ITALIC),
-        ));
+        let help_line = Text::new(help_text)
+            .style(
+                Style::default()
+                    .fg(ToadTheme::DARK_GRAY)
+                    .add_modifier(Modifier::ITALIC),
+            )
+            .to_line();
         let help_paragraph = Paragraph::new(help_line).alignment(Alignment::Center);
         frame.render_widget(help_paragraph, chunks[chunk_idx]);
     }
@@ -293,7 +290,11 @@ mod tests {
             .option('1', "Option 1")
             .option('2', "Option 2");
 
-        assert_eq!(dialog.selected(), 0, "First option should be selected by default");
+        assert_eq!(
+            dialog.selected(),
+            0,
+            "First option should be selected by default"
+        );
     }
 
     #[test]
@@ -376,7 +377,11 @@ mod tests {
 
         let result = dialog.select_by_key('9');
         assert!(result.is_none());
-        assert_eq!(dialog.selected(), 0, "Selection should not change if key not found");
+        assert_eq!(
+            dialog.selected(),
+            0,
+            "Selection should not change if key not found"
+        );
     }
 
     #[test]
@@ -407,7 +412,11 @@ mod tests {
             .info_box("First info")
             .info_box("Second info");
 
-        assert_eq!(dialog.info_box.unwrap(), "Second info", "Last info_box call should override");
+        assert_eq!(
+            dialog.info_box.unwrap(),
+            "Second info",
+            "Last info_box call should override"
+        );
     }
 
     #[test]
@@ -436,8 +445,7 @@ mod tests {
 
     #[test]
     fn test_confirm_dialog_empty_options() {
-        let dialog = ConfirmDialog::new("Title")
-            .message("No options provided");
+        let dialog = ConfirmDialog::new("Title").message("No options provided");
 
         assert_eq!(dialog.options.len(), 0);
         assert_eq!(dialog.selected(), 0);
@@ -445,8 +453,7 @@ mod tests {
 
     #[test]
     fn test_confirm_dialog_single_option() {
-        let mut dialog = ConfirmDialog::new("Title")
-            .option('1', "Only option");
+        let mut dialog = ConfirmDialog::new("Title").option('1', "Only option");
 
         assert_eq!(dialog.selected(), 0);
 
@@ -565,8 +572,12 @@ mod tests {
             match i % 4 {
                 0 => dialog.select_next(),
                 1 => dialog.select_previous(),
-                2 => { dialog.select_by_key('3'); }
-                _ => { dialog.select_by_key('1'); }
+                2 => {
+                    dialog.select_by_key('3');
+                }
+                _ => {
+                    dialog.select_by_key('1');
+                }
             }
         }
 
@@ -684,8 +695,18 @@ mod tests {
             .info_box(&long_unicode);
 
         assert_eq!(dialog.title.chars().filter(|&c| c == '🎉').count(), 1000);
-        assert_eq!(dialog.message[0].chars().filter(|&c| c == '🎉').count(), 1000);
-        assert_eq!(dialog.options[0].label.chars().filter(|&c| c == '🎉').count(), 1000);
+        assert_eq!(
+            dialog.message[0].chars().filter(|&c| c == '🎉').count(),
+            1000
+        );
+        assert_eq!(
+            dialog.options[0]
+                .label
+                .chars()
+                .filter(|&c| c == '🎉')
+                .count(),
+            1000
+        );
     }
 
     #[test]
@@ -781,8 +802,7 @@ mod tests {
     #[test]
     fn test_confirm_dialog_very_long_info_box() {
         let long_info = "x".repeat(10000);
-        let dialog = ConfirmDialog::new("Title")
-            .info_box(&long_info);
+        let dialog = ConfirmDialog::new("Title").info_box(&long_info);
 
         assert_eq!(dialog.info_box.as_ref().unwrap().len(), 10000);
     }
@@ -872,9 +892,7 @@ mod tests {
         assert_eq!(dialog.selected(), 0); // Should not change
 
         // Phase 9: Add more messages dynamically
-        dialog = dialog
-            .message("Added message 5")
-            .message("Added message 6");
+        dialog = dialog.message("Added message 5").message("Added message 6");
         assert_eq!(dialog.message.len(), 6);
 
         // Phase 10: Test boundary conditions
@@ -892,8 +910,14 @@ mod tests {
     #[test]
     fn test_confirm_dialog_builder_chaining_many_operations() {
         let dialog = ConfirmDialog::new("Title")
-            .message("M1").message("M2").message("M3").message("M4").message("M5")
-            .option('1', "O1").option('2', "O2").option('3', "O3")
+            .message("M1")
+            .message("M2")
+            .message("M3")
+            .message("M4")
+            .message("M5")
+            .option('1', "O1")
+            .option('2', "O2")
+            .option('3', "O3")
             .info_box("Info1")
             .info_box("Info2") // Should override
             .message("M6");
@@ -992,8 +1016,7 @@ mod tests {
 
     #[test]
     fn test_confirm_dialog_all_operations_no_options() {
-        let mut dialog = ConfirmDialog::new("Title")
-            .message("Message without options");
+        let mut dialog = ConfirmDialog::new("Title").message("Message without options");
 
         assert_eq!(dialog.options.len(), 0);
         assert_eq!(dialog.selected(), 0);

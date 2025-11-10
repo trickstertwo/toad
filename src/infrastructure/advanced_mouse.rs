@@ -142,7 +142,12 @@ impl AdvancedMouseHandler {
     }
 
     /// Process a mouse click with specific button
-    pub fn process_click_with_button(&mut self, x: u16, y: u16, button: MouseButton) -> MouseGesture {
+    pub fn process_click_with_button(
+        &mut self,
+        x: u16,
+        y: u16,
+        button: MouseButton,
+    ) -> MouseGesture {
         let now = Instant::now();
 
         // Check for multi-click
@@ -157,9 +162,8 @@ impl AdvancedMouseHandler {
         });
 
         // Cleanup old click history
-        self.click_history.retain(|c| {
-            now.duration_since(c.time) < self.double_click_threshold * 3
-        });
+        self.click_history
+            .retain(|c| now.duration_since(c.time) < self.double_click_threshold * 3);
 
         // Determine gesture based on click count
         match click_count {
@@ -224,7 +228,10 @@ impl AdvancedMouseHandler {
 
     /// Check if currently dragging
     pub fn is_dragging(&self) -> bool {
-        self.drag_state.as_ref().map(|d| d.is_active).unwrap_or(false)
+        self.drag_state
+            .as_ref()
+            .map(|d| d.is_active)
+            .unwrap_or(false)
     }
 
     /// Get drag delta (current - start)
@@ -238,9 +245,8 @@ impl AdvancedMouseHandler {
 
     /// Get drag distance
     pub fn drag_distance(&self) -> Option<u16> {
-        self.drag_delta().map(|(dx, dy)| {
-            ((dx.pow(2) + dy.pow(2)) as f64).sqrt() as u16
-        })
+        self.drag_delta()
+            .map(|(dx, dy)| ((dx.pow(2) + dy.pow(2)) as f64).sqrt() as u16)
     }
 
     /// Update hover position
@@ -267,9 +273,10 @@ impl AdvancedMouseHandler {
 
         // Check if we've hovered long enough
         if let Some(last_time) = self.last_hover_time
-            && now.duration_since(last_time) >= self.hover_delay {
-                return Some(MouseGesture::Hover);
-            }
+            && now.duration_since(last_time) >= self.hover_delay
+        {
+            return Some(MouseGesture::Hover);
+        }
 
         None
     }
@@ -298,12 +305,13 @@ impl AdvancedMouseHandler {
     /// Check for long press
     pub fn check_long_press(&mut self) -> Option<MouseGesture> {
         if let Some(drag) = &self.drag_state
-            && !drag.is_active {
-                let now = Instant::now();
-                if now.duration_since(drag.started) >= self.long_press_threshold {
-                    return Some(MouseGesture::LongPress);
-                }
+            && !drag.is_active
+        {
+            let now = Instant::now();
+            if now.duration_since(drag.started) >= self.long_press_threshold {
+                return Some(MouseGesture::LongPress);
             }
+        }
         None
     }
 

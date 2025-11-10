@@ -3,14 +3,13 @@
 //! Displays a scrollable chat history with user messages and AI responses,
 //! supporting markdown rendering, code blocks, and streaming responses.
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Line, Span, Text},
-    widgets::{
-        Block, Borders, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Wrap,
-    },
+    text::{Line, Text},
+    widgets::{Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Wrap},
 };
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -171,9 +170,10 @@ impl ChatPanel {
     /// Append to the last streaming message
     pub fn append_streaming(&mut self, text: &str) {
         if let Some(last) = self.messages.last_mut()
-            && last.streaming {
-                last.append(text);
-            }
+            && last.streaming
+        {
+            last.append(text);
+        }
     }
 
     /// Finish the current streaming message
@@ -259,13 +259,13 @@ impl ChatPanel {
         self
     }
 
-    /// Render the chat panel
+    /// Render the chat panel using Atomic Design (Block + Text atoms)
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        // Create block with border
-        let block = Block::default()
-            .borders(Borders::ALL)
+        // Create block with border using Block atom
+        let block = AtomBlock::new()
             .title(" Chat ")
-            .style(Style::default().fg(Color::White));
+            .style(Style::default().fg(Color::White))
+            .to_ratatui();
 
         let inner_area = block.inner(area);
         frame.render_widget(block, area);
@@ -287,44 +287,49 @@ impl ChatPanel {
                 MessageRole::System => self.system_color,
             };
 
-            let mut header_spans = vec![Span::styled(
-                role_str,
-                Style::default().fg(color).add_modifier(Modifier::BOLD),
-            )];
+            // Use Text atoms for message header
+            let role_text = AtomText::new(role_str)
+                .style(Style::default().fg(color).add_modifier(Modifier::BOLD));
+
+            let mut header_spans = vec![role_text.to_span()];
 
             if self.show_timestamps {
-                header_spans.push(Span::raw(" "));
-                header_spans.push(Span::styled(
-                    format!("[{}]", msg.formatted_time()),
-                    Style::default().fg(Color::DarkGray),
-                ));
+                header_spans.push(AtomText::new(" ").to_span());
+                header_spans.push(
+                    AtomText::new(format!("[{}]", msg.formatted_time()))
+                        .style(Style::default().fg(Color::DarkGray))
+                        .to_span(),
+                );
             }
 
             if msg.streaming {
-                header_spans.push(Span::raw(" "));
-                header_spans.push(Span::styled("●", Style::default().fg(Color::Green)));
+                header_spans.push(AtomText::new(" ").to_span());
+                header_spans.push(
+                    AtomText::new("●")
+                        .style(Style::default().fg(Color::Green))
+                        .to_span(),
+                );
             }
 
             lines.push(Line::from(header_spans));
 
-            // Add message content (word-wrapped)
+            // Add message content (word-wrapped) using Text atoms
             let content_lines: Vec<&str> = msg.content.lines().collect();
             for line in content_lines {
                 if line.starts_with("```") {
-                    // Code block delimiter
-                    lines.push(Line::from(Span::styled(
-                        line,
-                        Style::default().fg(Color::DarkGray),
-                    )));
+                    // Code block delimiter using Text atom
+                    let code_delim =
+                        AtomText::new(line).style(Style::default().fg(Color::DarkGray));
+                    lines.push(Line::from(code_delim.to_span()));
                 } else if msg.has_code && msg.content.contains("```") {
                     // Inside code block - use monospace styling
-                    lines.push(Line::from(Span::styled(
-                        format!("  {}", line),
-                        Style::default().fg(Color::Cyan).add_modifier(Modifier::DIM),
-                    )));
+                    let code_text = AtomText::new(format!("  {}", line))
+                        .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::DIM));
+                    lines.push(Line::from(code_text.to_span()));
                 } else {
-                    // Regular text
-                    lines.push(Line::from(Span::raw(format!("  {}", line))));
+                    // Regular text using Text atom
+                    let regular_text = AtomText::new(format!("  {}", line));
+                    lines.push(Line::from(regular_text.to_span()));
                 }
             }
 
@@ -360,4 +365,3 @@ impl ChatPanel {
         }
     }
 }
-

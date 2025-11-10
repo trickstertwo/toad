@@ -171,10 +171,7 @@ impl Comment {
             reacted_at: Utc::now(),
         };
 
-        self.reactions
-            .entry(reaction)
-            .or_default()
-            .push(entry);
+        self.reactions.entry(reaction).or_default().push(entry);
         self.updated_at = Utc::now();
     }
 
@@ -392,9 +389,10 @@ impl CommentManager {
 
         // Add root comment
         if let Some(comment) = self.get_comment(comment_id)
-            && !comment.deleted {
-                thread.push(comment);
-            }
+            && !comment.deleted
+        {
+            thread.push(comment);
+        }
 
         // Recursively add replies
         self.collect_replies(comment_id, &mut thread);
@@ -435,7 +433,8 @@ impl CommentManager {
 
         // Trim old activities
         if self.activities.len() > self.max_activities {
-            self.activities.drain(0..self.activities.len() - self.max_activities);
+            self.activities
+                .drain(0..self.activities.len() - self.max_activities);
         }
 
         id
@@ -590,16 +589,8 @@ mod tests {
         );
 
         let comment = manager.get_comment_mut(&comment_id).unwrap();
-        comment.add_reaction(
-            Reaction::ThumbsUp,
-            "user-2".to_string(),
-            "Bob".to_string(),
-        );
-        comment.add_reaction(
-            Reaction::Heart,
-            "user-3".to_string(),
-            "Charlie".to_string(),
-        );
+        comment.add_reaction(Reaction::ThumbsUp, "user-2".to_string(), "Bob".to_string());
+        comment.add_reaction(Reaction::Heart, "user-3".to_string(), "Charlie".to_string());
 
         assert_eq!(comment.total_reactions(), 2);
         assert_eq!(comment.reaction_count(&Reaction::ThumbsUp), 1);
@@ -618,11 +609,7 @@ mod tests {
         );
 
         let comment = manager.get_comment_mut(&comment_id).unwrap();
-        comment.add_reaction(
-            Reaction::ThumbsUp,
-            "user-2".to_string(),
-            "Bob".to_string(),
-        );
+        comment.add_reaction(Reaction::ThumbsUp, "user-2".to_string(), "Bob".to_string());
 
         assert_eq!(comment.reaction_count(&Reaction::ThumbsUp), 1);
 
@@ -642,11 +629,7 @@ mod tests {
         );
 
         let comment = manager.get_comment_mut(&comment_id).unwrap();
-        comment.add_reaction(
-            Reaction::ThumbsUp,
-            "user-2".to_string(),
-            "Bob".to_string(),
-        );
+        comment.add_reaction(Reaction::ThumbsUp, "user-2".to_string(), "Bob".to_string());
 
         assert!(comment.user_has_reacted(&Reaction::ThumbsUp, "user-2"));
         assert!(!comment.user_has_reacted(&Reaction::ThumbsUp, "user-3"));

@@ -15,9 +15,9 @@ pub mod sparkline;
 // are in dedicated modules (bar_chart, line_chart, scatter_plot)
 pub use bar_chart::*;
 pub use line_chart::*;
-pub use scatter_plot::*;
 pub use live_graph::*;
+pub use scatter_plot::*;
 pub use sparkline::*;
 
 // Re-export chart module with explicit namespace to avoid conflicts
-pub use chart::{LineStyle, BarOrientation};
+pub use chart::{BarOrientation, LineStyle};

@@ -15,8 +15,8 @@
 //!     .effect(BorderEffect::Glow);
 //! ```
 
-use crate::ui::gradient::Gradient;
 use crate::infrastructure::{FallbackMode, TerminalCapabilities};
+use crate::ui::gradient::Gradient;
 use ratatui::style::Color;
 use ratatui::widgets::BorderType;
 
@@ -231,7 +231,11 @@ impl EnhancedBorder {
     }
 
     /// Apply fallback mode to border
-    pub fn with_fallback(&self, mode: &FallbackMode, caps: &TerminalCapabilities) -> EnhancedBorder {
+    pub fn with_fallback(
+        &self,
+        mode: &FallbackMode,
+        caps: &TerminalCapabilities,
+    ) -> EnhancedBorder {
         let new_gradient = self.gradient.as_ref().map(|g| g.with_fallback(mode, caps));
         let new_color = mode.fallback_color(self.color, caps);
 
@@ -335,9 +339,7 @@ impl BorderStyles {
 
     /// Info border (blue rounded)
     pub fn info() -> EnhancedBorder {
-        EnhancedBorder::new()
-            .color(Color::Cyan)
-            .rounded(true)
+        EnhancedBorder::new().color(Color::Cyan).rounded(true)
     }
 
     /// Subtle border (gray thin)

@@ -152,7 +152,13 @@ impl CardBranch {
         let sanitized = card_title
             .to_lowercase()
             .chars()
-            .map(|c| if c.is_alphanumeric() || c == ' ' { c } else { ' ' })
+            .map(|c| {
+                if c.is_alphanumeric() || c == ' ' {
+                    c
+                } else {
+                    ' '
+                }
+            })
             .collect::<String>()
             .split_whitespace()
             .take(5)
@@ -231,9 +237,10 @@ impl CardCommit {
 
         // Try [CARD-XXX] pattern
         if let Some(idx) = message.find("[CARD-")
-            && let Some(end_idx) = message[idx..].find(']') {
-                return Some(message[idx + 1..idx + end_idx].to_string());
-            }
+            && let Some(end_idx) = message[idx..].find(']')
+        {
+            return Some(message[idx + 1..idx + end_idx].to_string());
+        }
 
         None
     }
@@ -386,15 +393,18 @@ impl GitCardIntegrationManager {
         let id = format!("link-{}", self.next_link_id);
         self.next_link_id += 1;
 
-        let mut link = GitCardLink::new(id.clone(), card_id.clone(), entity_type, entity_id, created_by);
+        let mut link = GitCardLink::new(
+            id.clone(),
+            card_id.clone(),
+            entity_type,
+            entity_id,
+            created_by,
+        );
         if let Some(repo) = repository {
             link = link.with_repository(repo);
         }
 
-        self.card_links
-            .entry(card_id)
-            .or_default()
-            .push(id.clone());
+        self.card_links.entry(card_id).or_default().push(id.clone());
 
         self.links.insert(id.clone(), link);
         id
@@ -427,7 +437,11 @@ impl GitCardIntegrationManager {
     }
 
     /// Get links by entity type for a card
-    pub fn get_card_links_by_type(&self, card_id: &str, entity_type: GitEntityType) -> Vec<&GitCardLink> {
+    pub fn get_card_links_by_type(
+        &self,
+        card_id: &str,
+        entity_type: GitEntityType,
+    ) -> Vec<&GitCardLink> {
         self.get_card_links(card_id)
             .into_iter()
             .filter(|link| link.entity_type == entity_type)
@@ -445,7 +459,13 @@ impl GitCardIntegrationManager {
     }
 
     /// Create a branch for a card
-    pub fn create_branch(&mut self, card_id: String, base_branch: String, card_title: &str, created_by: String) -> CardBranch {
+    pub fn create_branch(
+        &mut self,
+        card_id: String,
+        base_branch: String,
+        card_title: &str,
+        created_by: String,
+    ) -> CardBranch {
         let branch_name = CardBranch::suggest_branch_name(&card_id, card_title);
         let branch = CardBranch::new(branch_name, card_id.clone(), base_branch, created_by);
 
@@ -480,7 +500,10 @@ impl GitCardIntegrationManager {
                 branch.mark_merged();
                 Ok(())
             } else {
-                Err(format!("Branch {} not found for card {}", branch_name, card_id))
+                Err(format!(
+                    "Branch {} not found for card {}",
+                    branch_name, card_id
+                ))
             }
         } else {
             Err(format!("No branches found for card {}", card_id))
@@ -490,10 +513,7 @@ impl GitCardIntegrationManager {
     /// Add a commit to a card
     pub fn add_commit(&mut self, commit: CardCommit) {
         let card_id = commit.card_id.clone();
-        self.card_commits
-            .entry(card_id)
-            .or_default()
-            .push(commit);
+        self.card_commits.entry(card_id).or_default().push(commit);
     }
 
     /// Get commits for a card
@@ -562,7 +582,12 @@ impl GitCardIntegrationManager {
     pub fn get_cards_in_review(&self) -> Vec<&CardReviewWorkflow> {
         self.review_workflows
             .values()
-            .filter(|w| matches!(w.status, ReviewStatus::Pending | ReviewStatus::ChangesRequested))
+            .filter(|w| {
+                matches!(
+                    w.status,
+                    ReviewStatus::Pending | ReviewStatus::ChangesRequested
+                )
+            })
             .collect()
     }
 
@@ -727,7 +752,10 @@ mod tests {
             Some("CARD-456".to_string())
         );
 
-        assert_eq!(CardCommit::extract_card_id_from_message("Regular commit message"), None);
+        assert_eq!(
+            CardCommit::extract_card_id_from_message("Regular commit message"),
+            None
+        );
     }
 
     #[test]
@@ -762,7 +790,10 @@ mod tests {
     fn test_card_review_workflow_request_review() {
         let mut workflow = CardReviewWorkflow::new("card-123".to_string());
 
-        workflow.request_review("PR-1".to_string(), vec!["reviewer1".to_string(), "reviewer2".to_string()]);
+        workflow.request_review(
+            "PR-1".to_string(),
+            vec!["reviewer1".to_string(), "reviewer2".to_string()],
+        );
 
         assert_eq!(workflow.status, ReviewStatus::Pending);
         assert_eq!(workflow.pr_number, Some("PR-1".to_string()));
@@ -958,7 +989,11 @@ mod tests {
     fn test_manager_approve_review() {
         let mut manager = GitCardIntegrationManager::new();
 
-        manager.request_review("card-123".to_string(), "PR-1".to_string(), vec!["reviewer1".to_string()]);
+        manager.request_review(
+            "card-123".to_string(),
+            "PR-1".to_string(),
+            vec!["reviewer1".to_string()],
+        );
 
         let result = manager.approve_review("card-123");
         assert!(result.is_ok());

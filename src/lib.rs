@@ -4,6 +4,7 @@
 //! - core: TUI fundamentals (Elm Architecture: Model-Message-Update-View)
 //! - ui: Widgets, themes, and visual components
 //! - ai: Agent, LLM, evaluation, and tooling
+//! - services: Business logic and I/O operations (SoC layer)
 //! - editor: Vim motions, undo/redo, multi-cursor
 //! - workspace: Tabs, layouts, session management
 //! - navigation: Search, fuzzy finding, bookmarks
@@ -22,6 +23,7 @@ pub mod git;
 pub mod infrastructure;
 pub mod navigation;
 pub mod performance;
+pub mod services;
 pub mod ui;
 pub mod workspace;
 
@@ -43,6 +45,7 @@ pub use git::{BranchInfo, CommitInfo, FileChange, GitGraphService, GitService};
 pub use infrastructure::{Clipboard, ErrorHandler, KeyBindings};
 pub use navigation::{FuzzyFinder, SearchState};
 pub use performance::PerformanceMetrics;
+pub use services::FilesystemService;
 pub use ui::{HighlightTheme, HighlightedSpan, Language, SyntaxHighlighter, ToadTheme};
 pub use workspace::{LayoutManager, SessionState, Tab, TabManager};
 

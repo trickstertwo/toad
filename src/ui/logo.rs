@@ -59,8 +59,14 @@ mod tests {
     #[test]
     fn test_toad_logo_contains_box_chars() {
         // Logo uses box drawing characters
-        assert!(TOAD_LOGO.contains('█'), "TOAD_LOGO should contain block chars");
-        assert!(TOAD_LOGO.contains('╗') || TOAD_LOGO.contains('╔'), "TOAD_LOGO should contain box drawing chars");
+        assert!(
+            TOAD_LOGO.contains('█'),
+            "TOAD_LOGO should contain block chars"
+        );
+        assert!(
+            TOAD_LOGO.contains('╗') || TOAD_LOGO.contains('╔'),
+            "TOAD_LOGO should contain box drawing chars"
+        );
     }
 
     #[test]
@@ -76,13 +82,19 @@ mod tests {
 
     #[test]
     fn test_toad_compact_contains_box_chars() {
-        assert!(TOAD_COMPACT.contains('█'), "TOAD_COMPACT should contain block chars");
+        assert!(
+            TOAD_COMPACT.contains('█'),
+            "TOAD_COMPACT should contain block chars"
+        );
     }
 
     #[test]
     fn test_toad_compact_multiline() {
         let lines: Vec<&str> = TOAD_COMPACT.lines().collect();
-        assert!(lines.len() >= 6, "TOAD_COMPACT should have at least 6 lines");
+        assert!(
+            lines.len() >= 6,
+            "TOAD_COMPACT should have at least 6 lines"
+        );
     }
 
     #[test]
@@ -96,24 +108,39 @@ mod tests {
 
     #[test]
     fn test_toad_character_not_empty() {
-        assert!(!TOAD_CHARACTER.is_empty(), "TOAD_CHARACTER should not be empty");
+        assert!(
+            !TOAD_CHARACTER.is_empty(),
+            "TOAD_CHARACTER should not be empty"
+        );
     }
 
     #[test]
     fn test_toad_character_has_eyes() {
-        assert!(TOAD_CHARACTER.contains("o o"), "TOAD_CHARACTER should have eyes");
+        assert!(
+            TOAD_CHARACTER.contains("o o"),
+            "TOAD_CHARACTER should have eyes"
+        );
     }
 
     #[test]
     fn test_toad_character_multiline() {
         let lines: Vec<&str> = TOAD_CHARACTER.lines().collect();
-        assert!(lines.len() >= 8, "TOAD_CHARACTER should have at least 8 lines");
+        assert!(
+            lines.len() >= 8,
+            "TOAD_CHARACTER should have at least 8 lines"
+        );
     }
 
     #[test]
     fn test_toad_minimal_contains_emoji() {
-        assert!(TOAD_MINIMAL.contains('🐸'), "TOAD_MINIMAL should contain frog emoji");
-        assert!(TOAD_MINIMAL.contains("TOAD"), "TOAD_MINIMAL should contain 'TOAD' text");
+        assert!(
+            TOAD_MINIMAL.contains('🐸'),
+            "TOAD_MINIMAL should contain frog emoji"
+        );
+        assert!(
+            TOAD_MINIMAL.contains("TOAD"),
+            "TOAD_MINIMAL should contain 'TOAD' text"
+        );
     }
 
     #[test]
@@ -132,13 +159,19 @@ mod tests {
     fn test_version_string_contains_dots() {
         let version = version_string();
         // Semantic versioning has at least one dot (e.g., v0.1 or v1.2.3)
-        assert!(version.contains('.'), "Version should contain at least one dot");
+        assert!(
+            version.contains('.'),
+            "Version should contain at least one dot"
+        );
     }
 
     #[test]
     fn test_tagline_not_empty() {
         assert!(!TAGLINE.is_empty(), "TAGLINE should not be empty");
-        assert!(TAGLINE.contains("Terminal"), "TAGLINE should mention Terminal");
+        assert!(
+            TAGLINE.contains("Terminal"),
+            "TAGLINE should mention Terminal"
+        );
     }
 
     #[test]

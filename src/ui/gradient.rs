@@ -309,8 +309,8 @@ impl Gradients {
     /// TOAD brand gradient (green to blue)
     pub fn toad_brand() -> Gradient {
         Gradient::linear(
-            Color::Rgb(0, 255, 136),     // Bright green
-            Color::Rgb(0, 204, 255),     // Bright blue
+            Color::Rgb(0, 255, 136), // Bright green
+            Color::Rgb(0, 204, 255), // Bright blue
             GradientDirection::Horizontal,
         )
     }
@@ -318,8 +318,8 @@ impl Gradients {
     /// Sunset gradient (orange to purple)
     pub fn sunset() -> Gradient {
         Gradient::linear(
-            Color::Rgb(255, 94, 77),     // Orange
-            Color::Rgb(139, 76, 255),    // Purple
+            Color::Rgb(255, 94, 77),  // Orange
+            Color::Rgb(139, 76, 255), // Purple
             GradientDirection::Horizontal,
         )
         .with_stop(0.5, Color::Rgb(255, 138, 101)) // Peach
@@ -328,8 +328,8 @@ impl Gradients {
     /// Ocean gradient (cyan to deep blue)
     pub fn ocean() -> Gradient {
         Gradient::linear(
-            Color::Rgb(0, 255, 255),     // Cyan
-            Color::Rgb(0, 51, 153),      // Deep blue
+            Color::Rgb(0, 255, 255), // Cyan
+            Color::Rgb(0, 51, 153),  // Deep blue
             GradientDirection::Vertical,
         )
     }
@@ -337,8 +337,8 @@ impl Gradients {
     /// Fire gradient (yellow to red)
     pub fn fire() -> Gradient {
         Gradient::linear(
-            Color::Rgb(255, 255, 0),     // Yellow
-            Color::Rgb(255, 0, 0),       // Red
+            Color::Rgb(255, 255, 0), // Yellow
+            Color::Rgb(255, 0, 0),   // Red
             GradientDirection::Vertical,
         )
         .with_stop(0.5, Color::Rgb(255, 128, 0)) // Orange
@@ -347,8 +347,8 @@ impl Gradients {
     /// Forest gradient (light green to dark green)
     pub fn forest() -> Gradient {
         Gradient::linear(
-            Color::Rgb(144, 238, 144),   // Light green
-            Color::Rgb(34, 139, 34),     // Dark green
+            Color::Rgb(144, 238, 144), // Light green
+            Color::Rgb(34, 139, 34),   // Dark green
             GradientDirection::Vertical,
         )
     }
@@ -356,8 +356,8 @@ impl Gradients {
     /// Monochrome gradient (white to black)
     pub fn monochrome() -> Gradient {
         Gradient::linear(
-            Color::Rgb(255, 255, 255),   // White
-            Color::Rgb(0, 0, 0),         // Black
+            Color::Rgb(255, 255, 255), // White
+            Color::Rgb(0, 0, 0),       // Black
             GradientDirection::Horizontal,
         )
     }

@@ -413,11 +413,7 @@ fn test_filetree_node_file_creation() {
 
 #[test]
 fn test_filetree_node_directory_creation() {
-    let node = FileTreeNode::directory(
-        PathBuf::from("/home/user/src"),
-        "src".to_string(),
-        0,
-    );
+    let node = FileTreeNode::directory(PathBuf::from("/home/user/src"), "src".to_string(), 0);
 
     assert_eq!(node.name, "src");
     assert_eq!(node.node_type, FileTreeNodeType::Directory);

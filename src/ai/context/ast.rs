@@ -288,8 +288,8 @@ mod tests {
 
     #[test]
     fn test_import_creation() {
-        let import = Import::new("os", 1)
-            .with_items(vec!["path".to_string(), "getcwd".to_string()]);
+        let import =
+            Import::new("os", 1).with_items(vec!["path".to_string(), "getcwd".to_string()]);
 
         assert_eq!(import.module, "os");
         assert_eq!(import.items.len(), 2);

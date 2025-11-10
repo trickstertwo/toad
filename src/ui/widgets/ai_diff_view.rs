@@ -232,20 +232,30 @@ impl AIDiffView {
                 }
 
                 // Parse hunk header to get line numbers
-                if let Some((old_part, new_part)) = line.split_once("@@").and_then(|(_, rest)| {
-                    rest.trim().split_once("@@").map(|(header, _)| header)
-                }).and_then(|header| {
-                    let parts: Vec<&str> = header.split_whitespace().collect();
-                    if parts.len() >= 2 {
-                        Some((parts[0], parts[1]))
-                    } else {
-                        None
-                    }
-                }) {
-                    old_line = old_part.trim_start_matches('-').split(',').next()
-                        .and_then(|s| s.parse().ok()).unwrap_or(1);
-                    new_line = new_part.trim_start_matches('+').split(',').next()
-                        .and_then(|s| s.parse().ok()).unwrap_or(1);
+                if let Some((old_part, new_part)) = line
+                    .split_once("@@")
+                    .and_then(|(_, rest)| rest.trim().split_once("@@").map(|(header, _)| header))
+                    .and_then(|header| {
+                        let parts: Vec<&str> = header.split_whitespace().collect();
+                        if parts.len() >= 2 {
+                            Some((parts[0], parts[1]))
+                        } else {
+                            None
+                        }
+                    })
+                {
+                    old_line = old_part
+                        .trim_start_matches('-')
+                        .split(',')
+                        .next()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(1);
+                    new_line = new_part
+                        .trim_start_matches('+')
+                        .split(',')
+                        .next()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(1);
                 }
 
                 current_hunk = Some(DiffHunk::new(line));
@@ -403,9 +413,9 @@ impl Widget for &mut AIDiffView {
     fn render(self, area: Rect, buf: &mut Buffer) {
         // Split into header, diff view, footer
         let chunks = Layout::vertical([
-            Constraint::Length(3),  // Header
-            Constraint::Min(0),     // Diff view
-            Constraint::Length(3),  // Footer
+            Constraint::Length(3), // Header
+            Constraint::Min(0),    // Diff view
+            Constraint::Length(3), // Footer
         ])
         .split(area);
 
@@ -413,7 +423,12 @@ impl Widget for &mut AIDiffView {
         let (accepted, rejected, pending) = self.get_summary();
         let header_text = vec![Line::from(vec![
             Span::styled("File: ", Style::default().fg(Color::Gray)),
-            Span::styled(&self.file_path, Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                &self.file_path,
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw("  |  "),
             Span::styled(format!("✓ {}", accepted), Style::default().fg(Color::Green)),
             Span::raw(" "),
@@ -422,52 +437,74 @@ impl Widget for &mut AIDiffView {
             Span::styled(format!("? {}", pending), Style::default().fg(Color::Yellow)),
         ])];
 
-        let header = Paragraph::new(header_text)
-            .block(Block::default().borders(Borders::ALL).title("AI Proposed Changes"));
+        let header = Paragraph::new(header_text).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("AI Proposed Changes"),
+        );
         header.render(chunks[0], buf);
 
         // Render diff hunks
         if !self.hunks.is_empty() {
-            let items: Vec<ListItem> = self.hunks.iter().map(|hunk| {
-                let mut lines = vec![Line::from(vec![
-                    Span::styled(&hunk.header, Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-                ])];
+            let items: Vec<ListItem> = self
+                .hunks
+                .iter()
+                .map(|hunk| {
+                    let mut lines = vec![Line::from(vec![Span::styled(
+                        &hunk.header,
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    )])];
 
-                // Add lines from hunk
-                for line in &hunk.lines {
-                    let prefix = match line.line_type {
-                        AIDiffLineType::Addition => "+",
-                        AIDiffLineType::Deletion => "-",
-                        AIDiffLineType::Context => " ",
-                    };
+                    // Add lines from hunk
+                    for line in &hunk.lines {
+                        let prefix = match line.line_type {
+                            AIDiffLineType::Addition => "+",
+                            AIDiffLineType::Deletion => "-",
+                            AIDiffLineType::Context => " ",
+                        };
 
-                    let mut style = Style::default().fg(line.line_type.color());
-                    if let Some(bg) = line.line_type.bg_color() {
-                        style = style.bg(bg);
+                        let mut style = Style::default().fg(line.line_type.color());
+                        if let Some(bg) = line.line_type.bg_color() {
+                            style = style.bg(bg);
+                        }
+
+                        lines.push(Line::from(vec![
+                            Span::styled(prefix, style),
+                            Span::styled(&line.content, style),
+                        ]));
                     }
 
-                    lines.push(Line::from(vec![
-                        Span::styled(prefix, style),
-                        Span::styled(&line.content, style),
-                    ]));
-                }
+                    // Add status indicator
+                    let status = if hunk.accepted {
+                        Span::styled(
+                            " [ACCEPTED]",
+                            Style::default()
+                                .fg(Color::Green)
+                                .add_modifier(Modifier::BOLD),
+                        )
+                    } else if hunk.rejected {
+                        Span::styled(
+                            " [REJECTED]",
+                            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+                        )
+                    } else {
+                        Span::styled(" [PENDING]", Style::default().fg(Color::Yellow))
+                    };
+                    lines.push(Line::from(vec![status]));
 
-                // Add status indicator
-                let status = if hunk.accepted {
-                    Span::styled(" [ACCEPTED]", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD))
-                } else if hunk.rejected {
-                    Span::styled(" [REJECTED]", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD))
-                } else {
-                    Span::styled(" [PENDING]", Style::default().fg(Color::Yellow))
-                };
-                lines.push(Line::from(vec![status]));
-
-                ListItem::new(lines)
-            }).collect();
+                    ListItem::new(lines)
+                })
+                .collect();
 
             let list = List::new(items)
                 .block(Block::default().borders(Borders::ALL).title("Changes"))
-                .highlight_style(Style::default().bg(Color::DarkGray).add_modifier(Modifier::BOLD));
+                .highlight_style(
+                    Style::default()
+                        .bg(Color::DarkGray)
+                        .add_modifier(Modifier::BOLD),
+                );
 
             StatefulWidget::render(list, chunks[1], buf, &mut self.list_state);
         }

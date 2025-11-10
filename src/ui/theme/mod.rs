@@ -308,11 +308,7 @@ mod tests {
             accent: (100, 150, 200),
         };
 
-        let theme = CustomTheme::new(
-            "TestTheme".to_string(),
-            "A test theme".to_string(),
-            colors,
-        );
+        let theme = CustomTheme::new("TestTheme".to_string(), "A test theme".to_string(), colors);
 
         assert_eq!(theme.name(), "TestTheme");
         assert_eq!(theme.description(), "A test theme");
@@ -667,11 +663,7 @@ mod tests {
             accent: (100, 150, 200),
         };
 
-        let theme = CustomTheme::new(
-            "Original".to_string(),
-            "Original theme".to_string(),
-            colors,
-        );
+        let theme = CustomTheme::new("Original".to_string(), "Original theme".to_string(), colors);
 
         let cloned = theme.clone();
         assert_eq!(cloned.name(), theme.name());

@@ -114,10 +114,7 @@ impl DataSeries {
     /// assert_eq!(series.min(), Some(1.0));
     /// ```
     pub fn min(&self) -> Option<f64> {
-        self.data
-            .iter()
-            .copied()
-            .min_by(|a, b| a.total_cmp(b))
+        self.data.iter().copied().min_by(|a, b| a.total_cmp(b))
     }
 
     /// Get maximum value
@@ -131,10 +128,7 @@ impl DataSeries {
     /// assert_eq!(series.max(), Some(3.0));
     /// ```
     pub fn max(&self) -> Option<f64> {
-        self.data
-            .iter()
-            .copied()
-            .max_by(|a, b| a.total_cmp(b))
+        self.data.iter().copied().max_by(|a, b| a.total_cmp(b))
     }
 }
 
@@ -461,4 +455,3 @@ impl Widget for &LineChart {
         }
     }
 }
-

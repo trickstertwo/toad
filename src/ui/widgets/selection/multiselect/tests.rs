@@ -1,8 +1,8 @@
 //! Multiselect widget tests
 
-    use super::*;
+use super::*;
 
-    #[test]
+#[test]
 fn test_multiselect_creation() {
     let select = MultiSelect::new(vec!["a", "b", "c"]);
     assert_eq!(select.item_count(), 3);
@@ -270,13 +270,7 @@ fn test_multiselect_japanese() {
 
 #[test]
 fn test_multiselect_mixed_scripts() {
-    let mut select = MultiSelect::new(vec![
-        "Hello",
-        "مرحبا",
-        "שלום",
-        "こんにちは",
-        "🚀",
-    ]);
+    let mut select = MultiSelect::new(vec!["Hello", "مرحبا", "שלום", "こんにちは", "🚀"]);
     select.select_all();
     assert_eq!(select.selected_count(), 5);
 }
@@ -618,8 +612,8 @@ fn test_toggle_current_with_navigation() {
 
 #[test]
 fn test_range_selection_multiple_ranges() {
-    let mut select = MultiSelect::new(vec!["a", "b", "c", "d", "e", "f"])
-        .with_mode(SelectionMode::Range);
+    let mut select =
+        MultiSelect::new(vec!["a", "b", "c", "d", "e", "f"]).with_mode(SelectionMode::Range);
 
     select.select(1);
     select.select(3);

@@ -501,12 +501,11 @@ fn test_git_graph_compact_mode_with_many_commits() {
 
     for i in 0..50 {
         graph.add_commit(
-            GitCommit::new(format!("c{}", i), format!("Commit {}", i))
-                .with_parent(if i > 0 {
-                    format!("c{}", i - 1)
-                } else {
-                    String::new()
-                }),
+            GitCommit::new(format!("c{}", i), format!("Commit {}", i)).with_parent(if i > 0 {
+                format!("c{}", i - 1)
+            } else {
+                String::new()
+            }),
         );
     }
 
@@ -521,12 +520,11 @@ fn test_git_graph_non_compact_mode_with_many_commits() {
 
     for i in 0..50 {
         graph.add_commit(
-            GitCommit::new(format!("c{}", i), format!("Commit {}", i))
-                .with_parent(if i > 0 {
-                    format!("c{}", i - 1)
-                } else {
-                    String::new()
-                }),
+            GitCommit::new(format!("c{}", i), format!("Commit {}", i)).with_parent(if i > 0 {
+                format!("c{}", i - 1)
+            } else {
+                String::new()
+            }),
         );
     }
 

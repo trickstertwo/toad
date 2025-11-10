@@ -12,14 +12,14 @@
 //! assert!(tip.is_some());
 //! ```
 
-use std::time::{SystemTime, UNIX_EPOCH};
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Clear, Paragraph, Wrap, Widget},
+    widgets::{Block, Borders, Clear, Paragraph, Widget, Wrap},
 };
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Startup tips widget
 ///
@@ -254,11 +254,16 @@ impl Widget for &StartupTips {
                     Span::styled("💡 ", Style::default().fg(Color::Yellow)),
                     Span::styled(
                         &tip.title,
-                        Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
                     ),
                 ]),
                 Line::from(""),
-                Line::from(Span::styled(&tip.description, Style::default().fg(Color::White))),
+                Line::from(Span::styled(
+                    &tip.description,
+                    Style::default().fg(Color::White),
+                )),
             ];
 
             if let Some(keybinding) = &tip.keybinding {
@@ -270,12 +275,10 @@ impl Widget for &StartupTips {
             }
 
             lines.push(Line::from(""));
-            lines.push(Line::from(vec![
-                Span::styled(
-                    format!("Tip {} of {}", self.current + 1, self.tips.len()),
-                    Style::default().fg(Color::DarkGray),
-                ),
-            ]));
+            lines.push(Line::from(vec![Span::styled(
+                format!("Tip {} of {}", self.current + 1, self.tips.len()),
+                Style::default().fg(Color::DarkGray),
+            )]));
 
             let para = Paragraph::new(lines)
                 .block(

@@ -13,8 +13,7 @@ use serde::{Deserialize, Serialize};
 use crate::ui::theme::ToadTheme;
 
 /// Line chart style
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum LineStyle {
     /// Solid line
     #[default]
@@ -26,7 +25,6 @@ pub enum LineStyle {
     /// Stepped line
     Stepped,
 }
-
 
 /// Line chart for time-series data
 #[derive(Debug, Clone)]
@@ -251,8 +249,7 @@ impl LineChart {
 }
 
 /// Bar chart orientation
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum BarOrientation {
     /// Vertical bars (default)
     #[default]
@@ -260,7 +257,6 @@ pub enum BarOrientation {
     /// Horizontal bars
     Horizontal,
 }
-
 
 /// Bar chart for comparison data
 #[derive(Debug, Clone)]
@@ -602,4 +598,3 @@ impl ScatterPlot {
         frame.render_widget(paragraph, area);
     }
 }
-

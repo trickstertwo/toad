@@ -54,12 +54,6 @@ impl App {
                 "clear" => {
                     self.status_message = "Screen cleared".to_string();
                 }
-                "toad" => {
-                    use crate::core::app_state::AppScreen;
-                    self.screen = AppScreen::PSXFrogger;
-                    self.psx_frogger.reset();
-                    self.status_message = "🐸 PSX FROGGER - Let's hop! 🐸".to_string();
-                }
                 _ => {
                     self.status_message = format!("Unknown command: /{}", command);
                 }
@@ -92,9 +86,8 @@ impl App {
                         self.toast_error(format!("Command error: {}", e));
                         self.status_message = format!("Error: {}", e);
                     } else {
-                        // Regular query/request
-                        self.status_message = format!("Processing: {}", input);
-                        self.toast_info("AI query processing coming soon");
+                        // Regular AI query/request
+                        self.process_ai_query(input.to_string());
                     }
                 }
             }
@@ -281,7 +274,11 @@ mod tests {
         let mut app = App::new();
         let initial = app.vim_mode();
         app.execute_palette_command("vim_mode");
-        assert_ne!(app.vim_mode(), initial, "Palette command should toggle vim mode");
+        assert_ne!(
+            app.vim_mode(),
+            initial,
+            "Palette command should toggle vim mode"
+        );
     }
 
     #[test]

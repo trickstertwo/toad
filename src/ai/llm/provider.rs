@@ -175,8 +175,7 @@ impl LLMProvider {
                     .clone()
                     .unwrap_or_else(|| "http://localhost:11434".to_string());
 
-                let mut client = OllamaClient::new(&config.model)
-                    .with_base_url(base_url);
+                let mut client = OllamaClient::new(&config.model).with_base_url(base_url);
 
                 if let Some(temp) = config.temperature {
                     client = client.with_temperature(temp);
@@ -235,8 +234,7 @@ mod tests {
 
     #[test]
     fn test_github_config() {
-        let config = ProviderConfig::github("gpt-4o")
-            .with_api_key("ghp_test123");
+        let config = ProviderConfig::github("gpt-4o").with_api_key("ghp_test123");
 
         assert_eq!(config.provider, ProviderType::GitHub);
         assert_eq!(config.model, "gpt-4o");
@@ -245,8 +243,7 @@ mod tests {
 
     #[test]
     fn test_ollama_config() {
-        let config = ProviderConfig::ollama("llama2")
-            .with_base_url("http://192.168.1.100:11434");
+        let config = ProviderConfig::ollama("llama2").with_base_url("http://192.168.1.100:11434");
 
         assert_eq!(config.provider, ProviderType::Ollama);
         assert_eq!(config.model, "llama2");

@@ -395,7 +395,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_sequenced_mock_exhaustion() {
-        let client = MockResponseBuilder::new().with_text("Only response").build();
+        let client = MockResponseBuilder::new()
+            .with_text("Only response")
+            .build();
 
         // First call returns response
         let response1 = client

@@ -1,13 +1,8 @@
 /// Panel widget with focus indication
 ///
 /// Provides a container with borders that change appearance based on focus state
-use crate::ui::theme::ToadTheme;
-use ratatui::{
-    Frame,
-    layout::Rect,
-    style::{Modifier, Style},
-    widgets::{Block, Borders},
-};
+use crate::ui::{atoms::block::Block as AtomBlock, theme::ToadTheme};
+use ratatui::{layout::Rect, style::{Modifier, Style}, widgets::Borders, Frame};
 
 /// A panel widget that can be focused
 #[derive(Debug, Clone)]
@@ -43,14 +38,15 @@ impl Panel {
     }
 
     /// Get the block widget for this panel
-    pub fn block(&self) -> Block<'_> {
-        let block = Block::default()
+    pub fn block(&self) -> ratatui::widgets::Block<'_> {
+        // Use Block atom to create the border
+        let block_atom = AtomBlock::new()
             .borders(self.borders)
-            .title(self.title.clone());
+            .title(&self.title);
 
-        if self.is_focused {
+        let block_atom = if self.is_focused {
             // Focused panel: bright green border with bold title
-            block
+            block_atom
                 .border_style(Style::default().fg(ToadTheme::TOAD_GREEN_BRIGHT))
                 .title_style(
                     Style::default()
@@ -59,10 +55,12 @@ impl Panel {
                 )
         } else {
             // Unfocused panel: dimmer border
-            block
+            block_atom
                 .border_style(Style::default().fg(ToadTheme::BORDER))
                 .title_style(Style::default().fg(ToadTheme::GRAY))
-        }
+        };
+
+        block_atom.to_ratatui()
     }
 
     /// Render the panel (just the border, content should be rendered separately)
@@ -227,9 +225,7 @@ mod tests {
     // Builder Pattern
     #[test]
     fn test_panel_builder_chaining() {
-        let panel = Panel::new("Complete")
-            .focused(true)
-            .borders(Borders::ALL);
+        let panel = Panel::new("Complete").focused(true).borders(Borders::ALL);
 
         assert_eq!(panel.title, "Complete");
         assert!(panel.is_focused);
@@ -383,7 +379,10 @@ mod tests {
 
         assert_eq!(panel.title, "🎨 Complex Panel 日本語 🔧");
         assert!(panel.is_focused);
-        assert_eq!(panel.borders, Borders::TOP | Borders::BOTTOM | Borders::LEFT);
+        assert_eq!(
+            panel.borders,
+            Borders::TOP | Borders::BOTTOM | Borders::LEFT
+        );
 
         let area = Rect::new(10, 20, 200, 100);
         let inner = panel.inner(area);

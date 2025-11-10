@@ -92,11 +92,7 @@ impl RaceResult {
     /// Returns negative duration if racing was actually slower (overhead).
     pub fn latency_improvement(&self) -> Option<Duration> {
         // Find slowest completion time
-        let slowest = self
-            .all_latencies
-            .iter()
-            .filter_map(|l| *l)
-            .max()?;
+        let slowest = self.all_latencies.iter().filter_map(|l| *l).max()?;
 
         Some(slowest.saturating_sub(self.race_duration))
     }
@@ -197,7 +193,10 @@ impl RacingClient {
     /// # }
     /// ```
     pub fn new(models: Vec<Arc<dyn LLMClient>>) -> Self {
-        assert!(!models.is_empty(), "RacingClient requires at least one model");
+        assert!(
+            !models.is_empty(),
+            "RacingClient requires at least one model"
+        );
 
         let model_names = models.iter().map(|m| m.model_name().to_string()).collect();
 
@@ -336,8 +335,8 @@ impl RacingClient {
         let race_duration = start_time.elapsed();
 
         // Extract winner or return error
-        let (winner_index, response, winner_latency) = winner
-            .context("All models failed during race")?;
+        let (winner_index, response, winner_latency) =
+            winner.context("All models failed during race")?;
 
         // Build race result
         let mut all_costs = vec![0.0; self.models.len()];
@@ -438,13 +437,13 @@ mod tests {
         let fast = Arc::new(
             MockResponseBuilder::new()
                 .with_text("Fast response")
-                .build()
+                .build(),
         );
 
         let slow = Arc::new(
             MockResponseBuilder::new()
                 .with_text("Slow response")
-                .build()
+                .build(),
         );
 
         let racing = RacingClient::new(vec![fast, slow]);
@@ -481,7 +480,11 @@ mod tests {
         // Wasted cost is sum of costs from models 1 and 2 (not winner)
         // Use epsilon comparison for floating point
         let wasted = result.total_wasted_cost();
-        assert!((wasted - 0.0008).abs() < 1e-10, "Expected 0.0008, got {}", wasted);
+        assert!(
+            (wasted - 0.0008).abs() < 1e-10,
+            "Expected 0.0008, got {}",
+            wasted
+        );
     }
 
     #[tokio::test]
@@ -512,9 +515,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_selection_strategy_variants() {
-        assert_eq!(SelectionStrategy::FirstComplete, SelectionStrategy::FirstComplete);
-        assert_ne!(SelectionStrategy::FirstComplete, SelectionStrategy::HighestQuality);
-        assert_ne!(SelectionStrategy::FirstComplete, SelectionStrategy::LowestCost);
+        assert_eq!(
+            SelectionStrategy::FirstComplete,
+            SelectionStrategy::FirstComplete
+        );
+        assert_ne!(
+            SelectionStrategy::FirstComplete,
+            SelectionStrategy::HighestQuality
+        );
+        assert_ne!(
+            SelectionStrategy::FirstComplete,
+            SelectionStrategy::LowestCost
+        );
     }
 
     #[tokio::test]

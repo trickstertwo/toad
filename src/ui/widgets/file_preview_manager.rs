@@ -19,17 +19,16 @@
 //! # }
 //! ```
 
-use crate::ui::syntax::Language;
+use crate::{services::FilesystemService, ui::syntax::Language};
 use anyhow::Result;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap, Widget},
+    widgets::{Block, Borders, Paragraph, Widget, Wrap},
 };
 use std::path::{Path, PathBuf};
-use tokio::fs;
 
 /// File preview state
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -76,6 +75,8 @@ pub struct FilePreviewManager {
     max_size: usize,
     /// Whether file was truncated
     truncated: bool,
+    /// Filesystem service for I/O operations
+    fs_service: FilesystemService,
 }
 
 impl FilePreviewManager {
@@ -100,6 +101,7 @@ impl FilePreviewManager {
             language: Language::PlainText,
             max_size: 1024 * 1024, // 1MB default
             truncated: false,
+            fs_service: FilesystemService::new(),
         }
     }
 
@@ -125,14 +127,11 @@ impl FilePreviewManager {
         self.truncated = false;
 
         // Detect language from extension
-        self.language = Language::from_extension(
-            path.extension()
-                .and_then(|s| s.to_str())
-                .unwrap_or(""),
-        );
+        self.language =
+            Language::from_extension(path.extension().and_then(|s| s.to_str()).unwrap_or(""));
 
-        // Check file size
-        match fs::metadata(path).await {
+        // Check file size using FilesystemService
+        match self.fs_service.read_file_metadata(path).await {
             Ok(metadata) => {
                 let size = metadata.len() as usize;
                 if size > self.max_size {
@@ -150,8 +149,8 @@ impl FilePreviewManager {
                         }
                     }
                 } else {
-                    // Normal load
-                    match fs::read_to_string(path).await {
+                    // Normal load using FilesystemService
+                    match self.fs_service.read_file_to_string(path).await {
                         Ok(content) => {
                             self.content = content;
                             self.state = PreviewState::Loaded;
@@ -176,7 +175,7 @@ impl FilePreviewManager {
 
     /// Load partial file content
     async fn load_partial(&self, path: &Path, max_bytes: usize) -> Result<String> {
-        let bytes = fs::read(path).await?;
+        let bytes = self.fs_service.read_file(path).await?;
         let truncated_bytes = &bytes[..max_bytes.min(bytes.len())];
 
         // Try to convert to string, replacing invalid UTF-8
@@ -296,11 +295,7 @@ impl Widget for &FilePreviewManager {
                     Language::PlainText => String::new(),
                     lang => format!("[{:?}] ", lang),
                 },
-                if self.truncated {
-                    "[TRUNCATED]"
-                } else {
-                    ""
-                }
+                if self.truncated { "[TRUNCATED]" } else { "" }
             )
         } else {
             String::from("Preview")
@@ -318,18 +313,21 @@ impl Widget for &FilePreviewManager {
         // Render based on state
         match self.state {
             PreviewState::Empty => {
-                let para = Paragraph::new("No file selected").block(block)
+                let para = Paragraph::new("No file selected")
+                    .block(block)
                     .style(Style::default().fg(Color::Gray));
                 para.render(area, buf);
             }
             PreviewState::Loading => {
-                let para = Paragraph::new("Loading...").block(block)
+                let para = Paragraph::new("Loading...")
+                    .block(block)
                     .style(Style::default().fg(Color::Yellow));
                 para.render(area, buf);
             }
             PreviewState::Error => {
                 let error_text = self.error.as_deref().unwrap_or("Unknown error");
-                let para = Paragraph::new(error_text).block(block)
+                let para = Paragraph::new(error_text)
+                    .block(block)
                     .style(Style::default().fg(Color::Red))
                     .wrap(Wrap { trim: false });
                 para.render(area, buf);
@@ -387,6 +385,7 @@ impl FilePreviewManager {
 mod tests {
     use super::*;
     use tempfile::TempDir;
+    use tokio::fs;
 
     #[test]
     fn test_file_preview_manager_new() {

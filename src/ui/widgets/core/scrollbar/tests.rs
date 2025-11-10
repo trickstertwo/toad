@@ -1,8 +1,8 @@
 //! Scrollbar widget tests
 
-    use super::*;
+use super::*;
 
-    #[test]
+#[test]
 fn test_scrollbar_state_creation() {
     let state = ScrollbarState::new(100, 10, 20);
     assert_eq!(state.total, 100);
@@ -252,9 +252,7 @@ fn test_scrollbar_unicode_thumb_char() {
 #[test]
 fn test_scrollbar_emoji_characters() {
     let state = ScrollbarState::new(100, 0, 20);
-    let scrollbar = Scrollbar::vertical(state)
-        .track_char('🌫')
-        .thumb_char('🐸');
+    let scrollbar = Scrollbar::vertical(state).track_char('🌫').thumb_char('🐸');
 
     assert_eq!(scrollbar.track_char, '🌫');
     assert_eq!(scrollbar.thumb_char, '🐸');
@@ -342,9 +340,18 @@ fn test_scrollbar_orientation_debug() {
 
 #[test]
 fn test_scrollbar_orientation_partial_eq() {
-    assert_eq!(ScrollbarOrientation::Vertical, ScrollbarOrientation::Vertical);
-    assert_eq!(ScrollbarOrientation::Horizontal, ScrollbarOrientation::Horizontal);
-    assert_ne!(ScrollbarOrientation::Vertical, ScrollbarOrientation::Horizontal);
+    assert_eq!(
+        ScrollbarOrientation::Vertical,
+        ScrollbarOrientation::Vertical
+    );
+    assert_eq!(
+        ScrollbarOrientation::Horizontal,
+        ScrollbarOrientation::Horizontal
+    );
+    assert_ne!(
+        ScrollbarOrientation::Vertical,
+        ScrollbarOrientation::Horizontal
+    );
 }
 
 #[test]
@@ -430,12 +437,12 @@ fn test_scrollbar_orientation_switching() {
 fn test_scrollbar_edge_case_combinations() {
     // Test various edge case combinations
     let test_cases = vec![
-        (0, 0, 0),     // All zeros
-        (1, 0, 1),     // Single item
-        (10, 0, 10),   // Exact fit
-        (10, 0, 20),   // Viewport larger
-        (100, 0, 1),   // Minimal viewport
-        (100, 99, 1),  // Position near end
+        (0, 0, 0),    // All zeros
+        (1, 0, 1),    // Single item
+        (10, 0, 10),  // Exact fit
+        (10, 0, 20),  // Viewport larger
+        (100, 0, 1),  // Minimal viewport
+        (100, 99, 1), // Position near end
     ];
 
     for (total, position, viewport) in test_cases {
@@ -815,9 +822,7 @@ fn test_scrollbar_builder_same_char_track_thumb() {
     let state = ScrollbarState::new(100, 50, 10);
 
     // When track and thumb use same character
-    let scrollbar = Scrollbar::vertical(state)
-        .track_char('█')
-        .thumb_char('█');
+    let scrollbar = Scrollbar::vertical(state).track_char('█').thumb_char('█');
 
     assert_eq!(scrollbar.track_char, scrollbar.thumb_char);
 }
@@ -904,13 +909,9 @@ fn test_comprehensive_scrollbar_stress() {
         let state = ScrollbarState::new(10000, position, 100);
 
         if i % 2 == 0 {
-            scrollbar = Scrollbar::vertical(state)
-                .track_char('│')
-                .thumb_char('█');
+            scrollbar = Scrollbar::vertical(state).track_char('│').thumb_char('█');
         } else {
-            scrollbar = Scrollbar::horizontal(state)
-                .track_char('─')
-                .thumb_char('█');
+            scrollbar = Scrollbar::horizontal(state).track_char('─').thumb_char('█');
         }
 
         assert_eq!(scrollbar.state().position, position);
@@ -941,7 +942,10 @@ fn test_comprehensive_scrollbar_stress() {
         .track_char('.')
         .thumb_char('#');
 
-    assert_eq!(final_scrollbar.orientation, ScrollbarOrientation::Horizontal);
+    assert_eq!(
+        final_scrollbar.orientation,
+        ScrollbarOrientation::Horizontal
+    );
     assert!(!final_scrollbar.show_track);
     assert_eq!(final_scrollbar.track_char, '.');
     assert_eq!(final_scrollbar.thumb_char, '#');

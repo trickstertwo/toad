@@ -159,9 +159,10 @@ impl LiveGraph {
         // Check update frequency
         if let UpdateFrequency::Interval(interval) = self.update_frequency
             && let Some(last) = self.last_update
-                && last.elapsed() < interval {
-                    return; // Skip this update
-                }
+            && last.elapsed() < interval
+        {
+            return; // Skip this update
+        }
 
         let point = DataPoint::new(value);
         self.data.push_back(point);

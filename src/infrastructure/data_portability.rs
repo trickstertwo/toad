@@ -21,7 +21,7 @@
 //! ```
 
 use anyhow::{Context, Result};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use std::path::Path;
 use tokio::fs;
 
@@ -114,9 +114,7 @@ impl DataExporter {
     /// ```
     pub fn export<T: Serialize>(&self, data: &T, format: DataFormat) -> Result<String> {
         match format {
-            DataFormat::Json => {
-                serde_json::to_string(data).context("Failed to serialize to JSON")
-            }
+            DataFormat::Json => serde_json::to_string(data).context("Failed to serialize to JSON"),
             DataFormat::JsonPretty => {
                 serde_json::to_string_pretty(data).context("Failed to serialize to pretty JSON")
             }
@@ -228,9 +226,7 @@ impl DataImporter {
             DataFormat::Json | DataFormat::JsonPretty => {
                 serde_json::from_str(content).context("Failed to deserialize from JSON")
             }
-            DataFormat::Toml => {
-                toml::from_str(content).context("Failed to deserialize from TOML")
-            }
+            DataFormat::Toml => toml::from_str(content).context("Failed to deserialize from TOML"),
             DataFormat::Csv => {
                 anyhow::bail!("CSV import requires using import_csv_records")
             }

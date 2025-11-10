@@ -12,8 +12,8 @@
 //! progress.add_stage("Test", 5);
 //! ```
 
-mod state;
 mod render;
+mod state;
 #[cfg(test)]
 mod tests;
 

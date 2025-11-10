@@ -131,20 +131,16 @@ impl Validator for LengthValidator {
         let len = input.len();
 
         if let Some(min) = self.min
-            && len < min {
-                return ValidationResult::Error(format!(
-                    "Input must be at least {} characters",
-                    min
-                ));
-            }
+            && len < min
+        {
+            return ValidationResult::Error(format!("Input must be at least {} characters", min));
+        }
 
         if let Some(max) = self.max
-            && len > max {
-                return ValidationResult::Error(format!(
-                    "Input must be at most {} characters",
-                    max
-                ));
-            }
+            && len > max
+        {
+            return ValidationResult::Error(format!("Input must be at most {} characters", max));
+        }
 
         ValidationResult::Valid
     }

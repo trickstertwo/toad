@@ -150,7 +150,11 @@ impl CalendarEvent {
     pub fn new(summary: impl Into<String>, start: DateTime<Utc>) -> Self {
         let now = Utc::now();
         let summary = summary.into();
-        let uid = format!("toad-{}-{}", start.timestamp(), Self::sanitize_uid(&summary));
+        let uid = format!(
+            "toad-{}-{}",
+            start.timestamp(),
+            Self::sanitize_uid(&summary)
+        );
 
         Self {
             uid,
@@ -336,7 +340,12 @@ impl CalendarExporter {
 
         // Start time
         if event.all_day {
-            writeln!(ical, "DTSTART;VALUE=DATE:{}", Self::format_date(&event.start)).unwrap();
+            writeln!(
+                ical,
+                "DTSTART;VALUE=DATE:{}",
+                Self::format_date(&event.start)
+            )
+            .unwrap();
         } else {
             writeln!(ical, "DTSTART:{}", Self::format_datetime(&event.start)).unwrap();
         }
@@ -380,7 +389,12 @@ impl CalendarExporter {
 
         // Created and modified timestamps
         writeln!(ical, "CREATED:{}", Self::format_datetime(&event.created)).unwrap();
-        writeln!(ical, "LAST-MODIFIED:{}", Self::format_datetime(&event.last_modified)).unwrap();
+        writeln!(
+            ical,
+            "LAST-MODIFIED:{}",
+            Self::format_datetime(&event.last_modified)
+        )
+        .unwrap();
 
         writeln!(ical, "END:VEVENT").unwrap();
     }
@@ -416,7 +430,8 @@ mod tests {
     use chrono::TimeZone;
 
     fn make_datetime(year: i32, month: u32, day: u32, hour: u32, min: u32) -> DateTime<Utc> {
-        Utc.with_ymd_and_hms(year, month, day, hour, min, 0).unwrap()
+        Utc.with_ymd_and_hms(year, month, day, hour, min, 0)
+            .unwrap()
     }
 
     #[test]
@@ -439,9 +454,18 @@ mod tests {
     fn test_recurrence_to_rrule() {
         assert_eq!(Recurrence::None.to_rrule(), None);
         assert_eq!(Recurrence::Daily.to_rrule(), Some("FREQ=DAILY".to_string()));
-        assert_eq!(Recurrence::Weekly.to_rrule(), Some("FREQ=WEEKLY".to_string()));
-        assert_eq!(Recurrence::Monthly.to_rrule(), Some("FREQ=MONTHLY".to_string()));
-        assert_eq!(Recurrence::Yearly.to_rrule(), Some("FREQ=YEARLY".to_string()));
+        assert_eq!(
+            Recurrence::Weekly.to_rrule(),
+            Some("FREQ=WEEKLY".to_string())
+        );
+        assert_eq!(
+            Recurrence::Monthly.to_rrule(),
+            Some("FREQ=MONTHLY".to_string())
+        );
+        assert_eq!(
+            Recurrence::Yearly.to_rrule(),
+            Some("FREQ=YEARLY".to_string())
+        );
         assert_eq!(
             Recurrence::Custom("FREQ=DAILY;COUNT=5".to_string()).to_rrule(),
             Some("FREQ=DAILY;COUNT=5".to_string())
@@ -499,8 +523,7 @@ mod tests {
     #[test]
     fn test_calendar_event_recurrence() {
         let start = make_datetime(2025, 11, 9, 10, 0);
-        let event = CalendarEvent::new("Daily Standup", start)
-            .recurrence(Recurrence::Daily);
+        let event = CalendarEvent::new("Daily Standup", start).recurrence(Recurrence::Daily);
 
         assert_eq!(event.recurrence, Recurrence::Daily);
     }
@@ -518,7 +541,10 @@ mod tests {
             .description("Personal tasks")
             .product_id("-//Custom//Product//EN");
 
-        assert_eq!(exporter.calendar_description, Some("Personal tasks".to_string()));
+        assert_eq!(
+            exporter.calendar_description,
+            Some("Personal tasks".to_string())
+        );
         assert_eq!(exporter.product_id, "-//Custom//Product//EN");
     }
 
@@ -574,8 +600,7 @@ mod tests {
     #[test]
     fn test_export_recurring_event() {
         let start = make_datetime(2025, 11, 9, 10, 0);
-        let event = CalendarEvent::new("Daily Standup", start)
-            .recurrence(Recurrence::Daily);
+        let event = CalendarEvent::new("Daily Standup", start).recurrence(Recurrence::Daily);
 
         let exporter = CalendarExporter::new("Test Calendar");
         let ical = exporter.export_events(&[event]);
@@ -598,8 +623,13 @@ mod tests {
 
     #[test]
     fn test_escape_text() {
-        let escaped = CalendarExporter::escape_text("Text with, commas; semicolons\nand newlines\\backslashes");
-        assert_eq!(escaped, "Text with\\, commas\\; semicolons\\nand newlines\\\\backslashes");
+        let escaped = CalendarExporter::escape_text(
+            "Text with, commas; semicolons\nand newlines\\backslashes",
+        );
+        assert_eq!(
+            escaped,
+            "Text with\\, commas\\; semicolons\\nand newlines\\\\backslashes"
+        );
     }
 
     #[test]
@@ -617,8 +647,7 @@ mod tests {
     #[test]
     fn test_event_status() {
         let start = make_datetime(2025, 11, 9, 10, 0);
-        let event = CalendarEvent::new("Tentative Meeting", start)
-            .status(EventStatus::Tentative);
+        let event = CalendarEvent::new("Tentative Meeting", start).status(EventStatus::Tentative);
 
         let exporter = CalendarExporter::new("Test Calendar");
         let ical = exporter.export_events(&[event]);

@@ -22,8 +22,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 /// Sparkline rendering style
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum SparklineStyle {
     /// Bar style using block characters
     #[default]
@@ -53,7 +52,6 @@ impl SparklineStyle {
         }
     }
 }
-
 
 impl fmt::Display for SparklineStyle {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

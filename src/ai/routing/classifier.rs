@@ -4,7 +4,6 @@
 /// - Easy: Single file, < 50 lines, simple operations
 /// - Medium: Multiple files, < 200 lines, moderate complexity
 /// - Hard: Large changes, complex logic, architecture decisions
-
 use crate::ai::evaluation::Task;
 use anyhow::Result;
 
@@ -55,7 +54,8 @@ impl TaskClassifier {
         let statement_length = problem.len();
 
         // Heuristic 2: File mentions (rough estimate)
-        let file_mentions = problem.matches(".py")
+        let file_mentions = problem
+            .matches(".py")
             .chain(problem.matches(".rs"))
             .chain(problem.matches(".js"))
             .chain(problem.matches(".ts"))

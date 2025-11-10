@@ -631,4 +631,3 @@ impl Default for SplitPane {
         Self::new(SplitDirection::Horizontal)
     }
 }
-

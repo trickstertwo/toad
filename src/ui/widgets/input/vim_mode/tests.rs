@@ -1,9 +1,9 @@
 //! Vim mode tests
 
+use super::*;
 use ratatui::style::Color;
-    use super::*;
 
-    #[test]
+#[test]
 fn test_edit_mode_default() {
     assert_eq!(EditMode::default(), EditMode::Normal);
 }

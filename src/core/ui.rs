@@ -35,9 +35,6 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         AppScreen::Evaluation => {
             render_evaluation(app, frame, area);
         }
-        AppScreen::PSXFrogger => {
-            render_psx_frogger(app, frame, area);
-        }
     }
 }
 
@@ -96,59 +93,9 @@ fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
 }
 
 /// Render the main content area
-fn render_main_content(_app: &mut App, frame: &mut Frame, area: Rect) {
-    let content_block = Block::default()
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(ToadTheme::BORDER))
-        .title("Main Content")
-        .title_style(Style::default().fg(ToadTheme::TOAD_GREEN));
-
-    let welcome_text = vec![
-        Line::from(vec![
-            Span::styled("Welcome to ", Style::default().fg(ToadTheme::FOREGROUND)),
-            Span::styled(
-                "Toad",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
-                    .add_modifier(Modifier::BOLD),
-            ),
-        ]),
-        Line::from(""),
-        Line::from(Span::styled(
-            "An AI-powered coding terminal with semi-autonomous agents",
-            Style::default().fg(ToadTheme::GRAY),
-        )),
-        Line::from(""),
-        Line::from(vec![
-            Span::styled("Built with ", Style::default().fg(ToadTheme::FOREGROUND)),
-            Span::styled(
-                "Rust",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(" + ", Style::default().fg(ToadTheme::FOREGROUND)),
-            Span::styled(
-                "Ratatui",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(" + ", Style::default().fg(ToadTheme::FOREGROUND)),
-            Span::styled(
-                "Crossterm",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_DARK)
-                    .add_modifier(Modifier::BOLD),
-            ),
-        ]),
-    ];
-
-    let paragraph = Paragraph::new(welcome_text)
-        .block(content_block)
-        .alignment(Alignment::Center);
-
-    frame.render_widget(paragraph, area);
+fn render_main_content(app: &mut App, frame: &mut Frame, area: Rect) {
+    // Render conversation view
+    app.conversation_view().render(frame, area);
 }
 
 /// Render the metadata line (path on left, model info on right)
@@ -257,15 +204,16 @@ fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
             ]));
 
             if let Some(step) = progress.current_step
-                && let Some(max_steps) = progress.max_steps {
-                    lines.push(Line::from(vec![
-                        Span::styled("Agent Step: ", Style::default().fg(ToadTheme::GRAY)),
-                        Span::styled(
-                            format!("{}/{}", step, max_steps),
-                            Style::default().fg(ToadTheme::BLUE),
-                        ),
-                    ]));
-                }
+                && let Some(max_steps) = progress.max_steps
+            {
+                lines.push(Line::from(vec![
+                    Span::styled("Agent Step: ", Style::default().fg(ToadTheme::GRAY)),
+                    Span::styled(
+                        format!("{}/{}", step, max_steps),
+                        Style::default().fg(ToadTheme::BLUE),
+                    ),
+                ]));
+            }
 
             if let Some(tool) = &progress.last_tool {
                 lines.push(Line::from(vec![
@@ -404,30 +352,4 @@ fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
 
     // Render toasts on top
     app.toasts_mut().render(frame, area);
-}
-
-/// Render the PSX Frogger game screen
-fn render_psx_frogger(app: &mut App, frame: &mut Frame, area: Rect) {
-    // Simple full-screen game layout
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Min(0),    // Game area
-            Constraint::Length(1), // Status bar
-        ])
-        .split(area);
-
-    // Render the game widget
-    frame.render_widget(app.psx_frogger(), chunks[0]);
-
-    // Render status bar
-    let status_line = Line::from(vec![
-        Span::styled(" ", Style::default()),
-        Span::styled(
-            app.status_message(),
-            Style::default().fg(ToadTheme::FOREGROUND),
-        ),
-    ]);
-    let status_paragraph = Paragraph::new(status_line);
-    frame.render_widget(status_paragraph, chunks[1]);
 }

@@ -1,8 +1,8 @@
 /// Scrollbar widget for visual scroll indicators
 ///
 /// Displays a vertical or horizontal scrollbar with track and thumb
-use crate::ui::theme::ToadTheme;
-use ratatui::{Frame, layout::Rect, style::Style, widgets::Block};
+use crate::ui::{atoms::block::Block as AtomBlock, theme::ToadTheme};
+use ratatui::{layout::Rect, style::Style, Frame};
 
 /// Scrollbar orientation
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -173,8 +173,8 @@ impl Scrollbar {
                 Style::default().fg(ToadTheme::DARK_GRAY)
             };
 
-            // Render using a Block widget (simplified approach)
-            let block = Block::default().style(style);
+            // Render using Block atom (simplified approach)
+            let block = AtomBlock::new().style(style).to_ratatui();
             let rect = Rect::new(area.x, area.y + y as u16, area.width, 1);
 
             // Draw the character (using ratatui's low-level buffer access would be better,
@@ -214,11 +214,10 @@ impl Scrollbar {
                 Style::default().fg(ToadTheme::DARK_GRAY)
             };
 
-            let block = Block::default().style(style);
+            let block = AtomBlock::new().style(style).to_ratatui();
             let rect = Rect::new(area.x + x as u16, area.y, 1, area.height);
 
             frame.render_widget(block, rect);
         }
     }
 }
-

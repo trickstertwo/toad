@@ -787,8 +787,8 @@ mod tests {
 
     #[test]
     fn test_fixed_size_very_large_u16_max() {
-        let split = SplitPane::new(SplitDirection::Horizontal)
-            .with_split_size(SplitSize::Fixed(u16::MAX));
+        let split =
+            SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Fixed(u16::MAX));
 
         let area = Rect::new(0, 0, 100, 50);
         let (left, right) = split.calculate_panes(area);
@@ -800,8 +800,7 @@ mod tests {
 
     #[test]
     fn test_fixed_size_zero() {
-        let split =
-            SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Fixed(0));
+        let split = SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Fixed(0));
 
         let area = Rect::new(0, 0, 100, 50);
         let (left, right) = split.calculate_panes(area);
@@ -813,8 +812,8 @@ mod tests {
 
     #[test]
     fn test_min_size_very_large_u16_max() {
-        let split = SplitPane::new(SplitDirection::Horizontal)
-            .with_split_size(SplitSize::Min(u16::MAX));
+        let split =
+            SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Min(u16::MAX));
 
         let area = Rect::new(0, 0, 100, 50);
         let (left, right) = split.calculate_panes(area);
@@ -902,10 +901,7 @@ mod tests {
             style.unfocused_border_type(),
             cloned.unfocused_border_type()
         );
-        assert_eq!(
-            style.focused_border_color(),
-            cloned.focused_border_color()
-        );
+        assert_eq!(style.focused_border_color(), cloned.focused_border_color());
         assert_eq!(
             style.unfocused_border_color(),
             cloned.unfocused_border_color()
@@ -1251,7 +1247,10 @@ mod tests {
         let split = SplitPane::new(SplitDirection::Horizontal).with_border_style(custom_style);
 
         assert!(!split.border_style().show_borders());
-        assert_eq!(split.border_style().focused_border_type(), BorderType::Double);
+        assert_eq!(
+            split.border_style().focused_border_type(),
+            BorderType::Double
+        );
     }
 
     // Builder Pattern Chaining
@@ -1447,8 +1446,7 @@ mod tests {
 
     #[test]
     fn test_vertical_with_fixed_size() {
-        let split =
-            SplitPane::new(SplitDirection::Vertical).with_split_size(SplitSize::Fixed(30));
+        let split = SplitPane::new(SplitDirection::Vertical).with_split_size(SplitSize::Fixed(30));
 
         let area = Rect::new(0, 0, 100, 100);
         let (top, bottom) = split.calculate_panes(area);
@@ -1461,8 +1459,7 @@ mod tests {
 
     #[test]
     fn test_horizontal_with_min_size() {
-        let split =
-            SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Min(20));
+        let split = SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Min(20));
 
         let area = Rect::new(0, 0, 100, 50);
         let (left, right) = split.calculate_panes(area);
@@ -1534,8 +1531,7 @@ mod tests {
 
     #[test]
     fn test_split_size_fixed_0() {
-        let split =
-            SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Fixed(0));
+        let split = SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Fixed(0));
 
         let area = Rect::new(0, 0, 100, 50);
         let (left, right) = split.calculate_panes(area);
@@ -1546,8 +1542,7 @@ mod tests {
 
     #[test]
     fn test_split_size_min_0() {
-        let split =
-            SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Min(0));
+        let split = SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Min(0));
 
         let area = Rect::new(0, 0, 100, 50);
         let (left, right) = split.calculate_panes(area);
@@ -1662,8 +1657,8 @@ mod tests {
 
     #[test]
     fn test_calculate_panes_with_fixed_very_large() {
-        let split = SplitPane::new(SplitDirection::Horizontal)
-            .with_split_size(SplitSize::Fixed(10000));
+        let split =
+            SplitPane::new(SplitDirection::Horizontal).with_split_size(SplitSize::Fixed(10000));
 
         let area = Rect::new(0, 0, 100, 50);
         let (left, right) = split.calculate_panes(area);

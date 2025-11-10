@@ -2,15 +2,18 @@
 //!
 //! Displays the TOAD logo, version, and quick start tips
 
+use crate::ui::{
+    atoms::{block::Block, text::Text},
+    logo,
+    theme::ToadTheme,
+};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    widgets::Paragraph,
 };
-
-use crate::ui::{logo, theme::ToadTheme};
 
 /// Welcome screen widget
 pub struct WelcomeScreen {
@@ -55,10 +58,10 @@ impl WelcomeScreen {
     }
 
     fn render_header_box(&self, frame: &mut Frame, area: Rect) {
-        let header_block = Block::default()
-            .borders(Borders::ALL)
+        let header_block = Block::new()
             .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
-            .style(Style::default().bg(ToadTheme::BLACK));
+            .style(Style::default().bg(ToadTheme::BLACK))
+            .to_ratatui();
 
         let inner = header_block.inner(area);
         frame.render_widget(header_block, area);
@@ -69,73 +72,95 @@ impl WelcomeScreen {
             .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
             .split(inner);
 
-        // Render logo on left side
+        // Render logo on left side using Text atoms
         let logo_lines: Vec<Line> = logo::TOAD_COMPACT
             .lines()
             .map(|line| {
-                Line::from(Span::styled(
-                    line,
+                let text = Text::new(line).style(
                     Style::default()
                         .fg(ToadTheme::TOAD_GREEN)
                         .add_modifier(Modifier::BOLD),
-                ))
+                );
+                Line::from(text.to_span())
             })
             .collect();
 
         let logo_paragraph = Paragraph::new(logo_lines).alignment(Alignment::Center);
         frame.render_widget(logo_paragraph, columns[0]);
 
-        // Render quick start info on right side
+        // Render quick start info on right side using Text atoms
         let quick_start = vec![
-            Line::from(Span::styled(
-                "AI-Powered Coding Terminal",
-                Style::default()
-                    .fg(ToadTheme::WHITE)
-                    .add_modifier(Modifier::BOLD),
-            )),
+            Line::from(
+                Text::new("AI-Powered Coding Terminal")
+                    .style(
+                        Style::default()
+                            .fg(ToadTheme::WHITE)
+                            .add_modifier(Modifier::BOLD),
+                    )
+                    .to_span(),
+            ),
             Line::from(""),
             Line::from(vec![
-                Span::styled("  • ", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled(
-                    "Ask questions or request changes",
-                    Style::default().fg(ToadTheme::FOREGROUND),
-                ),
+                Text::new("  • ")
+                    .style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                    .to_span(),
+                Text::new("Ask questions or request changes")
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
             ]),
             Line::from(vec![
-                Span::styled("  • ", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled("Type ", Style::default().fg(ToadTheme::FOREGROUND)),
-                Span::styled(
-                    "/help",
-                    Style::default()
-                        .fg(ToadTheme::TOAD_GREEN)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(" for commands", Style::default().fg(ToadTheme::FOREGROUND)),
+                Text::new("  • ")
+                    .style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                    .to_span(),
+                Text::new("Type ")
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
+                Text::new("/help")
+                    .style(
+                        Style::default()
+                            .fg(ToadTheme::TOAD_GREEN)
+                            .add_modifier(Modifier::BOLD),
+                    )
+                    .to_span(),
+                Text::new(" for commands")
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
             ]),
             Line::from(vec![
-                Span::styled("  • ", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled("Press ", Style::default().fg(ToadTheme::FOREGROUND)),
-                Span::styled(
-                    "?",
-                    Style::default()
-                        .fg(ToadTheme::TOAD_GREEN)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    " for keybindings",
-                    Style::default().fg(ToadTheme::FOREGROUND),
-                ),
+                Text::new("  • ")
+                    .style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                    .to_span(),
+                Text::new("Press ")
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
+                Text::new("?")
+                    .style(
+                        Style::default()
+                            .fg(ToadTheme::TOAD_GREEN)
+                            .add_modifier(Modifier::BOLD),
+                    )
+                    .to_span(),
+                Text::new(" for keybindings")
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
             ]),
             Line::from(vec![
-                Span::styled("  • ", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled("Use ", Style::default().fg(ToadTheme::FOREGROUND)),
-                Span::styled(
-                    "Ctrl+P",
-                    Style::default()
-                        .fg(ToadTheme::TOAD_GREEN)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(" for palette", Style::default().fg(ToadTheme::FOREGROUND)),
+                Text::new("  • ")
+                    .style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                    .to_span(),
+                Text::new("Use ")
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
+                Text::new("Ctrl+P")
+                    .style(
+                        Style::default()
+                            .fg(ToadTheme::TOAD_GREEN)
+                            .add_modifier(Modifier::BOLD),
+                    )
+                    .to_span(),
+                Text::new(" for palette")
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
             ]),
         ];
 
@@ -146,12 +171,15 @@ impl WelcomeScreen {
     fn render_version_line(&self, frame: &mut Frame, area: Rect) {
         let version = env!("CARGO_PKG_VERSION");
         let version_text = format!("v{} · Built with Rust + Ratatui", version);
-        let version_line = Line::from(Span::styled(
-            version_text,
-            Style::default()
-                .fg(ToadTheme::DARK_GRAY)
-                .add_modifier(Modifier::ITALIC),
-        ));
+        let version_line = Line::from(
+            Text::new(version_text)
+                .style(
+                    Style::default()
+                        .fg(ToadTheme::DARK_GRAY)
+                        .add_modifier(Modifier::ITALIC),
+                )
+                .to_span(),
+        );
         let version_paragraph = Paragraph::new(version_line).alignment(Alignment::Center);
         frame.render_widget(version_paragraph, area);
     }
@@ -161,15 +189,10 @@ impl WelcomeScreen {
             return;
         }
 
-        let tips_block = Block::default()
+        let tips_block = Block::new()
             .title(" Features ")
-            .title_style(
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
-                    .add_modifier(Modifier::BOLD),
-            )
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(ToadTheme::DARK_GRAY));
+            .border_style(Style::default().fg(ToadTheme::DARK_GRAY))
+            .to_ratatui();
 
         let inner = tips_block.inner(area);
         frame.render_widget(tips_block, area);
@@ -304,13 +327,19 @@ mod tests {
     #[test]
     fn test_welcome_screen_with_tips_true() {
         let screen = WelcomeScreen::new().with_tips(true);
-        assert!(screen.show_tips, "Screen should show tips when with_tips(true)");
+        assert!(
+            screen.show_tips,
+            "Screen should show tips when with_tips(true)"
+        );
     }
 
     #[test]
     fn test_welcome_screen_with_tips_false() {
         let screen = WelcomeScreen::new().with_tips(false);
-        assert!(!screen.show_tips, "Screen should hide tips when with_tips(false)");
+        assert!(
+            !screen.show_tips,
+            "Screen should hide tips when with_tips(false)"
+        );
     }
 
     #[test]
@@ -327,7 +356,10 @@ mod tests {
             .with_tips(false)
             .with_tips(true)
             .with_tips(false);
-        assert!(!screen.show_tips, "Tips should be hidden after final toggle");
+        assert!(
+            !screen.show_tips,
+            "Tips should be hidden after final toggle"
+        );
     }
 
     #[test]

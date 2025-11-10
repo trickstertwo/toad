@@ -15,16 +15,15 @@ use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    text::Line,
+    widgets::{Borders, Paragraph, Wrap},
 };
 use serde::{Deserialize, Serialize};
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::{block::Block as AtomBlock, text::Text}, theme::ToadTheme};
 
 /// Minimap display mode
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum MinimapMode {
     /// Show characters (scaled down)
     Characters,
@@ -34,7 +33,6 @@ pub enum MinimapMode {
     /// Show syntax highlighting colors
     Colors,
 }
-
 
 /// Minimap widget
 #[derive(Debug, Clone)]
@@ -258,13 +256,17 @@ impl Minimap {
                 }
             };
 
-            let span = Span::styled(line_text, style);
-            lines_to_render.push(Line::from(vec![span]));
+            let text = Text::new(line_text).style(style);
+            lines_to_render.push(Line::from(vec![text.to_span()]));
         }
 
         let paragraph = if self.show_border {
+            let block = AtomBlock::new()
+                .borders(Borders::ALL)
+                .title("Minimap")
+                .to_ratatui();
             Paragraph::new(lines_to_render)
-                .block(Block::default().borders(Borders::ALL).title("Minimap"))
+                .block(block)
                 .wrap(Wrap { trim: false })
         } else {
             Paragraph::new(lines_to_render).wrap(Wrap { trim: false })
@@ -499,7 +501,9 @@ mod tests {
 
     #[test]
     fn test_minimap_with_very_long_lines() {
-        let lines: Vec<String> = (0..100).map(|i| "code line ".repeat(1000) + &i.to_string()).collect();
+        let lines: Vec<String> = (0..100)
+            .map(|i| "code line ".repeat(1000) + &i.to_string())
+            .collect();
         let minimap = Minimap::new(lines);
         assert_eq!(minimap.line_count(), 100);
     }
@@ -925,14 +929,12 @@ mod tests {
     #[test]
     fn test_minimap_comprehensive_stress_test() {
         let lines: Vec<String> = (0..1000)
-            .map(|i| {
-                match i % 5 {
-                    0 => format!("// Comment line {} 📝", i),
-                    1 => format!("fn function_{}() {{", i),
-                    2 => format!("    let x = \"string {}\";", i),
-                    3 => format!("    println!(\"Line {}\");", i),
-                    _ => format!("}}  // End block {}", i),
-                }
+            .map(|i| match i % 5 {
+                0 => format!("// Comment line {} 📝", i),
+                1 => format!("fn function_{}() {{", i),
+                2 => format!("    let x = \"string {}\";", i),
+                3 => format!("    println!(\"Line {}\");", i),
+                _ => format!("}}  // End block {}", i),
             })
             .collect();
 

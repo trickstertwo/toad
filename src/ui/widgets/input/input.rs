@@ -1,68 +1,170 @@
 //! Input field widget
 //!
 //! Single-line text input with placeholder support
+//!
+//! # Architecture
+//!
+//! Following Elm Architecture and Separation of Concerns:
+//! - **InputState**: Pure data (value, cursor) - testable, serializable
+//! - **InputField**: Widget layer (state + placeholder + focus + rendering)
+//!
+//! This design allows:
+//! - Testing state logic without UI dependencies
+//! - Sharing state between widgets
+//! - Serializing/deserializing input state
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::text::Text, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    text::{Line, Span},
+    text::Line,
     widgets::Paragraph,
 };
 
-/// A single-line text input widget
-#[derive(Debug)]
-pub struct InputField {
+/// Pure input state (Model in Elm Architecture)
+///
+/// Contains only the text content and cursor position, with no UI dependencies.
+/// This allows the state to be:
+/// - Tested independently without rendering infrastructure
+/// - Serialized/deserialized for session persistence
+/// - Shared between different UI representations
+///
+/// # Examples
+///
+/// ```
+/// use toad::ui::widgets::input::InputState;
+///
+/// let mut state = InputState::new();
+/// state.insert_char('H');
+/// state.insert_char('i');
+/// assert_eq!(state.value(), "Hi");
+/// assert_eq!(state.cursor_position(), 2);
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InputState {
     /// The current input text
     value: String,
-    /// Placeholder text when empty
-    placeholder: String,
-    /// Cursor position (byte index)
+    /// Cursor position (byte index, not character index)
     cursor_position: usize,
-    /// Whether the input is focused
-    is_focused: bool,
 }
 
-impl InputField {
+impl InputState {
+    /// Create a new empty input state
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputState;
+    ///
+    /// let state = InputState::new();
+    /// assert_eq!(state.value(), "");
+    /// assert_eq!(state.cursor_position(), 0);
+    /// ```
     pub fn new() -> Self {
         Self {
             value: String::new(),
-            placeholder: "Enter @ to mention files or / for commands".to_string(),
             cursor_position: 0,
-            is_focused: false,
         }
     }
 
-    pub fn with_placeholder(mut self, placeholder: impl Into<String>) -> Self {
-        self.placeholder = placeholder.into();
-        self
+    /// Create input state with initial value (cursor at end)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputState;
+    ///
+    /// let state = InputState::with_value("hello".to_string());
+    /// assert_eq!(state.value(), "hello");
+    /// assert_eq!(state.cursor_position(), 5);
+    /// ```
+    pub fn with_value(value: String) -> Self {
+        let cursor_position = value.len();
+        Self {
+            value,
+            cursor_position,
+        }
     }
 
+    /// Get the current text value
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputState;
+    ///
+    /// let state = InputState::with_value("test".to_string());
+    /// assert_eq!(state.value(), "test");
+    /// ```
     pub fn value(&self) -> &str {
         &self.value
     }
 
+    /// Get the cursor position (byte index)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputState;
+    ///
+    /// let mut state = InputState::new();
+    /// state.insert_char('a');
+    /// assert_eq!(state.cursor_position(), 1);
+    /// ```
+    pub fn cursor_position(&self) -> usize {
+        self.cursor_position
+    }
+
+    /// Replace the current value with new text (cursor moves to end)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputState;
+    ///
+    /// let mut state = InputState::new();
+    /// state.set_value("new text".to_string());
+    /// assert_eq!(state.value(), "new text");
+    /// assert_eq!(state.cursor_position(), 8);
+    /// ```
     pub fn set_value(&mut self, value: String) {
         self.value = value;
         self.cursor_position = self.value.len();
     }
 
-    pub fn is_focused(&self) -> bool {
-        self.is_focused
-    }
-
-    pub fn set_focused(&mut self, focused: bool) {
-        self.is_focused = focused;
-    }
-
     /// Insert a character at the cursor position
+    ///
+    /// The cursor moves forward by the character's byte length.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputState;
+    ///
+    /// let mut state = InputState::new();
+    /// state.insert_char('a');
+    /// state.insert_char('b');
+    /// assert_eq!(state.value(), "ab");
+    /// ```
     pub fn insert_char(&mut self, c: char) {
         self.value.insert(self.cursor_position, c);
         self.cursor_position += c.len_utf8();
     }
 
-    /// Delete the character before the cursor
+    /// Delete the character before the cursor (backspace behavior)
+    ///
+    /// If the cursor is at the start, does nothing.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputState;
+    ///
+    /// let mut state = InputState::with_value("abc".to_string());
+    /// state.delete_char();
+    /// assert_eq!(state.value(), "ab");
+    /// ```
     pub fn delete_char(&mut self) {
         if self.cursor_position > 0 {
             let mut chars: Vec<char> = self.value.chars().collect();
@@ -75,7 +177,19 @@ impl InputField {
         }
     }
 
-    /// Move cursor left
+    /// Move cursor one character left
+    ///
+    /// If already at start, does nothing.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputState;
+    ///
+    /// let mut state = InputState::with_value("ab".to_string());
+    /// state.move_cursor_left();
+    /// assert_eq!(state.cursor_position(), 1);
+    /// ```
     pub fn move_cursor_left(&mut self) {
         if self.cursor_position > 0 {
             let char_pos = self.char_position();
@@ -85,7 +199,23 @@ impl InputField {
         }
     }
 
-    /// Move cursor right
+    /// Move cursor one character right
+    ///
+    /// If already at end, does nothing.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputState;
+    ///
+    /// let mut state = InputState::new();
+    /// state.insert_char('a');
+    /// state.insert_char('b');
+    /// state.move_cursor_left();
+    /// state.move_cursor_left();
+    /// state.move_cursor_right();
+    /// assert_eq!(state.cursor_position(), 1);
+    /// ```
     pub fn move_cursor_right(&mut self) {
         let char_pos = self.char_position();
         let char_count = self.value.chars().count();
@@ -94,17 +224,49 @@ impl InputField {
         }
     }
 
-    /// Move cursor to start
+    /// Move cursor to the start of the text
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputState;
+    ///
+    /// let mut state = InputState::with_value("test".to_string());
+    /// state.move_cursor_start();
+    /// assert_eq!(state.cursor_position(), 0);
+    /// ```
     pub fn move_cursor_start(&mut self) {
         self.cursor_position = 0;
     }
 
-    /// Move cursor to end
+    /// Move cursor to the end of the text
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputState;
+    ///
+    /// let mut state = InputState::with_value("test".to_string());
+    /// state.cursor_position = 0;
+    /// state.move_cursor_end();
+    /// assert_eq!(state.cursor_position(), 4);
+    /// ```
     pub fn move_cursor_end(&mut self) {
         self.cursor_position = self.value.len();
     }
 
-    /// Clear the input
+    /// Clear all text and reset cursor to start
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputState;
+    ///
+    /// let mut state = InputState::with_value("text".to_string());
+    /// state.clear();
+    /// assert_eq!(state.value(), "");
+    /// assert_eq!(state.cursor_position(), 0);
+    /// ```
     pub fn clear(&mut self) {
         self.value.clear();
         self.cursor_position = 0;
@@ -123,24 +285,334 @@ impl InputField {
             .map(|(idx, _)| idx)
             .unwrap_or(self.value.len())
     }
+}
+
+impl Default for InputState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod input_state_tests {
+    use super::*;
+
+    // Test InputState in isolation to prove it's independently usable without UI layer
+
+    #[test]
+    fn test_state_new() {
+        let state = InputState::new();
+        assert_eq!(state.value(), "");
+        assert_eq!(state.cursor_position(), 0);
+    }
+
+    #[test]
+    fn test_state_with_value() {
+        let state = InputState::with_value("hello".to_string());
+        assert_eq!(state.value(), "hello");
+        assert_eq!(state.cursor_position(), 5);
+    }
+
+    #[test]
+    fn test_state_insert_and_delete() {
+        let mut state = InputState::new();
+        state.insert_char('a');
+        state.insert_char('b');
+        state.insert_char('c');
+        assert_eq!(state.value(), "abc");
+        assert_eq!(state.cursor_position(), 3);
+
+        state.delete_char();
+        assert_eq!(state.value(), "ab");
+        assert_eq!(state.cursor_position(), 2);
+    }
+
+    #[test]
+    fn test_state_cursor_movement() {
+        let mut state = InputState::with_value("test".to_string());
+        assert_eq!(state.cursor_position(), 4);
+
+        state.move_cursor_left();
+        assert_eq!(state.cursor_position(), 3);
+
+        state.move_cursor_start();
+        assert_eq!(state.cursor_position(), 0);
+
+        state.move_cursor_right();
+        assert_eq!(state.cursor_position(), 1);
+
+        state.move_cursor_end();
+        assert_eq!(state.cursor_position(), 4);
+    }
+
+    #[test]
+    fn test_state_unicode_handling() {
+        let mut state = InputState::new();
+        state.insert_char('🐸');
+        state.insert_char('日');
+        assert_eq!(state.value(), "🐸日");
+        // Emoji is 4 bytes, Japanese char is 3 bytes
+        assert_eq!(state.cursor_position(), 7);
+
+        state.delete_char();
+        assert_eq!(state.value(), "🐸");
+        assert_eq!(state.cursor_position(), 4);
+    }
+
+    #[test]
+    fn test_state_clear() {
+        let mut state = InputState::with_value("data".to_string());
+        state.clear();
+        assert_eq!(state.value(), "");
+        assert_eq!(state.cursor_position(), 0);
+    }
+
+    #[test]
+    fn test_state_set_value() {
+        let mut state = InputState::new();
+        state.set_value("first".to_string());
+        assert_eq!(state.value(), "first");
+        assert_eq!(state.cursor_position(), 5);
+
+        state.set_value("second".to_string());
+        assert_eq!(state.value(), "second");
+        assert_eq!(state.cursor_position(), 6);
+    }
+
+    #[test]
+    fn test_state_clone() {
+        let state1 = InputState::with_value("clone".to_string());
+        let state2 = state1.clone();
+        assert_eq!(state1.value(), state2.value());
+        assert_eq!(state1.cursor_position(), state2.cursor_position());
+    }
+
+    #[test]
+    fn test_state_equality() {
+        let state1 = InputState::with_value("test".to_string());
+        let state2 = InputState::with_value("test".to_string());
+        let state3 = InputState::with_value("other".to_string());
+
+        assert_eq!(state1, state2);
+        assert_ne!(state1, state3);
+    }
+
+    #[test]
+    fn test_state_default() {
+        let state = InputState::default();
+        assert_eq!(state.value(), "");
+        assert_eq!(state.cursor_position(), 0);
+    }
+
+    #[test]
+    fn test_state_insert_at_middle() {
+        let mut state = InputState::with_value("ac".to_string());
+        state.cursor_position = 1; // After 'a'
+        state.insert_char('b');
+        assert_eq!(state.value(), "abc");
+        assert_eq!(state.cursor_position(), 2);
+    }
+
+    #[test]
+    fn test_state_boundary_conditions() {
+        let mut state = InputState::new();
+
+        // Delete on empty
+        state.delete_char();
+        assert_eq!(state.value(), "");
+
+        // Move left at start
+        state.move_cursor_left();
+        assert_eq!(state.cursor_position(), 0);
+
+        state.set_value("x".to_string());
+
+        // Move right at end
+        state.move_cursor_right();
+        assert_eq!(state.cursor_position(), 1);
+    }
+
+    #[test]
+    fn test_state_independence_from_ui() {
+        // This test proves InputState has no UI dependencies
+        // We can create, mutate, and test it without any Frame, Rect, or Style
+        let mut state = InputState::new();
+        state.insert_char('i');
+        state.insert_char('n');
+        state.insert_char('d');
+        state.insert_char('e');
+        state.insert_char('p');
+        state.insert_char('e');
+        state.insert_char('n');
+        state.insert_char('d');
+        state.insert_char('e');
+        state.insert_char('n');
+        state.insert_char('t');
+
+        assert_eq!(state.value(), "independent");
+        assert_eq!(state.cursor_position(), 11);
+
+        // All operations work without any UI context
+        state.move_cursor_start();
+        state.move_cursor_right();
+        state.move_cursor_right();
+        state.delete_char();
+        assert_eq!(state.value(), "idependent");
+    }
+}
+
+/// A single-line text input widget (View in Elm Architecture)
+///
+/// This widget wraps [`InputState`] and adds UI-specific concerns:
+/// - Placeholder text
+/// - Focus state
+/// - Rendering with theme
+///
+/// # Examples
+///
+/// ```no_run
+/// use toad::ui::widgets::input::InputField;
+/// use ratatui::Frame;
+/// use ratatui::layout::Rect;
+///
+/// let mut input = InputField::new();
+/// input.set_focused(true);
+/// input.insert_char('H');
+/// input.insert_char('i');
+/// // Then render: input.render(&mut frame, area);
+/// ```
+#[derive(Debug)]
+pub struct InputField {
+    /// Pure state (text content and cursor)
+    state: InputState,
+    /// Placeholder text when empty
+    placeholder: String,
+    /// Whether the input is focused
+    is_focused: bool,
+    /// Cursor visibility (for blinking animation)
+    cursor_visible: bool,
+}
+
+impl InputField {
+    /// Create a new input field with default placeholder
+    pub fn new() -> Self {
+        Self {
+            state: InputState::new(),
+            placeholder: "Enter @ to mention files or / for commands".to_string(),
+            is_focused: false,
+            cursor_visible: true,
+        }
+    }
+
+    /// Set a custom placeholder text
+    pub fn with_placeholder(mut self, placeholder: impl Into<String>) -> Self {
+        self.placeholder = placeholder.into();
+        self
+    }
+
+    /// Get the current text value (delegates to state)
+    pub fn value(&self) -> &str {
+        self.state.value()
+    }
+
+    /// Replace the current value (delegates to state)
+    pub fn set_value(&mut self, value: String) {
+        self.state.set_value(value);
+    }
+
+    /// Get focus state
+    pub fn is_focused(&self) -> bool {
+        self.is_focused
+    }
+
+    /// Set focus state
+    pub fn set_focused(&mut self, focused: bool) {
+        self.is_focused = focused;
+    }
+
+    /// Insert a character at the cursor position (delegates to state)
+    pub fn insert_char(&mut self, c: char) {
+        self.state.insert_char(c);
+    }
+
+    /// Delete the character before the cursor (delegates to state)
+    pub fn delete_char(&mut self) {
+        self.state.delete_char();
+    }
+
+    /// Move cursor left (delegates to state)
+    pub fn move_cursor_left(&mut self) {
+        self.state.move_cursor_left();
+    }
+
+    /// Move cursor right (delegates to state)
+    pub fn move_cursor_right(&mut self) {
+        self.state.move_cursor_right();
+    }
+
+    /// Move cursor to start (delegates to state)
+    pub fn move_cursor_start(&mut self) {
+        self.state.move_cursor_start();
+    }
+
+    /// Move cursor to end (delegates to state)
+    pub fn move_cursor_end(&mut self) {
+        self.state.move_cursor_end();
+    }
+
+    /// Clear the input (delegates to state)
+    pub fn clear(&mut self) {
+        self.state.clear();
+    }
+
+    /// Toggle cursor visibility (for blinking animation)
+    ///
+    /// Call this on tick events to create blinking effect.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputField;
+    ///
+    /// let mut input = InputField::new();
+    /// assert!(input.is_cursor_visible());
+    ///
+    /// input.toggle_cursor();
+    /// assert!(!input.is_cursor_visible());
+    /// ```
+    pub fn toggle_cursor(&mut self) {
+        self.cursor_visible = !self.cursor_visible;
+    }
+
+    /// Get cursor visibility state
+    pub fn is_cursor_visible(&self) -> bool {
+        self.cursor_visible
+    }
+
+    /// Set cursor visibility
+    pub fn set_cursor_visible(&mut self, visible: bool) {
+        self.cursor_visible = visible;
+    }
 
     /// Render the input field
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let display_text = if self.value.is_empty() {
-            // Show placeholder
-            Line::from(vec![
-                Span::styled("> ", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled(
-                    &self.placeholder,
-                    Style::default()
-                        .fg(ToadTheme::DARK_GRAY)
-                        .add_modifier(Modifier::ITALIC),
-                ),
-            ])
+        let value = self.state.value();
+        let cursor_position = self.state.cursor_position();
+
+        let display_text = if value.is_empty() {
+            // Show placeholder - use Text atoms
+            let prompt_text = Text::new("> ").style(Style::default().fg(ToadTheme::TOAD_GREEN));
+            let placeholder_text = Text::new(&self.placeholder).style(
+                Style::default()
+                    .fg(ToadTheme::DARK_GRAY)
+                    .add_modifier(Modifier::ITALIC),
+            );
+
+            Line::from(vec![prompt_text.to_span(), placeholder_text.to_span()])
         } else {
             // Show actual input
-            let before_cursor = &self.value[..self.cursor_position];
-            let after_cursor = &self.value[self.cursor_position..];
+            let before_cursor = &value[..cursor_position];
+            let after_cursor = &value[cursor_position..];
 
             let cursor_char = if after_cursor.is_empty() {
                 " "
@@ -154,30 +626,30 @@ impl InputField {
                 &after_cursor[1..]
             };
 
-            let mut spans = vec![
-                Span::styled("> ", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled(before_cursor, Style::default().fg(ToadTheme::FOREGROUND)),
-            ];
+            // Use Text atoms for all components
+            let prompt_text = Text::new("> ").style(Style::default().fg(ToadTheme::TOAD_GREEN));
+            let before_text =
+                Text::new(before_cursor).style(Style::default().fg(ToadTheme::FOREGROUND));
 
-            if self.is_focused {
-                // Show cursor
-                spans.push(Span::styled(
-                    cursor_char,
+            let mut spans = vec![prompt_text.to_span(), before_text.to_span()];
+
+            if self.is_focused && self.cursor_visible {
+                // Show cursor with green background (blinking when visible)
+                let cursor_text = Text::new(cursor_char).style(
                     Style::default()
                         .fg(ToadTheme::BLACK)
                         .bg(ToadTheme::TOAD_GREEN),
-                ));
+                );
+                spans.push(cursor_text.to_span());
             } else {
-                spans.push(Span::styled(
-                    cursor_char,
-                    Style::default().fg(ToadTheme::FOREGROUND),
-                ));
+                // No cursor or cursor hidden (during blink)
+                let cursor_text =
+                    Text::new(cursor_char).style(Style::default().fg(ToadTheme::FOREGROUND));
+                spans.push(cursor_text.to_span());
             }
 
-            spans.push(Span::styled(
-                rest,
-                Style::default().fg(ToadTheme::FOREGROUND),
-            ));
+            let rest_text = Text::new(rest).style(Style::default().fg(ToadTheme::FOREGROUND));
+            spans.push(rest_text.to_span());
 
             Line::from(spans)
         };
@@ -201,7 +673,7 @@ mod tests {
     fn test_input_field_new() {
         let input = InputField::new();
         assert_eq!(input.value(), "");
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
         assert!(!input.is_focused());
     }
 
@@ -223,7 +695,7 @@ mod tests {
         let mut input = InputField::new();
         input.set_value("test".to_string());
         assert_eq!(input.value(), "test");
-        assert_eq!(input.cursor_position, 4); // Cursor at end
+        assert_eq!(input.state.cursor_position(), 4); // Cursor at end
     }
 
     #[test]
@@ -233,7 +705,7 @@ mod tests {
         input.insert_char('b');
         input.insert_char('c');
         assert_eq!(input.value(), "abc");
-        assert_eq!(input.cursor_position, 3);
+        assert_eq!(input.state.cursor_position(), 3);
     }
 
     #[test]
@@ -244,7 +716,7 @@ mod tests {
         input.insert_char('本');
         assert_eq!(input.value(), "🐸日本");
         // Cursor position is in bytes, emoji is 4 bytes, Japanese chars are 3 bytes each
-        assert!(input.cursor_position > 3);
+        assert!(input.state.cursor_position() > 3);
     }
 
     #[test]
@@ -285,10 +757,10 @@ mod tests {
         input.set_value("abc".to_string());
 
         input.move_cursor_left();
-        assert_eq!(input.cursor_position, 2);
+        assert_eq!(input.state.cursor_position(), 2);
 
         input.move_cursor_left();
-        assert_eq!(input.cursor_position, 1);
+        assert_eq!(input.state.cursor_position(), 1);
     }
 
     #[test]
@@ -297,23 +769,23 @@ mod tests {
         input.set_value("a".to_string());
 
         input.move_cursor_left();
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
 
         input.move_cursor_left(); // Should not go negative
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
     }
 
     #[test]
     fn test_input_field_move_cursor_right() {
         let mut input = InputField::new();
         input.set_value("abc".to_string());
-        input.cursor_position = 0;
+        input.state.cursor_position = 0;
 
         input.move_cursor_right();
-        assert_eq!(input.cursor_position, 1);
+        assert_eq!(input.state.cursor_position(), 1);
 
         input.move_cursor_right();
-        assert_eq!(input.cursor_position, 2);
+        assert_eq!(input.state.cursor_position(), 2);
     }
 
     #[test]
@@ -322,7 +794,7 @@ mod tests {
         input.set_value("ab".to_string());
 
         input.move_cursor_right(); // Already at end, should not move
-        assert_eq!(input.cursor_position, 2);
+        assert_eq!(input.state.cursor_position(), 2);
     }
 
     #[test]
@@ -331,17 +803,17 @@ mod tests {
         input.set_value("abc".to_string());
 
         input.move_cursor_start();
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
     }
 
     #[test]
     fn test_input_field_move_cursor_end() {
         let mut input = InputField::new();
         input.set_value("abc".to_string());
-        input.cursor_position = 0;
+        input.state.cursor_position = 0;
 
         input.move_cursor_end();
-        assert_eq!(input.cursor_position, 3);
+        assert_eq!(input.state.cursor_position(), 3);
     }
 
     #[test]
@@ -351,7 +823,7 @@ mod tests {
 
         input.clear();
         assert_eq!(input.value(), "");
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
     }
 
     #[test]
@@ -372,14 +844,14 @@ mod tests {
         input.set_value(long_text.clone());
 
         assert_eq!(input.value(), long_text);
-        assert_eq!(input.cursor_position, 10000);
+        assert_eq!(input.state.cursor_position(), 10000);
     }
 
     #[test]
     fn test_input_field_insert_at_middle() {
         let mut input = InputField::new();
         input.set_value("ac".to_string());
-        input.cursor_position = 1; // Between 'a' and 'c'
+        input.state.cursor_position = 1; // Between 'a' and 'c'
 
         input.insert_char('b');
         assert_eq!(input.value(), "abc");
@@ -389,7 +861,7 @@ mod tests {
     fn test_input_field_delete_at_middle() {
         let mut input = InputField::new();
         input.set_value("abc".to_string());
-        input.cursor_position = 2; // After 'b'
+        input.state.cursor_position = 2; // After 'b'
 
         input.delete_char();
         assert_eq!(input.value(), "ac");
@@ -401,11 +873,11 @@ mod tests {
         input.set_value("hello".to_string());
 
         input.move_cursor_start();
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
 
         input.move_cursor_right();
         input.move_cursor_right();
-        assert_eq!(input.cursor_position, 2);
+        assert_eq!(input.state.cursor_position(), 2);
 
         input.delete_char();
         assert_eq!(input.value(), "hllo");
@@ -426,7 +898,7 @@ mod tests {
         input.move_cursor_left(); // Before 'b'
         input.move_cursor_left(); // Before emoji
         input.move_cursor_left(); // Before 'a'
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
     }
 
     #[test]
@@ -454,9 +926,9 @@ mod tests {
 
         // char_position is private, but we can test it indirectly
         // by testing cursor movement
-        input.cursor_position = 0;
+        input.state.cursor_position = 0;
         input.move_cursor_right();
-        assert_eq!(input.cursor_position, 1);
+        assert_eq!(input.state.cursor_position(), 1);
     }
 
     #[test]
@@ -495,7 +967,7 @@ mod tests {
         }
 
         assert_eq!(input.value().len(), 5000);
-        assert_eq!(input.cursor_position, 5000);
+        assert_eq!(input.state.cursor_position(), 5000);
     }
 
     #[test]
@@ -508,7 +980,7 @@ mod tests {
         }
 
         assert_eq!(input.value(), "");
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
     }
 
     #[test]
@@ -520,13 +992,13 @@ mod tests {
             input.move_cursor_left();
         }
 
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
 
         for _ in 0..1000 {
             input.move_cursor_right();
         }
 
-        assert_eq!(input.cursor_position, 100);
+        assert_eq!(input.state.cursor_position(), 100);
     }
 
     #[test]
@@ -622,7 +1094,7 @@ mod tests {
         input.set_value(huge_text.clone());
 
         assert_eq!(input.value().len(), 100000);
-        assert_eq!(input.cursor_position, 100000);
+        assert_eq!(input.state.cursor_position(), 100000);
     }
 
     #[test]
@@ -681,10 +1153,10 @@ mod tests {
         // Move to boundaries repeatedly
         for _ in 0..50 {
             input.move_cursor_start();
-            assert_eq!(input.cursor_position, 0);
+            assert_eq!(input.state.cursor_position(), 0);
 
             input.move_cursor_end();
-            assert_eq!(input.cursor_position, 4);
+            assert_eq!(input.state.cursor_position(), 4);
         }
     }
 
@@ -747,7 +1219,7 @@ mod tests {
         // Test cursor at each position
         input.move_cursor_start();
         for i in 0..=10 {
-            assert_eq!(input.cursor_position, i);
+            assert_eq!(input.state.cursor_position(), i);
             if i < 10 {
                 input.move_cursor_right();
             }
@@ -764,7 +1236,7 @@ mod tests {
             input.move_cursor_right();
         }
 
-        assert_eq!(input.cursor_position, 5); // Stays at end
+        assert_eq!(input.state.cursor_position(), 5); // Stays at end
     }
 
     #[test]
@@ -778,7 +1250,7 @@ mod tests {
             input.move_cursor_left();
         }
 
-        assert_eq!(input.cursor_position, 0); // Stays at start
+        assert_eq!(input.state.cursor_position(), 0); // Stays at start
     }
 
     // ============ Delete Edge Cases ============
@@ -803,21 +1275,21 @@ mod tests {
         }
 
         assert_eq!(input.value(), "");
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
     }
 
     #[test]
     fn test_input_field_delete_from_middle() {
         let mut input = InputField::new();
         input.set_value("ABCDEFGH".to_string());
-        input.cursor_position = 4; // After 'D'
+        input.state.cursor_position = 4; // After 'D'
 
         for _ in 0..4 {
             input.delete_char();
         }
 
         assert_eq!(input.value(), "EFGH");
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
     }
 
     // ============ Insert Edge Cases ============
@@ -871,7 +1343,7 @@ mod tests {
         input.clear();
 
         assert_eq!(input.value(), "");
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
     }
 
     #[test]
@@ -888,10 +1360,10 @@ mod tests {
     fn test_input_field_clear_resets_cursor() {
         let mut input = InputField::new();
         input.set_value("Long text here".to_string());
-        input.cursor_position = 7;
+        input.state.cursor_position = 7;
 
         input.clear();
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
     }
 
     // ============ Value Setter Edge Cases ============
@@ -912,7 +1384,7 @@ mod tests {
         input.set_value(String::new());
 
         assert_eq!(input.value(), "");
-        assert_eq!(input.cursor_position, 0);
+        assert_eq!(input.state.cursor_position(), 0);
     }
 
     // ============ Trait Coverage ============
@@ -983,6 +1455,83 @@ mod tests {
         }
 
         // Verify state is consistent
-        assert!(input.cursor_position <= input.value().len());
+        assert!(input.state.cursor_position() <= input.value().len());
+    }
+
+    // ===== Cursor Blinking Tests =====
+
+    #[test]
+    fn test_cursor_visible_default() {
+        let input = InputField::new();
+        assert!(input.is_cursor_visible());
+    }
+
+    #[test]
+    fn test_toggle_cursor() {
+        let mut input = InputField::new();
+
+        assert!(input.is_cursor_visible());
+
+        input.toggle_cursor();
+        assert!(!input.is_cursor_visible());
+
+        input.toggle_cursor();
+        assert!(input.is_cursor_visible());
+    }
+
+    #[test]
+    fn test_set_cursor_visible() {
+        let mut input = InputField::new();
+
+        input.set_cursor_visible(false);
+        assert!(!input.is_cursor_visible());
+
+        input.set_cursor_visible(true);
+        assert!(input.is_cursor_visible());
+    }
+
+    #[test]
+    fn test_cursor_blink_cycle() {
+        let mut input = InputField::new();
+
+        // Start: visible (true)
+        assert!(input.is_cursor_visible());
+
+        // Simulate 10 toggles
+        for _ in 0..10 {
+            let before = input.is_cursor_visible();
+            input.toggle_cursor();
+            assert_ne!(input.is_cursor_visible(), before);
+        }
+
+        // After 10 toggles: true → false → true → false → ... → true
+        // Odd toggles go to false, even toggles go to true
+        // Toggle 10 (even) ends at true
+        assert!(input.is_cursor_visible());
+    }
+
+    #[test]
+    fn test_cursor_visibility_with_focus() {
+        let mut input = InputField::new();
+        input.set_focused(true);
+        input.set_value("test".to_string());
+
+        // Cursor should be visible by default
+        assert!(input.is_cursor_visible());
+
+        // Hide cursor
+        input.set_cursor_visible(false);
+        assert!(!input.is_cursor_visible());
+
+        // Changing focus doesn't affect cursor visibility flag
+        input.set_focused(false);
+        assert!(!input.is_cursor_visible());
+
+        input.set_focused(true);
+        assert!(!input.is_cursor_visible());
+
+        // Show cursor again
+        input.set_cursor_visible(true);
+        assert!(input.is_cursor_visible());
     }
 }

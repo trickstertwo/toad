@@ -415,8 +415,14 @@ mod tests {
             DatasetSource::Verified.cache_filename(),
             "swe_bench_verified.parquet"
         );
-        assert_eq!(DatasetSource::Lite.cache_filename(), "swe_bench_lite.parquet");
-        assert_eq!(DatasetSource::Full.cache_filename(), "swe_bench_full.parquet");
+        assert_eq!(
+            DatasetSource::Lite.cache_filename(),
+            "swe_bench_lite.parquet"
+        );
+        assert_eq!(
+            DatasetSource::Full.cache_filename(),
+            "swe_bench_full.parquet"
+        );
     }
 
     #[test]

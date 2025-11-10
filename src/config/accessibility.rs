@@ -15,8 +15,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Accessibility configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AccessibilityConfig {
     /// Enable high contrast colors for better visibility
     pub high_contrast_mode: bool,
@@ -119,11 +118,7 @@ impl AccessibilityConfig {
 
     /// Get text size multiplier based on large text setting
     pub fn text_size_multiplier(&self) -> f32 {
-        if self.large_text_mode {
-            1.5
-        } else {
-            1.0
-        }
+        if self.large_text_mode { 1.5 } else { 1.0 }
     }
 
     /// Get transition duration in milliseconds
@@ -137,7 +132,6 @@ impl AccessibilityConfig {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {

@@ -24,7 +24,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, Paragraph, Wrap, Widget},
+    widgets::{Block, Borders, Clear, Paragraph, Widget, Wrap},
 };
 
 /// Git commit dialog state
@@ -290,11 +290,7 @@ impl GitCommitDialog {
     fn cursor_line_col(&self) -> (usize, usize) {
         let before_cursor = &self.message[..self.cursor_pos];
         let line = before_cursor.lines().count().saturating_sub(1);
-        let col = before_cursor
-            .lines()
-            .last()
-            .map(|l| l.len())
-            .unwrap_or(0);
+        let col = before_cursor.lines().last().map(|l| l.len()).unwrap_or(0);
         (line, col)
     }
 }
@@ -338,21 +334,21 @@ impl Widget for &GitCommitDialog {
         };
 
         // Header with file count
-        let header_text = vec![
-            Line::from(vec![
-                Span::styled("Staged files: ", Style::default().fg(Color::Gray)),
-                Span::styled(
-                    format!("{}", self.staged_count),
-                    Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
-                ),
-                Span::styled("  |  ", Style::default().fg(Color::Gray)),
-                Span::styled("Length: ", Style::default().fg(Color::Gray)),
-                Span::styled(
-                    format!("{}", self.message.len()),
-                    Style::default().fg(Color::Cyan),
-                ),
-            ]),
-        ];
+        let header_text = vec![Line::from(vec![
+            Span::styled("Staged files: ", Style::default().fg(Color::Gray)),
+            Span::styled(
+                format!("{}", self.staged_count),
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled("  |  ", Style::default().fg(Color::Gray)),
+            Span::styled("Length: ", Style::default().fg(Color::Gray)),
+            Span::styled(
+                format!("{}", self.message.len()),
+                Style::default().fg(Color::Cyan),
+            ),
+        ])];
 
         let header = Paragraph::new(header_text)
             .block(
@@ -368,7 +364,9 @@ impl Widget for &GitCommitDialog {
         // Message editor area
         let message_text = if self.state == CommitDialogState::Success {
             Text::from(vec![Line::from(vec![Span::styled(
-                self.result_message.as_deref().unwrap_or("Committed successfully!"),
+                self.result_message
+                    .as_deref()
+                    .unwrap_or("Committed successfully!"),
                 Style::default().fg(Color::Green),
             )])])
         } else if self.state == CommitDialogState::Error {
@@ -420,12 +418,15 @@ impl Widget for &GitCommitDialog {
         message_editor.render(chunks[1], buf);
 
         // Guidelines
-        let guidelines = vec![
-            Line::from(vec![
-                Span::styled("Tip: ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-                Span::raw("First line is summary (50 chars max), then blank line, then details"),
-            ]),
-        ];
+        let guidelines = vec![Line::from(vec![
+            Span::styled(
+                "Tip: ",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw("First line is summary (50 chars max), then blank line, then details"),
+        ])];
 
         let guidelines_widget = Paragraph::new(guidelines)
             .block(Block::default().borders(Borders::ALL))

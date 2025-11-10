@@ -426,7 +426,11 @@ mod tests {
 
     #[test]
     fn test_line_chart_very_small_values() {
-        let data = vec![f64::MIN_POSITIVE, f64::MIN_POSITIVE * 2.0, f64::MIN_POSITIVE * 3.0];
+        let data = vec![
+            f64::MIN_POSITIVE,
+            f64::MIN_POSITIVE * 2.0,
+            f64::MIN_POSITIVE * 3.0,
+        ];
         let chart = LineChart::new(data);
         let (min, max) = chart.bounds();
         assert!(min <= max);
@@ -482,7 +486,12 @@ mod tests {
 
     #[test]
     fn test_line_chart_builder_all_combinations() {
-        let styles = [LineStyle::Solid, LineStyle::Dotted, LineStyle::Dashed, LineStyle::Stepped];
+        let styles = [
+            LineStyle::Solid,
+            LineStyle::Dotted,
+            LineStyle::Dashed,
+            LineStyle::Stepped,
+        ];
         let colors = [Color::Red, Color::Green, Color::Blue];
 
         for style in styles {
@@ -505,9 +514,7 @@ mod tests {
 
     #[test]
     fn test_bar_chart_1000_bars() {
-        let data: Vec<(String, f64)> = (0..1000)
-            .map(|i| (format!("Bar{}", i), i as f64))
-            .collect();
+        let data: Vec<(String, f64)> = (0..1000).map(|i| (format!("Bar{}", i), i as f64)).collect();
 
         let chart = BarChart::new(data);
         assert_eq!(chart.data().len(), 1000);
@@ -527,10 +534,10 @@ mod tests {
     #[test]
     fn test_bar_chart_orientation_switching_stress() {
         for _ in 0..1000 {
-            let _vertical = BarChart::new(vec![("A".into(), 1.0)])
-                .with_orientation(BarOrientation::Vertical);
-            let _horizontal = BarChart::new(vec![("A".into(), 1.0)])
-                .with_orientation(BarOrientation::Horizontal);
+            let _vertical =
+                BarChart::new(vec![("A".into(), 1.0)]).with_orientation(BarOrientation::Vertical);
+            let _horizontal =
+                BarChart::new(vec![("A".into(), 1.0)]).with_orientation(BarOrientation::Horizontal);
         }
     }
 
@@ -568,10 +575,7 @@ mod tests {
 
     #[test]
     fn test_bar_chart_rtl_labels() {
-        let data = vec![
-            ("العربية".to_string(), 10.0),
-            ("עברית".to_string(), 20.0),
-        ];
+        let data = vec![("العربية".to_string(), 10.0), ("עברית".to_string(), 20.0)];
         let chart = BarChart::new(data);
         assert_eq!(chart.data().len(), 2);
     }
@@ -591,10 +595,7 @@ mod tests {
 
     #[test]
     fn test_bar_chart_zero_values() {
-        let data = vec![
-            ("A".to_string(), 0.0),
-            ("B".to_string(), 0.0),
-        ];
+        let data = vec![("A".to_string(), 0.0), ("B".to_string(), 0.0)];
         let chart = BarChart::new(data);
         assert_eq!(chart.max_value(), 1.0);
     }
@@ -632,9 +633,7 @@ mod tests {
 
     #[test]
     fn test_scatter_plot_10000_points() {
-        let data: Vec<(f64, f64)> = (0..10000)
-            .map(|i| (i as f64, (i * 2) as f64))
-            .collect();
+        let data: Vec<(f64, f64)> = (0..10000).map(|i| (i as f64, (i * 2) as f64)).collect();
 
         let plot = ScatterPlot::new(data);
         assert_eq!(plot.data().len(), 10000);
@@ -669,8 +668,7 @@ mod tests {
 
     #[test]
     fn test_scatter_plot_unicode_title() {
-        let plot = ScatterPlot::new(vec![(1.0, 2.0)])
-            .with_title("Scatter 📈 分布図 مبعثر");
+        let plot = ScatterPlot::new(vec![(1.0, 2.0)]).with_title("Scatter 📈 分布図 مبعثر");
         assert!(plot.title.unwrap().contains("📈"));
     }
 
@@ -698,11 +696,7 @@ mod tests {
 
     #[test]
     fn test_scatter_plot_infinity_values() {
-        let data = vec![
-            (f64::INFINITY, 1.0),
-            (1.0, f64::NEG_INFINITY),
-            (0.0, 0.0),
-        ];
+        let data = vec![(f64::INFINITY, 1.0), (1.0, f64::NEG_INFINITY), (0.0, 0.0)];
         let plot = ScatterPlot::new(data);
         let (min_x, max_x, min_y, max_y) = plot.bounds();
         // Should handle gracefully (may not be fully finite)
@@ -914,16 +908,13 @@ mod tests {
         assert_eq!(bar_chart.data().len(), 600);
 
         // ScatterPlot comprehensive test
-        let mut scatter_plot = ScatterPlot::new(
-            (0..800)
-                .map(|i| (i as f64, (i * 2) as f64))
-                .collect(),
-        )
-        .with_title("Scatter 📈 Plot")
-        .with_point_char('●')
-        .with_color(Color::Red)
-        .with_border(false)
-        .with_axes(true);
+        let mut scatter_plot =
+            ScatterPlot::new((0..800).map(|i| (i as f64, (i * 2) as f64)).collect())
+                .with_title("Scatter 📈 Plot")
+                .with_point_char('●')
+                .with_color(Color::Red)
+                .with_border(false)
+                .with_axes(true);
 
         for i in 800..900 {
             scatter_plot.add_point(i as f64, (i * 3) as f64);
@@ -931,7 +922,12 @@ mod tests {
         assert_eq!(scatter_plot.data().len(), 900);
 
         // Test all style variations
-        for style in [LineStyle::Solid, LineStyle::Dotted, LineStyle::Dashed, LineStyle::Stepped] {
+        for style in [
+            LineStyle::Solid,
+            LineStyle::Dotted,
+            LineStyle::Dashed,
+            LineStyle::Stepped,
+        ] {
             let _chart = LineChart::new(vec![1.0, 2.0, 3.0]).with_line_style(style);
         }
 

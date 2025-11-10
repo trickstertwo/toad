@@ -203,12 +203,11 @@ impl SyntaxHighlighter {
         let query = language.highlight_query()?;
 
         let mut config = HighlightConfiguration::new(
-            grammar,
-            "source", // Name of the language
-            query,
-            "",  // Injection query (empty for now)
-            "",  // Locals query (empty for now)
-        ).ok()?;
+            grammar, "source", // Name of the language
+            query, "", // Injection query (empty for now)
+            "", // Locals query (empty for now)
+        )
+        .ok()?;
 
         // Configure highlight names
         config.configure(&[

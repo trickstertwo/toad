@@ -24,8 +24,7 @@ use std::collections::HashSet;
 use crate::ui::theme::ToadTheme;
 
 /// Selection mode for multi-select
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum SelectionMode {
     /// Single selection only
     Single,
@@ -35,7 +34,6 @@ pub enum SelectionMode {
     /// Range selection (shift+click)
     Range,
 }
-
 
 /// Multi-select widget state
 #[derive(Debug, Clone)]
@@ -446,4 +444,3 @@ impl<T: std::fmt::Display> MultiSelect<T> {
         frame.render_stateful_widget(list, area, &mut state);
     }
 }
-

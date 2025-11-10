@@ -33,7 +33,10 @@ impl Permission {
     pub fn includes(&self, other: Permission) -> bool {
         match self {
             Permission::Admin => true,
-            Permission::Edit => matches!(other, Permission::View | Permission::Comment | Permission::Edit),
+            Permission::Edit => matches!(
+                other,
+                Permission::View | Permission::Comment | Permission::Edit
+            ),
             Permission::Comment => matches!(other, Permission::View | Permission::Comment),
             Permission::View => matches!(other, Permission::View),
         }
@@ -434,10 +437,11 @@ impl CollaborationManager {
     /// Remove a board member
     pub fn remove_board_member(&mut self, board_id: &str, user_id: &str) -> bool {
         if let Some(members) = self.board_members.get_mut(board_id)
-            && let Some(pos) = members.iter().position(|m| m.user_id == user_id) {
-                members.remove(pos);
-                return true;
-            }
+            && let Some(pos) = members.iter().position(|m| m.user_id == user_id)
+        {
+            members.remove(pos);
+            return true;
+        }
         false
     }
 
@@ -469,10 +473,11 @@ impl CollaborationManager {
     /// Remove a watcher from a task
     pub fn remove_watcher(&mut self, task_id: &str, user_id: &str) -> bool {
         if let Some(watchers) = self.task_watchers.get_mut(task_id)
-            && let Some(pos) = watchers.iter().position(|w| w.user_id == user_id) {
-                watchers.remove(pos);
-                return true;
-            }
+            && let Some(pos) = watchers.iter().position(|w| w.user_id == user_id)
+        {
+            watchers.remove(pos);
+            return true;
+        }
         false
     }
 
@@ -563,10 +568,11 @@ impl CollaborationManager {
     /// Mark notification as read
     pub fn mark_notification_read(&mut self, user_id: &str, notification_id: &str) -> bool {
         if let Some(notifications) = self.notifications.get_mut(user_id)
-            && let Some(notif) = notifications.iter_mut().find(|n| n.id == notification_id) {
-                notif.mark_read();
-                return true;
-            }
+            && let Some(notif) = notifications.iter_mut().find(|n| n.id == notification_id)
+        {
+            notif.mark_read();
+            return true;
+        }
         false
     }
 
@@ -665,8 +671,12 @@ mod tests {
 
     #[test]
     fn test_notification_creation() {
-        let notification =
-            Notification::new("alice", NotificationType::TaskAssigned, "New Task", "You were assigned");
+        let notification = Notification::new(
+            "alice",
+            NotificationType::TaskAssigned,
+            "New Task",
+            "You were assigned",
+        );
         assert_eq!(notification.user_id, "alice");
         assert!(notification.is_unread());
         assert!(notification.read_at.is_none());

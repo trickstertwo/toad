@@ -7,11 +7,12 @@
 //! - View (ui.rs): Rendering logic
 
 pub mod app;
-pub mod app_evaluation;
 pub mod app_accessors;
+pub mod app_ai;
 pub mod app_commands;
-pub mod app_session;
+pub mod app_evaluation;
 pub mod app_event_handlers;
+pub mod app_session;
 pub mod app_state;
 pub mod event;
 pub mod tui;

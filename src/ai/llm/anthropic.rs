@@ -2,7 +2,9 @@
 ///
 /// Implements the Messages API: https://docs.claude.com/en/api/messages
 /// Supports all Anthropic API features including streaming, tool use, and advanced parameters
-use super::{streaming::MessageStream, LLMClient, LLMResponse, Message, StopReason, ToolUse, Usage};
+use super::{
+    LLMClient, LLMResponse, Message, StopReason, ToolUse, Usage, streaming::MessageStream,
+};
 use anyhow::{Context, Result, anyhow};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -188,8 +190,13 @@ impl AnthropicClient {
     /// to reuse computation across requests. Requires beta header.
     pub fn with_prompt_caching(mut self, enabled: bool) -> Self {
         self.prompt_caching_enabled = enabled;
-        if enabled && !self.beta_features.contains(&"prompt-caching-2024-07-31".to_string()) {
-            self.beta_features.push("prompt-caching-2024-07-31".to_string());
+        if enabled
+            && !self
+                .beta_features
+                .contains(&"prompt-caching-2024-07-31".to_string())
+        {
+            self.beta_features
+                .push("prompt-caching-2024-07-31".to_string());
         }
         self
     }
@@ -257,15 +264,17 @@ impl LLMClient for AnthropicClient {
 
         // Add tools if provided
         if let Some(mut tools_list) = tools
-            && !tools_list.is_empty() {
-                // Add cache_control to last tool when caching enabled
-                if self.prompt_caching_enabled
-                    && let Some(last_tool) = tools_list.last_mut()
-                        && let Some(obj) = last_tool.as_object_mut() {
-                            obj.insert("cache_control".to_string(), json!({"type": "ephemeral"}));
-                        }
-                body["tools"] = json!(tools_list);
+            && !tools_list.is_empty()
+        {
+            // Add cache_control to last tool when caching enabled
+            if self.prompt_caching_enabled
+                && let Some(last_tool) = tools_list.last_mut()
+                && let Some(obj) = last_tool.as_object_mut()
+            {
+                obj.insert("cache_control".to_string(), json!({"type": "ephemeral"}));
             }
+            body["tools"] = json!(tools_list);
+        }
 
         // Build request with headers
         let mut request = self
@@ -295,7 +304,9 @@ impl LLMClient for AnthropicClient {
 
         if !status.is_success() {
             // Try to parse Anthropic error response
-            if let Ok(error_response) = serde_json::from_str::<AnthropicErrorResponse>(&response_text) {
+            if let Ok(error_response) =
+                serde_json::from_str::<AnthropicErrorResponse>(&response_text)
+            {
                 return Err(anyhow!(
                     "Anthropic API error ({}): {} - {}",
                     status,
@@ -426,15 +437,17 @@ impl LLMClient for AnthropicClient {
 
         // Add tools if provided
         if let Some(mut tools_list) = tools
-            && !tools_list.is_empty() {
-                // Add cache_control to last tool when caching enabled
-                if self.prompt_caching_enabled
-                    && let Some(last_tool) = tools_list.last_mut()
-                        && let Some(obj) = last_tool.as_object_mut() {
-                            obj.insert("cache_control".to_string(), json!({"type": "ephemeral"}));
-                        }
-                body["tools"] = json!(tools_list);
+            && !tools_list.is_empty()
+        {
+            // Add cache_control to last tool when caching enabled
+            if self.prompt_caching_enabled
+                && let Some(last_tool) = tools_list.last_mut()
+                && let Some(obj) = last_tool.as_object_mut()
+            {
+                obj.insert("cache_control".to_string(), json!({"type": "ephemeral"}));
             }
+            body["tools"] = json!(tools_list);
+        }
 
         // Build request with headers
         let mut request = self
@@ -465,7 +478,8 @@ impl LLMClient for AnthropicClient {
                 .unwrap_or_else(|_| "Failed to read error response".to_string());
 
             // Try to parse Anthropic error response
-            if let Ok(error_response) = serde_json::from_str::<AnthropicErrorResponse>(&error_text) {
+            if let Ok(error_response) = serde_json::from_str::<AnthropicErrorResponse>(&error_text)
+            {
                 return Err(anyhow!(
                     "Anthropic API error ({}): {} - {}",
                     status,
@@ -474,11 +488,7 @@ impl LLMClient for AnthropicClient {
                 ));
             }
 
-            return Err(anyhow!(
-                "Anthropic API error ({}): {}",
-                status,
-                error_text
-            ));
+            return Err(anyhow!("Anthropic API error ({}): {}", status, error_text));
         }
 
         // Create streaming response
@@ -566,13 +576,11 @@ mod tests {
 
     #[test]
     fn test_temperature_clamping() {
-        let client = AnthropicClient::new("test-key".to_string())
-            .with_temperature(1.5); // Should clamp to 1.0
+        let client = AnthropicClient::new("test-key".to_string()).with_temperature(1.5); // Should clamp to 1.0
 
         assert_eq!(client.temperature.unwrap(), 1.0);
 
-        let client = AnthropicClient::new("test-key".to_string())
-            .with_temperature(-0.5); // Should clamp to 0.0
+        let client = AnthropicClient::new("test-key".to_string()).with_temperature(-0.5); // Should clamp to 0.0
 
         assert_eq!(client.temperature.unwrap(), 0.0);
     }
@@ -592,21 +600,21 @@ mod tests {
     #[test]
     fn test_stop_sequences() {
         let sequences = vec!["END".to_string(), "STOP".to_string()];
-        let client = AnthropicClient::new("test-key".to_string())
-            .with_stop_sequences(sequences.clone());
+        let client =
+            AnthropicClient::new("test-key".to_string()).with_stop_sequences(sequences.clone());
 
         assert_eq!(client.stop_sequences.as_ref().unwrap(), &sequences);
     }
 
     #[test]
     fn test_tool_choice() {
-        let client = AnthropicClient::new("test-key".to_string())
-            .with_tool_choice(ToolChoice::Auto);
+        let client =
+            AnthropicClient::new("test-key".to_string()).with_tool_choice(ToolChoice::Auto);
 
         assert!(matches!(client.tool_choice, Some(ToolChoice::Auto)));
 
-        let client = AnthropicClient::new("test-key".to_string())
-            .with_tool_choice(ToolChoice::Tool {
+        let client =
+            AnthropicClient::new("test-key".to_string()).with_tool_choice(ToolChoice::Tool {
                 name: "read_file".to_string(),
             });
 
@@ -619,24 +627,22 @@ mod tests {
 
     #[test]
     fn test_thinking_config() {
-        let client = AnthropicClient::new("test-key".to_string())
-            .with_thinking(2048);
+        let client = AnthropicClient::new("test-key".to_string()).with_thinking(2048);
 
         let thinking = client.thinking.unwrap();
         assert_eq!(thinking.mode, "enabled");
         assert_eq!(thinking.budget_tokens, 2048);
 
         // Test minimum budget enforcement
-        let client = AnthropicClient::new("test-key".to_string())
-            .with_thinking(512); // Should enforce minimum 1024
+        let client = AnthropicClient::new("test-key".to_string()).with_thinking(512); // Should enforce minimum 1024
 
         assert_eq!(client.thinking.unwrap().budget_tokens, 1024);
     }
 
     #[test]
     fn test_service_tier() {
-        let client = AnthropicClient::new("test-key".to_string())
-            .with_service_tier(ServiceTier::Auto);
+        let client =
+            AnthropicClient::new("test-key".to_string()).with_service_tier(ServiceTier::Auto);
 
         assert!(matches!(client.service_tier, Some(ServiceTier::Auto)));
     }
@@ -648,7 +654,11 @@ mod tests {
             .with_beta_feature("extended-thinking-2024-12-12");
 
         assert_eq!(client.beta_features.len(), 2);
-        assert!(client.beta_features.contains(&"prompt-caching-2024-07-31".to_string()));
+        assert!(
+            client
+                .beta_features
+                .contains(&"prompt-caching-2024-07-31".to_string())
+        );
     }
 
     #[test]
@@ -661,8 +671,7 @@ mod tests {
             extra,
         };
 
-        let client = AnthropicClient::new("test-key".to_string())
-            .with_metadata(metadata);
+        let client = AnthropicClient::new("test-key".to_string()).with_metadata(metadata);
 
         let meta = client.metadata.as_ref().unwrap();
         assert_eq!(meta.user_id.as_ref().unwrap(), "user123");
@@ -694,16 +703,23 @@ mod tests {
     fn test_prompt_caching_disabled_by_default() {
         let client = AnthropicClient::new("test-key".to_string());
         assert!(!client.prompt_caching_enabled);
-        assert!(!client.beta_features.contains(&"prompt-caching-2024-07-31".to_string()));
+        assert!(
+            !client
+                .beta_features
+                .contains(&"prompt-caching-2024-07-31".to_string())
+        );
     }
 
     #[test]
     fn test_prompt_caching_enabled() {
-        let client = AnthropicClient::new("test-key".to_string())
-            .with_prompt_caching(true);
+        let client = AnthropicClient::new("test-key".to_string()).with_prompt_caching(true);
 
         assert!(client.prompt_caching_enabled);
-        assert!(client.beta_features.contains(&"prompt-caching-2024-07-31".to_string()));
+        assert!(
+            client
+                .beta_features
+                .contains(&"prompt-caching-2024-07-31".to_string())
+        );
     }
 
     #[test]

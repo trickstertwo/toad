@@ -445,10 +445,7 @@ fn test_e2e_token_budget_management_workflow() {
     // Save budget session
     session.set_data("budget", "10.0");
     session.set_data("spent", final_cost.to_string());
-    session.set_data(
-        "remaining",
-        (10.0 - final_cost).to_string(),
-    );
+    session.set_data("remaining", (10.0 - final_cost).to_string());
     session.set_data("messages", chat.message_count().to_string());
     session.save_session("budget_management");
 
@@ -487,9 +484,10 @@ fn test_e2e_interactive_form_validation_workflow() {
     // Step 3: Enter port (invalid initially)
     port_input.set_value("99999".to_string());
     if let Ok(port) = port_input.value().parse::<u32>()
-        && port > 65535 {
-            toasts.error("Port must be between 1 and 65535");
-        }
+        && port > 65535
+    {
+        toasts.error("Port must be between 1 and 65535");
+    }
     port_input.set_value("8080".to_string());
     toasts.success("Port valid");
 
@@ -526,11 +524,13 @@ fn test_e2e_spinner_state_workflow() {
     let mut toasts = ToastManager::new();
 
     // Simulate loading states with spinners
-    let loading_messages = ["Connecting to server",
+    let loading_messages = [
+        "Connecting to server",
         "Authenticating",
         "Loading workspace",
         "Fetching files",
-        "Building index"];
+        "Building index",
+    ];
 
     for (i, message) in loading_messages.iter().enumerate() {
         toasts.info(format!("Loading: {}", message));
@@ -570,7 +570,8 @@ fn test_e2e_realtime_diff_analysis_workflow() {
     let mut stats_data = Vec::new();
 
     // Analyze multiple diffs and track statistics
-    let diffs = [(
+    let diffs = [
+        (
             "refactor",
             r#"@@ -10,5 +10,8 @@
 -old_function();
@@ -593,7 +594,8 @@ fn test_e2e_realtime_diff_analysis_workflow() {
 -another_bug();
 +fixed_line();
 "#,
-        )];
+        ),
+    ];
 
     for (change_type, diff_content) in diffs.iter() {
         diff_viewer.set_diff(diff_content);

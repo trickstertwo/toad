@@ -326,7 +326,11 @@ fn test_minimap_scroll() {
 
 #[test]
 fn test_multiselect_creation() {
-    let items = vec!["Item 1".to_string(), "Item 2".to_string(), "Item 3".to_string()];
+    let items = vec![
+        "Item 1".to_string(),
+        "Item 2".to_string(),
+        "Item 3".to_string(),
+    ];
     let selector = MultiSelect::new(items);
 
     assert_eq!(selector.item_count(), 3);
@@ -404,7 +408,12 @@ fn test_multiselect_clear_selection() {
 
 #[test]
 fn test_multiselect_invert_selection() {
-    let items = vec!["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()];
+    let items = vec![
+        "A".to_string(),
+        "B".to_string(),
+        "C".to_string(),
+        "D".to_string(),
+    ];
     let mut selector = MultiSelect::new(items).with_mode(SelectionMode::Multiple);
 
     selector.toggle(0);
@@ -547,12 +556,8 @@ fn test_complete_editing_workflow() {
     undo_manager.execute(Action::new("Save", "saved file"));
 
     // Show edit menu
-    menu.add_item(
-        MenuItem::action("Undo", "Ctrl+Z").with_enabled(undo_manager.can_undo()),
-    );
-    menu.add_item(
-        MenuItem::action("Redo", "Ctrl+Y").with_enabled(undo_manager.can_redo()),
-    );
+    menu.add_item(MenuItem::action("Undo", "Ctrl+Z").with_enabled(undo_manager.can_undo()));
+    menu.add_item(MenuItem::action("Redo", "Ctrl+Y").with_enabled(undo_manager.can_redo()));
     menu.add_item(MenuItem::separator());
     menu.add_item(MenuItem::action("Cut", "Ctrl+X"));
     menu.add_item(MenuItem::action("Copy", "Ctrl+C"));

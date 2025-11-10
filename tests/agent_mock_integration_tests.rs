@@ -1,3 +1,4 @@
+use toad::ai::evaluation::Task;
 /// Integration tests for Agent using mock LLM clients
 ///
 /// These tests demonstrate how to test the agent execution loop
@@ -6,7 +7,6 @@ use toad::ai::{
     Agent, DeterministicLLMClient, LLMClient, Message, MetricsCollector, MockResponseBuilder,
     ToolRegistry,
 };
-use toad::ai::evaluation::Task;
 
 #[tokio::test]
 async fn test_agent_with_deterministic_mock_read_tool() {
@@ -45,10 +45,7 @@ async fn test_agent_with_sequenced_mock() {
     // Create mock with specific response sequence
     let llm_client = Box::new(
         MockResponseBuilder::new()
-            .with_tool(
-                "read",
-                serde_json::json!({"path": "src/main.rs"}),
-            )
+            .with_tool("read", serde_json::json!({"path": "src/main.rs"}))
             .with_tool(
                 "write",
                 serde_json::json!({

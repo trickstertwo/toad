@@ -211,10 +211,7 @@ impl QuickFilter {
 
         match self {
             QuickFilter::MyTasks => {
-                filter.add_condition(FilterCondition::equals(
-                    FilterField::Assignee,
-                    current_user,
-                ));
+                filter.add_condition(FilterCondition::equals(FilterField::Assignee, current_user));
             }
             QuickFilter::DueThisWeek => {
                 // This would need date logic in real implementation
@@ -248,10 +245,7 @@ impl QuickFilter {
                 filter.add_condition(FilterCondition::equals(FilterField::Status, "completed"));
             }
             QuickFilter::InProgress => {
-                filter.add_condition(FilterCondition::equals(
-                    FilterField::Status,
-                    "in_progress",
-                ));
+                filter.add_condition(FilterCondition::equals(FilterField::Status, "in_progress"));
             }
             QuickFilter::All => {
                 // No conditions - show everything
@@ -614,10 +608,7 @@ mod tests {
     fn test_search_parser_full_text() {
         let filter = SearchParser::parse("bug fix");
         assert_eq!(filter.conditions.len(), 2);
-        assert!(matches!(
-            filter.conditions[0].field,
-            FilterField::FullText
-        ));
+        assert!(matches!(filter.conditions[0].field, FilterField::FullText));
     }
 
     #[test]

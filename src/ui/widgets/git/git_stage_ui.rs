@@ -185,7 +185,11 @@ impl GitStageUI {
     /// ```
     pub async fn refresh(&mut self) -> Result<()> {
         // Get current branch
-        self.branch = self.service.current_branch().await.unwrap_or_else(|_| String::from("unknown"));
+        self.branch = self
+            .service
+            .current_branch()
+            .await
+            .unwrap_or_else(|_| String::from("unknown"));
 
         // Get file changes
         let changes = self.service.status().await?;
@@ -231,22 +235,24 @@ impl GitStageUI {
     /// Stage the currently selected file
     pub async fn stage_selected(&mut self) -> Result<()> {
         if let Some(idx) = self.unstaged_state.selected()
-            && let Some(entry) = self.unstaged.get(idx) {
-                self.service.stage(&entry.path).await?;
-                self.message = Some(format!("Staged: {}", entry.path.display()));
-                self.refresh().await?;
-            }
+            && let Some(entry) = self.unstaged.get(idx)
+        {
+            self.service.stage(&entry.path).await?;
+            self.message = Some(format!("Staged: {}", entry.path.display()));
+            self.refresh().await?;
+        }
         Ok(())
     }
 
     /// Unstage the currently selected file
     pub async fn unstage_selected(&mut self) -> Result<()> {
         if let Some(idx) = self.staged_state.selected()
-            && let Some(entry) = self.staged.get(idx) {
-                self.service.unstage(&entry.path).await?;
-                self.message = Some(format!("Unstaged: {}", entry.path.display()));
-                self.refresh().await?;
-            }
+            && let Some(entry) = self.staged.get(idx)
+        {
+            self.service.unstage(&entry.path).await?;
+            self.message = Some(format!("Unstaged: {}", entry.path.display()));
+            self.refresh().await?;
+        }
         Ok(())
     }
 
@@ -285,15 +291,17 @@ impl GitStageUI {
         match self.focus {
             StagePane::Unstaged => {
                 if let Some(selected) = self.unstaged_state.selected()
-                    && selected > 0 {
-                        self.unstaged_state.select(Some(selected - 1));
-                    }
+                    && selected > 0
+                {
+                    self.unstaged_state.select(Some(selected - 1));
+                }
             }
             StagePane::Staged => {
                 if let Some(selected) = self.staged_state.selected()
-                    && selected > 0 {
-                        self.staged_state.select(Some(selected - 1));
-                    }
+                    && selected > 0
+                {
+                    self.staged_state.select(Some(selected - 1));
+                }
             }
         }
     }
@@ -303,15 +311,17 @@ impl GitStageUI {
         match self.focus {
             StagePane::Unstaged => {
                 if let Some(selected) = self.unstaged_state.selected()
-                    && selected + 1 < self.unstaged.len() {
-                        self.unstaged_state.select(Some(selected + 1));
-                    }
+                    && selected + 1 < self.unstaged.len()
+                {
+                    self.unstaged_state.select(Some(selected + 1));
+                }
             }
             StagePane::Staged => {
                 if let Some(selected) = self.staged_state.selected()
-                    && selected + 1 < self.staged.len() {
-                        self.staged_state.select(Some(selected + 1));
-                    }
+                    && selected + 1 < self.staged.len()
+                {
+                    self.staged_state.select(Some(selected + 1));
+                }
             }
         }
     }
@@ -408,16 +418,25 @@ impl Widget for &mut GitStageUI {
         .split(area);
 
         // Render header with branch info
-        let header = Paragraph::new(vec![
-            Line::from(vec![
-                Span::styled("Branch: ", Style::default().fg(Color::Gray)),
-                Span::styled(&self.branch, Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-                Span::styled("  |  ", Style::default().fg(Color::Gray)),
-                Span::styled(format!("Unstaged: {}", self.unstaged.len()), Style::default().fg(Color::Yellow)),
-                Span::styled("  |  ", Style::default().fg(Color::Gray)),
-                Span::styled(format!("Staged: {}", self.staged.len()), Style::default().fg(Color::Green)),
-            ]),
-        ])
+        let header = Paragraph::new(vec![Line::from(vec![
+            Span::styled("Branch: ", Style::default().fg(Color::Gray)),
+            Span::styled(
+                &self.branch,
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled("  |  ", Style::default().fg(Color::Gray)),
+            Span::styled(
+                format!("Unstaged: {}", self.unstaged.len()),
+                Style::default().fg(Color::Yellow),
+            ),
+            Span::styled("  |  ", Style::default().fg(Color::Gray)),
+            Span::styled(
+                format!("Staged: {}", self.staged.len()),
+                Style::default().fg(Color::Green),
+            ),
+        ])])
         .block(Block::default().borders(Borders::ALL).title("Git Stage"));
         header.render(chunks[0], buf);
 
@@ -454,7 +473,11 @@ impl Widget for &mut GitStageUI {
                     .title("Unstaged")
                     .border_style(unstaged_border),
             )
-            .highlight_style(Style::default().bg(Color::DarkGray).add_modifier(Modifier::BOLD));
+            .highlight_style(
+                Style::default()
+                    .bg(Color::DarkGray)
+                    .add_modifier(Modifier::BOLD),
+            );
 
         StatefulWidget::render(unstaged_list, panes[0], buf, &mut self.unstaged_state);
 
@@ -487,7 +510,11 @@ impl Widget for &mut GitStageUI {
                     .title("Staged")
                     .border_style(staged_border),
             )
-            .highlight_style(Style::default().bg(Color::DarkGray).add_modifier(Modifier::BOLD));
+            .highlight_style(
+                Style::default()
+                    .bg(Color::DarkGray)
+                    .add_modifier(Modifier::BOLD),
+            );
 
         StatefulWidget::render(staged_list, panes[1], buf, &mut self.staged_state);
 
@@ -495,7 +522,9 @@ impl Widget for &mut GitStageUI {
         let footer_text = if let Some(msg) = &self.message {
             msg.clone()
         } else {
-            String::from("Space: Stage/Unstage | a: Stage All | u: Unstage All | Tab: Switch Pane | v: Visual Mode | j/k: Navigate")
+            String::from(
+                "Space: Stage/Unstage | a: Stage All | u: Unstage All | Tab: Switch Pane | v: Visual Mode | j/k: Navigate",
+            )
         };
         let footer = Paragraph::new(footer_text).style(Style::default().fg(Color::Gray));
         footer.render(chunks[2], buf);

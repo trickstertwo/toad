@@ -5,15 +5,14 @@
 /// - Multi-model: Race multiple models in parallel (TRAE paper)
 /// - Semantic: Route based on task type (Aurelio Labs)
 /// - Speculative: Run fast+premium in parallel, use fast if good enough
-
 mod cascade;
 mod classifier;
 
 pub use cascade::{CascadingRouter, ModelTier};
 pub use classifier::{Difficulty, TaskClassifier};
 
-use crate::ai::llm::ProviderConfig;
 use crate::ai::evaluation::Task;
+use crate::ai::llm::ProviderConfig;
 use anyhow::Result;
 
 /// Router trait for selecting which LLM to use for a task

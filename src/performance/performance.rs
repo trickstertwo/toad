@@ -6,8 +6,7 @@ use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 
 /// Target FPS configuration
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum TargetFPS {
     /// 30 FPS (balanced for slower terminals)
     Fps30,
@@ -52,7 +51,6 @@ impl TargetFPS {
     }
 }
 
-
 /// Frame rate limiter for controlling render rate
 #[derive(Debug)]
 pub struct FrameLimiter {
@@ -79,15 +77,16 @@ impl FrameLimiter {
     /// End frame and sleep if needed to match target FPS
     pub fn end_frame(&mut self) {
         if let Some(target_micros) = self.target_fps.frame_time_micros()
-            && let Some(start) = self.last_frame_start {
-                let elapsed = start.elapsed();
-                let target_duration = Duration::from_micros(target_micros);
+            && let Some(start) = self.last_frame_start
+        {
+            let elapsed = start.elapsed();
+            let target_duration = Duration::from_micros(target_micros);
 
-                if elapsed < target_duration {
-                    let sleep_duration = target_duration - elapsed;
-                    std::thread::sleep(sleep_duration);
-                }
+            if elapsed < target_duration {
+                let sleep_duration = target_duration - elapsed;
+                std::thread::sleep(sleep_duration);
             }
+        }
     }
 
     /// Set target FPS

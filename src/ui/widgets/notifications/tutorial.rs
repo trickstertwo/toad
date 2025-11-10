@@ -18,7 +18,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Clear, Paragraph, Wrap, Widget},
+    widgets::{Block, Borders, Clear, Paragraph, Widget, Wrap},
 };
 use serde::{Deserialize, Serialize};
 
@@ -354,10 +354,10 @@ impl Widget for &InteractiveTutorial {
         if let Some(step) = self.get_current_step() {
             // Split into header, content, action, footer
             let chunks = Layout::vertical([
-                Constraint::Length(3),  // Header with progress
-                Constraint::Min(5),     // Content
-                Constraint::Length(4),  // Action required
-                Constraint::Length(3),  // Footer with navigation
+                Constraint::Length(3), // Header with progress
+                Constraint::Min(5),    // Content
+                Constraint::Length(4), // Action required
+                Constraint::Length(3), // Footer with navigation
             ])
             .split(dialog_area);
 
@@ -371,7 +371,9 @@ impl Widget for &InteractiveTutorial {
                     ),
                     Span::styled(
                         &step.title,
-                        Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
                     ),
                 ]),
                 Line::from(vec![
@@ -397,18 +399,29 @@ impl Widget for &InteractiveTutorial {
 
             // Render action required
             let mut action_lines = vec![Line::from(vec![
-                Span::styled("Action: ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "Action: ",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::raw(&step.action),
             ])];
 
             if self.show_hints
-                && let Some(hint) = &step.hint {
-                    action_lines.push(Line::from(""));
-                    action_lines.push(Line::from(vec![
-                        Span::styled("💡 Hint: ", Style::default().fg(Color::Cyan)),
-                        Span::styled(hint, Style::default().fg(Color::Gray).add_modifier(Modifier::ITALIC)),
-                    ]));
-                }
+                && let Some(hint) = &step.hint
+            {
+                action_lines.push(Line::from(""));
+                action_lines.push(Line::from(vec![
+                    Span::styled("💡 Hint: ", Style::default().fg(Color::Cyan)),
+                    Span::styled(
+                        hint,
+                        Style::default()
+                            .fg(Color::Gray)
+                            .add_modifier(Modifier::ITALIC),
+                    ),
+                ]));
+            }
 
             let action_widget = Paragraph::new(action_lines)
                 .block(Block::default().borders(Borders::ALL))
@@ -527,16 +540,14 @@ mod tests {
 
     #[test]
     fn test_custom_steps() {
-        let steps = vec![
-            TutorialStep {
-                title: "Step 1".to_string(),
-                description: "Description".to_string(),
-                action: "Action".to_string(),
-                hint: None,
-                interactive: false,
-                highlight_area: None,
-            },
-        ];
+        let steps = vec![TutorialStep {
+            title: "Step 1".to_string(),
+            description: "Description".to_string(),
+            action: "Action".to_string(),
+            hint: None,
+            interactive: false,
+            highlight_area: None,
+        }];
 
         let tutorial = InteractiveTutorial::with_steps(steps);
         assert_eq!(tutorial.step_count(), 1);

@@ -536,4 +536,3 @@ impl Widget for &GitGraph {
         }
     }
 }
-

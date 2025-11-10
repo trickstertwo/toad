@@ -10,19 +10,18 @@
 /// let spinner = Spinner::new(SpinnerStyle::Dots);
 /// assert_eq!(spinner.current_frame(), 0);
 /// ```
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::text::Text, theme::ToadTheme};
 use ratatui::{
-    Frame,
     layout::{Alignment, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
+    text::Line,
     widgets::Paragraph,
+    Frame,
 };
 use serde::{Deserialize, Serialize};
 
 /// Spinner animation style
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum SpinnerStyle {
     /// Rotating dots: ⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏
     #[default]
@@ -81,7 +80,6 @@ impl SpinnerStyle {
         }
     }
 }
-
 
 /// Loading spinner widget
 #[derive(Debug, Clone)]
@@ -211,14 +209,16 @@ impl Spinner {
         let symbol = self.current_symbol();
         let spinner_style = Style::default().fg(self.color).add_modifier(Modifier::BOLD);
 
+        // Use Text atoms for rendering
         let text = if let Some(label) = &self.label {
-            Line::from(vec![
-                Span::styled(symbol, spinner_style),
-                Span::raw(" "),
-                Span::styled(label, Style::default().fg(ToadTheme::FOREGROUND)),
-            ])
+            let symbol_text = Text::new(symbol).style(spinner_style);
+            let space_text = Text::new(" ");
+            let label_text = Text::new(label).style(Style::default().fg(ToadTheme::FOREGROUND));
+
+            Line::from(vec![symbol_text.to_span(), space_text.to_span(), label_text.to_span()])
         } else {
-            Line::from(Span::styled(symbol, spinner_style))
+            let symbol_text = Text::new(symbol).style(spinner_style);
+            Line::from(symbol_text.to_span())
         };
 
         let paragraph = Paragraph::new(text).alignment(Alignment::Left);

@@ -9,7 +9,7 @@ use crate::core::app::App;
 use crate::core::app_state::{AppScreen, EvaluationState};
 use crate::core::event::Event;
 use crate::performance::PerformanceMetrics;
-use crate::ui::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, PSXFroggerGame, ToastManager};
+use crate::ui::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, ToastManager};
 use crate::workspace::{LayoutManager, SessionState, TabManager};
 use std::path::PathBuf;
 
@@ -228,16 +228,6 @@ impl App {
     pub fn tabs_mut(&mut self) -> &mut TabManager {
         &mut self.tabs
     }
-
-    /// Get reference to PSX Frogger game
-    pub fn psx_frogger(&self) -> &PSXFroggerGame {
-        &self.psx_frogger
-    }
-
-    /// Get mutable reference to PSX Frogger game
-    pub fn psx_frogger_mut(&mut self) -> &mut PSXFroggerGame {
-        &mut self.psx_frogger
-    }
 }
 
 #[cfg(test)]
@@ -286,7 +276,10 @@ mod tests {
     fn test_evaluation_state_mut_accessor() {
         let mut app = App::new();
         let state = app.evaluation_state_mut();
-        assert!(state.is_none(), "Initial mutable evaluation state should be None");
+        assert!(
+            state.is_none(),
+            "Initial mutable evaluation state should be None"
+        );
     }
 
     #[test]
@@ -330,9 +323,15 @@ mod tests {
         let mut app = App::new();
         assert!(!app.show_performance(), "Performance should start hidden");
         app.toggle_performance();
-        assert!(app.show_performance(), "Performance should be shown after toggle");
+        assert!(
+            app.show_performance(),
+            "Performance should be shown after toggle"
+        );
         app.toggle_performance();
-        assert!(!app.show_performance(), "Performance should be hidden after second toggle");
+        assert!(
+            !app.show_performance(),
+            "Performance should be hidden after second toggle"
+        );
     }
 
     // ===== Toast Notification Tests =====

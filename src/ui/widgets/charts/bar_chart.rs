@@ -617,7 +617,9 @@ mod tests {
 
     #[test]
     fn test_bar_chart_with_many_bars() {
-        let data: Vec<BarData> = (0..100).map(|i| BarData::new(format!("Bar{}", i), i as f64)).collect();
+        let data: Vec<BarData> = (0..100)
+            .map(|i| BarData::new(format!("Bar{}", i), i as f64))
+            .collect();
         let chart = BarChart::new(data);
         assert_eq!(chart.bar_count(), 100);
     }
@@ -748,7 +750,9 @@ mod tests {
 
     #[test]
     fn test_bar_chart_render_vertical_with_many_bars() {
-        let data: Vec<BarData> = (0..50).map(|i| BarData::new(format!("B{}", i), i as f64)).collect();
+        let data: Vec<BarData> = (0..50)
+            .map(|i| BarData::new(format!("B{}", i), i as f64))
+            .collect();
         let chart = BarChart::new(data).with_direction(BarDirection::Vertical);
         let lines = chart.render_lines(200, 50);
         assert!(!lines.is_empty());
@@ -756,7 +760,9 @@ mod tests {
 
     #[test]
     fn test_bar_chart_render_horizontal_with_many_bars() {
-        let data: Vec<BarData> = (0..50).map(|i| BarData::new(format!("B{}", i), i as f64)).collect();
+        let data: Vec<BarData> = (0..50)
+            .map(|i| BarData::new(format!("B{}", i), i as f64))
+            .collect();
         let chart = BarChart::new(data).with_direction(BarDirection::Horizontal);
         let lines = chart.render_lines(100, 100);
         assert!(!lines.is_empty());
@@ -887,11 +893,15 @@ mod tests {
         let chart = BarChart::new(data)
             .with_title("📊 Chart Title")
             .with_value_label("Values (%)");
-        let lines_vertical = chart.clone().with_direction(BarDirection::Vertical).render_lines(60, 25);
-        let lines_horizontal = chart.with_direction(BarDirection::Horizontal).render_lines(60, 25);
+        let lines_vertical = chart
+            .clone()
+            .with_direction(BarDirection::Vertical)
+            .render_lines(60, 25);
+        let lines_horizontal = chart
+            .with_direction(BarDirection::Horizontal)
+            .render_lines(60, 25);
 
         assert!(!lines_vertical.is_empty());
         assert!(!lines_horizontal.is_empty());
     }
 }
-

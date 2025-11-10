@@ -3,12 +3,12 @@
 //! These tests verify that MEDIUM tier components work together correctly
 //! in realistic multi-component scenarios.
 
-use toad::workspace::{SessionState, TabManager};
-use toad::ui::widgets::ToastManager;
-use toad::infrastructure::history::History;
-use toad::navigation::search::SearchState;
 use std::path::PathBuf;
 use std::time::Duration;
+use toad::infrastructure::history::History;
+use toad::navigation::search::SearchState;
+use toad::ui::widgets::ToastManager;
+use toad::workspace::{SessionState, TabManager};
 
 // =============================================================================
 // TOAST + SESSION INTEGRATION
@@ -21,13 +21,19 @@ fn test_integration_toast_manager_with_session_state() {
 
     // Simulate workflow: session loading triggers success toast
     session.set_working_directory(PathBuf::from("/test/project"));
-    toasts.success(format!("Loaded session from {}", session.working_directory().display()));
+    toasts.success(format!(
+        "Loaded session from {}",
+        session.working_directory().display()
+    ));
 
     assert_eq!(toasts.len(), 1);
 
     // Change directory, show new toast
     session.set_working_directory(PathBuf::from("/test/another"));
-    toasts.info(format!("Changed to {}", session.working_directory().display()));
+    toasts.info(format!(
+        "Changed to {}",
+        session.working_directory().display()
+    ));
 
     assert_eq!(toasts.len(), 2);
 }
@@ -201,7 +207,10 @@ fn test_integration_complete_workspace_state() {
     history.add("cargo build".to_string());
 
     // Verify complete state
-    assert_eq!(session.working_directory(), &PathBuf::from("/home/user/project"));
+    assert_eq!(
+        session.working_directory(),
+        &PathBuf::from("/home/user/project")
+    );
     assert_eq!(tabs.count(), 3);
     assert_eq!(tabs.active_index(), Some(1));
     assert_eq!(history.len(), 3);
@@ -225,7 +234,12 @@ fn test_integration_workspace_state_with_unicode() {
     history.add("cd /home/用户/项目".to_string());
 
     // Verify Unicode handling across all components
-    assert!(session.working_directory().to_string_lossy().contains("用户"));
+    assert!(
+        session
+            .working_directory()
+            .to_string_lossy()
+            .contains("用户")
+    );
     assert_eq!(&tabs.tabs()[0].title, "エディタ");
     assert_eq!(&tabs.tabs()[1].title, "终端");
     assert!(history.entries().iter().any(|e| e.contains("🐸")));
@@ -308,10 +322,7 @@ fn test_integration_search_across_tabs_and_history() {
     history.add("git status".to_string());
 
     // Search in tab titles
-    let tab_titles: Vec<String> = tabs.tabs()
-        .iter()
-        .map(|t| t.title.clone())
-        .collect();
+    let tab_titles: Vec<String> = tabs.tabs().iter().map(|t| t.title.clone()).collect();
     let mut search_tabs = SearchState::new();
     search_tabs.set_query("cargo".to_string());
     search_tabs.search(&tab_titles);
@@ -336,7 +347,9 @@ fn test_integration_session_serialization_with_complex_state() {
     let mut session = SessionState::new();
 
     // Set up complex session state
-    session.set_working_directory(PathBuf::from("/complex/path/with spaces/and-unicode-日本語"));
+    session.set_working_directory(PathBuf::from(
+        "/complex/path/with spaces/and-unicode-日本語",
+    ));
 
     // Serialize
     let json = serde_json::to_string(&session).unwrap();

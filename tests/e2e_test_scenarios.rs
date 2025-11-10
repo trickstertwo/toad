@@ -57,10 +57,7 @@ fn test_e2e_ai_coding_session_workflow() {
 
     // Step 5: User switches to more powerful model for complex question
     model_selector.next();
-    assert_eq!(
-        model_selector.selected_model().unwrap().id,
-        "claude-opus-4"
-    );
+    assert_eq!(model_selector.selected_model().unwrap().id, "claude-opus-4");
     token_counter.set_cost_model(CostModel::claude_opus_4());
 
     chat.add_user_message("How do I handle thread safety with Arc and Mutex?");
@@ -493,7 +490,9 @@ fn test_e2e_refactoring_workflow() {
 
     // Step 1: Identify code that needs refactoring
     chat.add_user_message("This function is too complex. How should I refactor it?");
-    chat.add_assistant_message("Consider extracting helper methods and using the builder pattern...");
+    chat.add_assistant_message(
+        "Consider extracting helper methods and using the builder pattern...",
+    );
 
     // Step 2: Make refactoring changes
     status.set_branch("refactor/simplify-api");

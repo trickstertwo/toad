@@ -7,11 +7,10 @@
 /// - Fall back to all tests if selection fails
 ///
 /// Evidence: AutoCodeRover proven (+3-5 points with smart test selection)
-
 use super::{Tool, ToolResult};
 use crate::ai::test_selection::TestSelector;
 use anyhow::Result;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::Command;
@@ -111,7 +110,8 @@ impl Tool for RunTestsTool {
     }
 
     async fn execute(&self, args: HashMap<String, Value>) -> Result<ToolResult> {
-        let workspace_str = args.get("workspace_path")
+        let workspace_str = args
+            .get("workspace_path")
             .and_then(|v| v.as_str())
             .ok_or_else(|| anyhow::anyhow!("workspace_path is required"))?;
 
@@ -135,9 +135,7 @@ impl Tool for RunTestsTool {
             let selector = TestSelector::new();
 
             // Get test selection based on git changes
-            let selection = selector
-                .select_tests_from_git(&workspace, base_ref)
-                .await?;
+            let selection = selector.select_tests_from_git(&workspace, base_ref).await?;
 
             if selection.run_all {
                 tracing::warn!("Smart selection failed or no changes detected, running all tests");

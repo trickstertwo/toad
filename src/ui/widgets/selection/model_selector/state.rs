@@ -377,28 +377,28 @@ impl ModelSelector {
 
         // Render details panel if enabled and model selected
         if self.show_details
-            && let Some(model) = self.selected_model() {
-                // Show capabilities at the bottom
-                let caps_text = format!("Capabilities: {}", model.capabilities.join(", "));
-                let caps_line = Line::from(vec![Span::styled(
-                    caps_text,
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::ITALIC),
-                )]);
+            && let Some(model) = self.selected_model()
+        {
+            // Show capabilities at the bottom
+            let caps_text = format!("Capabilities: {}", model.capabilities.join(", "));
+            let caps_line = Line::from(vec![Span::styled(
+                caps_text,
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::ITALIC),
+            )]);
 
-                // Render at bottom of area
-                if area.height > 2 {
-                    let caps_area = Rect {
-                        x: area.x + 2,
-                        y: area.y + area.height - 2,
-                        width: area.width.saturating_sub(4),
-                        height: 1,
-                    };
+            // Render at bottom of area
+            if area.height > 2 {
+                let caps_area = Rect {
+                    x: area.x + 2,
+                    y: area.y + area.height - 2,
+                    width: area.width.saturating_sub(4),
+                    height: 1,
+                };
 
-                    frame.render_widget(caps_line, caps_area);
-                }
+                frame.render_widget(caps_line, caps_area);
             }
+        }
     }
 }
-

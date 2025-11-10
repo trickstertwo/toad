@@ -2,13 +2,16 @@
 //!
 //! Displays keybindings and command reference
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{
+    atoms::{block::Block, text::Text},
+    theme::ToadTheme,
+};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    text::Line,
+    widgets::Paragraph,
 };
 
 /// Help screen widget
@@ -42,17 +45,12 @@ impl HelpScreen {
 
         let help_area = horizontal[1];
 
-        // Render help content
-        let help_block = Block::default()
+        // Render help content using Block atom
+        let help_block = Block::new()
             .title(" TOAD - Keyboard Shortcuts ")
-            .title_style(
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
-                    .add_modifier(Modifier::BOLD),
-            )
-            .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
-            .style(Style::default().bg(ToadTheme::BLACK));
+            .style(Style::default().bg(ToadTheme::BLACK))
+            .to_ratatui();
 
         let inner = help_block.inner(help_area);
         frame.render_widget(help_block, help_area);
@@ -66,23 +64,13 @@ impl HelpScreen {
         // Left column: General & Navigation
         let left_content = vec![
             Line::from(""),
-            Line::from(Span::styled(
-                "GENERAL",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
-                    .add_modifier(Modifier::BOLD),
-            )),
+            self.section_header("GENERAL"),
             Line::from(""),
             self.keybinding_line("Ctrl+c", "Quit application"),
             self.keybinding_line("?", "Toggle help screen"),
             self.keybinding_line("Esc", "Go back / Close dialog"),
             Line::from(""),
-            Line::from(Span::styled(
-                "INPUT & EDITING",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
-                    .add_modifier(Modifier::BOLD),
-            )),
+            self.section_header("INPUT & EDITING"),
             Line::from(""),
             self.keybinding_line("Enter", "Submit command"),
             self.keybinding_line("Ctrl+u", "Clear input"),
@@ -91,12 +79,7 @@ impl HelpScreen {
             self.keybinding_line("← / →", "Move cursor"),
             self.keybinding_line("Backspace", "Delete character"),
             Line::from(""),
-            Line::from(Span::styled(
-                "NAVIGATION",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
-                    .add_modifier(Modifier::BOLD),
-            )),
+            self.section_header("NAVIGATION"),
             Line::from(""),
             self.keybinding_line("↑ / ↓", "Navigate lists"),
             self.keybinding_line("Tab", "Next panel"),
@@ -106,24 +89,14 @@ impl HelpScreen {
         // Right column: Commands & Features
         let right_content = vec![
             Line::from(""),
-            Line::from(Span::styled(
-                "COMMANDS",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
-                    .add_modifier(Modifier::BOLD),
-            )),
+            self.section_header("COMMANDS"),
             Line::from(""),
             self.keybinding_line("/help", "Show command reference"),
             self.keybinding_line("/commands", "List available commands"),
             self.keybinding_line("/clear", "Clear screen"),
             self.keybinding_line("@filename", "Mention file in context"),
             Line::from(""),
-            Line::from(Span::styled(
-                "FEATURES",
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
-                    .add_modifier(Modifier::BOLD),
-            )),
+            self.section_header("FEATURES"),
             Line::from(""),
             self.keybinding_line("Ctrl+p", "Command palette"),
             self.keybinding_line("Ctrl+r", "Expand recent"),
@@ -131,12 +104,15 @@ impl HelpScreen {
             Line::from(""),
             Line::from(""),
             Line::from(""),
-            Line::from(Span::styled(
-                "Press ESC or ? to close this help screen",
-                Style::default()
-                    .fg(ToadTheme::DARK_GRAY)
-                    .add_modifier(Modifier::ITALIC),
-            )),
+            Line::from(
+                Text::new("Press ESC or ? to close this help screen")
+                    .style(
+                        Style::default()
+                            .fg(ToadTheme::DARK_GRAY)
+                            .add_modifier(Modifier::ITALIC),
+                    )
+                    .to_span(),
+            ),
         ];
 
         let left_paragraph = Paragraph::new(left_content).alignment(Alignment::Left);
@@ -146,20 +122,32 @@ impl HelpScreen {
         frame.render_widget(right_paragraph, columns[1]);
     }
 
-    fn keybinding_line<'a>(&self, key: &'a str, description: &'a str) -> Line<'a> {
+    fn section_header(&self, title: &str) -> Line<'static> {
+        // Use Text atom for section headers
+        let header_text = Text::new(title).style(
+            Style::default()
+                .fg(ToadTheme::TOAD_GREEN_BRIGHT)
+                .add_modifier(Modifier::BOLD),
+        );
+        Line::from(header_text.to_span())
+    }
+
+    fn keybinding_line(&self, key: &str, description: &str) -> Line<'static> {
+        // Use Text atoms for each component
+        let indent = Text::new("  ");
+        let key_text = Text::new(format!("{:<15}", key)).style(
+            Style::default()
+                .fg(ToadTheme::TOAD_GREEN)
+                .add_modifier(Modifier::BOLD),
+        );
+        let space = Text::new(" ");
+        let desc_text = Text::new(description).style(Style::default().fg(ToadTheme::FOREGROUND));
+
         Line::from(vec![
-            Span::styled("  ", Style::default()),
-            Span::styled(
-                format!("{:<15}", key),
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(" ", Style::default()),
-            Span::styled(
-                description.to_string(),
-                Style::default().fg(ToadTheme::FOREGROUND),
-            ),
+            indent.to_span(),
+            key_text.to_span(),
+            space.to_span(),
+            desc_text.to_span(),
         ])
     }
 }
@@ -280,8 +268,8 @@ mod tests {
     }
 
     // ===== Integration tests with TestBackend =====
-    use ratatui::backend::TestBackend;
     use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
 
     #[test]
     fn test_render_with_test_backend() {

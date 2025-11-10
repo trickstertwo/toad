@@ -83,11 +83,7 @@ impl TimeEntry {
     }
 
     /// Create a manual time entry
-    pub fn manual(
-        task_id: impl Into<String>,
-        start: DateTime<Utc>,
-        duration: Duration,
-    ) -> Self {
+    pub fn manual(task_id: impl Into<String>, start: DateTime<Utc>, duration: Duration) -> Self {
         let task_id = task_id.into();
         let id = format!("entry-{}-{}", task_id, start.timestamp());
         let end = start + duration;
@@ -341,10 +337,7 @@ impl TimeTracker {
         let task_id = entry.task_id.clone();
 
         self.entries.push(entry);
-        self.by_task
-            .entry(task_id)
-            .or_default()
-            .push(index);
+        self.by_task.entry(task_id).or_default().push(index);
 
         self.next_id += 1;
         index
@@ -380,11 +373,7 @@ impl TimeTracker {
     }
 
     /// Get entries within a date range
-    pub fn entries_in_range(
-        &self,
-        start: DateTime<Utc>,
-        end: DateTime<Utc>,
-    ) -> Vec<&TimeEntry> {
+    pub fn entries_in_range(&self, start: DateTime<Utc>, end: DateTime<Utc>) -> Vec<&TimeEntry> {
         self.entries
             .iter()
             .filter(|e| e.start >= start && e.start < end)
@@ -463,7 +452,8 @@ mod tests {
     use chrono::TimeZone;
 
     fn make_datetime(year: i32, month: u32, day: u32, hour: u32, min: u32) -> DateTime<Utc> {
-        Utc.with_ymd_and_hms(year, month, day, hour, min, 0).unwrap()
+        Utc.with_ymd_and_hms(year, month, day, hour, min, 0)
+            .unwrap()
     }
 
     #[test]

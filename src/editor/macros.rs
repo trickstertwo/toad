@@ -166,10 +166,11 @@ impl MacroManager {
     pub fn stop_recording(&mut self) -> bool {
         if let Some(register) = self.recording.take()
             && let Some(macro_) = self.current_macro.take()
-                && !macro_.is_empty() {
-                    self.macros.insert(register, macro_);
-                    return true;
-                }
+            && !macro_.is_empty()
+        {
+            self.macros.insert(register, macro_);
+            return true;
+        }
         false
     }
 

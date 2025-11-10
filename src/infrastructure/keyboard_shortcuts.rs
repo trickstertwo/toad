@@ -228,38 +228,74 @@ impl ShortcutAction {
     /// Get category
     pub fn category(&self) -> ShortcutCategory {
         match self {
-            ShortcutAction::MoveUp | ShortcutAction::MoveDown | ShortcutAction::MoveLeft |
-            ShortcutAction::MoveRight | ShortcutAction::JumpToTop | ShortcutAction::JumpToBottom |
-            ShortcutAction::PageUp | ShortcutAction::PageDown | ShortcutAction::GoBack |
-            ShortcutAction::GoForward => ShortcutCategory::Navigation,
+            ShortcutAction::MoveUp
+            | ShortcutAction::MoveDown
+            | ShortcutAction::MoveLeft
+            | ShortcutAction::MoveRight
+            | ShortcutAction::JumpToTop
+            | ShortcutAction::JumpToBottom
+            | ShortcutAction::PageUp
+            | ShortcutAction::PageDown
+            | ShortcutAction::GoBack
+            | ShortcutAction::GoForward => ShortcutCategory::Navigation,
 
-            ShortcutAction::Create | ShortcutAction::Edit | ShortcutAction::Delete |
-            ShortcutAction::Rename | ShortcutAction::Copy | ShortcutAction::Paste |
-            ShortcutAction::Cut | ShortcutAction::Save => ShortcutCategory::FileOps,
+            ShortcutAction::Create
+            | ShortcutAction::Edit
+            | ShortcutAction::Delete
+            | ShortcutAction::Rename
+            | ShortcutAction::Copy
+            | ShortcutAction::Paste
+            | ShortcutAction::Cut
+            | ShortcutAction::Save => ShortcutCategory::FileOps,
 
-            ShortcutAction::Search | ShortcutAction::Filter | ShortcutAction::NextResult |
-            ShortcutAction::PreviousResult | ShortcutAction::ClearSearch => ShortcutCategory::Search,
+            ShortcutAction::Search
+            | ShortcutAction::Filter
+            | ShortcutAction::NextResult
+            | ShortcutAction::PreviousResult
+            | ShortcutAction::ClearSearch => ShortcutCategory::Search,
 
-            ShortcutAction::ToggleView | ShortcutAction::Fullscreen | ShortcutAction::ToggleSidebar |
-            ShortcutAction::TogglePanel | ShortcutAction::ZoomIn | ShortcutAction::ZoomOut |
-            ShortcutAction::ResetZoom => ShortcutCategory::View,
+            ShortcutAction::ToggleView
+            | ShortcutAction::Fullscreen
+            | ShortcutAction::ToggleSidebar
+            | ShortcutAction::TogglePanel
+            | ShortcutAction::ZoomIn
+            | ShortcutAction::ZoomOut
+            | ShortcutAction::ResetZoom => ShortcutCategory::View,
 
-            ShortcutAction::NewTab | ShortcutAction::CloseTab | ShortcutAction::NextTab |
-            ShortcutAction::PreviousTab | ShortcutAction::SwitchWorkspace(_) => ShortcutCategory::Workspace,
+            ShortcutAction::NewTab
+            | ShortcutAction::CloseTab
+            | ShortcutAction::NextTab
+            | ShortcutAction::PreviousTab
+            | ShortcutAction::SwitchWorkspace(_) => ShortcutCategory::Workspace,
 
-            ShortcutAction::NewWindow | ShortcutAction::CloseWindow | ShortcutAction::NextWindow |
-            ShortcutAction::PreviousWindow | ShortcutAction::Minimize => ShortcutCategory::Window,
+            ShortcutAction::NewWindow
+            | ShortcutAction::CloseWindow
+            | ShortcutAction::NextWindow
+            | ShortcutAction::PreviousWindow
+            | ShortcutAction::Minimize => ShortcutCategory::Window,
 
-            ShortcutAction::Stage | ShortcutAction::Unstage | ShortcutAction::Commit |
-            ShortcutAction::Push | ShortcutAction::Pull | ShortcutAction::Diff |
-            ShortcutAction::Log => ShortcutCategory::Git,
+            ShortcutAction::Stage
+            | ShortcutAction::Unstage
+            | ShortcutAction::Commit
+            | ShortcutAction::Push
+            | ShortcutAction::Pull
+            | ShortcutAction::Diff
+            | ShortcutAction::Log => ShortcutCategory::Git,
 
-            ShortcutAction::Send | ShortcutAction::Stop | ShortcutAction::Accept |
-            ShortcutAction::Reject | ShortcutAction::ToggleContext => ShortcutCategory::AI,
+            ShortcutAction::Send
+            | ShortcutAction::Stop
+            | ShortcutAction::Accept
+            | ShortcutAction::Reject
+            | ShortcutAction::ToggleContext => ShortcutCategory::AI,
 
-            ShortcutAction::CommandPalette | ShortcutAction::Help | ShortcutAction::Quit |
-            ShortcutAction::Cancel | ShortcutAction::Confirm | ShortcutAction::Undo |
-            ShortcutAction::Redo | ShortcutAction::Refresh => ShortcutCategory::General,
+            ShortcutAction::CommandPalette
+            | ShortcutAction::Help
+            | ShortcutAction::Quit
+            | ShortcutAction::Cancel
+            | ShortcutAction::Confirm
+            | ShortcutAction::Undo
+            | ShortcutAction::Redo
+            | ShortcutAction::Refresh => ShortcutCategory::General,
         }
     }
 }
@@ -494,48 +530,168 @@ impl ShortcutRegistry {
         let key = |code: KeyCode, mods: KeyModifiers| KeyEvent::new(code, mods);
 
         // Navigation
-        self.add_shortcut(Shortcut::new(ShortcutAction::MoveUp, key(Char('k'), M::NONE), "Move up"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::MoveUp, key(Up, M::NONE), "Move up").alternate());
-        self.add_shortcut(Shortcut::new(ShortcutAction::MoveDown, key(Char('j'), M::NONE), "Move down"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::MoveDown, key(Down, M::NONE), "Move down").alternate());
-        self.add_shortcut(Shortcut::new(ShortcutAction::MoveLeft, key(Char('h'), M::NONE), "Move left"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::MoveLeft, key(Left, M::NONE), "Move left").alternate());
-        self.add_shortcut(Shortcut::new(ShortcutAction::MoveRight, key(Char('l'), M::NONE), "Move right"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::MoveRight, key(Right, M::NONE), "Move right").alternate());
-        self.add_shortcut(Shortcut::new(ShortcutAction::JumpToTop, key(Char('g'), M::NONE), "Jump to top"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::JumpToBottom, key(Char('G'), M::SHIFT), "Jump to bottom"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::PageUp, key(Char('u'), M::CONTROL), "Page up"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::PageDown, key(Char('d'), M::CONTROL), "Page down"));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::MoveUp,
+            key(Char('k'), M::NONE),
+            "Move up",
+        ));
+        self.add_shortcut(
+            Shortcut::new(ShortcutAction::MoveUp, key(Up, M::NONE), "Move up").alternate(),
+        );
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::MoveDown,
+            key(Char('j'), M::NONE),
+            "Move down",
+        ));
+        self.add_shortcut(
+            Shortcut::new(ShortcutAction::MoveDown, key(Down, M::NONE), "Move down").alternate(),
+        );
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::MoveLeft,
+            key(Char('h'), M::NONE),
+            "Move left",
+        ));
+        self.add_shortcut(
+            Shortcut::new(ShortcutAction::MoveLeft, key(Left, M::NONE), "Move left").alternate(),
+        );
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::MoveRight,
+            key(Char('l'), M::NONE),
+            "Move right",
+        ));
+        self.add_shortcut(
+            Shortcut::new(ShortcutAction::MoveRight, key(Right, M::NONE), "Move right").alternate(),
+        );
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::JumpToTop,
+            key(Char('g'), M::NONE),
+            "Jump to top",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::JumpToBottom,
+            key(Char('G'), M::SHIFT),
+            "Jump to bottom",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::PageUp,
+            key(Char('u'), M::CONTROL),
+            "Page up",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::PageDown,
+            key(Char('d'), M::CONTROL),
+            "Page down",
+        ));
 
         // File operations
-        self.add_shortcut(Shortcut::new(ShortcutAction::Create, key(Char('c'), M::NONE), "Create"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::Edit, key(Char('e'), M::NONE), "Edit"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::Delete, key(Char('d'), M::NONE), "Delete"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::Rename, key(Char('r'), M::NONE), "Rename"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::Save, key(Char('s'), M::CONTROL), "Save"));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::Create,
+            key(Char('c'), M::NONE),
+            "Create",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::Edit,
+            key(Char('e'), M::NONE),
+            "Edit",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::Delete,
+            key(Char('d'), M::NONE),
+            "Delete",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::Rename,
+            key(Char('r'), M::NONE),
+            "Rename",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::Save,
+            key(Char('s'), M::CONTROL),
+            "Save",
+        ));
 
         // Search
-        self.add_shortcut(Shortcut::new(ShortcutAction::Search, key(Char('/'), M::NONE), "Search"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::NextResult, key(Char('n'), M::NONE), "Next result"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::PreviousResult, key(Char('N'), M::SHIFT), "Previous result"));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::Search,
+            key(Char('/'), M::NONE),
+            "Search",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::NextResult,
+            key(Char('n'), M::NONE),
+            "Next result",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::PreviousResult,
+            key(Char('N'), M::SHIFT),
+            "Previous result",
+        ));
 
         // View
-        self.add_shortcut(Shortcut::new(ShortcutAction::ToggleSidebar, key(Char('b'), M::CONTROL), "Toggle sidebar"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::Fullscreen, key(F(11), M::NONE), "Toggle fullscreen"));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::ToggleSidebar,
+            key(Char('b'), M::CONTROL),
+            "Toggle sidebar",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::Fullscreen,
+            key(F(11), M::NONE),
+            "Toggle fullscreen",
+        ));
 
         // Tabs
-        self.add_shortcut(Shortcut::new(ShortcutAction::NewTab, key(Char('t'), M::CONTROL), "New tab"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::CloseTab, key(Char('w'), M::CONTROL), "Close tab"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::NextTab, key(Tab, M::NONE), "Next tab"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::PreviousTab, key(Tab, M::SHIFT), "Previous tab"));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::NewTab,
+            key(Char('t'), M::CONTROL),
+            "New tab",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::CloseTab,
+            key(Char('w'), M::CONTROL),
+            "Close tab",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::NextTab,
+            key(Tab, M::NONE),
+            "Next tab",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::PreviousTab,
+            key(Tab, M::SHIFT),
+            "Previous tab",
+        ));
 
         // General
-        self.add_shortcut(Shortcut::new(ShortcutAction::CommandPalette, key(Char('p'), M::CONTROL), "Command palette"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::Help, key(Char('?'), M::SHIFT), "Show help"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::Quit, key(Char('q'), M::NONE), "Quit"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::Cancel, key(Esc, M::NONE), "Cancel"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::Undo, key(Char('z'), M::CONTROL), "Undo"));
-        self.add_shortcut(Shortcut::new(ShortcutAction::Redo, key(Char('y'), M::CONTROL), "Redo"));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::CommandPalette,
+            key(Char('p'), M::CONTROL),
+            "Command palette",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::Help,
+            key(Char('?'), M::SHIFT),
+            "Show help",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::Quit,
+            key(Char('q'), M::NONE),
+            "Quit",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::Cancel,
+            key(Esc, M::NONE),
+            "Cancel",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::Undo,
+            key(Char('z'), M::CONTROL),
+            "Undo",
+        ));
+        self.add_shortcut(Shortcut::new(
+            ShortcutAction::Redo,
+            key(Char('y'), M::CONTROL),
+            "Redo",
+        ));
     }
 }
 
@@ -562,7 +718,10 @@ mod tests {
 
     #[test]
     fn test_shortcut_action_category() {
-        assert_eq!(ShortcutAction::MoveUp.category(), ShortcutCategory::Navigation);
+        assert_eq!(
+            ShortcutAction::MoveUp.category(),
+            ShortcutCategory::Navigation
+        );
         assert_eq!(ShortcutAction::Save.category(), ShortcutCategory::FileOps);
         assert_eq!(ShortcutAction::Search.category(), ShortcutCategory::Search);
         assert_eq!(ShortcutAction::Stage.category(), ShortcutCategory::Git);
@@ -608,21 +767,21 @@ mod tests {
         let shortcut1 = Shortcut::new(
             ShortcutAction::MoveUp,
             make_key(KeyCode::Char('k'), KeyModifiers::NONE),
-            "Move up"
+            "Move up",
         );
         assert_eq!(shortcut1.format_key(), "k");
 
         let shortcut2 = Shortcut::new(
             ShortcutAction::Save,
             make_key(KeyCode::Char('s'), KeyModifiers::CONTROL),
-            "Save"
+            "Save",
         );
         assert_eq!(shortcut2.format_key(), "Ctrl+s");
 
         let shortcut3 = Shortcut::new(
             ShortcutAction::MoveUp,
             make_key(KeyCode::Up, KeyModifiers::NONE),
-            "Move up"
+            "Move up",
         );
         assert_eq!(shortcut3.format_key(), "↑");
     }
@@ -672,7 +831,11 @@ mod tests {
         let nav_shortcuts = registry.get_by_category(ShortcutCategory::Navigation);
 
         assert!(nav_shortcuts.len() > 0);
-        assert!(nav_shortcuts.iter().all(|s| s.action.category() == ShortcutCategory::Navigation));
+        assert!(
+            nav_shortcuts
+                .iter()
+                .all(|s| s.action.category() == ShortcutCategory::Navigation)
+        );
     }
 
     #[test]

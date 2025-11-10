@@ -1,8 +1,8 @@
 //! Preview widget tests
 
-    use super::*;
+use super::*;
 
-    #[test]
+#[test]
 fn test_preview_pane_creation() {
     let preview = PreviewPane::new("Test content");
     assert_eq!(preview.content(), "Test content");
@@ -654,9 +654,7 @@ fn test_preview_combined_state_transitions() {
     let mut preview = PreviewPane::new("Content");
 
     for i in 0..100 {
-        preview = preview
-            .show_line_numbers(i % 2 == 0)
-            .wrap_lines(i % 3 == 0);
+        preview = preview.show_line_numbers(i % 2 == 0).wrap_lines(i % 3 == 0);
     }
 
     // i=99: 99%2==1 (false), 99%3==0 (true)
@@ -835,11 +833,17 @@ fn test_preview_content_exactly_at_boundaries() {
 #[test]
 fn test_preview_line_count_at_boundaries() {
     // Test line counts at u16 boundaries
-    let lines_255 = (0..255).map(|i| format!("L{}", i)).collect::<Vec<_>>().join("\n");
+    let lines_255 = (0..255)
+        .map(|i| format!("L{}", i))
+        .collect::<Vec<_>>()
+        .join("\n");
     let preview = PreviewPane::new(lines_255);
     assert_eq!(preview.line_count(), 255);
 
-    let lines_256 = (0..256).map(|i| format!("L{}", i)).collect::<Vec<_>>().join("\n");
+    let lines_256 = (0..256)
+        .map(|i| format!("L{}", i))
+        .collect::<Vec<_>>()
+        .join("\n");
     let preview = PreviewPane::new(lines_256);
     assert_eq!(preview.line_count(), 256);
 }
@@ -879,9 +883,7 @@ fn test_preview_alternating_flags() {
     let mut preview = PreviewPane::new("Content");
 
     for i in 0..1000 {
-        preview = preview
-            .show_line_numbers(i % 2 == 0)
-            .wrap_lines(i % 2 == 1);
+        preview = preview.show_line_numbers(i % 2 == 0).wrap_lines(i % 2 == 1);
     }
 
     // i=999: odd, so show_line_numbers=false, wrap_lines=true

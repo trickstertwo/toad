@@ -532,4 +532,3 @@ impl Widget for &ScatterPlot {
         }
     }
 }
-

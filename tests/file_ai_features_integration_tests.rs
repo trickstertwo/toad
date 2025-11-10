@@ -23,8 +23,7 @@ fn test_bookmark_creation() {
 
 #[test]
 fn test_bookmark_with_description() {
-    let bookmark = Bookmark::new("main", "/src/main.rs", 10, 0)
-        .with_description("Entry point");
+    let bookmark = Bookmark::new("main", "/src/main.rs", 10, 0).with_description("Entry point");
     assert_eq!(bookmark.description, Some("Entry point".to_string()));
 }
 
@@ -306,7 +305,9 @@ fn test_recent_files_most_frequent() {
 fn test_file_ops_creation() {
     let _ops = FileOps::new();
     // Default settings verified through builder
-    let _ops = FileOps::new().with_overwrite(true).with_create_parents(false);
+    let _ops = FileOps::new()
+        .with_overwrite(true)
+        .with_create_parents(false);
 }
 
 #[test]
@@ -598,7 +599,9 @@ fn test_chat_panel_ai_workflow() {
     panel.add_user_message("Can you show traversal methods?");
 
     // AI responds
-    panel.add_assistant_message("Here are the main traversal methods: in-order, pre-order, and post-order.");
+    panel.add_assistant_message(
+        "Here are the main traversal methods: in-order, pre-order, and post-order.",
+    );
 
     assert_eq!(panel.message_count(), 4);
 }

@@ -226,9 +226,10 @@ impl ExperimentManager {
 
             if path.extension().and_then(|s| s.to_str()) == Some("json")
                 && let Ok(json) = std::fs::read_to_string(&path)
-                    && let Ok(exp) = serde_json::from_str::<Experiment>(&json) {
-                        self.experiments.insert(exp.id.clone(), exp);
-                    }
+                && let Ok(exp) = serde_json::from_str::<Experiment>(&json)
+            {
+                self.experiments.insert(exp.id.clone(), exp);
+            }
         }
 
         Ok(())

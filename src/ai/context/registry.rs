@@ -34,7 +34,7 @@ impl ExtractorRegistry {
         let language = Language::from_extension(
             path.extension()
                 .and_then(|ext| ext.to_str())
-                .ok_or_else(|| anyhow!("File has no extension: {}", path.display()))?
+                .ok_or_else(|| anyhow!("File has no extension: {}", path.display()))?,
         )
         .ok_or_else(|| anyhow!("Unsupported file extension: {}", path.display()))?;
 
@@ -50,10 +50,12 @@ impl ExtractorRegistry {
     ///
     /// This is a convenience method that combines parser selection and parsing.
     pub async fn parse_file(&self, path: &Path) -> Result<FileContext> {
-        let parser = self.get_parser(path)
+        let parser = self
+            .get_parser(path)
             .with_context(|| format!("Failed to get parser for {}", path.display()))?;
 
-        parser.parse_file(path)
+        parser
+            .parse_file(path)
             .await
             .with_context(|| format!("Failed to parse file {}", path.display()))
     }
@@ -68,9 +70,7 @@ impl ExtractorRegistry {
             .map(|path| {
                 let path = path.as_ref().to_path_buf();
                 let registry = self.clone();
-                tokio::spawn(async move {
-                    registry.parse_file(&path).await
-                })
+                tokio::spawn(async move { registry.parse_file(&path).await })
             })
             .collect();
 
@@ -89,10 +89,8 @@ impl ExtractorRegistry {
     pub fn supported_extensions(&self) -> Vec<&str> {
         vec![
             // Python
-            "py", "pyw",
-            // JavaScript
-            "js", "jsx", "mjs", "cjs",
-            // TypeScript
+            "py", "pyw", // JavaScript
+            "js", "jsx", "mjs", "cjs", // TypeScript
             "ts", "tsx",
         ]
     }

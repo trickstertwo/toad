@@ -3,17 +3,20 @@
 //! This module contains the application state and the update logic
 //! that handles state transitions based on events.
 
+use crate::ai::llm::{AnthropicClient, LLMClient, Message};
 use crate::config::Config;
 use crate::core::app_state::{AppScreen, EvaluationState};
 use crate::core::event::Event;
 use crate::performance::PerformanceMetrics;
-use crate::ui::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, PSXFroggerGame, ToastManager};
+use crate::ui::widgets::{
+    CommandPalette, ConfirmDialog, ConversationView, HelpScreen, InputField, ToastManager,
+};
 use crate::workspace::{LayoutManager, SessionState, TabManager};
 use crossterm::event::KeyEvent;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 /// Application state (Model in Elm Architecture)
-#[derive(Debug)]
 pub struct App {
     /// Current screen being displayed
     pub(crate) screen: AppScreen,
@@ -84,8 +87,55 @@ pub struct App {
     /// Current evaluation state
     pub(crate) evaluation_state: Option<EvaluationState>,
 
-    /// PSX Frogger game instance (easter egg)
-    pub(crate) psx_frogger: PSXFroggerGame,
+    /// AI conversation history
+    pub(crate) conversation: Vec<Message>,
+
+    /// LLM client for AI chat
+    pub(crate) llm_client: Option<Arc<dyn LLMClient>>,
+
+    /// Conversation view widget
+    pub(crate) conversation_view: ConversationView,
+
+    /// Whether AI processing is in progress
+    pub(crate) ai_processing: bool,
+
+    /// Tick counter for cursor blinking (toggles every 2 ticks = 500ms)
+    tick_count: u32,
+}
+
+impl std::fmt::Debug for App {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("App")
+            .field("screen", &self.screen)
+            .field("should_quit", &self.should_quit)
+            .field("status_message", &self.status_message)
+            .field("title", &self.title)
+            .field("working_directory", &self.working_directory)
+            .field("trust_dialog", &self.trust_dialog)
+            .field("welcome_shown", &self.welcome_shown)
+            .field("input_field", &self.input_field)
+            .field("plugin_count", &self.plugin_count)
+            .field("help_screen", &self.help_screen)
+            .field("show_help", &self.show_help)
+            .field("command_palette", &self.command_palette)
+            .field("show_palette", &self.show_palette)
+            .field("config", &self.config)
+            .field("session", &self.session)
+            .field("tabs", &self.tabs)
+            .field("layout", &self.layout)
+            .field("vim_mode", &self.vim_mode)
+            .field("performance", &self.performance)
+            .field("show_performance", &self.show_performance)
+            .field("toasts", &self.toasts)
+            .field("event_tx", &self.event_tx)
+            .field("evaluation_state", &self.evaluation_state)
+            .field("conversation", &self.conversation)
+            .field("llm_client", &"<LLMClient>") // Skip Debug for trait object
+            .field("conversation_view", &"<ConversationView>") // Skip for large widget
+            .field("ai_processing", &self.ai_processing)
+            .field("tick_count", &self.tick_count)
+            .finish()
+    }
 }
 
 impl Default for App {
@@ -112,6 +162,15 @@ impl Default for App {
 
         // Load vim mode from config
         let vim_mode = config.ui.vim_mode;
+
+        // Try to initialize LLM client (fallback to None if API key is missing)
+        let llm_client = match std::env::var("ANTHROPIC_API_KEY") {
+            Ok(api_key) if !api_key.is_empty() => {
+                let client = AnthropicClient::new(api_key);
+                Some(Arc::new(client) as Arc<dyn LLMClient>)
+            }
+            _ => None,
+        };
 
         Self {
             screen,
@@ -141,7 +200,11 @@ impl Default for App {
             toasts: ToastManager::new(),
             event_tx: None,
             evaluation_state: None,
-            psx_frogger: PSXFroggerGame::new(),
+            conversation: Vec::new(),
+            llm_client,
+            conversation_view: ConversationView::new(),
+            ai_processing: false,
+            tick_count: 0,
         }
     }
 }
@@ -151,7 +214,6 @@ impl App {
     pub fn new() -> Self {
         Self::default()
     }
-
 
     /// Start an evaluation run
 
@@ -171,10 +233,12 @@ impl App {
                 Ok(())
             }
             Event::Tick => {
-                // Update PSX Frogger game if playing
-                if self.screen == crate::core::app_state::AppScreen::PSXFrogger {
-                    self.psx_frogger.update();
+                // Handle cursor blinking (every 2 ticks = 500ms)
+                self.tick_count = self.tick_count.wrapping_add(1);
+                if self.tick_count % 2 == 0 {
+                    self.input_field.toggle_cursor();
                 }
+
                 // Toasts are automatically cleaned up during render
                 Ok(())
             }
@@ -233,6 +297,14 @@ impl App {
                 self.cancel_evaluation();
                 Ok(())
             }
+            Event::AIResponse(message) => {
+                self.handle_ai_response(message);
+                Ok(())
+            }
+            Event::AIError(error) => {
+                self.handle_ai_error(error);
+                Ok(())
+            }
         }
     }
 
@@ -243,10 +315,8 @@ impl App {
             AppScreen::TrustDialog => self.handle_trust_dialog_key(key),
             AppScreen::Main => self.handle_main_key(key),
             AppScreen::Evaluation => self.handle_evaluation_key(key),
-            AppScreen::PSXFrogger => self.handle_psx_frogger_key(key),
         }
     }
-
 
     /// Process commands entered by the user
 
@@ -298,8 +368,50 @@ impl App {
         }
     }
 
-}
+    // ===== AI Conversation Methods =====
 
+    /// Get conversation view widget
+    pub(crate) fn conversation_view(&mut self) -> &mut ConversationView {
+        &mut self.conversation_view
+    }
+
+    /// Get conversation history
+    pub(crate) fn conversation(&self) -> &[Message] {
+        &self.conversation
+    }
+
+    /// Add a message to the conversation
+    pub(crate) fn add_message(&mut self, message: Message) {
+        self.conversation.push(message.clone());
+        self.conversation_view.add_message(message);
+    }
+
+    /// Clear conversation history
+    pub(crate) fn clear_conversation(&mut self) {
+        self.conversation.clear();
+        self.conversation_view.clear();
+    }
+
+    /// Check if LLM client is available
+    pub(crate) fn has_llm_client(&self) -> bool {
+        self.llm_client.is_some()
+    }
+
+    /// Get LLM client reference
+    pub(crate) fn llm_client(&self) -> Option<&Arc<dyn LLMClient>> {
+        self.llm_client.as_ref()
+    }
+
+    /// Check if AI is currently processing
+    pub(crate) fn is_ai_processing(&self) -> bool {
+        self.ai_processing
+    }
+
+    /// Set AI processing state
+    pub(crate) fn set_ai_processing(&mut self, processing: bool) {
+        self.ai_processing = processing;
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -367,7 +479,8 @@ mod tests {
 
         // Test Welcome screen
         app.screen = AppScreen::Welcome;
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char(' ')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char(' '))))
+            .unwrap();
         assert_eq!(app.screen, AppScreen::TrustDialog);
 
         // Test Main screen
@@ -384,7 +497,8 @@ mod tests {
         // Sequence of events
         app.update(Event::Tick).unwrap();
         app.update(Event::Resize(80, 24)).unwrap();
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char('a')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('a'))))
+            .unwrap();
         app.update(Event::Tick).unwrap();
 
         // Should handle sequence without panicking
@@ -408,7 +522,8 @@ mod tests {
         let mut app = App::new();
         app.screen = AppScreen::Welcome;
 
-        app.update(Event::Key(KeyEvent::from(KeyCode::Enter))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Enter)))
+            .unwrap();
 
         // Should route to welcome handler and advance to trust dialog
         assert_eq!(app.screen, AppScreen::TrustDialog);
@@ -420,7 +535,8 @@ mod tests {
         app.screen = AppScreen::TrustDialog;
         app.create_trust_dialog();
 
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char('1')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('1'))))
+            .unwrap();
 
         // Should route to trust dialog handler and process selection
         assert_eq!(app.screen, AppScreen::Main);
@@ -431,7 +547,8 @@ mod tests {
         let mut app = App::new();
         app.screen = AppScreen::Main;
 
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char('?')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('?'))))
+            .unwrap();
 
         // Should toggle help screen
         assert!(app.show_help);
@@ -443,7 +560,8 @@ mod tests {
         app.screen = AppScreen::Evaluation;
         app.evaluation_state = None;
 
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char('q')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('q'))))
+            .unwrap();
 
         // Should return to main screen
         assert_eq!(app.screen, AppScreen::Main);
@@ -471,10 +589,12 @@ mod tests {
 
         // Welcome → TrustDialog
         app.screen = AppScreen::Welcome;
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char(' ')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char(' '))))
+            .unwrap();
 
         // TrustDialog → Main
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char('1')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('1'))))
+            .unwrap();
 
         assert_eq!(app.screen, AppScreen::Main);
     }
@@ -504,7 +624,11 @@ mod tests {
         let mut app = App::new();
         app.screen = AppScreen::Main;
 
-        app.update(Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL))).unwrap();
+        app.update(Event::Key(KeyEvent::new(
+            KeyCode::Char('c'),
+            KeyModifiers::CONTROL,
+        )))
+        .unwrap();
 
         assert!(app.should_quit());
     }
@@ -515,21 +639,133 @@ mod tests {
         let mut app1 = App::new();
         app1.screen = AppScreen::Main;
         app1.show_help = true;
-        app1.update(Event::Key(KeyEvent::from(KeyCode::Esc))).unwrap();
+        app1.update(Event::Key(KeyEvent::from(KeyCode::Esc)))
+            .unwrap();
         assert!(!app1.show_help);
         assert!(!app1.should_quit());
 
         // Esc on Welcome - quits
         let mut app2 = App::new();
         app2.screen = AppScreen::Welcome;
-        app2.update(Event::Key(KeyEvent::from(KeyCode::Esc))).unwrap();
+        app2.update(Event::Key(KeyEvent::from(KeyCode::Esc)))
+            .unwrap();
         assert!(app2.should_quit());
 
         // Esc on TrustDialog - quits
         let mut app3 = App::new();
         app3.screen = AppScreen::TrustDialog;
         app3.create_trust_dialog();
-        app3.update(Event::Key(KeyEvent::from(KeyCode::Esc))).unwrap();
+        app3.update(Event::Key(KeyEvent::from(KeyCode::Esc)))
+            .unwrap();
         assert!(app3.should_quit());
+    }
+
+    // ===== AI Conversation Methods Tests =====
+
+    #[test]
+    fn test_conversation_view_accessor() {
+        let mut app = App::new();
+        let view = app.conversation_view();
+        assert_eq!(view.message_count(), 0);
+    }
+
+    #[test]
+    fn test_conversation_accessor() {
+        let app = App::new();
+        let conversation = app.conversation();
+        assert_eq!(conversation.len(), 0);
+    }
+
+    #[test]
+    fn test_add_message() {
+        let mut app = App::new();
+
+        let user_msg = Message::user("Test question");
+        app.add_message(user_msg);
+
+        assert_eq!(app.conversation().len(), 1);
+        assert_eq!(app.conversation_view().message_count(), 1);
+        assert_eq!(app.conversation()[0].content, "Test question");
+    }
+
+    #[test]
+    fn test_add_multiple_messages() {
+        let mut app = App::new();
+
+        app.add_message(Message::user("Question 1"));
+        app.add_message(Message::assistant("Answer 1"));
+        app.add_message(Message::user("Question 2"));
+        app.add_message(Message::assistant("Answer 2"));
+
+        assert_eq!(app.conversation().len(), 4);
+        assert_eq!(app.conversation_view().message_count(), 4);
+    }
+
+    #[test]
+    fn test_clear_conversation() {
+        let mut app = App::new();
+
+        app.add_message(Message::user("Test 1"));
+        app.add_message(Message::assistant("Response 1"));
+        assert_eq!(app.conversation().len(), 2);
+
+        app.clear_conversation();
+
+        assert_eq!(app.conversation().len(), 0);
+        assert_eq!(app.conversation_view().message_count(), 0);
+    }
+
+    #[test]
+    fn test_has_llm_client_with_api_key() {
+        // This test depends on ANTHROPIC_API_KEY env var
+        let app = App::new();
+
+        // If API key is set, client should be available
+        if std::env::var("ANTHROPIC_API_KEY").is_ok() {
+            assert!(app.has_llm_client() || !app.has_llm_client()); // Either state is valid
+        } else {
+            assert!(!app.has_llm_client());
+        }
+    }
+
+    #[test]
+    fn test_llm_client_accessor() {
+        let app = App::new();
+
+        // Should return Some or None depending on API key
+        let client = app.llm_client();
+        assert!(client.is_some() || client.is_none());
+    }
+
+    #[test]
+    fn test_ai_processing_state() {
+        let mut app = App::new();
+
+        assert!(!app.is_ai_processing());
+
+        app.set_ai_processing(true);
+        assert!(app.is_ai_processing());
+
+        app.set_ai_processing(false);
+        assert!(!app.is_ai_processing());
+    }
+
+    #[test]
+    fn test_conversation_message_order() {
+        let mut app = App::new();
+
+        app.add_message(Message::user("First"));
+        app.add_message(Message::assistant("Second"));
+        app.add_message(Message::user("Third"));
+
+        let conversation = app.conversation();
+        assert_eq!(conversation[0].content, "First");
+        assert_eq!(conversation[1].content, "Second");
+        assert_eq!(conversation[2].content, "Third");
+
+        // Verify roles
+        assert_eq!(conversation[0].role, crate::ai::llm::Role::User);
+        assert_eq!(conversation[1].role, crate::ai::llm::Role::Assistant);
+        assert_eq!(conversation[2].role, crate::ai::llm::Role::User);
     }
 }

@@ -56,9 +56,7 @@ fn test_scatter_plot_simple_creation() {
 fn test_scatter_plot_simple_builder() {
     let data = vec![(1.0, 1.0), (2.0, 2.0)];
     let series = ScatterSeries::new("Data", data);
-    let _plot = ScatterPlot::new()
-        .add_series(series)
-        .with_title("Analysis");
+    let _plot = ScatterPlot::new().add_series(series).with_title("Analysis");
 }
 
 // ==================== ScatterPlot Tests (with series) ====================
@@ -414,10 +412,7 @@ fn test_performance_monitoring() {
 
 #[test]
 fn test_charts_dashboard() {
-    let bars = vec![
-        BarData::new("A", 100.0),
-        BarData::new("B", 150.0),
-    ];
+    let bars = vec![BarData::new("A", 100.0), BarData::new("B", 150.0)];
     let _bar_chart = BarChart::new(bars).with_title("Sales");
 
     let series = ScatterSeries::new("Data", vec![(1.0, 100.0), (2.0, 200.0)]);

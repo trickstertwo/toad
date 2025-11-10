@@ -31,8 +31,8 @@ impl WriteTool {
 
     /// Validate syntax using tree-sitter for supported languages
     fn validate_syntax(path: &Path, content: &str) -> Result<(), String> {
-        use crate::ai::context::parser::detect_language;
         use crate::ai::context::Language;
+        use crate::ai::context::parser::detect_language;
 
         // Detect language from file extension
         let language = match detect_language(path) {
@@ -129,22 +129,24 @@ impl Tool for WriteTool {
 
         // Validate syntax if enabled
         if self.validate_syntax
-            && let Err(e) = Self::validate_syntax(&path_buf, content) {
-                return Ok(ToolResult::error(
-                    self.name(),
-                    format!("Validation failed: {}", e),
-                ));
-            }
+            && let Err(e) = Self::validate_syntax(&path_buf, content)
+        {
+            return Ok(ToolResult::error(
+                self.name(),
+                format!("Validation failed: {}", e),
+            ));
+        }
 
         // Create parent directories if they don't exist
         if let Some(parent) = path_buf.parent()
             && !parent.exists()
-                && let Err(e) = tokio::fs::create_dir_all(parent).await {
-                    return Ok(ToolResult::error(
-                        self.name(),
-                        format!("Failed to create parent directories: {}", e),
-                    ));
-                }
+            && let Err(e) = tokio::fs::create_dir_all(parent).await
+        {
+            return Ok(ToolResult::error(
+                self.name(),
+                format!("Failed to create parent directories: {}", e),
+            ));
+        }
 
         match tokio::fs::write(&path_buf, content).await {
             Ok(_) => Ok(ToolResult::success(
@@ -266,13 +268,21 @@ mod tests {
         );
         args.insert(
             "content".to_string(),
-            serde_json::Value::String("def hello(\n    print('missing closing paren'\n".to_string()),
+            serde_json::Value::String(
+                "def hello(\n    print('missing closing paren'\n".to_string(),
+            ),
         );
 
         let result = tool.execute(args).await.unwrap();
-        assert!(!result.success, "Invalid Python code should fail validation");
+        assert!(
+            !result.success,
+            "Invalid Python code should fail validation"
+        );
         assert!(result.error.unwrap().contains("Syntax error"));
-        assert!(!file_path.exists(), "File should not be written on validation failure");
+        assert!(
+            !file_path.exists(),
+            "File should not be written on validation failure"
+        );
     }
 
     #[tokio::test]
@@ -288,11 +298,16 @@ mod tests {
         );
         args.insert(
             "content".to_string(),
-            serde_json::Value::String("function hello() {\n  console.log('world');\n}\n".to_string()),
+            serde_json::Value::String(
+                "function hello() {\n  console.log('world');\n}\n".to_string(),
+            ),
         );
 
         let result = tool.execute(args).await.unwrap();
-        assert!(result.success, "Valid JavaScript code should pass validation");
+        assert!(
+            result.success,
+            "Valid JavaScript code should pass validation"
+        );
         assert!(file_path.exists());
     }
 
@@ -309,13 +324,21 @@ mod tests {
         );
         args.insert(
             "content".to_string(),
-            serde_json::Value::String("function hello() {\n  console.log('missing brace'\n".to_string()),
+            serde_json::Value::String(
+                "function hello() {\n  console.log('missing brace'\n".to_string(),
+            ),
         );
 
         let result = tool.execute(args).await.unwrap();
-        assert!(!result.success, "Invalid JavaScript code should fail validation");
+        assert!(
+            !result.success,
+            "Invalid JavaScript code should fail validation"
+        );
         assert!(result.error.unwrap().contains("Syntax error"));
-        assert!(!file_path.exists(), "File should not be written on validation failure");
+        assert!(
+            !file_path.exists(),
+            "File should not be written on validation failure"
+        );
     }
 
     #[tokio::test]
@@ -357,7 +380,10 @@ mod tests {
         );
 
         let result = tool.execute(args).await.unwrap();
-        assert!(result.success, "Invalid code should be written when validation is disabled");
+        assert!(
+            result.success,
+            "Invalid code should be written when validation is disabled"
+        );
         assert!(file_path.exists());
     }
 }

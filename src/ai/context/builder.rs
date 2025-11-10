@@ -155,7 +155,8 @@ impl ContextBuilder {
         recursive: bool,
     ) -> Result<Vec<PathBuf>> {
         let mut files = Vec::new();
-        self.scan_directory_impl(dir, extensions, recursive, &mut files).await?;
+        self.scan_directory_impl(dir, extensions, recursive, &mut files)
+            .await?;
         Ok(files)
     }
 
@@ -178,13 +179,15 @@ impl ContextBuilder {
 
                 if metadata.is_dir() {
                     if recursive {
-                        self.scan_directory_impl(&path, extensions, recursive, files).await?;
+                        self.scan_directory_impl(&path, extensions, recursive, files)
+                            .await?;
                     }
                 } else if metadata.is_file()
                     && let Some(ext) = path.extension().and_then(|e| e.to_str())
-                        && extensions.contains(&ext) {
-                            files.push(path);
-                        }
+                    && extensions.contains(&ext)
+                {
+                    files.push(path);
+                }
             }
 
             Ok(())
@@ -293,15 +296,9 @@ mod tests {
         std::fs::write(&file_path, "def hello(): pass").unwrap();
 
         // First parse - should cache
-        let builder = ContextBuilder::new()
-            .unwrap()
-            .with_cache(10);
+        let builder = ContextBuilder::new().unwrap().with_cache(10);
 
-        let context1 = builder
-            .add_file(&file_path)
-            .await
-            .unwrap()
-            .build();
+        let context1 = builder.add_file(&file_path).await.unwrap().build();
 
         assert_eq!(context1.file_contexts.len(), 1);
 
@@ -337,9 +334,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_build_empty_context() {
-        let context = ContextBuilder::new()
-            .unwrap()
-            .build();
+        let context = ContextBuilder::new().unwrap().build();
 
         assert_eq!(context.file_contexts.len(), 0);
         assert_eq!(context.total_symbols, 0);
