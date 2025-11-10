@@ -1,8 +1,17 @@
 //! UI domain
 //!
 //! Contains all UI-related modules including widgets, themes, and visual components.
+//!
+//! # Atomic UI Design
+//!
+//! Following Atomic Design methodology for Phase 1 refactoring:
+//! - **atoms**: Fundamental primitives (text, block, button, icon)
+//! - **molecules**: Composite components (metric_card, task_item, progress_bar)
+//! - **organisms**: Complex compositions (eval_panel)
+//! - **screens**: Full screen layouts (evaluation, welcome, main)
 
 pub mod animations;
+pub mod atoms;
 pub mod board_background;
 pub mod box_drawing;
 pub mod pixel_canvas;
