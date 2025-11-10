@@ -11,6 +11,18 @@ use std::time::{Duration, Instant};
 
 /// Progress bar widget for single tasks
 ///
+/// # Deprecated
+///
+/// This stateful widget is deprecated in favor of the atomic `ProgressBar` molecule
+/// for composable UIs. If you need stateful progress tracking, consider using
+/// `MultiStageProgress` or managing state externally.
+///
+/// **Migration:**
+/// - For composable rendering: Use `crate::ui::molecules::ProgressBar`
+/// - For stateful tracking: Use `MultiStageProgress` or manage state in your app
+///
+/// See `ATOMIC_DESIGN_MIGRATION.md` for detailed migration guide.
+///
 /// # Examples
 ///
 /// ```
@@ -21,12 +33,19 @@ use std::time::{Duration, Instant};
 /// assert_eq!(progress.progress(), 0.5);
 /// assert!(!progress.is_complete());
 /// ```
+#[deprecated(
+    since = "0.2.0",
+    note = "Use `crate::ui::molecules::ProgressBar` for composable UIs, \
+            or `MultiStageProgress` for stateful progress tracking. \
+            See ATOMIC_DESIGN_MIGRATION.md for migration guide."
+)]
 pub struct ProgressBar {
     title: String,
     progress: f64, // 0.0 to 1.0
     message: Option<String>,
 }
 
+#[allow(deprecated)]
 impl ProgressBar {
     /// Create a new progress bar
     ///

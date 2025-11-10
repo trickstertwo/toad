@@ -2,7 +2,6 @@
 //!
 //! Reusable UI components following Ratatui patterns
 
-pub mod accept_reject_panel;
 pub mod ai_diff_view;
 pub mod card_preview;
 pub mod charts;
@@ -31,7 +30,6 @@ pub mod undo_redo;
 pub mod vim_macros;
 pub mod workspace;
 
-pub use accept_reject_panel::{AcceptRejectPanel, ChangeState, ProposedChange};
 pub use ai_diff_view::{AIDiffLine, AIDiffLineType, AIDiffView, DiffHunk, DiffViewMode};
 pub use card_preview::{CardPreview, CardPriority, PreviewPosition};
 pub use charts::*;
