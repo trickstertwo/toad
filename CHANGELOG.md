@@ -14,11 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Phase B: Atomic Design Migration] Migrate high-impact widgets (18 widgets) (@claude) - 2025-11-10 🚧 **IN PROGRESS**
   - **SCOPE**: 18 widgets across 6 phases
   - **GOAL**: Reduce Ratatui usage by 45% (270→120 Span calls, 66→20 Block calls)
-  - **STATUS**: Phase 3 - Notification & Progress (2/5 complete)
-  - **PROGRESS**: 2 widgets refactored (collapsible, modal) - 125 tests passing
-  - **VERIFIED**: 6 widgets already atomic (help, breadcrumbs, panel, dialog, input, fps)
-  - **SKIPPED**: 5 utility modules (borders, icons, animation - no rendering code)
-  - **DEV DOCS**: .toad/active/phase-b-atomic/ (plan.md, context.md, tasks.md, template.md)
+  - **STATUS**: Phase 5 - Bonus High-Ratatui (0/4 complete)
+  - **PROGRESS**: 3 refactored (collapsible, modal, tutorial) - 134 tests passing ✅
+  - **VERIFIED**: 11 already atomic (help, breadcrumbs, panel, dialog, input, fps, spinner, token_counter, workspace, sparkline, command_palette) ✅
+  - **SKIPPED**: 5 utility modules (borders, icons, animation - no rendering) ✅
+  - **REMAINING**: 4 widgets (conflict_resolver, ai_diff_view, git_commit_dialog, git_stage_ui) - ~78 Span/Block calls
+  - **DEV DOCS**: .toad/active/phase-b-atomic/
   - **PREVIOUS**: Phase A - Critical duplicates resolved ✅ (2025-11-10)
 
 <!-- COMPLETED 2025-11-10: Phase 0 Foundation - Architecture cleanup and SoC patterns -->
