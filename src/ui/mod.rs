@@ -23,6 +23,7 @@ pub mod nerd_fonts;
 pub mod organisms;
 pub mod pixel_canvas;
 pub mod responsive_layout;
+pub mod screens;
 pub mod syntax;
 pub mod theme;
 pub mod widgets;
