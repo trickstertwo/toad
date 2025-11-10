@@ -154,9 +154,15 @@ impl Attachment {
                 "json" => Some("application/json"),
                 "xml" => Some("application/xml"),
                 "zip" => Some("application/zip"),
-                "doc" | "docx" => Some("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
-                "xls" | "xlsx" => Some("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-                "ppt" | "pptx" => Some("application/vnd.openxmlformats-officedocument.presentationml.presentation"),
+                "doc" | "docx" => {
+                    Some("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                }
+                "xls" | "xlsx" => {
+                    Some("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                }
+                "ppt" | "pptx" => Some(
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                ),
                 _ => None,
             }
             .map(String::from)
@@ -183,7 +189,15 @@ impl Attachment {
     pub fn is_code(&self) -> bool {
         matches!(
             self.extension.as_deref(),
-            Some("rs") | Some("js") | Some("ts") | Some("py") | Some("go") | Some("java") | Some("c") | Some("cpp") | Some("h")
+            Some("rs")
+                | Some("js")
+                | Some("ts")
+                | Some("py")
+                | Some("go")
+                | Some("java")
+                | Some("c")
+                | Some("cpp")
+                | Some("h")
         )
     }
 
@@ -299,9 +313,7 @@ impl AttachmentManager {
         let query_lower = query.to_lowercase();
         self.attachments
             .values()
-            .filter(|a| {
-                !a.deleted && a.name.to_lowercase().contains(&query_lower)
-            })
+            .filter(|a| !a.deleted && a.name.to_lowercase().contains(&query_lower))
             .collect()
     }
 
@@ -355,10 +367,11 @@ impl AttachmentManager {
     /// Sets the size for the current version of an attachment
     pub fn set_attachment_size(&mut self, attachment_id: &str, size_bytes: u64) -> bool {
         if let Some(attachment) = self.get_attachment_mut(attachment_id)
-            && let Some(version) = attachment.versions.last_mut() {
-                version.size_bytes = Some(size_bytes);
-                return true;
-            }
+            && let Some(version) = attachment.versions.last_mut()
+        {
+            version.size_bytes = Some(size_bytes);
+            return true;
+        }
         false
     }
 }

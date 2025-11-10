@@ -400,9 +400,7 @@ mod tests {
     fn test_tabbar_builder_pattern() {
         let manager = TabManager::with_tab("Main");
 
-        let tabbar = TabBar::new(&manager)
-            .max_tab_width(25)
-            .show_close(false);
+        let tabbar = TabBar::new(&manager).max_tab_width(25).show_close(false);
 
         assert_eq!(tabbar.max_tab_width, 25);
         assert!(!tabbar.show_close);
@@ -873,18 +871,14 @@ mod tests {
         }
 
         // Create tabbar with various settings
-        let tabbar1 = TabBar::new(&manager)
-            .max_tab_width(20)
-            .show_close(true);
+        let tabbar1 = TabBar::new(&manager).max_tab_width(20).show_close(true);
 
         assert_eq!(tabbar1.tab_count(), 100);
         assert_eq!(tabbar1.max_tab_width, 20);
         assert!(tabbar1.show_close);
 
         // Test with different settings
-        let tabbar2 = TabBar::new(&manager)
-            .max_tab_width(50)
-            .show_close(false);
+        let tabbar2 = TabBar::new(&manager).max_tab_width(50).show_close(false);
 
         assert_eq!(tabbar2.tab_count(), 100);
         assert_eq!(tabbar2.max_tab_width, 50);

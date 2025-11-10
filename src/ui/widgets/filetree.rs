@@ -84,14 +84,23 @@ impl FileTreeNode {
             // Skip hidden files and common ignore patterns
             if entry.file_name.starts_with('.')
                 || entry.file_name == "target"
-                || entry.file_name == "node_modules" {
+                || entry.file_name == "node_modules"
+            {
                 continue;
             }
 
             if entry.is_dir {
-                dirs.push(FileTreeNode::directory(entry.path, entry.file_name, self.depth + 1));
+                dirs.push(FileTreeNode::directory(
+                    entry.path,
+                    entry.file_name,
+                    self.depth + 1,
+                ));
             } else {
-                files.push(FileTreeNode::file(entry.path, entry.file_name, self.depth + 1));
+                files.push(FileTreeNode::file(
+                    entry.path,
+                    entry.file_name,
+                    self.depth + 1,
+                ));
             }
         }
 
@@ -476,7 +485,8 @@ mod tests {
     fn test_load_children_empty_directory() {
         let fs_service = FilesystemService::new();
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
-        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        let mut node =
+            FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
 
         let result = node.load_children(&fs_service);
         assert!(result.is_ok());
@@ -492,11 +502,17 @@ mod tests {
         fs::write(temp_dir.path().join("file1.txt"), "content").expect("Failed to write file");
         fs::write(temp_dir.path().join("file2.txt"), "content").expect("Failed to write file");
 
-        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children(&fs_service).expect("Failed to load children");
+        let mut node =
+            FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children(&fs_service)
+            .expect("Failed to load children");
 
         assert_eq!(node.children.len(), 2);
-        assert!(node.children.iter().all(|c| c.node_type == FileTreeNodeType::File));
+        assert!(
+            node.children
+                .iter()
+                .all(|c| c.node_type == FileTreeNodeType::File)
+        );
         assert!(node.children.iter().all(|c| c.depth == 1));
     }
 
@@ -509,11 +525,17 @@ mod tests {
         fs::create_dir(temp_dir.path().join("dir1")).expect("Failed to create dir");
         fs::create_dir(temp_dir.path().join("dir2")).expect("Failed to create dir");
 
-        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children(&fs_service).expect("Failed to load children");
+        let mut node =
+            FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children(&fs_service)
+            .expect("Failed to load children");
 
         assert_eq!(node.children.len(), 2);
-        assert!(node.children.iter().all(|c| c.node_type == FileTreeNodeType::Directory));
+        assert!(
+            node.children
+                .iter()
+                .all(|c| c.node_type == FileTreeNodeType::Directory)
+        );
     }
 
     #[test]
@@ -527,8 +549,10 @@ mod tests {
         fs::create_dir(temp_dir.path().join("dir2")).expect("Failed to create dir");
         fs::write(temp_dir.path().join("file2.txt"), "content").expect("Failed to write file");
 
-        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children(&fs_service).expect("Failed to load children");
+        let mut node =
+            FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children(&fs_service)
+            .expect("Failed to load children");
 
         assert_eq!(node.children.len(), 4);
         // Directories should come first
@@ -548,8 +572,10 @@ mod tests {
         fs::write(temp_dir.path().join("apple.txt"), "content").expect("Failed to write file");
         fs::write(temp_dir.path().join("mango.txt"), "content").expect("Failed to write file");
 
-        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children(&fs_service).expect("Failed to load children");
+        let mut node =
+            FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children(&fs_service)
+            .expect("Failed to load children");
 
         assert_eq!(node.children[0].name, "apple.txt");
         assert_eq!(node.children[1].name, "mango.txt");
@@ -565,8 +591,10 @@ mod tests {
         fs::write(temp_dir.path().join(".hidden"), "content").expect("Failed to write file");
         fs::write(temp_dir.path().join("visible.txt"), "content").expect("Failed to write file");
 
-        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children(&fs_service).expect("Failed to load children");
+        let mut node =
+            FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children(&fs_service)
+            .expect("Failed to load children");
 
         assert_eq!(node.children.len(), 1);
         assert_eq!(node.children[0].name, "visible.txt");
@@ -581,8 +609,10 @@ mod tests {
         fs::create_dir(temp_dir.path().join("target")).expect("Failed to create dir");
         fs::create_dir(temp_dir.path().join("src")).expect("Failed to create dir");
 
-        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children(&fs_service).expect("Failed to load children");
+        let mut node =
+            FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children(&fs_service)
+            .expect("Failed to load children");
 
         assert_eq!(node.children.len(), 1);
         assert_eq!(node.children[0].name, "src");
@@ -597,8 +627,10 @@ mod tests {
         fs::create_dir(temp_dir.path().join("node_modules")).expect("Failed to create dir");
         fs::create_dir(temp_dir.path().join("lib")).expect("Failed to create dir");
 
-        let mut node = FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
-        node.load_children(&fs_service).expect("Failed to load children");
+        let mut node =
+            FileTreeNode::directory(temp_dir.path().to_path_buf(), "test".to_string(), 0);
+        node.load_children(&fs_service)
+            .expect("Failed to load children");
 
         assert_eq!(node.children.len(), 1);
         assert_eq!(node.children[0].name, "lib");

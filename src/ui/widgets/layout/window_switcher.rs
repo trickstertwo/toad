@@ -295,10 +295,7 @@ impl WindowSwitcher {
                             format!("{}. ", idx + 1),
                             Style::default().fg(ToadTheme::DARK_GRAY),
                         ),
-                        Span::styled(
-                            state_text,
-                            Style::default().fg(priority_color),
-                        ),
+                        Span::styled(state_text, Style::default().fg(priority_color)),
                         Span::raw(" "),
                         Span::styled(
                             window.title(),
@@ -306,16 +303,10 @@ impl WindowSwitcher {
                                 .fg(priority_color)
                                 .add_modifier(Modifier::BOLD),
                         ),
-                        Span::styled(
-                            unsaved,
-                            Style::default().fg(ratatui::style::Color::Yellow),
-                        ),
+                        Span::styled(unsaved, Style::default().fg(ratatui::style::Color::Yellow)),
                     ]),
                     Line::from(vec![
-                        Span::styled(
-                            "   ",
-                            Style::default(),
-                        ),
+                        Span::styled("   ", Style::default()),
                         Span::styled(
                             format!("📁 {} ", workspace),
                             Style::default().fg(ToadTheme::DARK_GRAY),

@@ -277,7 +277,7 @@ impl ToolExecutionItem {
         ));
 
         // Duration
-        if self.show_duration {
+        if self.show_duration && self.duration_ms.is_some() {
             if let Some(duration) = self.duration_ms {
                 let duration_text = format!(" ({})", Self::format_duration(duration));
                 spans.push(Span::styled(
@@ -339,8 +339,7 @@ mod tests {
 
     #[test]
     fn test_tool_execution_item_status() {
-        let item = ToolExecutionItem::new("Write", "file.rs")
-            .status(ExecutionStatus::Success);
+        let item = ToolExecutionItem::new("Write", "file.rs").status(ExecutionStatus::Success);
         assert_eq!(item.get_status(), ExecutionStatus::Success);
     }
 
@@ -352,8 +351,7 @@ mod tests {
 
     #[test]
     fn test_tool_execution_item_result_preview() {
-        let item = ToolExecutionItem::new("Read", "file.rs")
-            .result_preview("200 lines");
+        let item = ToolExecutionItem::new("Read", "file.rs").result_preview("200 lines");
         assert_eq!(item.result_preview, Some("200 lines".to_string()));
     }
 
@@ -453,22 +451,19 @@ mod tests {
 
     #[test]
     fn test_tool_execution_item_running_status() {
-        let item = ToolExecutionItem::new("Read", "file.rs")
-            .status(ExecutionStatus::Running);
+        let item = ToolExecutionItem::new("Read", "file.rs").status(ExecutionStatus::Running);
         assert_eq!(item.get_status(), ExecutionStatus::Running);
     }
 
     #[test]
     fn test_tool_execution_item_success_status() {
-        let item = ToolExecutionItem::new("Write", "file.rs")
-            .status(ExecutionStatus::Success);
+        let item = ToolExecutionItem::new("Write", "file.rs").status(ExecutionStatus::Success);
         assert_eq!(item.get_status(), ExecutionStatus::Success);
     }
 
     #[test]
     fn test_tool_execution_item_failed_status() {
-        let item = ToolExecutionItem::new("Edit", "file.rs")
-            .status(ExecutionStatus::Failed);
+        let item = ToolExecutionItem::new("Edit", "file.rs").status(ExecutionStatus::Failed);
         assert_eq!(item.get_status(), ExecutionStatus::Failed);
     }
 

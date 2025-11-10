@@ -1,5 +1,5 @@
 /// Test execution with smart selection
-use super::{TestSelector, TestSelection};
+use super::{TestSelection, TestSelector};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
@@ -90,15 +90,17 @@ impl TestExecutor {
     }
 
     /// Build Python test command (pytest)
-    fn build_python_command(&self, workspace_root: &Path, test_files: &[PathBuf]) -> Result<String> {
+    fn build_python_command(
+        &self,
+        workspace_root: &Path,
+        test_files: &[PathBuf],
+    ) -> Result<String> {
         // Use pytest with specific test files
         let mut cmd = String::from("pytest");
 
         for test_file in test_files {
             // Get relative path from workspace root
-            let relative = test_file
-                .strip_prefix(workspace_root)
-                .unwrap_or(test_file);
+            let relative = test_file.strip_prefix(workspace_root).unwrap_or(test_file);
 
             cmd.push(' ');
             cmd.push_str(&relative.to_string_lossy());
@@ -153,9 +155,7 @@ impl TestExecutor {
         let mut cmd = String::from(test_runner);
 
         for test_file in test_files {
-            let relative = test_file
-                .strip_prefix(workspace_root)
-                .unwrap_or(test_file);
+            let relative = test_file.strip_prefix(workspace_root).unwrap_or(test_file);
 
             cmd.push(' ');
             cmd.push_str(&relative.to_string_lossy());
@@ -215,7 +215,9 @@ mod tests {
         let workspace = Path::new("/project");
         let tests = vec![PathBuf::from("/project/src/foo.test.js")];
 
-        let cmd = executor.build_javascript_command(workspace, &tests).unwrap();
+        let cmd = executor
+            .build_javascript_command(workspace, &tests)
+            .unwrap();
 
         assert!(cmd.contains("npm test"));
         assert!(cmd.contains("src/foo.test.js"));

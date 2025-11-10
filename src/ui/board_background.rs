@@ -266,11 +266,7 @@ impl BoardBackground {
             }
             PatternType::Waves => {
                 let wave = (x as f32 * 0.3 + y as f32).sin() * 2.0;
-                if wave > 0.0 {
-                    Some('~')
-                } else {
-                    Some(' ')
-                }
+                if wave > 0.0 { Some('~') } else { Some(' ') }
             }
             PatternType::Hexagons => {
                 if (x.is_multiple_of(6) && y.is_multiple_of(3)) || (x % 6 == 3 && y % 3 == 1) {
@@ -306,13 +302,12 @@ impl BoardBackground {
                     let grid_y = (y * 10.0) as u16;
                     (grid_x + grid_y).is_multiple_of(2)
                 }
-                PatternType::Waves => {
-                    ((x * 10.0).sin() + (y * 10.0).sin()) > 0.0
-                }
+                PatternType::Waves => ((x * 10.0).sin() + (y * 10.0).sin()) > 0.0,
                 PatternType::Hexagons => {
                     let grid_x = (x * 15.0) as u16;
                     let grid_y = (y * 15.0) as u16;
-                    (grid_x.is_multiple_of(3) && grid_y.is_multiple_of(2)) || (grid_x % 3 == 1 && grid_y % 2 == 1)
+                    (grid_x.is_multiple_of(3) && grid_y.is_multiple_of(2))
+                        || (grid_x % 3 == 1 && grid_y % 2 == 1)
                 }
             }
         } else {
@@ -321,7 +316,11 @@ impl BoardBackground {
     }
 
     /// Apply fallback mode
-    pub fn with_fallback(&self, mode: &FallbackMode, caps: &TerminalCapabilities) -> BoardBackground {
+    pub fn with_fallback(
+        &self,
+        mode: &FallbackMode,
+        caps: &TerminalCapabilities,
+    ) -> BoardBackground {
         let mut result = self.clone();
 
         // Simplify based on terminal capabilities
@@ -367,22 +366,12 @@ impl BoardBackgrounds {
 
     /// Subtle dots pattern
     pub fn subtle_dots() -> BoardBackground {
-        BoardBackground::pattern(
-            PatternType::Dots,
-            Color::DarkGray,
-            Color::Black,
-        )
-        .density(0.3)
+        BoardBackground::pattern(PatternType::Dots, Color::DarkGray, Color::Black).density(0.3)
     }
 
     /// Grid pattern
     pub fn grid() -> BoardBackground {
-        BoardBackground::pattern(
-            PatternType::Grid,
-            Color::DarkGray,
-            Color::Reset,
-        )
-        .density(0.5)
+        BoardBackground::pattern(PatternType::Grid, Color::DarkGray, Color::Reset).density(0.5)
     }
 
     /// Ocean gradient
@@ -454,8 +443,8 @@ mod tests {
 
     #[test]
     fn test_density() {
-        let bg = BoardBackground::pattern(PatternType::Grid, Color::White, Color::Black)
-            .density(0.7);
+        let bg =
+            BoardBackground::pattern(PatternType::Grid, Color::White, Color::Black).density(0.7);
         assert_eq!(bg.density_value(), 0.7);
     }
 

@@ -142,14 +142,12 @@ impl MainScreen {
         let inner = block.inner(area);
         block.render(area, buf);
 
-        let mut status_spans = vec![
-            Span::styled(
-                self.status.clone(),
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
-                    .add_modifier(Modifier::BOLD),
-            ),
-        ];
+        let mut status_spans = vec![Span::styled(
+            self.status.clone(),
+            Style::default()
+                .fg(ToadTheme::TOAD_GREEN)
+                .add_modifier(Modifier::BOLD),
+        )];
 
         // Add path if set
         if let Some(ref path) = self.path {
@@ -180,7 +178,11 @@ impl MainScreen {
 
         let input_text = if self.input.is_empty() {
             Text::new(&self.placeholder)
-                .style(Style::default().fg(ToadTheme::GRAY).add_modifier(Modifier::DIM))
+                .style(
+                    Style::default()
+                        .fg(ToadTheme::GRAY)
+                        .add_modifier(Modifier::DIM),
+                )
                 .to_span()
         } else {
             Text::new(&self.input)
@@ -219,7 +221,7 @@ impl Default for MainScreen {
 
 impl Widget for MainScreen {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        (&self).render(area, buf);
+        self.render(area, buf);
     }
 }
 

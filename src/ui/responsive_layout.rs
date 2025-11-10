@@ -265,11 +265,7 @@ impl ResponsiveLayout {
 
     /// Get adaptive margin
     pub fn margin(&self) -> u16 {
-        if self.is_compact() {
-            0
-        } else {
-            1
-        }
+        if self.is_compact() { 0 } else { 1 }
     }
 
     /// Check if should show help footer

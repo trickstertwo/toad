@@ -184,8 +184,8 @@ impl Statusline {
 
             // Add separator if not last
             if default_separator && i < sections.len() - 1 {
-                let separator = Text::new(&self.separator)
-                    .style(Style::default().fg(ToadTheme::DARK_GRAY));
+                let separator =
+                    Text::new(&self.separator).style(Style::default().fg(ToadTheme::DARK_GRAY));
                 spans.push(separator.to_span());
             }
         }
@@ -246,4 +246,3 @@ impl Default for Statusline {
         Self::new()
     }
 }
-

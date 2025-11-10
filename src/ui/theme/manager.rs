@@ -337,10 +337,7 @@ mod tests {
         assert_eq!(manager.current_theme_name(), ThemeName::CatppuccinMocha);
 
         manager.set_theme(ThemeName::CatppuccinMacchiato);
-        assert_eq!(
-            manager.current_theme_name(),
-            ThemeName::CatppuccinMacchiato
-        );
+        assert_eq!(manager.current_theme_name(), ThemeName::CatppuccinMacchiato);
 
         manager.set_theme(ThemeName::CatppuccinFrappe);
         assert_eq!(manager.current_theme_name(), ThemeName::CatppuccinFrappe);
@@ -355,9 +352,18 @@ mod tests {
         assert_eq!(ThemeName::from_str("dark"), Some(ThemeName::Dark));
         assert_eq!(ThemeName::from_str("DARK"), Some(ThemeName::Dark));
         assert_eq!(ThemeName::from_str("light"), Some(ThemeName::Light));
-        assert_eq!(ThemeName::from_str("high contrast"), Some(ThemeName::HighContrast));
-        assert_eq!(ThemeName::from_str("highcontrast"), Some(ThemeName::HighContrast));
-        assert_eq!(ThemeName::from_str("mocha"), Some(ThemeName::CatppuccinMocha));
+        assert_eq!(
+            ThemeName::from_str("high contrast"),
+            Some(ThemeName::HighContrast)
+        );
+        assert_eq!(
+            ThemeName::from_str("highcontrast"),
+            Some(ThemeName::HighContrast)
+        );
+        assert_eq!(
+            ThemeName::from_str("mocha"),
+            Some(ThemeName::CatppuccinMocha)
+        );
         assert_eq!(
             ThemeName::from_str("catppuccin mocha"),
             Some(ThemeName::CatppuccinMocha)
@@ -366,8 +372,14 @@ mod tests {
             ThemeName::from_str("macchiato"),
             Some(ThemeName::CatppuccinMacchiato)
         );
-        assert_eq!(ThemeName::from_str("frappe"), Some(ThemeName::CatppuccinFrappe));
-        assert_eq!(ThemeName::from_str("latte"), Some(ThemeName::CatppuccinLatte));
+        assert_eq!(
+            ThemeName::from_str("frappe"),
+            Some(ThemeName::CatppuccinFrappe)
+        );
+        assert_eq!(
+            ThemeName::from_str("latte"),
+            Some(ThemeName::CatppuccinLatte)
+        );
         assert_eq!(ThemeName::from_str("nord"), Some(ThemeName::Nord));
         assert_eq!(ThemeName::from_str("custom"), Some(ThemeName::Custom));
     }

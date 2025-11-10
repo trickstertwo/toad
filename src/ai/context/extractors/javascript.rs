@@ -108,7 +108,8 @@ impl JavaScriptParser {
 
                 let signature = params.map(|p| format!("function {}{} {{ }}", func_name, p));
 
-                let mut symbol = Symbol::new(func_name, SymbolKind::Function, (start_line, end_line));
+                let mut symbol =
+                    Symbol::new(func_name, SymbolKind::Function, (start_line, end_line));
                 if let Some(sig) = signature {
                     symbol = symbol.with_signature(sig);
                 }
@@ -126,7 +127,8 @@ impl JavaScriptParser {
             let mut params = None;
 
             for capture in match_.captures {
-                let capture_name = self.arrow_function_query.capture_names()[capture.index as usize];
+                let capture_name =
+                    self.arrow_function_query.capture_names()[capture.index as usize];
                 let text = &source[capture.node.byte_range()];
 
                 match capture_name {
@@ -142,7 +144,8 @@ impl JavaScriptParser {
 
                 let signature = params.map(|p| format!("const {} = {} => {{ }}", func_name, p));
 
-                let mut symbol = Symbol::new(func_name, SymbolKind::Function, (start_line, end_line));
+                let mut symbol =
+                    Symbol::new(func_name, SymbolKind::Function, (start_line, end_line));
                 if let Some(sig) = signature {
                     symbol = symbol.with_signature(sig);
                 }
@@ -269,8 +272,8 @@ impl AstParser for JavaScriptParser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
     use std::io::Write;
+    use tempfile::NamedTempFile;
 
     #[tokio::test]
     async fn test_parse_function_declaration() {

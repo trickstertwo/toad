@@ -1,3 +1,5 @@
+use tempfile::TempDir;
+use toad::ai::evaluation::Task;
 /// End-to-end tests for M0/M1 evaluation framework using mock LLM
 ///
 /// These tests prove that the entire evaluation pipeline works without
@@ -5,9 +7,7 @@
 use toad::ai::{
     Agent, DeterministicLLMClient, MetricsCollector, MockResponseBuilder, ToolRegistry,
 };
-use toad::ai::evaluation::Task;
 use toad::config::ToadConfig;
-use tempfile::TempDir;
 
 /// Test M0 evaluation framework with mock LLM - single task
 #[tokio::test]
@@ -16,10 +16,13 @@ async fn test_m0_evaluation_single_task_with_mock() {
     let mock_client = Box::new(
         MockResponseBuilder::new()
             .with_tool("read", serde_json::json!({"path": "src/bug.py"}))
-            .with_tool("write", serde_json::json!({
-                "path": "src/bug.py",
-                "content": "def fixed():\n    return 42\n"
-            }))
+            .with_tool(
+                "write",
+                serde_json::json!({
+                    "path": "src/bug.py",
+                    "content": "def fixed():\n    return 42\n"
+                }),
+            )
             .with_text("Bug fixed successfully!")
             .build(),
     );
@@ -50,10 +53,15 @@ async fn test_m0_evaluation_single_task_with_mock() {
     assert!(snapshot.api_calls > 0, "API calls should be tracked");
     assert_eq!(snapshot.cost_usd, 0.0, "Mock LLM has zero cost");
     assert!(snapshot.input_tokens > 0, "Input tokens should be tracked");
-    assert!(snapshot.output_tokens > 0, "Output tokens should be tracked");
+    assert!(
+        snapshot.output_tokens > 0,
+        "Output tokens should be tracked"
+    );
 
-    println!("✅ M0 Evaluation with Mock: {} steps, {} API calls, $0.00 cost",
-        agent_result.steps, snapshot.api_calls);
+    println!(
+        "✅ M0 Evaluation with Mock: {} steps, {} API calls, $0.00 cost",
+        agent_result.steps, snapshot.api_calls
+    );
 }
 
 /// Test M0 evaluation framework with mock LLM - multiple tasks
@@ -105,8 +113,10 @@ async fn test_m0_evaluation_multiple_tasks_with_mock() {
     assert!(total_steps > 0, "Should have executed agent steps");
     assert!(total_api_calls > 0, "Should have tracked API calls");
 
-    println!("✅ M0 Multiple Tasks: 3 tasks, {} total steps, {} total calls, $0.00 total cost",
-        total_steps, total_api_calls);
+    println!(
+        "✅ M0 Multiple Tasks: 3 tasks, {} total steps, {} total calls, $0.00 total cost",
+        total_steps, total_api_calls
+    );
 }
 
 /// Test M1 baseline configuration with mock LLM
@@ -116,12 +126,18 @@ async fn test_m1_baseline_config_with_mock() {
     let config = ToadConfig::for_milestone(1);
 
     // Verify M1 features
-    assert!(config.features.prompt_caching, "M1 should enable prompt caching");
+    assert!(
+        config.features.prompt_caching,
+        "M1 should enable prompt caching"
+    );
     assert!(
         config.features.tree_sitter_validation,
         "M1 should enable tree-sitter validation"
     );
-    assert!(!config.features.context_ast, "M1 should not use AST context");
+    assert!(
+        !config.features.context_ast,
+        "M1 should not use AST context"
+    );
     assert!(
         !config.features.smart_test_selection,
         "M1 should not use smart test selection"
@@ -185,8 +201,10 @@ async fn test_m1_quality_gate_simulation() {
 
     let avg_duration_ms = total_duration_ms / TASK_COUNT as u64;
 
-    println!("✅ M1 QG1 Simulation: {}/{} tasks completed, $0.00 total cost, ~{}ms avg",
-        completed_tasks, TASK_COUNT, avg_duration_ms);
+    println!(
+        "✅ M1 QG1 Simulation: {}/{} tasks completed, $0.00 total cost, ~{}ms avg",
+        completed_tasks, TASK_COUNT, avg_duration_ms
+    );
 }
 
 /// Test evaluation metrics persistence (without actual LLM)
@@ -223,7 +241,11 @@ async fn test_evaluation_metrics_persistence_mock() {
         }
     });
 
-    fs::write(&results_file, serde_json::to_string_pretty(&results_json).unwrap()).unwrap();
+    fs::write(
+        &results_file,
+        serde_json::to_string_pretty(&results_json).unwrap(),
+    )
+    .unwrap();
 
     // Verify file was created
     assert!(results_file.exists(), "Results file should be created");

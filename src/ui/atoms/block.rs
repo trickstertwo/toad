@@ -348,7 +348,7 @@ mod tests {
     #[test]
     fn test_block_to_ratatui() {
         let block = Block::new().title("Convert");
-        let ratatui_block = block.to_ratatui();
+        let _ratatui_block = block.to_ratatui();
         // Verify conversion works (can't easily test ratatui internals)
         assert!(block.title_text().is_some());
     }

@@ -59,9 +59,7 @@ impl Agent {
         metrics.start();
 
         // Use custom prompt if provided, otherwise build default
-        let prompt = custom_prompt.unwrap_or_else(|| {
-            PromptBuilder::new().with_task(task).build()
-        });
+        let prompt = custom_prompt.unwrap_or_else(|| PromptBuilder::new().with_task(task).build());
 
         let mut conversation = vec![Message::user(prompt)];
         let mut step_count = 0;
@@ -108,13 +106,11 @@ impl Agent {
                     let tool_results = self.execute_tools(&response.tool_uses, metrics).await?;
 
                     // Add assistant message with tool uses
-                    conversation.push(Message::assistant(
-                        if response.content.is_empty() {
-                            format!("Tool uses: {}", tool_results)
-                        } else {
-                            format!("{}\n\nTool uses: {}", response.content, tool_results)
-                        }
-                    ));
+                    conversation.push(Message::assistant(if response.content.is_empty() {
+                        format!("Tool uses: {}", tool_results)
+                    } else {
+                        format!("{}\n\nTool uses: {}", response.content, tool_results)
+                    }));
                 }
                 StopReason::EndTurn | StopReason::MaxTokens | StopReason::StopSequence => {
                     // Task complete or hit limit

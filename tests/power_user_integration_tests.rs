@@ -3,7 +3,7 @@
 /// Tests for Minimap, Breadcrumbs, MultiSelect, TokenCounter, ModelSelector
 use toad::ui::multiselect::SelectionMode;
 use toad::ui::widgets::{
-    Breadcrumbs, BreadcrumbSegment, CostModel, Minimap, MinimapMode, ModelInfo, ModelSelector,
+    BreadcrumbSegment, Breadcrumbs, CostModel, Minimap, MinimapMode, ModelInfo, ModelSelector,
     MultiSelect, TokenCounter, TokenUsage,
 };
 
@@ -22,7 +22,7 @@ fn test_minimap_creation() {
 #[test]
 fn test_minimap_modes() {
     let lines = vec!["test"];
-    
+
     let minimap_chars = Minimap::new(lines.clone()).with_mode(MinimapMode::Characters);
     assert_eq!(minimap_chars.line_count(), 1);
 
@@ -61,7 +61,7 @@ fn test_minimap_jump_to() {
     let mut minimap = Minimap::new(lines);
 
     minimap.jump_to(50);
-    
+
     // Viewport should be centered around line 50
     let (start, _) = minimap.viewport();
     assert!(start <= 50);
@@ -112,8 +112,7 @@ fn test_breadcrumb_segment_creation() {
 
 #[test]
 fn test_breadcrumb_segment_with_icon() {
-    let segment = BreadcrumbSegment::new("Folder")
-        .with_icon("📁");
+    let segment = BreadcrumbSegment::new("Folder").with_icon("📁");
 
     assert_eq!(segment.icon, Some("📁".to_string()));
 }
@@ -121,10 +120,10 @@ fn test_breadcrumb_segment_with_icon() {
 #[test]
 fn test_breadcrumbs_push_pop() {
     let mut breadcrumbs = Breadcrumbs::new();
-    
+
     breadcrumbs.push(BreadcrumbSegment::new("Home"));
     breadcrumbs.push(BreadcrumbSegment::new("Projects"));
-    
+
     assert_eq!(breadcrumbs.segments().len(), 2);
 
     let popped = breadcrumbs.pop();
@@ -136,7 +135,7 @@ fn test_breadcrumbs_push_pop() {
 #[test]
 fn test_breadcrumbs_set_segments() {
     let mut breadcrumbs = Breadcrumbs::new();
-    
+
     let segments = vec![
         BreadcrumbSegment::new("A"),
         BreadcrumbSegment::new("B"),
@@ -195,16 +194,13 @@ fn test_multiselect_creation() {
 fn test_multiselect_modes() {
     let items = vec![1, 2, 3];
 
-    let single = MultiSelect::new(items.clone())
-        .with_mode(SelectionMode::Single);
+    let single = MultiSelect::new(items.clone()).with_mode(SelectionMode::Single);
     assert_eq!(single.item_count(), 3);
 
-    let multiple = MultiSelect::new(items.clone())
-        .with_mode(SelectionMode::Multiple);
+    let multiple = MultiSelect::new(items.clone()).with_mode(SelectionMode::Multiple);
     assert_eq!(multiple.item_count(), 3);
 
-    let range = MultiSelect::new(items)
-        .with_mode(SelectionMode::Range);
+    let range = MultiSelect::new(items).with_mode(SelectionMode::Range);
     assert_eq!(range.item_count(), 3);
 }
 
@@ -403,7 +399,7 @@ fn test_token_counter_creation() {
 #[test]
 fn test_token_counter_add_usage() {
     let mut counter = TokenCounter::new();
-    
+
     counter.add_usage(TokenUsage::new(100, 50));
     counter.add_usage(TokenUsage::new(200, 100));
 
@@ -413,7 +409,7 @@ fn test_token_counter_add_usage() {
 #[test]
 fn test_token_counter_reset_session() {
     let mut counter = TokenCounter::new();
-    
+
     counter.add_usage(TokenUsage::new(1000, 500));
     counter.reset_session();
 
@@ -423,7 +419,7 @@ fn test_token_counter_reset_session() {
 #[test]
 fn test_token_counter_reset_total() {
     let mut counter = TokenCounter::new();
-    
+
     counter.add_usage(TokenUsage::new(1000, 500));
     counter.reset_total();
 
@@ -433,7 +429,7 @@ fn test_token_counter_reset_total() {
 #[test]
 fn test_token_counter_with_budget() {
     let counter = TokenCounter::new().with_budget(10.0);
-    
+
     // Budget should be set
     let _counter = counter;
 }
@@ -492,8 +488,7 @@ fn test_model_info_builder() {
 
 #[test]
 fn test_model_info_formatted_context() {
-    let model = ModelInfo::new("test", "Test", "Test")
-        .with_context_window(100_000);
+    let model = ModelInfo::new("test", "Test", "Test").with_context_window(100_000);
 
     let formatted = model.formatted_context();
     assert!(formatted.contains("100"));
@@ -533,9 +528,9 @@ fn test_model_selector_with_models() {
 #[test]
 fn test_model_selector_add_model() {
     let mut selector = ModelSelector::new();
-    
+
     selector.add_model(ModelInfo::new("custom", "Custom Model", "Custom"));
-    
+
     // Model should be added
 }
 
@@ -559,7 +554,7 @@ fn test_model_selector_navigation() {
 #[test]
 fn test_model_selector_select() {
     let mut selector = ModelSelector::new();
-    
+
     selector.select(0);
     assert!(selector.selected_model().is_some());
 }
@@ -567,7 +562,7 @@ fn test_model_selector_select() {
 #[test]
 fn test_model_selector_previous() {
     let mut selector = ModelSelector::new();
-    
+
     selector.previous();
     assert!(selector.selected_model().is_some());
 }

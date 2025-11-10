@@ -4,7 +4,6 @@
 /// - Easy tasks: Ollama 7B/13B (~$0.01)
 /// - Medium tasks: Ollama 32B (~$0.10-0.50)
 /// - Hard tasks: Claude Sonnet/Opus ($1-5)
-
 use super::{Difficulty, Router, TaskClassifier};
 use crate::ai::evaluation::Task;
 use crate::ai::llm::{ProviderConfig, ProviderType};
@@ -30,10 +29,10 @@ impl ModelTier {
     /// Get estimated cost per task in USD
     pub fn estimated_cost_usd(&self) -> f64 {
         match self {
-            ModelTier::Local7B => 0.0,        // Local = free
-            ModelTier::Local32B => 0.0,       // Local = free
-            ModelTier::CloudPremium => 2.0,   // Anthropic Sonnet
-            ModelTier::CloudBest => 10.0,     // Anthropic Opus
+            ModelTier::Local7B => 0.0,      // Local = free
+            ModelTier::Local32B => 0.0,     // Local = free
+            ModelTier::CloudPremium => 2.0, // Anthropic Sonnet
+            ModelTier::CloudBest => 10.0,   // Anthropic Opus
         }
     }
 
@@ -211,8 +210,14 @@ mod tests {
     #[test]
     fn test_cloud_only_mode() {
         let router = CascadingRouter::cloud_only("sk-test".to_string());
-        assert_eq!(router.select_tier(Difficulty::Easy), ModelTier::CloudPremium);
-        assert_eq!(router.select_tier(Difficulty::Medium), ModelTier::CloudPremium);
+        assert_eq!(
+            router.select_tier(Difficulty::Easy),
+            ModelTier::CloudPremium
+        );
+        assert_eq!(
+            router.select_tier(Difficulty::Medium),
+            ModelTier::CloudPremium
+        );
         assert_eq!(router.select_tier(Difficulty::Hard), ModelTier::CloudBest);
     }
 

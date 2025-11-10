@@ -135,12 +135,11 @@ impl HelpScreen {
     fn keybinding_line(&self, key: &str, description: &str) -> Line<'static> {
         // Use Text atoms for each component
         let indent = Text::new("  ");
-        let key_text = Text::new(format!("{:<15}", key))
-            .style(
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
-                    .add_modifier(Modifier::BOLD),
-            );
+        let key_text = Text::new(format!("{:<15}", key)).style(
+            Style::default()
+                .fg(ToadTheme::TOAD_GREEN)
+                .add_modifier(Modifier::BOLD),
+        );
         let space = Text::new(" ");
         let desc_text = Text::new(description).style(Style::default().fg(ToadTheme::FOREGROUND));
 
@@ -269,8 +268,8 @@ mod tests {
     }
 
     // ===== Integration tests with TestBackend =====
-    use ratatui::backend::TestBackend;
     use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
 
     #[test]
     fn test_render_with_test_backend() {

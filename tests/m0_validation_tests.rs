@@ -5,11 +5,11 @@
 
 #[cfg(test)]
 mod m0_validation_tests {
-    
+
     use tempfile::TempDir;
+    use toad::ComparisonResult;
     use toad::config::{FeatureFlags, ToadConfig};
     use toad::{EvaluationHarness, ExperimentManager, ExperimentStatus, task_loader};
-    use toad::ComparisonResult;
 
     /// Test the complete experimental workflow
     #[tokio::test]
@@ -257,8 +257,8 @@ mod m0_validation_tests {
     /// Test statistical decision criteria
     #[test]
     fn test_statistical_decision_criteria() {
-        use toad::{EvaluationResults, TaskResult};
         use toad::{ComparisonResult, Recommendation};
+        use toad::{EvaluationResults, TaskResult};
 
         fn create_results(name: &str, solved: Vec<bool>, costs: Vec<f64>) -> EvaluationResults {
             let results: Vec<TaskResult> = solved
@@ -363,8 +363,7 @@ mod m0_validation_tests {
             let entry = entry.unwrap();
             if entry.path().extension().and_then(|s| s.to_str()) == Some("json") {
                 let content = std::fs::read_to_string(entry.path()).unwrap();
-                let _: toad::EvaluationResults =
-                    serde_json::from_str(&content).unwrap();
+                let _: toad::EvaluationResults = serde_json::from_str(&content).unwrap();
             }
         }
     }

@@ -101,14 +101,20 @@ impl WelcomeScreen {
             ),
             Line::from(""),
             Line::from(vec![
-                Text::new("  • ").style(Style::default().fg(ToadTheme::TOAD_GREEN)).to_span(),
+                Text::new("  • ")
+                    .style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                    .to_span(),
                 Text::new("Ask questions or request changes")
                     .style(Style::default().fg(ToadTheme::FOREGROUND))
                     .to_span(),
             ]),
             Line::from(vec![
-                Text::new("  • ").style(Style::default().fg(ToadTheme::TOAD_GREEN)).to_span(),
-                Text::new("Type ").style(Style::default().fg(ToadTheme::FOREGROUND)).to_span(),
+                Text::new("  • ")
+                    .style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                    .to_span(),
+                Text::new("Type ")
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
                 Text::new("/help")
                     .style(
                         Style::default()
@@ -116,11 +122,17 @@ impl WelcomeScreen {
                             .add_modifier(Modifier::BOLD),
                     )
                     .to_span(),
-                Text::new(" for commands").style(Style::default().fg(ToadTheme::FOREGROUND)).to_span(),
+                Text::new(" for commands")
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
             ]),
             Line::from(vec![
-                Text::new("  • ").style(Style::default().fg(ToadTheme::TOAD_GREEN)).to_span(),
-                Text::new("Press ").style(Style::default().fg(ToadTheme::FOREGROUND)).to_span(),
+                Text::new("  • ")
+                    .style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                    .to_span(),
+                Text::new("Press ")
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
                 Text::new("?")
                     .style(
                         Style::default()
@@ -133,8 +145,12 @@ impl WelcomeScreen {
                     .to_span(),
             ]),
             Line::from(vec![
-                Text::new("  • ").style(Style::default().fg(ToadTheme::TOAD_GREEN)).to_span(),
-                Text::new("Use ").style(Style::default().fg(ToadTheme::FOREGROUND)).to_span(),
+                Text::new("  • ")
+                    .style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                    .to_span(),
+                Text::new("Use ")
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
                 Text::new("Ctrl+P")
                     .style(
                         Style::default()
@@ -142,7 +158,9 @@ impl WelcomeScreen {
                             .add_modifier(Modifier::BOLD),
                     )
                     .to_span(),
-                Text::new(" for palette").style(Style::default().fg(ToadTheme::FOREGROUND)).to_span(),
+                Text::new(" for palette")
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
             ]),
         ];
 
@@ -309,13 +327,19 @@ mod tests {
     #[test]
     fn test_welcome_screen_with_tips_true() {
         let screen = WelcomeScreen::new().with_tips(true);
-        assert!(screen.show_tips, "Screen should show tips when with_tips(true)");
+        assert!(
+            screen.show_tips,
+            "Screen should show tips when with_tips(true)"
+        );
     }
 
     #[test]
     fn test_welcome_screen_with_tips_false() {
         let screen = WelcomeScreen::new().with_tips(false);
-        assert!(!screen.show_tips, "Screen should hide tips when with_tips(false)");
+        assert!(
+            !screen.show_tips,
+            "Screen should hide tips when with_tips(false)"
+        );
     }
 
     #[test]
@@ -332,7 +356,10 @@ mod tests {
             .with_tips(false)
             .with_tips(true)
             .with_tips(false);
-        assert!(!screen.show_tips, "Tips should be hidden after final toggle");
+        assert!(
+            !screen.show_tips,
+            "Tips should be hidden after final toggle"
+        );
     }
 
     #[test]

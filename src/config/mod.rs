@@ -1,7 +1,7 @@
+pub mod accessibility;
 /// Configuration module for TOAD
 /// Contains both M0 (evaluation framework) and TUI configurations
 mod tui_config;
-pub mod accessibility;
 
 pub use accessibility::AccessibilityConfig;
 pub use tui_config::{AiConfig, Config, EditorConfig, SessionConfig, UiConfig};
@@ -376,16 +376,13 @@ mod tests {
 
     #[test]
     fn test_config_with_providers() {
-        let config = ToadConfig::default()
-            .with_anthropic("claude-sonnet-4-5-20250929");
+        let config = ToadConfig::default().with_anthropic("claude-sonnet-4-5-20250929");
         assert_eq!(config.provider.provider, ProviderType::Anthropic);
 
-        let config = ToadConfig::default()
-            .with_github("gpt-4o");
+        let config = ToadConfig::default().with_github("gpt-4o");
         assert_eq!(config.provider.provider, ProviderType::GitHub);
 
-        let config = ToadConfig::default()
-            .with_ollama("llama2");
+        let config = ToadConfig::default().with_ollama("llama2");
         assert_eq!(config.provider.provider, ProviderType::Ollama);
     }
 
@@ -394,17 +391,38 @@ mod tests {
         let m3_features = FeatureFlags::milestone_3();
 
         // M3 MUST have multi-model racing enabled
-        assert!(m3_features.routing_multi_model, "M3 must have routing_multi_model enabled (TRAE +4.2 points)");
+        assert!(
+            m3_features.routing_multi_model,
+            "M3 must have routing_multi_model enabled (TRAE +4.2 points)"
+        );
 
         // M3 should inherit M2 features
-        assert!(m3_features.context_ast, "M3 should have AST context from M2");
-        assert!(m3_features.smart_test_selection, "M3 should have smart test selection from M2");
-        assert!(m3_features.prompt_caching, "M3 should have prompt caching from M1");
-        assert!(m3_features.tree_sitter_validation, "M3 should have tree-sitter validation from M1");
+        assert!(
+            m3_features.context_ast,
+            "M3 should have AST context from M2"
+        );
+        assert!(
+            m3_features.smart_test_selection,
+            "M3 should have smart test selection from M2"
+        );
+        assert!(
+            m3_features.prompt_caching,
+            "M3 should have prompt caching from M1"
+        );
+        assert!(
+            m3_features.tree_sitter_validation,
+            "M3 should have tree-sitter validation from M1"
+        );
 
         // M3 should NOT have M4 features
-        assert!(!m3_features.routing_cascade, "M3 should not have cascading routing (that's M4)");
-        assert!(!m3_features.context_embeddings, "M3 should not have embeddings (that's M4)");
+        assert!(
+            !m3_features.routing_cascade,
+            "M3 should not have cascading routing (that's M4)"
+        );
+        assert!(
+            !m3_features.context_embeddings,
+            "M3 should not have embeddings (that's M4)"
+        );
     }
 
     #[test]
@@ -423,13 +441,25 @@ mod tests {
         let config = ToadConfig::default();
 
         // Default should have 2 racing models
-        assert_eq!(config.racing_models.len(), 2, "Default config should have 2 racing models");
+        assert_eq!(
+            config.racing_models.len(),
+            2,
+            "Default config should have 2 racing models"
+        );
 
         // Should include Sonnet 4 and Sonnet 3.5
-        assert!(config.racing_models.contains(&"claude-sonnet-4-20250514".to_string()),
-            "Should include Sonnet 4");
-        assert!(config.racing_models.contains(&"claude-sonnet-3-5-20241022".to_string()),
-            "Should include Sonnet 3.5");
+        assert!(
+            config
+                .racing_models
+                .contains(&"claude-sonnet-4-20250514".to_string()),
+            "Should include Sonnet 4"
+        );
+        assert!(
+            config
+                .racing_models
+                .contains(&"claude-sonnet-3-5-20241022".to_string()),
+            "Should include Sonnet 3.5"
+        );
     }
 
     #[test]

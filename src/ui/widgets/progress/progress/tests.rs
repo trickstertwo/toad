@@ -570,16 +570,14 @@ mod tests {
 
     #[test]
     fn test_progress_bar_rtl_text_arabic() {
-        let progress = ProgressBar::new("تحميل البيانات")
-            .with_message("معالجة الملفات...");
+        let progress = ProgressBar::new("تحميل البيانات").with_message("معالجة الملفات...");
 
         assert_eq!(progress.progress(), 0.0);
     }
 
     #[test]
     fn test_progress_bar_rtl_text_hebrew() {
-        let progress = ProgressBar::new("טוען נתונים")
-            .with_message("מעבד קבצים...");
+        let progress = ProgressBar::new("טוען נתונים").with_message("מעבד קבצים...");
 
         assert_eq!(progress.progress(), 0.0);
     }
@@ -603,8 +601,7 @@ mod tests {
     #[test]
     fn test_progress_bar_zero_width_characters() {
         let text_with_zwj = "Test\u{200D}Progress";
-        let progress = ProgressBar::new(text_with_zwj)
-            .with_message("Test\u{200C}Message");
+        let progress = ProgressBar::new(text_with_zwj).with_message("Test\u{200C}Message");
 
         assert_eq!(progress.progress(), 0.0);
     }
@@ -612,8 +609,7 @@ mod tests {
     #[test]
     fn test_progress_bar_combining_characters() {
         let text_with_combining = "Progre\u{0301}s"; // é with combining accent
-        let progress = ProgressBar::new(text_with_combining)
-            .with_message("Cafe\u{0301}"); // Café
+        let progress = ProgressBar::new(text_with_combining).with_message("Cafe\u{0301}"); // Café
 
         assert_eq!(progress.progress(), 0.0);
     }
@@ -854,8 +850,12 @@ mod tests {
     #[test]
     fn test_progress_bar_builder_chaining_many_operations() {
         let progress = ProgressBar::new("Test")
-            .with_progress(0.1).with_progress(0.2).with_progress(0.3)
-            .with_message("M1").with_message("M2").with_message("M3")
+            .with_progress(0.1)
+            .with_progress(0.2)
+            .with_progress(0.3)
+            .with_message("M1")
+            .with_message("M2")
+            .with_message("M3")
             .with_progress(0.9);
 
         assert_eq!(progress.progress(), 0.9);

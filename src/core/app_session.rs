@@ -178,7 +178,10 @@ mod tests {
         app.config.session.auto_save = false;
 
         let result = app.save_session();
-        assert!(result.is_ok(), "Should return Ok when auto_save is disabled");
+        assert!(
+            result.is_ok(),
+            "Should return Ok when auto_save is disabled"
+        );
     }
 
     #[test]

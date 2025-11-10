@@ -486,7 +486,10 @@ mod tests {
     #[test]
     fn test_key_sequence_add_key() {
         let mut sequence = KeySequence::new("test");
-        sequence.add_key(make_key_event(KeyCode::Char('a')), Duration::from_millis(100));
+        sequence.add_key(
+            make_key_event(KeyCode::Char('a')),
+            Duration::from_millis(100),
+        );
 
         assert_eq!(sequence.len(), 1);
         assert_eq!(sequence.total_duration(), Duration::from_millis(100));

@@ -302,7 +302,10 @@ impl CrossWindowContextManager {
     }
 
     /// Get clipboard entries of a specific type
-    pub fn get_clipboard_by_type(&self, content_type: ClipboardContentType) -> Vec<&ClipboardEntry> {
+    pub fn get_clipboard_by_type(
+        &self,
+        content_type: ClipboardContentType,
+    ) -> Vec<&ClipboardEntry> {
         self.clipboard
             .iter()
             .filter(|entry| entry.content_type == content_type)
@@ -337,12 +340,19 @@ impl CrossWindowContextManager {
     }
 
     /// Complete a drag and drop operation
-    pub fn complete_drag_drop(&mut self, operation_id: &str, target_window_id: String) -> Result<(), String> {
+    pub fn complete_drag_drop(
+        &mut self,
+        operation_id: &str,
+        target_window_id: String,
+    ) -> Result<(), String> {
         if let Some(operation) = self.drag_drop_operations.get_mut(operation_id) {
             operation.complete(target_window_id);
             Ok(())
         } else {
-            Err(format!("Drag and drop operation {} not found", operation_id))
+            Err(format!(
+                "Drag and drop operation {} not found",
+                operation_id
+            ))
         }
     }
 
@@ -352,7 +362,10 @@ impl CrossWindowContextManager {
             operation.cancel();
             Ok(())
         } else {
-            Err(format!("Drag and drop operation {} not found", operation_id))
+            Err(format!(
+                "Drag and drop operation {} not found",
+                operation_id
+            ))
         }
     }
 
@@ -371,7 +384,8 @@ impl CrossWindowContextManager {
 
     /// Clean up completed drag and drop operations
     pub fn cleanup_drag_drops(&mut self) {
-        self.drag_drop_operations.retain(|_, op| op.status == DragDropStatus::InProgress);
+        self.drag_drop_operations
+            .retain(|_, op| op.status == DragDropStatus::InProgress);
     }
 
     /// Add a window context reference
@@ -428,7 +442,11 @@ impl CrossWindowContextManager {
     }
 
     /// Update a shared agent context
-    pub fn update_agent_context(&mut self, context_id: &str, context_data: String) -> Result<(), String> {
+    pub fn update_agent_context(
+        &mut self,
+        context_id: &str,
+        context_data: String,
+    ) -> Result<(), String> {
         if let Some(context) = self.agent_contexts.get_mut(context_id) {
             context.update(context_data);
             Ok(())
@@ -438,7 +456,11 @@ impl CrossWindowContextManager {
     }
 
     /// Subscribe a window to an agent context
-    pub fn subscribe_to_agent_context(&mut self, context_id: &str, window_id: String) -> Result<(), String> {
+    pub fn subscribe_to_agent_context(
+        &mut self,
+        context_id: &str,
+        window_id: String,
+    ) -> Result<(), String> {
         if let Some(context) = self.agent_contexts.get_mut(context_id) {
             context.subscribe(window_id);
             Ok(())
@@ -448,7 +470,11 @@ impl CrossWindowContextManager {
     }
 
     /// Unsubscribe a window from an agent context
-    pub fn unsubscribe_from_agent_context(&mut self, context_id: &str, window_id: &str) -> Result<(), String> {
+    pub fn unsubscribe_from_agent_context(
+        &mut self,
+        context_id: &str,
+        window_id: &str,
+    ) -> Result<(), String> {
         if let Some(context) = self.agent_contexts.get_mut(context_id) {
             context.unsubscribe(window_id);
             Ok(())
@@ -475,7 +501,8 @@ impl CrossWindowContextManager {
 
     /// Remove all agent contexts owned by a window
     pub fn remove_agent_contexts_by_owner(&mut self, owner_window_id: &str) {
-        self.agent_contexts.retain(|_, ctx| ctx.owner_window_id != owner_window_id);
+        self.agent_contexts
+            .retain(|_, ctx| ctx.owner_window_id != owner_window_id);
     }
 
     /// Get total clipboard size in bytes
@@ -563,7 +590,11 @@ mod tests {
 
     #[test]
     fn test_drag_drop_operation_creation() {
-        let op = DragDropOperation::new("window-1".to_string(), "task".to_string(), "task-123".to_string());
+        let op = DragDropOperation::new(
+            "window-1".to_string(),
+            "task".to_string(),
+            "task-123".to_string(),
+        );
 
         assert_eq!(op.source_window_id, "window-1");
         assert_eq!(op.item_type, "task");
@@ -574,7 +605,11 @@ mod tests {
 
     #[test]
     fn test_drag_drop_operation_complete() {
-        let mut op = DragDropOperation::new("window-1".to_string(), "task".to_string(), "task-123".to_string());
+        let mut op = DragDropOperation::new(
+            "window-1".to_string(),
+            "task".to_string(),
+            "task-123".to_string(),
+        );
         op.complete("window-2".to_string());
 
         assert_eq!(op.status, DragDropStatus::Completed);
@@ -584,7 +619,11 @@ mod tests {
 
     #[test]
     fn test_drag_drop_operation_cancel() {
-        let mut op = DragDropOperation::new("window-1".to_string(), "task".to_string(), "task-123".to_string());
+        let mut op = DragDropOperation::new(
+            "window-1".to_string(),
+            "task".to_string(),
+            "task-123".to_string(),
+        );
         op.cancel();
 
         assert_eq!(op.status, DragDropStatus::Cancelled);
@@ -652,7 +691,10 @@ mod tests {
 
         assert_eq!(id, "clip-1");
         assert_eq!(manager.clipboard.len(), 1);
-        assert_eq!(manager.get_latest_clipboard().unwrap().content, "Test content");
+        assert_eq!(
+            manager.get_latest_clipboard().unwrap().content,
+            "Test content"
+        );
     }
 
     #[test]
@@ -888,7 +930,9 @@ mod tests {
             None,
         );
 
-        manager.complete_drag_drop(&id1, "window-2".to_string()).unwrap();
+        manager
+            .complete_drag_drop(&id1, "window-2".to_string())
+            .unwrap();
 
         assert_eq!(manager.drag_drop_operations.len(), 2);
 

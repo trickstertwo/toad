@@ -236,9 +236,10 @@ impl CollapsibleList {
     /// Toggle focused section
     pub fn toggle_focused(&mut self) {
         if let Some(idx) = self.focused
-            && let Some(section) = self.sections.get_mut(idx) {
-                section.toggle();
-            }
+            && let Some(section) = self.sections.get_mut(idx)
+        {
+            section.toggle();
+        }
     }
 
     /// Expand all sections
@@ -580,10 +581,7 @@ mod tests {
 
     #[test]
     fn test_section_mixed_scripts() {
-        let section = CollapsibleSection::new(
-            "Hello世界Привет안녕하세요",
-            "こんにちは🌍Bonjour",
-        );
+        let section = CollapsibleSection::new("Hello世界Привет안녕하세요", "こんにちは🌍Bonjour");
         assert!(section.title().contains("世界"));
         assert!(section.content().contains("こんにちは"));
     }
@@ -597,10 +595,7 @@ mod tests {
 
     #[test]
     fn test_section_zero_width_characters() {
-        let section = CollapsibleSection::new(
-            "Test\u{200B}\u{200C}\u{200D}",
-            "Zero\u{FEFF}Width",
-        );
+        let section = CollapsibleSection::new("Test\u{200B}\u{200C}\u{200D}", "Zero\u{FEFF}Width");
         assert!(section.title().contains("Test"));
         assert!(section.content().contains("Zero"));
     }
@@ -687,7 +682,10 @@ mod tests {
 
         for i in 0..10 {
             if i % 2 == 0 {
-                list.add(CollapsibleSection::expanded(format!("Section {}", i), "Content"));
+                list.add(CollapsibleSection::expanded(
+                    format!("Section {}", i),
+                    "Content",
+                ));
             } else {
                 list.add(CollapsibleSection::new(format!("Section {}", i), "Content"));
             }

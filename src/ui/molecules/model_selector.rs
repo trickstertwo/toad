@@ -216,9 +216,11 @@ impl<'a> ModelSelector<'a> {
         spans.push(Span::raw(" "));
 
         // Model name
-        let style = self
-            .selected_style
-            .unwrap_or(Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD));
+        let style = self.selected_style.unwrap_or(
+            Style::default()
+                .fg(ToadTheme::TOAD_GREEN)
+                .add_modifier(Modifier::BOLD),
+        );
         spans.push(Text::new(model).style(style).to_span());
 
         Line::from(spans)
@@ -230,12 +232,11 @@ impl<'a> ModelSelector<'a> {
 
         // Selection indicator
         if is_selected {
-            let icon = Icon::ui(UiIcon::RadioChecked)
-                .style(Style::default().fg(ToadTheme::TOAD_GREEN));
+            let icon =
+                Icon::ui(UiIcon::RadioChecked).style(Style::default().fg(ToadTheme::TOAD_GREEN));
             spans.push(icon.to_text().to_span());
         } else {
-            let icon =
-                Icon::ui(UiIcon::RadioUnchecked).style(Style::default().fg(ToadTheme::GRAY));
+            let icon = Icon::ui(UiIcon::RadioUnchecked).style(Style::default().fg(ToadTheme::GRAY));
             spans.push(icon.to_text().to_span());
         }
         spans.push(Span::raw(" "));

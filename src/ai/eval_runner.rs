@@ -4,9 +4,7 @@
 /// while sending progress updates to the TUI event loop.
 use crate::ai::agent::Agent;
 use crate::ai::eval_commands::{CompareArgs, EvalArgs};
-use crate::ai::evaluation::{
-    DatasetManager, EvaluationResults, Task, TaskLoader, TaskResult,
-};
+use crate::ai::evaluation::{DatasetManager, EvaluationResults, Task, TaskLoader, TaskResult};
 use crate::ai::tools::ToolRegistry;
 use crate::config::ToadConfig;
 use crate::core::event::{EvaluationProgress, Event};
@@ -224,8 +222,8 @@ async fn run_tasks_with_progress(
 
 /// Run a single task
 async fn run_single_task(task: &Task, config: &ToadConfig) -> anyhow::Result<TaskResult> {
-    use crate::ai::metrics::MetricsCollector;
     use crate::ai::agent::PromptBuilder;
+    use crate::ai::metrics::MetricsCollector;
 
     // Build AST context if feature enabled
     let custom_prompt = if config.features.context_ast {
@@ -238,10 +236,12 @@ async fn run_single_task(task: &Task, config: &ToadConfig) -> anyhow::Result<Tas
         {
             Ok(builder) => {
                 let context = builder.build();
-                Some(PromptBuilder::new()
-                    .with_task(task)
-                    .with_ast_context(context)
-                    .build())
+                Some(
+                    PromptBuilder::new()
+                        .with_task(task)
+                        .with_ast_context(context)
+                        .build(),
+                )
             }
             Err(e) => {
                 // Log warning but continue without AST context
@@ -255,10 +255,8 @@ async fn run_single_task(task: &Task, config: &ToadConfig) -> anyhow::Result<Tas
 
     // Create LLM client using provider factory
     use crate::ai::llm::LLMProvider;
-    let llm_client = LLMProvider::create_with_features(
-        &config.provider,
-        config.features.prompt_caching,
-    )?;
+    let llm_client =
+        LLMProvider::create_with_features(&config.provider, config.features.prompt_caching)?;
 
     // Create tool registry with feature flags
     let tool_registry = ToolRegistry::m1_with_features(&config.features);
@@ -270,11 +268,9 @@ async fn run_single_task(task: &Task, config: &ToadConfig) -> anyhow::Result<Tas
     let mut metrics_collector = MetricsCollector::new();
 
     // Execute task with custom AST-enhanced prompt if available
-    let agent_result = agent.execute_task_with_prompt(
-        task,
-        custom_prompt,
-        &mut metrics_collector
-    ).await?;
+    let agent_result = agent
+        .execute_task_with_prompt(task, custom_prompt, &mut metrics_collector)
+        .await?;
 
     // Build task result from agent result and metrics
     let final_metrics = metrics_collector.finish();
@@ -374,7 +370,6 @@ async fn run_comparison_inner(
 
 #[cfg(test)]
 mod tests {
-    
 
     #[test]
     fn test_evaluation_handle_created() {

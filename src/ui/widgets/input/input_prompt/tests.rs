@@ -1,8 +1,8 @@
 //! Input prompt tests
 
-    use super::*;
+use super::*;
 
-    #[test]
+#[test]
 fn test_input_prompt_creation() {
     let prompt = InputPrompt::new("Test Title", "Enter something");
     assert_eq!(prompt.value(), "");
@@ -372,8 +372,7 @@ fn test_input_prompt_navigation_wraparound_prevention() {
 
 #[test]
 fn test_input_prompt_builder_chaining() {
-    let prompt = InputPrompt::new("Title", "Message")
-        .with_placeholder("Enter email...");
+    let prompt = InputPrompt::new("Title", "Message").with_placeholder("Enter email...");
 
     assert_eq!(prompt.placeholder, "Enter email...");
     assert_eq!(prompt.title, "Title");
@@ -388,8 +387,7 @@ fn test_input_prompt_builder_empty_placeholder() {
 
 #[test]
 fn test_input_prompt_builder_unicode_placeholder() {
-    let prompt = InputPrompt::new("Title", "Message")
-        .with_placeholder("输入文本... 😀");
+    let prompt = InputPrompt::new("Title", "Message").with_placeholder("输入文本... 😀");
     assert_eq!(prompt.placeholder, "输入文本... 😀");
 }
 
@@ -707,7 +705,7 @@ fn test_input_prompt_comprehensive_stress() {
 
     // Phase 8: Placeholder test
     prompt.clear();
-    let with_placeholder = InputPrompt::new("Title", "Message")
-        .with_placeholder("Custom placeholder");
+    let with_placeholder =
+        InputPrompt::new("Title", "Message").with_placeholder("Custom placeholder");
     assert_eq!(with_placeholder.placeholder, "Custom placeholder");
 }

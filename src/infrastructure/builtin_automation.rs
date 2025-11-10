@@ -661,7 +661,11 @@ mod tests {
 
     #[test]
     fn test_recurring_task_creation() {
-        let task = RecurringTask::new("Daily Standup", "Team standup meeting", RecurrencePattern::Daily);
+        let task = RecurringTask::new(
+            "Daily Standup",
+            "Team standup meeting",
+            RecurrencePattern::Daily,
+        );
 
         assert_eq!(task.title, "Daily Standup");
         assert!(task.enabled);
@@ -670,8 +674,8 @@ mod tests {
 
     #[test]
     fn test_recurring_task_with_status() {
-        let task = RecurringTask::new("Task", "Desc", RecurrencePattern::Daily)
-            .with_status("In Progress");
+        let task =
+            RecurringTask::new("Task", "Desc", RecurrencePattern::Daily).with_status("In Progress");
 
         assert_eq!(task.target_status, "In Progress");
     }
@@ -811,8 +815,7 @@ mod tests {
         let manager = AutomationManager::new();
         let task_ids = vec!["task-1".to_string(), "task-2".to_string()];
 
-        let result =
-            manager.execute_bulk_action(BulkActionType::Archive, &task_ids);
+        let result = manager.execute_bulk_action(BulkActionType::Archive, &task_ids);
         assert!(result.success);
         assert_eq!(result.affected_count, 2);
     }

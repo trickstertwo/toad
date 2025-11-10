@@ -250,10 +250,13 @@ impl AgentStepItem {
 
         // Action
         let color = self.get_color();
-        spans.push(Span::styled(self.action.clone(), Style::default().fg(color)));
+        spans.push(Span::styled(
+            self.action.clone(),
+            Style::default().fg(color),
+        ));
 
         // Thinking preview
-        if self.show_thinking {
+        if self.show_thinking && self.thinking.is_some() {
             if let Some(ref thinking) = self.thinking {
                 spans.push(Span::raw(" → "));
                 spans.push(Span::styled(

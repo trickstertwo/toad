@@ -697,7 +697,15 @@ mod tests {
         manager.switch_workspace("p2");
 
         let workspaces = manager.workspaces_by_recent();
-        assert_eq!(workspaces[0].name(), "p2", "Most recently accessed workspace should be first");
-        assert_eq!(workspaces[1].name(), "p1", "Least recently accessed workspace should be second");
+        assert_eq!(
+            workspaces[0].name(),
+            "p2",
+            "Most recently accessed workspace should be first"
+        );
+        assert_eq!(
+            workspaces[1].name(),
+            "p1",
+            "Least recently accessed workspace should be second"
+        );
     }
 }

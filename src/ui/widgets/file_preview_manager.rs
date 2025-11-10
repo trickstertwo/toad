@@ -26,7 +26,7 @@ use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap, Widget},
+    widgets::{Block, Borders, Paragraph, Widget, Wrap},
 };
 use std::path::{Path, PathBuf};
 use tokio::fs;
@@ -125,11 +125,8 @@ impl FilePreviewManager {
         self.truncated = false;
 
         // Detect language from extension
-        self.language = Language::from_extension(
-            path.extension()
-                .and_then(|s| s.to_str())
-                .unwrap_or(""),
-        );
+        self.language =
+            Language::from_extension(path.extension().and_then(|s| s.to_str()).unwrap_or(""));
 
         // Check file size
         match fs::metadata(path).await {
@@ -296,11 +293,7 @@ impl Widget for &FilePreviewManager {
                     Language::PlainText => String::new(),
                     lang => format!("[{:?}] ", lang),
                 },
-                if self.truncated {
-                    "[TRUNCATED]"
-                } else {
-                    ""
-                }
+                if self.truncated { "[TRUNCATED]" } else { "" }
             )
         } else {
             String::from("Preview")
@@ -318,18 +311,21 @@ impl Widget for &FilePreviewManager {
         // Render based on state
         match self.state {
             PreviewState::Empty => {
-                let para = Paragraph::new("No file selected").block(block)
+                let para = Paragraph::new("No file selected")
+                    .block(block)
                     .style(Style::default().fg(Color::Gray));
                 para.render(area, buf);
             }
             PreviewState::Loading => {
-                let para = Paragraph::new("Loading...").block(block)
+                let para = Paragraph::new("Loading...")
+                    .block(block)
                     .style(Style::default().fg(Color::Yellow));
                 para.render(area, buf);
             }
             PreviewState::Error => {
                 let error_text = self.error.as_deref().unwrap_or("Unknown error");
-                let para = Paragraph::new(error_text).block(block)
+                let para = Paragraph::new(error_text)
+                    .block(block)
                     .style(Style::default().fg(Color::Red))
                     .wrap(Wrap { trim: false });
                 para.render(area, buf);

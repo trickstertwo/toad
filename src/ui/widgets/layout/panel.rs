@@ -227,9 +227,7 @@ mod tests {
     // Builder Pattern
     #[test]
     fn test_panel_builder_chaining() {
-        let panel = Panel::new("Complete")
-            .focused(true)
-            .borders(Borders::ALL);
+        let panel = Panel::new("Complete").focused(true).borders(Borders::ALL);
 
         assert_eq!(panel.title, "Complete");
         assert!(panel.is_focused);
@@ -383,7 +381,10 @@ mod tests {
 
         assert_eq!(panel.title, "🎨 Complex Panel 日本語 🔧");
         assert!(panel.is_focused);
-        assert_eq!(panel.borders, Borders::TOP | Borders::BOTTOM | Borders::LEFT);
+        assert_eq!(
+            panel.borders,
+            Borders::TOP | Borders::BOTTOM | Borders::LEFT
+        );
 
         let area = Rect::new(10, 20, 200, 100);
         let inner = panel.inner(area);

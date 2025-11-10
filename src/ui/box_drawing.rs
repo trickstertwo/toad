@@ -238,8 +238,7 @@ impl fmt::Display for BoxChars {
 }
 
 /// Box drawing style presets
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum BoxStyle {
     /// Light lines (thin)
     #[default]
@@ -288,7 +287,6 @@ impl BoxStyle {
         }
     }
 }
-
 
 impl fmt::Display for BoxStyle {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -257,9 +257,12 @@ impl CostTracker {
         // Budget info
         if let Some(budget) = self.budget {
             let budget_text = format!(" / {}", Self::format_cost(budget));
-            spans.push(Span::styled(budget_text, Style::default().fg(ToadTheme::GRAY)));
+            spans.push(Span::styled(
+                budget_text,
+                Style::default().fg(ToadTheme::GRAY),
+            ));
 
-            if self.show_budget_percentage {
+            if self.show_budget_percentage && self.budget_percentage().is_some() {
                 if let Some(pct) = self.budget_percentage() {
                     let pct_text = format!(" ({:.1}%)", pct);
                     spans.push(Span::styled(pct_text, Style::default().fg(ToadTheme::GRAY)));

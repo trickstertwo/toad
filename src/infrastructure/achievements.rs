@@ -441,7 +441,8 @@ impl AchievementSystem {
 
     /// Add an achievement
     pub fn add_achievement(&mut self, achievement: Achievement) {
-        self.achievements.insert(achievement.id.clone(), achievement);
+        self.achievements
+            .insert(achievement.id.clone(), achievement);
     }
 
     /// Get all achievements
@@ -568,11 +569,7 @@ impl AchievementSystem {
             .stats
             .iter()
             .map(|(user_id, stats)| {
-                let streak = self
-                    .streaks
-                    .get(user_id)
-                    .map(|s| s.current)
-                    .unwrap_or(0);
+                let streak = self.streaks.get(user_id).map(|s| s.current).unwrap_or(0);
 
                 LeaderboardEntry {
                     rank: 0,
@@ -605,11 +602,7 @@ impl AchievementSystem {
 
         let current = match achievement.achievement_type {
             AchievementType::TaskCompletion => stats.tasks_completed,
-            AchievementType::Streak => self
-                .streaks
-                .get(user_id)
-                .map(|s| s.current)
-                .unwrap_or(0),
+            AchievementType::Streak => self.streaks.get(user_id).map(|s| s.current).unwrap_or(0),
             _ => 0,
         };
 

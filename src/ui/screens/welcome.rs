@@ -114,14 +114,14 @@ impl WelcomeScreen {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(7), // Logo
-                Constraint::Length(1), // Spacer
-                Constraint::Length(1), // Tagline
-                Constraint::Length(2), // Spacer
+                Constraint::Length(7),                      // Logo
+                Constraint::Length(1),                      // Spacer
+                Constraint::Length(1),                      // Tagline
+                Constraint::Length(2),                      // Spacer
                 Constraint::Length(self.tips.len() as u16), // Tips
-                Constraint::Length(2), // Spacer
-                Constraint::Length(1), // Prompt
-                Constraint::Min(0),    // Filler
+                Constraint::Length(2),                      // Spacer
+                Constraint::Length(1),                      // Prompt
+                Constraint::Min(0),                         // Filler
             ])
             .split(inner);
 
@@ -156,7 +156,11 @@ impl WelcomeScreen {
     /// Render tagline
     fn render_tagline(&self, area: Rect, buf: &mut Buffer) {
         let tagline = Text::new(TAGLINE)
-            .style(Style::default().fg(ToadTheme::GRAY).add_modifier(Modifier::ITALIC))
+            .style(
+                Style::default()
+                    .fg(ToadTheme::GRAY)
+                    .add_modifier(Modifier::ITALIC),
+            )
             .to_span();
 
         Paragraph::new(tagline)
@@ -204,7 +208,7 @@ impl Default for WelcomeScreen {
 
 impl Widget for WelcomeScreen {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        (&self).render(area, buf);
+        self.render(area, buf);
     }
 }
 

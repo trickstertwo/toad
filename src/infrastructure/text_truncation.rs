@@ -157,7 +157,9 @@ impl SmartTruncate {
             }
 
             let name_chars: Vec<char> = name.chars().collect();
-            let mut result: String = name_chars[..available.min(name_chars.len())].iter().collect();
+            let mut result: String = name_chars[..available.min(name_chars.len())]
+                .iter()
+                .collect();
             result.push_str("...");
             result.push_str(ext);
             result
@@ -351,8 +353,7 @@ mod tests {
     #[test]
     fn test_truncate_with_strategy_end() {
         let text = "Hello world!";
-        let result =
-            SmartTruncate::truncate_with_strategy(text, 8, TruncationStrategy::End);
+        let result = SmartTruncate::truncate_with_strategy(text, 8, TruncationStrategy::End);
         assert_eq!(result, "Hello...");
     }
 

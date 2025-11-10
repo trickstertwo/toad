@@ -556,7 +556,9 @@ mod tests {
             profiler.end_component();
         }
 
-        let stats = profiler.get_stats("Widget").expect("Widget stats should exist");
+        let stats = profiler
+            .get_stats("Widget")
+            .expect("Widget stats should exist");
         assert_eq!(stats.render_count, 3);
     }
 
@@ -607,7 +609,9 @@ mod tests {
         thread::sleep(Duration::from_millis(10));
         profiler.end_component();
 
-        let (name, _) = profiler.slowest_component().expect("should have slowest component");
+        let (name, _) = profiler
+            .slowest_component()
+            .expect("should have slowest component");
         assert_eq!(name, "Slow");
     }
 
@@ -709,7 +713,9 @@ mod tests {
         profiler.start_component("Only");
         profiler.end_component();
 
-        let (name, _) = profiler.slowest_component().expect("should have one component");
+        let (name, _) = profiler
+            .slowest_component()
+            .expect("should have one component");
         assert_eq!(name, "Only");
     }
 

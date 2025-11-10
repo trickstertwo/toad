@@ -6,8 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 /// Main TUI configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Config {
     /// UI-specific settings
     pub ui: UiConfig,
@@ -22,7 +21,6 @@ pub struct Config {
     #[serde(default)]
     pub session: SessionConfig,
 }
-
 
 impl Config {
     /// Load config from a TOML file

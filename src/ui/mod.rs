@@ -32,11 +32,13 @@ pub mod widgets;
 pub use animations::{Animation, AnimationState, EasingFunction, TransitionManager};
 pub use board_background::{BackgroundStyle, BoardBackground, BoardBackgrounds, PatternType};
 pub use box_drawing::{BoxBuilder, BoxChars, BoxStyle};
-pub use pixel_canvas::{Canvas, Pixel, Shape};
-pub use enhanced_borders::{BorderEffect, BorderStyles, BorderThickness, CornerStyle, EnhancedBorder};
+pub use enhanced_borders::{
+    BorderEffect, BorderStyles, BorderThickness, CornerStyle, EnhancedBorder,
+};
 pub use gradient::{ColorStop, Gradient, GradientDirection, GradientType, Gradients};
 pub use multi_window::{Window, WindowId, WindowManager, WindowPriority, WindowState};
 pub use nerd_fonts::{GitStatus, NerdFonts, UiIcon, supports_nerd_fonts};
+pub use pixel_canvas::{Canvas, Pixel, Shape};
 pub use responsive_layout::{ResponsiveLayout, ScreenSize};
 pub use syntax::{HighlightTheme, HighlightedSpan, Language, SyntaxHighlighter};
 pub use theme::ToadTheme;

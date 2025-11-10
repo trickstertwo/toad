@@ -147,9 +147,10 @@ impl TaskLoader {
 
         for line in patch.lines() {
             if line.starts_with("--- a/")
-                && let Some(path) = line.strip_prefix("--- a/") {
-                    files.push(PathBuf::from(path));
-                }
+                && let Some(path) = line.strip_prefix("--- a/")
+            {
+                files.push(PathBuf::from(path));
+            }
         }
 
         files

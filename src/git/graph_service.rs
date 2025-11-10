@@ -62,7 +62,8 @@ impl GitGraphService {
                 if err_msg.contains("does not have any commits")
                     || err_msg.contains("no commits")
                     || err_msg.contains("bad default revision")
-                    || err_msg.contains("unknown revision") {
+                    || err_msg.contains("unknown revision")
+                {
                     Vec::new()
                 } else {
                     return Err(e);
@@ -132,9 +133,8 @@ impl GitGraphService {
         ];
 
         for commit in commits {
-            let mut git_commit =
-                GitCommit::new(commit.hash.clone(), commit.message.clone())
-                    .with_author(commit.author.clone());
+            let mut git_commit = GitCommit::new(commit.hash.clone(), commit.message.clone())
+                .with_author(commit.author.clone());
 
             // Set parent if exists
             if let Some(parent) = commit.parents.first() {
@@ -178,9 +178,10 @@ impl GitGraphService {
 fn extract_branch_hint(message: &str) -> String {
     // Look for bracketed tags first (e.g., "[feature] Add login")
     if let Some(start) = message.find('[')
-        && let Some(end_offset) = message[start + 1..].find(']') {
-            return message[start + 1..start + 1 + end_offset].to_lowercase();
-        }
+        && let Some(end_offset) = message[start + 1..].find(']')
+    {
+        return message[start + 1..start + 1 + end_offset].to_lowercase();
+    }
 
     // Look for conventional commit prefixes (e.g., "feat: Add feature")
     if let Some(colon_pos) = message.find(':') {
@@ -245,7 +246,11 @@ mod tests {
             .await
             .unwrap();
 
-        assert!(add_output.status.success(), "git add failed: {}", String::from_utf8_lossy(&add_output.stderr));
+        assert!(
+            add_output.status.success(),
+            "git add failed: {}",
+            String::from_utf8_lossy(&add_output.stderr)
+        );
 
         let commit_output = Command::new("git")
             .current_dir(path)
@@ -254,7 +259,11 @@ mod tests {
             .await
             .unwrap();
 
-        assert!(commit_output.status.success(), "git commit failed: {}", String::from_utf8_lossy(&commit_output.stderr));
+        assert!(
+            commit_output.status.success(),
+            "git commit failed: {}",
+            String::from_utf8_lossy(&commit_output.stderr)
+        );
     }
 
     #[tokio::test]

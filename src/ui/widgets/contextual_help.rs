@@ -330,7 +330,11 @@ impl ContextualHelp {
 
     /// Get filtered entries for current context
     fn get_filtered_entries(&self) -> Vec<&HelpEntry> {
-        let entries = self.entries.get(&self.context).map(|v| v.as_slice()).unwrap_or(&[]);
+        let entries = self
+            .entries
+            .get(&self.context)
+            .map(|v| v.as_slice())
+            .unwrap_or(&[]);
 
         if self.search_filter.is_empty() {
             entries.iter().collect()
@@ -395,9 +399,9 @@ impl Widget for &ContextualHelp {
 
         // Split into title, content, footer
         let chunks = Layout::vertical([
-            Constraint::Length(3),  // Title
-            Constraint::Min(0),     // Content
-            Constraint::Length(3),  // Footer
+            Constraint::Length(3), // Title
+            Constraint::Min(0),    // Content
+            Constraint::Length(3), // Footer
         ])
         .split(help_area);
 
@@ -406,8 +410,11 @@ impl Widget for &ContextualHelp {
 
         // Use Text atoms for title components
         let help_text = Text::new("Help: ").style(Style::default().fg(Color::Gray));
-        let context_text = Text::new(&context_name)
-            .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD));
+        let context_text = Text::new(&context_name).style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        );
         let space_text = Text::new(" ");
         let bindings_text = Text::new(format!("({} bindings)", self.entry_count()))
             .style(Style::default().fg(Color::Gray));
@@ -438,11 +445,14 @@ impl Widget for &ContextualHelp {
                 let category_str = entry.category.as_deref().unwrap_or("General");
 
                 // Use Text atoms for each component
-                let key_text = Text::new(format!("{:15}", entry.keybinding))
-                    .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD));
+                let key_text = Text::new(format!("{:15}", entry.keybinding)).style(
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                );
                 let separator_text = Text::new(" │ ");
-                let desc_text = Text::new(&entry.description)
-                    .style(Style::default().fg(Color::White));
+                let desc_text =
+                    Text::new(&entry.description).style(Style::default().fg(Color::White));
                 let space_text = Text::new(" ");
                 let category_text = Text::new(format!("[{}]", category_str))
                     .style(Style::default().fg(Color::DarkGray));
@@ -475,9 +485,7 @@ impl Widget for &ContextualHelp {
         };
 
         // Use Block atom for footer border
-        let footer_block = AtomBlock::new()
-            .borders(Borders::ALL)
-            .to_ratatui();
+        let footer_block = AtomBlock::new().borders(Borders::ALL).to_ratatui();
 
         let footer = Paragraph::new(footer_text)
             .block(footer_block)
@@ -587,10 +595,7 @@ mod tests {
         let mut help = ContextualHelp::new();
         let initial_count = help.entry_count();
 
-        help.add_entry(
-            HelpContext::General,
-            HelpEntry::new("F1", "Custom help"),
-        );
+        help.add_entry(HelpContext::General, HelpEntry::new("F1", "Custom help"));
 
         assert_eq!(help.entry_count(), initial_count + 1);
     }

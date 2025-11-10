@@ -130,7 +130,8 @@ impl TypeScriptParser {
 
                 let signature = params.map(|p| format!("function {}{} {{ }}", func_name, p));
 
-                let mut symbol = Symbol::new(func_name, SymbolKind::Function, (start_line, end_line));
+                let mut symbol =
+                    Symbol::new(func_name, SymbolKind::Function, (start_line, end_line));
                 if let Some(sig) = signature {
                     symbol = symbol.with_signature(sig);
                 }
@@ -148,7 +149,8 @@ impl TypeScriptParser {
             let mut params = None;
 
             for capture in match_.captures {
-                let capture_name = self.arrow_function_query.capture_names()[capture.index as usize];
+                let capture_name =
+                    self.arrow_function_query.capture_names()[capture.index as usize];
                 let text = &source[capture.node.byte_range()];
 
                 match capture_name {
@@ -164,7 +166,8 @@ impl TypeScriptParser {
 
                 let signature = params.map(|p| format!("const {} = {} => {{ }}", func_name, p));
 
-                let mut symbol = Symbol::new(func_name, SymbolKind::Function, (start_line, end_line));
+                let mut symbol =
+                    Symbol::new(func_name, SymbolKind::Function, (start_line, end_line));
                 if let Some(sig) = signature {
                     symbol = symbol.with_signature(sig);
                 }
@@ -228,7 +231,11 @@ impl TypeScriptParser {
                 let start_line = match_.captures[0].node.start_position().row + 1;
                 let end_line = match_.captures[0].node.end_position().row + 1;
 
-                let symbol = Symbol::new(interface_name, SymbolKind::Interface, (start_line, end_line));
+                let symbol = Symbol::new(
+                    interface_name,
+                    SymbolKind::Interface,
+                    (start_line, end_line),
+                );
                 symbols.push(symbol);
             }
         }
@@ -359,8 +366,8 @@ impl AstParser for TypeScriptParser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
     use std::io::Write;
+    use tempfile::NamedTempFile;
 
     #[tokio::test]
     async fn test_parse_function_with_types() {

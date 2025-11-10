@@ -8,7 +8,9 @@ use crate::config::Config;
 use crate::core::app_state::{AppScreen, EvaluationState};
 use crate::core::event::Event;
 use crate::performance::PerformanceMetrics;
-use crate::ui::widgets::{CommandPalette, ConfirmDialog, ConversationView, HelpScreen, InputField, ToastManager};
+use crate::ui::widgets::{
+    CommandPalette, ConfirmDialog, ConversationView, HelpScreen, InputField, ToastManager,
+};
 use crate::workspace::{LayoutManager, SessionState, TabManager};
 use crossterm::event::KeyEvent;
 use std::path::PathBuf;
@@ -213,7 +215,6 @@ impl App {
         Self::default()
     }
 
-
     /// Start an evaluation run
 
     /// Update application state based on an event (Update in Elm Architecture)
@@ -317,7 +318,6 @@ impl App {
         }
     }
 
-
     /// Process commands entered by the user
 
     /// Create the trust dialog for the current directory
@@ -411,9 +411,7 @@ impl App {
     pub(crate) fn set_ai_processing(&mut self, processing: bool) {
         self.ai_processing = processing;
     }
-
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -481,7 +479,8 @@ mod tests {
 
         // Test Welcome screen
         app.screen = AppScreen::Welcome;
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char(' ')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char(' '))))
+            .unwrap();
         assert_eq!(app.screen, AppScreen::TrustDialog);
 
         // Test Main screen
@@ -498,7 +497,8 @@ mod tests {
         // Sequence of events
         app.update(Event::Tick).unwrap();
         app.update(Event::Resize(80, 24)).unwrap();
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char('a')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('a'))))
+            .unwrap();
         app.update(Event::Tick).unwrap();
 
         // Should handle sequence without panicking
@@ -522,7 +522,8 @@ mod tests {
         let mut app = App::new();
         app.screen = AppScreen::Welcome;
 
-        app.update(Event::Key(KeyEvent::from(KeyCode::Enter))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Enter)))
+            .unwrap();
 
         // Should route to welcome handler and advance to trust dialog
         assert_eq!(app.screen, AppScreen::TrustDialog);
@@ -534,7 +535,8 @@ mod tests {
         app.screen = AppScreen::TrustDialog;
         app.create_trust_dialog();
 
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char('1')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('1'))))
+            .unwrap();
 
         // Should route to trust dialog handler and process selection
         assert_eq!(app.screen, AppScreen::Main);
@@ -545,7 +547,8 @@ mod tests {
         let mut app = App::new();
         app.screen = AppScreen::Main;
 
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char('?')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('?'))))
+            .unwrap();
 
         // Should toggle help screen
         assert!(app.show_help);
@@ -557,7 +560,8 @@ mod tests {
         app.screen = AppScreen::Evaluation;
         app.evaluation_state = None;
 
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char('q')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('q'))))
+            .unwrap();
 
         // Should return to main screen
         assert_eq!(app.screen, AppScreen::Main);
@@ -585,10 +589,12 @@ mod tests {
 
         // Welcome → TrustDialog
         app.screen = AppScreen::Welcome;
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char(' ')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char(' '))))
+            .unwrap();
 
         // TrustDialog → Main
-        app.update(Event::Key(KeyEvent::from(KeyCode::Char('1')))).unwrap();
+        app.update(Event::Key(KeyEvent::from(KeyCode::Char('1'))))
+            .unwrap();
 
         assert_eq!(app.screen, AppScreen::Main);
     }
@@ -618,7 +624,11 @@ mod tests {
         let mut app = App::new();
         app.screen = AppScreen::Main;
 
-        app.update(Event::Key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL))).unwrap();
+        app.update(Event::Key(KeyEvent::new(
+            KeyCode::Char('c'),
+            KeyModifiers::CONTROL,
+        )))
+        .unwrap();
 
         assert!(app.should_quit());
     }
@@ -629,21 +639,24 @@ mod tests {
         let mut app1 = App::new();
         app1.screen = AppScreen::Main;
         app1.show_help = true;
-        app1.update(Event::Key(KeyEvent::from(KeyCode::Esc))).unwrap();
+        app1.update(Event::Key(KeyEvent::from(KeyCode::Esc)))
+            .unwrap();
         assert!(!app1.show_help);
         assert!(!app1.should_quit());
 
         // Esc on Welcome - quits
         let mut app2 = App::new();
         app2.screen = AppScreen::Welcome;
-        app2.update(Event::Key(KeyEvent::from(KeyCode::Esc))).unwrap();
+        app2.update(Event::Key(KeyEvent::from(KeyCode::Esc)))
+            .unwrap();
         assert!(app2.should_quit());
 
         // Esc on TrustDialog - quits
         let mut app3 = App::new();
         app3.screen = AppScreen::TrustDialog;
         app3.create_trust_dialog();
-        app3.update(Event::Key(KeyEvent::from(KeyCode::Esc))).unwrap();
+        app3.update(Event::Key(KeyEvent::from(KeyCode::Esc)))
+            .unwrap();
         assert!(app3.should_quit());
     }
 

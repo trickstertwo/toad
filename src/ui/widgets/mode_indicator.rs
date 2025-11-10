@@ -25,8 +25,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 /// Editor mode
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum EditorMode {
     /// Normal mode - navigation and commands
     #[default]
@@ -99,7 +98,6 @@ impl EditorMode {
     }
 }
 
-
 impl fmt::Display for EditorMode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.name())
@@ -107,8 +105,7 @@ impl fmt::Display for EditorMode {
 }
 
 /// Mode indicator display style
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum IndicatorStyle {
     /// Full mode name
     #[default]
@@ -118,7 +115,6 @@ pub enum IndicatorStyle {
     /// Colored block with mode name
     Block,
 }
-
 
 /// Mode indicator widget
 pub struct ModeIndicator {
@@ -186,19 +182,14 @@ impl ModeIndicator {
 
         // Use Text atom for mode text rendering
         let text = match self.style {
-            IndicatorStyle::Full | IndicatorStyle::Short => {
-                Text::new(format!(" {} ", mode_text))
-                    .style(Style::default().fg(color).add_modifier(Modifier::BOLD))
-            }
-            IndicatorStyle::Block => {
-                Text::new(format!(" {} ", mode_text))
-                    .style(
-                        Style::default()
-                            .fg(ToadTheme::BLACK)
-                            .bg(color)
-                            .add_modifier(Modifier::BOLD),
-                    )
-            }
+            IndicatorStyle::Full | IndicatorStyle::Short => Text::new(format!(" {} ", mode_text))
+                .style(Style::default().fg(color).add_modifier(Modifier::BOLD)),
+            IndicatorStyle::Block => Text::new(format!(" {} ", mode_text)).style(
+                Style::default()
+                    .fg(ToadTheme::BLACK)
+                    .bg(color)
+                    .add_modifier(Modifier::BOLD),
+            ),
         };
 
         // Convert Text atom to Line for rendering

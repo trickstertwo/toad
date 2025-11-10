@@ -229,7 +229,6 @@ impl Toast {
     pub fn remaining_time(&self) -> Duration {
         self.duration.saturating_sub(self.created_at.elapsed())
     }
-
 }
 
 /// Toast notification manager
@@ -410,5 +409,4 @@ impl ToastManager {
     pub fn is_empty(&self) -> bool {
         self.toasts.is_empty()
     }
-
 }

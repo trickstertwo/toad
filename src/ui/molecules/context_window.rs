@@ -290,10 +290,7 @@ impl ContextWindow {
         // Bar
         if self.show_bar {
             spans.push(Span::raw(" "));
-            spans.push(Span::styled(
-                self.create_bar(),
-                Style::default().fg(color),
-            ));
+            spans.push(Span::styled(self.create_bar(), Style::default().fg(color)));
         }
 
         spans

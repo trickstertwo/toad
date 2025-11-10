@@ -131,8 +131,8 @@ impl Breadcrumbs {
         for (i, segment) in self.segments.iter().enumerate() {
             // Add icon if present using Text atom
             if let Some(icon) = &segment.icon {
-                let icon_text = Text::new(format!("{} ", icon))
-                    .style(Style::default().fg(ToadTheme::GRAY));
+                let icon_text =
+                    Text::new(format!("{} ", icon)).style(Style::default().fg(ToadTheme::GRAY));
                 spans.push(icon_text.to_span());
             }
 
@@ -163,8 +163,8 @@ impl Breadcrumbs {
 
             // Add separator if not last using Text atom
             if !is_last {
-                let separator_text = Text::new(&self.separator)
-                    .style(Style::default().fg(ToadTheme::DARK_GRAY));
+                let separator_text =
+                    Text::new(&self.separator).style(Style::default().fg(ToadTheme::DARK_GRAY));
                 spans.push(separator_text.to_span());
             }
         }

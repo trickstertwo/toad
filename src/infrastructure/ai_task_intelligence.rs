@@ -239,7 +239,12 @@ pub struct BurndownForecast {
 
 impl BurndownForecast {
     /// Create a new burndown forecast
-    pub fn new(sprint_id: String, target_date: DateTime<Utc>, remaining_work: f32, current_velocity: f32) -> Self {
+    pub fn new(
+        sprint_id: String,
+        target_date: DateTime<Utc>,
+        remaining_work: f32,
+        current_velocity: f32,
+    ) -> Self {
         let days_to_complete = if current_velocity > 0.0 {
             (remaining_work / current_velocity).ceil() as i64
         } else {
@@ -247,7 +252,9 @@ impl BurndownForecast {
         };
 
         let forecasted_date = Utc::now() + chrono::Duration::days(days_to_complete);
-        let days_delta = (target_date.signed_duration_since(forecasted_date).num_days()) as i32;
+        let days_delta = (target_date
+            .signed_duration_since(forecasted_date)
+            .num_days()) as i32;
         let on_track = days_delta >= 0;
 
         let confidence = if current_velocity > 0.0 { 0.7 } else { 0.3 };
@@ -320,7 +327,8 @@ impl AITaskIntelligence {
             suggestion.add_reason(reason);
         }
 
-        self.priority_suggestions.insert(task_id.clone(), suggestion);
+        self.priority_suggestions
+            .insert(task_id.clone(), suggestion);
         task_id
     }
 
@@ -358,7 +366,8 @@ impl AITaskIntelligence {
         suggestion.suggested_project = project;
         suggestion.suggested_epic = epic;
 
-        self.category_suggestions.insert(task_id.clone(), suggestion);
+        self.category_suggestions
+            .insert(task_id.clone(), suggestion);
         task_id
     }
 
@@ -439,7 +448,12 @@ impl AITaskIntelligence {
         remaining_work: f32,
         current_velocity: f32,
     ) -> String {
-        let forecast = BurndownForecast::new(sprint_id.clone(), target_date, remaining_work, current_velocity);
+        let forecast = BurndownForecast::new(
+            sprint_id.clone(),
+            target_date,
+            remaining_work,
+            current_velocity,
+        );
         self.forecasts.insert(sprint_id.clone(), forecast);
         sprint_id
     }
@@ -463,9 +477,12 @@ impl AITaskIntelligence {
     pub fn clear_old_suggestions(&mut self, days: i64) {
         let cutoff = Utc::now() - chrono::Duration::days(days);
 
-        self.priority_suggestions.retain(|_, s| s.generated_at > cutoff);
-        self.category_suggestions.retain(|_, s| s.generated_at > cutoff);
-        self.effort_estimations.retain(|_, e| e.generated_at > cutoff);
+        self.priority_suggestions
+            .retain(|_, s| s.generated_at > cutoff);
+        self.category_suggestions
+            .retain(|_, s| s.generated_at > cutoff);
+        self.effort_estimations
+            .retain(|_, e| e.generated_at > cutoff);
         self.bottlenecks.retain(|_, b| b.detected_at > cutoff);
         self.forecasts.retain(|_, f| f.generated_at > cutoff);
     }
@@ -516,7 +533,8 @@ mod tests {
 
     #[test]
     fn test_priority_suggestion_creation() {
-        let suggestion = PrioritySuggestion::new("task-1".to_string(), SuggestedPriority::High, 0.8);
+        let suggestion =
+            PrioritySuggestion::new("task-1".to_string(), SuggestedPriority::High, 0.8);
 
         assert_eq!(suggestion.task_id, "task-1");
         assert_eq!(suggestion.priority, SuggestedPriority::High);
@@ -526,7 +544,8 @@ mod tests {
 
     #[test]
     fn test_priority_suggestion_add_reason() {
-        let mut suggestion = PrioritySuggestion::new("task-1".to_string(), SuggestedPriority::High, 0.8);
+        let mut suggestion =
+            PrioritySuggestion::new("task-1".to_string(), SuggestedPriority::High, 0.8);
         suggestion.add_reason("Urgent deadline".to_string());
         suggestion.add_reason("Critical path".to_string());
 
@@ -570,8 +589,8 @@ mod tests {
 
     #[test]
     fn test_effort_estimation_custom_interval() {
-        let estimation = EffortEstimation::new("task-1".to_string(), 8.0, 0.75)
-            .with_interval(6.0, 10.0);
+        let estimation =
+            EffortEstimation::new("task-1".to_string(), 8.0, 0.75).with_interval(6.0, 10.0);
 
         assert_eq!(estimation.confidence_interval, (6.0, 10.0));
     }

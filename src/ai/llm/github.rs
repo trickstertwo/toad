@@ -106,9 +106,10 @@ impl LLMClient for GitHubClient {
 
         // Add tools if provided
         if let Some(tools_list) = tools
-            && !tools_list.is_empty() {
-                body["tools"] = json!(tools_list);
-            }
+            && !tools_list.is_empty()
+        {
+            body["tools"] = json!(tools_list);
+        }
 
         // Make API request
         let response = self
@@ -151,8 +152,7 @@ impl LLMClient for GitHubClient {
                 tool_uses.push(ToolUse {
                     id: tool_call.id.clone(),
                     name: tool_call.function.name.clone(),
-                    input: serde_json::from_str(&tool_call.function.arguments)
-                        .unwrap_or(json!({})),
+                    input: serde_json::from_str(&tool_call.function.arguments).unwrap_or(json!({})),
                 });
             }
         }
@@ -260,21 +260,16 @@ mod tests {
 
     #[test]
     fn test_temperature_clamping() {
-        let client = GitHubClient::new("ghp_test123".to_string())
-            .with_temperature(3.0);
+        let client = GitHubClient::new("ghp_test123".to_string()).with_temperature(3.0);
         assert_eq!(client.temperature.unwrap(), 2.0);
 
-        let client = GitHubClient::new("ghp_test123".to_string())
-            .with_temperature(-0.5);
+        let client = GitHubClient::new("ghp_test123".to_string()).with_temperature(-0.5);
         assert_eq!(client.temperature.unwrap(), 0.0);
     }
 
     #[test]
     fn test_message_conversion() {
-        let messages = vec![
-            Message::user("Hello"),
-            Message::assistant("Hi there!"),
-        ];
+        let messages = vec![Message::user("Hello"), Message::assistant("Hi there!")];
 
         let github_msgs = GitHubClient::to_github_messages(&messages);
         assert_eq!(github_msgs.len(), 2);

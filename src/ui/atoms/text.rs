@@ -247,9 +247,7 @@ mod tests {
     #[test]
     fn test_text_chaining() {
         let style = Style::default().fg(ToadTheme::TOAD_GREEN_BRIGHT);
-        let text = Text::new("Important")
-            .bold()
-            .style(style);
+        let text = Text::new("Important").bold().style(style);
 
         assert_eq!(text.content(), "Important");
         assert!(text.style.is_some());
@@ -258,7 +256,7 @@ mod tests {
     #[test]
     fn test_text_to_span() {
         let text = Text::new("Hello");
-        let span = text.to_span();
+        let _span = text.to_span();
         // Verify span was created (can't easily test content without ratatui backend)
         assert!(!text.content().is_empty());
     }
@@ -266,7 +264,7 @@ mod tests {
     #[test]
     fn test_text_to_line() {
         let text = Text::new("Hello");
-        let line = text.to_line();
+        let _line = text.to_line();
         // Verify line was created
         assert!(!text.content().is_empty());
     }

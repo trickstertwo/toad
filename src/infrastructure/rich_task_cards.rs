@@ -242,26 +242,28 @@ impl RichTaskCard {
     /// Marks a subtask as completed
     pub fn complete_subtask(&mut self, subtask_id: &str) -> bool {
         if let Some(subtask) = self.subtasks.iter_mut().find(|s| s.id == subtask_id)
-            && !subtask.completed {
-                subtask.completed = true;
-                subtask.completed_at = Some(Utc::now());
-                self.update_progress();
-                self.updated_at = Utc::now();
-                return true;
-            }
+            && !subtask.completed
+        {
+            subtask.completed = true;
+            subtask.completed_at = Some(Utc::now());
+            self.update_progress();
+            self.updated_at = Utc::now();
+            return true;
+        }
         false
     }
 
     /// Marks a subtask as incomplete
     pub fn uncomplete_subtask(&mut self, subtask_id: &str) -> bool {
         if let Some(subtask) = self.subtasks.iter_mut().find(|s| s.id == subtask_id)
-            && subtask.completed {
-                subtask.completed = false;
-                subtask.completed_at = None;
-                self.update_progress();
-                self.updated_at = Utc::now();
-                return true;
-            }
+            && subtask.completed
+        {
+            subtask.completed = false;
+            subtask.completed_at = None;
+            self.update_progress();
+            self.updated_at = Utc::now();
+            return true;
+        }
         false
     }
 
@@ -425,7 +427,10 @@ impl RichTaskCardManager {
 
     /// Gets all overdue cards
     pub fn overdue_cards(&self) -> Vec<&RichTaskCard> {
-        self.cards.values().filter(|card| card.is_overdue()).collect()
+        self.cards
+            .values()
+            .filter(|card| card.is_overdue())
+            .collect()
     }
 
     /// Gets all cards by status
@@ -716,7 +721,10 @@ mod tests {
         let tag = manager.create_tag("Bug".to_string(), "#FF0000".to_string());
         let tag_id = tag.id.clone();
 
-        manager.get_card_mut(&card1_id).unwrap().add_tag(tag.clone());
+        manager
+            .get_card_mut(&card1_id)
+            .unwrap()
+            .add_tag(tag.clone());
         manager.get_card_mut(&card2_id).unwrap().add_tag(tag);
 
         let cards = manager.cards_with_tag(&tag_id);
@@ -741,7 +749,10 @@ mod tests {
             assigned_at: Utc::now(),
         };
 
-        manager.get_card_mut(&card_id).unwrap().add_assignee(assignee);
+        manager
+            .get_card_mut(&card_id)
+            .unwrap()
+            .add_assignee(assignee);
 
         let cards = manager.cards_assigned_to("user-2");
         assert_eq!(cards.len(), 1);

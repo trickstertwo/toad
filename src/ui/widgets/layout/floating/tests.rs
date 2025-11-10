@@ -1008,7 +1008,10 @@ mod tests {
 
         // Phase 1: Add initial windows
         for i in 0..5 {
-            manager.add_window(FloatingWindow::new(format!("Window {}", i), format!("Content {}", i)));
+            manager.add_window(FloatingWindow::new(
+                format!("Window {}", i),
+                format!("Content {}", i),
+            ));
         }
         assert_eq!(manager.window_count(), 5);
 
@@ -1028,7 +1031,10 @@ mod tests {
 
         // Phase 4: Add more windows
         for i in 5..10 {
-            manager.add_window(FloatingWindow::new(format!("Window {}", i), format!("Content {}", i)));
+            manager.add_window(FloatingWindow::new(
+                format!("Window {}", i),
+                format!("Content {}", i),
+            ));
         }
         assert_eq!(manager.window_count(), 10);
 

@@ -194,4 +194,3 @@ impl Default for PreviewPane {
         Self::new("")
     }
 }
-

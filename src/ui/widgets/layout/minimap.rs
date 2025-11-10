@@ -23,8 +23,7 @@ use serde::{Deserialize, Serialize};
 use crate::ui::theme::ToadTheme;
 
 /// Minimap display mode
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum MinimapMode {
     /// Show characters (scaled down)
     Characters,
@@ -34,7 +33,6 @@ pub enum MinimapMode {
     /// Show syntax highlighting colors
     Colors,
 }
-
 
 /// Minimap widget
 #[derive(Debug, Clone)]
@@ -499,7 +497,9 @@ mod tests {
 
     #[test]
     fn test_minimap_with_very_long_lines() {
-        let lines: Vec<String> = (0..100).map(|i| "code line ".repeat(1000) + &i.to_string()).collect();
+        let lines: Vec<String> = (0..100)
+            .map(|i| "code line ".repeat(1000) + &i.to_string())
+            .collect();
         let minimap = Minimap::new(lines);
         assert_eq!(minimap.line_count(), 100);
     }
@@ -925,14 +925,12 @@ mod tests {
     #[test]
     fn test_minimap_comprehensive_stress_test() {
         let lines: Vec<String> = (0..1000)
-            .map(|i| {
-                match i % 5 {
-                    0 => format!("// Comment line {} 📝", i),
-                    1 => format!("fn function_{}() {{", i),
-                    2 => format!("    let x = \"string {}\";", i),
-                    3 => format!("    println!(\"Line {}\");", i),
-                    _ => format!("}}  // End block {}", i),
-                }
+            .map(|i| match i % 5 {
+                0 => format!("// Comment line {} 📝", i),
+                1 => format!("fn function_{}() {{", i),
+                2 => format!("    let x = \"string {}\";", i),
+                3 => format!("    println!(\"Line {}\");", i),
+                _ => format!("}}  // End block {}", i),
             })
             .collect();
 

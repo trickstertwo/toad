@@ -35,21 +35,13 @@ impl TestDiscovery {
         vec![
             // Python patterns
             TestPattern {
-                directories: vec![
-                    "tests".to_string(),
-                    "test".to_string(),
-                ],
-                file_patterns: vec![
-                    "test_*.py".to_string(),
-                    "*_test.py".to_string(),
-                ],
+                directories: vec!["tests".to_string(), "test".to_string()],
+                file_patterns: vec!["test_*.py".to_string(), "*_test.py".to_string()],
                 extensions: vec!["py".to_string()],
             },
             // Rust patterns
             TestPattern {
-                directories: vec![
-                    "tests".to_string(),
-                ],
+                directories: vec!["tests".to_string()],
                 file_patterns: vec![
                     "*.rs".to_string(), // Rust tests can be in any .rs file
                 ],
@@ -147,9 +139,10 @@ impl TestDiscovery {
             });
 
             // Check file name pattern
-            let matches_pattern = pattern.file_patterns.iter().any(|pat| {
-                self.matches_glob_pattern(file_name, pat)
-            });
+            let matches_pattern = pattern
+                .file_patterns
+                .iter()
+                .any(|pat| self.matches_glob_pattern(file_name, pat));
 
             if in_test_dir || matches_pattern {
                 return true;

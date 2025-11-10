@@ -248,11 +248,7 @@ impl ConversationView {
                 .position(self.scroll_offset)
                 .viewport_content_length(viewport_height);
 
-            frame.render_stateful_widget(
-                scrollbar,
-                inner,
-                &mut scrollbar_state,
-            );
+            frame.render_stateful_widget(scrollbar, inner, &mut scrollbar_state);
         }
     }
 }
@@ -284,10 +280,7 @@ mod tests {
     #[test]
     fn test_conversation_view_add_messages() {
         let mut view = ConversationView::new();
-        view.add_messages(vec![
-            Message::user("Hello"),
-            Message::assistant("Hi"),
-        ]);
+        view.add_messages(vec![Message::user("Hello"), Message::assistant("Hi")]);
         assert_eq!(view.message_count(), 2);
     }
 

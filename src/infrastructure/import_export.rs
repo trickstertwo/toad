@@ -193,7 +193,11 @@ impl BoardData {
             id: id.into(),
             name: name.into(),
             description: String::new(),
-            columns: vec!["To Do".to_string(), "In Progress".to_string(), "Done".to_string()],
+            columns: vec![
+                "To Do".to_string(),
+                "In Progress".to_string(),
+                "Done".to_string(),
+            ],
             tasks: Vec::new(),
             metadata: HashMap::new(),
             exported_at: Utc::now(),
@@ -439,7 +443,10 @@ impl Exporter {
             content.push_str(&format!("{}\n\n", board.description));
         }
 
-        content.push_str(&format!("**Exported:** {}\n\n", board.exported_at.format("%Y-%m-%d %H:%M:%S")));
+        content.push_str(&format!(
+            "**Exported:** {}\n\n",
+            board.exported_at.format("%Y-%m-%d %H:%M:%S")
+        ));
         content.push_str(&format!("**Total Tasks:** {}\n\n", board.tasks.len()));
 
         // Group by status
@@ -500,7 +507,10 @@ impl Exporter {
             content.push_str(&format!("<h2>{}</h2>\n<ul>\n", column));
             for task in &board.tasks {
                 if task.status == *column {
-                    content.push_str(&format!("<li><strong>{}</strong><br>{}</li>\n", task.title, task.description));
+                    content.push_str(&format!(
+                        "<li><strong>{}</strong><br>{}</li>\n",
+                        task.title, task.description
+                    ));
                 }
             }
             content.push_str("</ul>\n");
@@ -713,7 +723,10 @@ mod tests {
     fn test_task_data_custom_field() {
         let mut task = TaskData::new("task-1", "Test");
         task.set_custom_field("story_points", "5");
-        assert_eq!(task.custom_fields.get("story_points"), Some(&"5".to_string()));
+        assert_eq!(
+            task.custom_fields.get("story_points"),
+            Some(&"5".to_string())
+        );
     }
 
     #[test]

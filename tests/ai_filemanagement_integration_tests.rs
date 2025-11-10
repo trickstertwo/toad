@@ -344,7 +344,9 @@ fn test_file_ops_creation() {
 
 #[test]
 fn test_file_ops_builder() {
-    let _ops = FileOps::new().with_overwrite(true).with_create_parents(true);
+    let _ops = FileOps::new()
+        .with_overwrite(true)
+        .with_create_parents(true);
 }
 
 // ==================== Bookmarks Tests ====================
@@ -360,7 +362,10 @@ fn test_bookmark_creation() {
 fn test_bookmark_with_description() {
     let bookmark = Bookmark::new("docs", "/docs", 0, 0).with_description("Documentation folder");
 
-    assert_eq!(bookmark.description, Some("Documentation folder".to_string()));
+    assert_eq!(
+        bookmark.description,
+        Some("Documentation folder".to_string())
+    );
 }
 
 #[test]
@@ -613,9 +618,7 @@ fn test_ai_coding_workflow() {
     chat.add_user_message("How do I implement a linked list in Rust?");
 
     // AI responds
-    chat.add_assistant_message(
-        "Here's how to implement a linked list in Rust using Box<T>...",
-    );
+    chat.add_assistant_message("Here's how to implement a linked list in Rust using Box<T>...");
 
     // Track token usage
     tokens.add_usage(TokenUsage::new(50, 200));
@@ -632,7 +635,13 @@ fn test_file_management_workflow() {
     let mut recent = RecentFiles::new(10);
 
     // Add project bookmarks with line/column positions
-    bookmarks.add_bookmark_with_desc("toad_main", "/home/user/toad/src/main.rs", 1, 0, "Entry point");
+    bookmarks.add_bookmark_with_desc(
+        "toad_main",
+        "/home/user/toad/src/main.rs",
+        1,
+        0,
+        "Entry point",
+    );
     bookmarks.add_bookmark_with_desc("docs", "/home/user/docs/README.md", 0, 0, "Documentation");
 
     // Work with files

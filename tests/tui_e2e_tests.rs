@@ -4,7 +4,7 @@
 //! a terminal environment without needing a real TTY device.
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use ratatui::{backend::TestBackend, Terminal};
+use ratatui::{Terminal, backend::TestBackend};
 use toad::{App, AppScreen, Event};
 
 /// Helper to create a test terminal
@@ -97,7 +97,10 @@ fn test_e2e_trust_dialog_navigation() {
         .expect("Failed to render");
 
     assert_eq!(*app.screen(), AppScreen::TrustDialog);
-    assert!(app.trust_dialog().is_some(), "Trust dialog should be present");
+    assert!(
+        app.trust_dialog().is_some(),
+        "Trust dialog should be present"
+    );
 
     // Test navigation with arrow keys (doesn't dismiss dialog)
     app.update(key_event(KeyCode::Down))
@@ -105,7 +108,10 @@ fn test_e2e_trust_dialog_navigation() {
 
     // Verify dialog is still shown after navigation
     assert_eq!(*app.screen(), AppScreen::TrustDialog);
-    assert!(app.trust_dialog().is_some(), "Trust dialog should still be present after navigation");
+    assert!(
+        app.trust_dialog().is_some(),
+        "Trust dialog should still be present after navigation"
+    );
 
     // Now test selection with number key '1' (dismisses dialog)
     app.update(key_event(KeyCode::Char('1')))
@@ -119,7 +125,10 @@ fn test_e2e_trust_dialog_navigation() {
 
     // After selection, should move to Main screen and dismiss dialog
     assert_eq!(*app.screen(), AppScreen::Main);
-    assert!(app.trust_dialog().is_none(), "Trust dialog should be dismissed after selection");
+    assert!(
+        app.trust_dialog().is_none(),
+        "Trust dialog should be dismissed after selection"
+    );
 }
 
 #[test]
@@ -394,11 +403,7 @@ fn test_e2e_vim_mode_toggle() {
         })
         .expect("Failed to render");
 
-    assert_ne!(
-        app.vim_mode(),
-        initial_vim_mode,
-        "Vim mode should toggle"
-    );
+    assert_ne!(app.vim_mode(), initial_vim_mode, "Vim mode should toggle");
 
     // Verify status message mentions vim mode
     assert!(
@@ -758,7 +763,11 @@ fn test_e2e_trust_dialog_enter_confirms() {
     // Confirm with Enter
     app.update(key_event(KeyCode::Enter)).ok();
 
-    assert_eq!(*app.screen(), AppScreen::Main, "Enter should confirm selection");
+    assert_eq!(
+        *app.screen(),
+        AppScreen::Main,
+        "Enter should confirm selection"
+    );
 }
 
 #[test]
@@ -782,16 +791,19 @@ fn test_e2e_input_field_with_unicode() {
         .expect("Should render with Unicode input");
 
     // Verify input field contains Unicode
-    assert!(!app.input_field().value().is_empty(), "Input field should contain Unicode");
+    assert!(
+        !app.input_field().value().is_empty(),
+        "Input field should contain Unicode"
+    );
 }
 
 #[test]
 fn test_e2e_very_small_terminal() {
     // Test with extremely small terminal (smaller than minimum practical size)
     let sizes = [
-        (20, 8),   // Very small
-        (30, 10),  // Small
-        (40, 12),  // Minimal
+        (20, 8),  // Very small
+        (30, 10), // Small
+        (40, 12), // Minimal
     ];
 
     for (width, height) in sizes {
@@ -804,8 +816,12 @@ fn test_e2e_very_small_terminal() {
             .draw(|frame| {
                 toad::core::ui::render(&mut app, frame);
             })
-            .unwrap_or_else(|_| panic!("Should render without panic at very small size {}x{}",
-                width, height));
+            .unwrap_or_else(|_| {
+                panic!(
+                    "Should render without panic at very small size {}x{}",
+                    width, height
+                )
+            });
     }
 }
 
@@ -928,7 +944,11 @@ fn test_e2e_backspace_empty_input() {
     // Backspace on empty input should not crash
     app.update(key_event(KeyCode::Backspace)).ok();
 
-    assert_eq!(app.input_field().value().len(), 0, "Backspace on empty should stay empty");
+    assert_eq!(
+        app.input_field().value().len(),
+        0,
+        "Backspace on empty should stay empty"
+    );
 }
 
 #[test]
@@ -955,7 +975,11 @@ fn test_e2e_multiple_backspaces() {
     }
 
     // Should handle extra backspaces gracefully
-    assert_eq!(app.input_field().value().len(), 0, "Should be empty after backspacing");
+    assert_eq!(
+        app.input_field().value().len(),
+        0,
+        "Should be empty after backspacing"
+    );
 }
 
 #[test]
@@ -982,7 +1006,10 @@ fn test_e2e_terminal_resize_during_operation() {
         .expect("Should render after resize");
 
     // Input should still be there
-    assert!(!app.input_field().value().is_empty(), "Input should persist after resize");
+    assert!(
+        !app.input_field().value().is_empty(),
+        "Input should persist after resize"
+    );
 }
 
 // =============================================================================
@@ -1160,11 +1187,12 @@ fn test_e2e_session_with_unicode_path() {
     session.set_working_directory(std::path::PathBuf::from("/home/用户/项目/日本語"));
 
     // Verify Unicode path
-    assert!(app
-        .session()
-        .working_directory()
-        .to_string_lossy()
-        .contains("用户"));
+    assert!(
+        app.session()
+            .working_directory()
+            .to_string_lossy()
+            .contains("用户")
+    );
 }
 
 #[test]
@@ -1378,9 +1406,7 @@ fn test_e2e_rapid_component_updates() {
 
         // Render periodically
         if i % 10 == 0 {
-            terminal
-                .draw(|f| toad::core::ui::render(&mut app, f))
-                .ok();
+            terminal.draw(|f| toad::core::ui::render(&mut app, f)).ok();
         }
     }
 

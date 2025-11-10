@@ -145,7 +145,9 @@ impl MetricCard {
         use crate::ui::nerd_fonts::UiIcon;
 
         Self::new(label, value)
-            .icon(Icon::ui(UiIcon::Success).style(Style::default().fg(ToadTheme::TOAD_GREEN_BRIGHT)))
+            .icon(
+                Icon::ui(UiIcon::Success).style(Style::default().fg(ToadTheme::TOAD_GREEN_BRIGHT)),
+            )
             .value_style(Style::default().fg(ToadTheme::TOAD_GREEN_BRIGHT))
             .label_style(Style::default().fg(ToadTheme::GRAY))
     }
@@ -337,8 +339,7 @@ mod tests {
 
     #[test]
     fn test_metric_card_to_spans_with_icon() {
-        let card = MetricCard::new("Status", "OK")
-            .icon(Icon::ui(UiIcon::Success));
+        let card = MetricCard::new("Status", "OK").icon(Icon::ui(UiIcon::Success));
         let spans = card.to_spans();
         // Should have: icon + " " + label + ": " + value = 5 spans
         assert_eq!(spans.len(), 5);

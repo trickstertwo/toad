@@ -402,7 +402,11 @@ fn test_multi_stage_progress_creation() {
 
 #[test]
 fn test_multi_stage_progress_set_stage() {
-    let stages = vec!["Step 1".to_string(), "Step 2".to_string(), "Step 3".to_string()];
+    let stages = vec![
+        "Step 1".to_string(),
+        "Step 2".to_string(),
+        "Step 3".to_string(),
+    ];
     let mut progress = MultiStageProgress::new("Process", stages);
 
     assert_eq!(progress.current_stage(), 0);

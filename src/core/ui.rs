@@ -204,15 +204,16 @@ fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
             ]));
 
             if let Some(step) = progress.current_step
-                && let Some(max_steps) = progress.max_steps {
-                    lines.push(Line::from(vec![
-                        Span::styled("Agent Step: ", Style::default().fg(ToadTheme::GRAY)),
-                        Span::styled(
-                            format!("{}/{}", step, max_steps),
-                            Style::default().fg(ToadTheme::BLUE),
-                        ),
-                    ]));
-                }
+                && let Some(max_steps) = progress.max_steps
+            {
+                lines.push(Line::from(vec![
+                    Span::styled("Agent Step: ", Style::default().fg(ToadTheme::GRAY)),
+                    Span::styled(
+                        format!("{}/{}", step, max_steps),
+                        Style::default().fg(ToadTheme::BLUE),
+                    ),
+                ]));
+            }
 
             if let Some(tool) = &progress.last_tool {
                 lines.push(Line::from(vec![
@@ -352,4 +353,3 @@ fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
     // Render toasts on top
     app.toasts_mut().render(frame, area);
 }
-

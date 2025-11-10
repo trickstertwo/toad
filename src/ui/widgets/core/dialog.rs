@@ -290,7 +290,11 @@ mod tests {
             .option('1', "Option 1")
             .option('2', "Option 2");
 
-        assert_eq!(dialog.selected(), 0, "First option should be selected by default");
+        assert_eq!(
+            dialog.selected(),
+            0,
+            "First option should be selected by default"
+        );
     }
 
     #[test]
@@ -373,7 +377,11 @@ mod tests {
 
         let result = dialog.select_by_key('9');
         assert!(result.is_none());
-        assert_eq!(dialog.selected(), 0, "Selection should not change if key not found");
+        assert_eq!(
+            dialog.selected(),
+            0,
+            "Selection should not change if key not found"
+        );
     }
 
     #[test]
@@ -404,7 +412,11 @@ mod tests {
             .info_box("First info")
             .info_box("Second info");
 
-        assert_eq!(dialog.info_box.unwrap(), "Second info", "Last info_box call should override");
+        assert_eq!(
+            dialog.info_box.unwrap(),
+            "Second info",
+            "Last info_box call should override"
+        );
     }
 
     #[test]
@@ -433,8 +445,7 @@ mod tests {
 
     #[test]
     fn test_confirm_dialog_empty_options() {
-        let dialog = ConfirmDialog::new("Title")
-            .message("No options provided");
+        let dialog = ConfirmDialog::new("Title").message("No options provided");
 
         assert_eq!(dialog.options.len(), 0);
         assert_eq!(dialog.selected(), 0);
@@ -442,8 +453,7 @@ mod tests {
 
     #[test]
     fn test_confirm_dialog_single_option() {
-        let mut dialog = ConfirmDialog::new("Title")
-            .option('1', "Only option");
+        let mut dialog = ConfirmDialog::new("Title").option('1', "Only option");
 
         assert_eq!(dialog.selected(), 0);
 
@@ -562,8 +572,12 @@ mod tests {
             match i % 4 {
                 0 => dialog.select_next(),
                 1 => dialog.select_previous(),
-                2 => { dialog.select_by_key('3'); }
-                _ => { dialog.select_by_key('1'); }
+                2 => {
+                    dialog.select_by_key('3');
+                }
+                _ => {
+                    dialog.select_by_key('1');
+                }
             }
         }
 
@@ -681,8 +695,18 @@ mod tests {
             .info_box(&long_unicode);
 
         assert_eq!(dialog.title.chars().filter(|&c| c == '🎉').count(), 1000);
-        assert_eq!(dialog.message[0].chars().filter(|&c| c == '🎉').count(), 1000);
-        assert_eq!(dialog.options[0].label.chars().filter(|&c| c == '🎉').count(), 1000);
+        assert_eq!(
+            dialog.message[0].chars().filter(|&c| c == '🎉').count(),
+            1000
+        );
+        assert_eq!(
+            dialog.options[0]
+                .label
+                .chars()
+                .filter(|&c| c == '🎉')
+                .count(),
+            1000
+        );
     }
 
     #[test]
@@ -778,8 +802,7 @@ mod tests {
     #[test]
     fn test_confirm_dialog_very_long_info_box() {
         let long_info = "x".repeat(10000);
-        let dialog = ConfirmDialog::new("Title")
-            .info_box(&long_info);
+        let dialog = ConfirmDialog::new("Title").info_box(&long_info);
 
         assert_eq!(dialog.info_box.as_ref().unwrap().len(), 10000);
     }
@@ -869,9 +892,7 @@ mod tests {
         assert_eq!(dialog.selected(), 0); // Should not change
 
         // Phase 9: Add more messages dynamically
-        dialog = dialog
-            .message("Added message 5")
-            .message("Added message 6");
+        dialog = dialog.message("Added message 5").message("Added message 6");
         assert_eq!(dialog.message.len(), 6);
 
         // Phase 10: Test boundary conditions
@@ -889,8 +910,14 @@ mod tests {
     #[test]
     fn test_confirm_dialog_builder_chaining_many_operations() {
         let dialog = ConfirmDialog::new("Title")
-            .message("M1").message("M2").message("M3").message("M4").message("M5")
-            .option('1', "O1").option('2', "O2").option('3', "O3")
+            .message("M1")
+            .message("M2")
+            .message("M3")
+            .message("M4")
+            .message("M5")
+            .option('1', "O1")
+            .option('2', "O2")
+            .option('3', "O3")
             .info_box("Info1")
             .info_box("Info2") // Should override
             .message("M6");
@@ -989,8 +1016,7 @@ mod tests {
 
     #[test]
     fn test_confirm_dialog_all_operations_no_options() {
-        let mut dialog = ConfirmDialog::new("Title")
-            .message("Message without options");
+        let mut dialog = ConfirmDialog::new("Title").message("Message without options");
 
         assert_eq!(dialog.options.len(), 0);
         assert_eq!(dialog.selected(), 0);

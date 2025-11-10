@@ -170,9 +170,10 @@ impl ChatPanel {
     /// Append to the last streaming message
     pub fn append_streaming(&mut self, text: &str) {
         if let Some(last) = self.messages.last_mut()
-            && last.streaming {
-                last.append(text);
-            }
+            && last.streaming
+        {
+            last.append(text);
+        }
     }
 
     /// Finish the current streaming message
@@ -317,8 +318,8 @@ impl ChatPanel {
             for line in content_lines {
                 if line.starts_with("```") {
                     // Code block delimiter using Text atom
-                    let code_delim = AtomText::new(line)
-                        .style(Style::default().fg(Color::DarkGray));
+                    let code_delim =
+                        AtomText::new(line).style(Style::default().fg(Color::DarkGray));
                     lines.push(Line::from(code_delim.to_span()));
                 } else if msg.has_code && msg.content.contains("```") {
                     // Inside code block - use monospace styling
@@ -364,4 +365,3 @@ impl ChatPanel {
         }
     }
 }
-

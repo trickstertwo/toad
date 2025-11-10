@@ -82,9 +82,14 @@ impl TerminalCapabilities {
     /// ```
     pub fn detect() -> Self {
         let term_name = env::var("TERM").unwrap_or_else(|_| "dumb".to_string());
-        let term_program = env::var("TERM_PROGRAM").ok()
+        let term_program = env::var("TERM_PROGRAM")
+            .ok()
             .or_else(|| env::var("TERMINAL_EMULATOR").ok())
-            .or_else(|| env::var("WT_SESSION").ok().map(|_| "Windows Terminal".to_string()));
+            .or_else(|| {
+                env::var("WT_SESSION")
+                    .ok()
+                    .map(|_| "Windows Terminal".to_string())
+            });
 
         let color_support = Self::detect_color_support(&term_name);
         let unicode_support = Self::detect_unicode_support();
@@ -111,9 +116,10 @@ impl TerminalCapabilities {
     fn detect_color_support(term_name: &str) -> ColorSupport {
         // Check COLORTERM for truecolor
         if let Ok(colorterm) = env::var("COLORTERM")
-            && (colorterm.contains("truecolor") || colorterm.contains("24bit")) {
-                return ColorSupport::TrueColor;
-            }
+            && (colorterm.contains("truecolor") || colorterm.contains("24bit"))
+        {
+            return ColorSupport::TrueColor;
+        }
 
         // Check TERM for color hints
         if term_name.contains("truecolor") || term_name.contains("24bit") {
@@ -145,14 +151,16 @@ impl TerminalCapabilities {
     fn detect_unicode_support() -> bool {
         // Check locale for UTF-8
         if let Ok(lang) = env::var("LANG")
-            && (lang.to_uppercase().contains("UTF-8") || lang.to_uppercase().contains("UTF8")) {
-                return true;
-            }
+            && (lang.to_uppercase().contains("UTF-8") || lang.to_uppercase().contains("UTF8"))
+        {
+            return true;
+        }
 
         if let Ok(lc_all) = env::var("LC_ALL")
-            && (lc_all.to_uppercase().contains("UTF-8") || lc_all.to_uppercase().contains("UTF8")) {
-                return true;
-            }
+            && (lc_all.to_uppercase().contains("UTF-8") || lc_all.to_uppercase().contains("UTF8"))
+        {
+            return true;
+        }
 
         // Default to true for modern systems
         true
@@ -178,9 +186,9 @@ impl TerminalCapabilities {
                 || program.contains("WezTerm")
                 || program.contains("kitty")
                 || program.contains("Alacritty"))
-            {
-                return true;
-            }
+        {
+            return true;
+        }
 
         term_name.contains("kitty") || term_name.contains("wezterm")
     }
@@ -200,15 +208,16 @@ impl TerminalCapabilities {
                 || program.contains("kitty")
                 || program.contains("Alacritty")
                 || program.contains("Windows Terminal"))
-            {
-                return true;
-            }
+        {
+            return true;
+        }
 
         // Check environment variable
         if let Ok(nerd_fonts) = env::var("NERD_FONTS")
-            && (nerd_fonts == "1" || nerd_fonts.to_lowercase() == "true") {
-                return true;
-            }
+            && (nerd_fonts == "1" || nerd_fonts.to_lowercase() == "true")
+        {
+            return true;
+        }
 
         // Conservative default
         false

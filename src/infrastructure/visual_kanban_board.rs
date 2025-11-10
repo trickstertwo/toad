@@ -98,7 +98,13 @@ pub struct Swimlane {
 
 impl Swimlane {
     /// Creates a new swimlane
-    pub fn new(id: String, name: String, grouping: SwimlaneGrouping, value: String, position: usize) -> Self {
+    pub fn new(
+        id: String,
+        name: String,
+        grouping: SwimlaneGrouping,
+        value: String,
+        position: usize,
+    ) -> Self {
         Self {
             id,
             name,
@@ -170,9 +176,9 @@ impl KanbanBoard {
 #[derive(Debug)]
 pub struct BoardManager {
     boards: HashMap<String, KanbanBoard>,
-    columns: HashMap<String, KanbanColumn>,      // column_id -> column
+    columns: HashMap<String, KanbanColumn>, // column_id -> column
     board_columns: HashMap<String, Vec<String>>, // board_id -> column_ids (ordered)
-    swimlanes: HashMap<String, Swimlane>,        // swimlane_id -> swimlane
+    swimlanes: HashMap<String, Swimlane>,   // swimlane_id -> swimlane
     board_swimlanes: HashMap<String, Vec<String>>, // board_id -> swimlane_ids (ordered)
     card_positions: HashMap<String, CardPosition>, // card_id -> position
     next_board_id: usize,
@@ -308,9 +314,10 @@ impl BoardManager {
 
         // Remove card from old column if it exists
         if let Some(old_position) = self.card_positions.get(&card_id)
-            && let Some(old_column) = self.columns.get_mut(&old_position.column_id) {
-                old_column.card_ids.retain(|id| id != &card_id);
-            }
+            && let Some(old_column) = self.columns.get_mut(&old_position.column_id)
+        {
+            old_column.card_ids.retain(|id| id != &card_id);
+        }
 
         // Add card to new column
         if let Some(column) = self.columns.get_mut(&to_column_id) {
@@ -537,9 +544,7 @@ mod tests {
         let col1 = manager
             .create_column(board_id.clone(), "Todo".to_string())
             .unwrap();
-        let col2 = manager
-            .create_column(board_id, "Done".to_string())
-            .unwrap();
+        let col2 = manager.create_column(board_id, "Done".to_string()).unwrap();
 
         manager
             .move_card_to_column("card-1".to_string(), col1.clone(), 0)
@@ -570,9 +575,7 @@ mod tests {
             "user-1".to_string(),
         );
 
-        let col_id = manager
-            .create_column(board_id, "Todo".to_string())
-            .unwrap();
+        let col_id = manager.create_column(board_id, "Todo".to_string()).unwrap();
 
         manager
             .move_card_to_column("card-1".to_string(), col_id.clone(), 0)
@@ -677,7 +680,8 @@ mod tests {
             .unwrap();
 
         // Reorder: swap col1 and col3
-        let success = manager.reorder_columns(&board_id, vec![col3.clone(), col2.clone(), col1.clone()]);
+        let success =
+            manager.reorder_columns(&board_id, vec![col3.clone(), col2.clone(), col1.clone()]);
         assert!(success);
 
         let columns = manager.columns_for_board(&board_id);
@@ -747,9 +751,7 @@ mod tests {
             "user-1".to_string(),
         );
 
-        let col_id = manager
-            .create_column(board_id, "Todo".to_string())
-            .unwrap();
+        let col_id = manager.create_column(board_id, "Todo".to_string()).unwrap();
 
         manager
             .move_card_to_column("card-1".to_string(), col_id.clone(), 0)
@@ -811,11 +813,8 @@ mod tests {
     fn test_invalid_column_for_move() {
         let mut manager = BoardManager::new();
 
-        let result = manager.move_card_to_column(
-            "card-1".to_string(),
-            "nonexistent".to_string(),
-            0,
-        );
+        let result =
+            manager.move_card_to_column("card-1".to_string(), "nonexistent".to_string(), 0);
 
         assert!(result.is_err());
     }

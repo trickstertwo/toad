@@ -1,9 +1,9 @@
 //! Statusline widget tests
 
+use super::*;
 use crate::ui::theme::ToadTheme;
-    use super::*;
 
-    #[test]
+#[test]
 fn test_status_level_colors() {
     assert_eq!(StatusLevel::Normal.color(), ToadTheme::FOREGROUND);
     assert_eq!(StatusLevel::Info.color(), ToadTheme::BLUE);
@@ -212,7 +212,11 @@ fn test_status_section_highlight_default() {
 #[test]
 fn test_status_section_level_default() {
     let section = StatusSection::new("Test");
-    assert_eq!(section.level, StatusLevel::Normal, "Level should be Normal by default");
+    assert_eq!(
+        section.level,
+        StatusLevel::Normal,
+        "Level should be Normal by default"
+    );
 }
 
 #[test]
@@ -296,7 +300,10 @@ fn test_statusline_clear_preserves_separator() {
     statusline.add_left(StatusSection::new("Test"));
     statusline.clear();
 
-    assert_eq!(statusline.separator, " | ", "Clear should preserve separator");
+    assert_eq!(
+        statusline.separator, " | ",
+        "Clear should preserve separator"
+    );
 }
 
 // ============================================================================
@@ -724,9 +731,7 @@ fn test_all_sections_highlighted() {
     let mut statusline = Statusline::new();
 
     for i in 0..100 {
-        statusline.add_left(
-            StatusSection::new(format!("H{}", i)).with_highlight(true),
-        );
+        statusline.add_left(StatusSection::new(format!("H{}", i)).with_highlight(true));
     }
 
     for section in &statusline.left {
@@ -740,9 +745,7 @@ fn test_mixed_highlight_states() {
 
     for i in 0..100 {
         let highlight = i % 2 == 0;
-        statusline.add_left(
-            StatusSection::new(format!("S{}", i)).with_highlight(highlight),
-        );
+        statusline.add_left(StatusSection::new(format!("S{}", i)).with_highlight(highlight));
     }
 
     assert!(statusline.left[0].highlight);

@@ -562,9 +562,7 @@ mod tests {
 
     #[test]
     fn test_fuzzy_finder_10000_items() {
-        let items: Vec<String> = (0..10000)
-            .map(|i| format!("item{:05}", i))
-            .collect();
+        let items: Vec<String> = (0..10000).map(|i| format!("item{:05}", i)).collect();
         let mut finder = FuzzyFinder::new(items);
         finder.set_query("item0");
         // Should match and truncate to max_results (default 100)

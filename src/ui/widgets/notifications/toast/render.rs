@@ -31,14 +31,11 @@ impl Toast {
         let icon_text = Text::new(format!("{} ", icon))
             .style(Style::default().fg(color).add_modifier(Modifier::BOLD));
 
-        let message_text = Text::new(&self.message)
-            .style(Style::default().fg(ToadTheme::FOREGROUND));
+        let message_text =
+            Text::new(&self.message).style(Style::default().fg(ToadTheme::FOREGROUND));
 
         // Combine text atoms into a line
-        let line = ratatui::text::Line::from(vec![
-            icon_text.to_span(),
-            message_text.to_span(),
-        ]);
+        let line = ratatui::text::Line::from(vec![icon_text.to_span(), message_text.to_span()]);
 
         let paragraph = Paragraph::new(line).alignment(Alignment::Left);
         frame.render_widget(paragraph, inner);

@@ -159,7 +159,6 @@ impl NerdFonts {
         let name_lower = name.to_lowercase();
 
         // Special folder names
-        
 
         (match name_lower.as_str() {
             ".git" => "",
@@ -175,7 +174,7 @@ impl NerdFonts {
             ".vscode" => "",
             "bin" => "",
             "lib" => "",
-            _ => ""
+            _ => "",
         }) as _
     }
 

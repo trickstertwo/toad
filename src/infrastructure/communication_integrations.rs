@@ -230,8 +230,7 @@ impl WebhookConfig {
 
     /// Check if event should be sent
     pub fn should_send_event(&self, event_type: EventType) -> bool {
-        self.enabled
-            && (self.event_filter.is_empty() || self.event_filter.contains(&event_type))
+        self.enabled && (self.event_filter.is_empty() || self.event_filter.contains(&event_type))
     }
 
     /// Record send
@@ -382,7 +381,11 @@ pub struct EmailConfig {
 
 impl EmailConfig {
     /// Create a new email configuration
-    pub fn new(smtp_server: impl Into<String>, smtp_port: u16, from_address: impl Into<String>) -> Self {
+    pub fn new(
+        smtp_server: impl Into<String>,
+        smtp_port: u16,
+        from_address: impl Into<String>,
+    ) -> Self {
         Self {
             smtp_server: smtp_server.into(),
             smtp_port,
@@ -570,7 +573,8 @@ impl IntegrationManager {
                     serde_json::to_string_pretty(&msg).unwrap_or_default()
                 }
                 IntegrationPlatform::Email => {
-                    let msg = EmailMessage::from_event(&test_event, vec!["test@example.com".to_string()]);
+                    let msg =
+                        EmailMessage::from_event(&test_event, vec!["test@example.com".to_string()]);
                     format!("To: {:?}\nSubject: {}\n\n{}", msg.to, msg.subject, msg.body)
                 }
             }
@@ -624,14 +628,9 @@ mod tests {
 
     #[test]
     fn test_notification_event_with_metadata() {
-        let event = NotificationEvent::new(
-            EventType::TaskUpdated,
-            "task-1",
-            "Task",
-            "bob",
-            "Updated",
-        )
-        .with_metadata("priority", "high");
+        let event =
+            NotificationEvent::new(EventType::TaskUpdated, "task-1", "Task", "bob", "Updated")
+                .with_metadata("priority", "high");
 
         assert_eq!(event.metadata.get("priority"), Some(&"high".to_string()));
     }
@@ -867,13 +866,8 @@ mod tests {
 
         let webhook_id = manager.add_webhook(webhook);
 
-        let event = NotificationEvent::new(
-            EventType::TaskCreated,
-            "task-1",
-            "Test",
-            "alice",
-            "Created",
-        );
+        let event =
+            NotificationEvent::new(EventType::TaskCreated, "task-1", "Test", "alice", "Created");
 
         let sent_to = manager.send_event(event);
         assert_eq!(sent_to.len(), 1);
@@ -909,13 +903,8 @@ mod tests {
     fn test_integration_manager_clear_history() {
         let mut manager = IntegrationManager::new();
 
-        let event = NotificationEvent::new(
-            EventType::TaskCreated,
-            "task-1",
-            "Test",
-            "alice",
-            "Created",
-        );
+        let event =
+            NotificationEvent::new(EventType::TaskCreated, "task-1", "Test", "alice", "Created");
 
         manager.send_event(event);
         assert_eq!(manager.event_history().len(), 1);

@@ -32,12 +32,14 @@ pub mod vim_macros;
 pub mod workspace;
 
 pub use accept_reject_panel::{AcceptRejectPanel, ChangeState, ProposedChange};
-pub use ai_diff_view::{AIDiffView, AIDiffLine, AIDiffLineType, DiffHunk, DiffViewMode};
+pub use ai_diff_view::{AIDiffLine, AIDiffLineType, AIDiffView, DiffHunk, DiffViewMode};
 pub use card_preview::{CardPreview, CardPriority, PreviewPosition};
 pub use charts::*;
 pub use chat_panel::{ChatMessage, ChatPanel, MessageRole};
 pub use collapsible::{CollapsibleList, CollapsibleSection};
-pub use conflict_resolver::{ConflictRegion, ConflictResolution, ConflictResolver, ConflictViewMode};
+pub use conflict_resolver::{
+    ConflictRegion, ConflictResolution, ConflictResolver, ConflictViewMode,
+};
 pub use context_menu::{ContextMenu, MenuItem};
 pub use contextual_help::{ContextualHelp, HelpContext, HelpEntry};
 pub use conversation::ConversationView;

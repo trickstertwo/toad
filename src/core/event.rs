@@ -434,8 +434,8 @@ mod tests {
     #[test]
     fn test_event_evaluation_complete_variant() {
         use crate::ai::evaluation::EvaluationResults;
-        use std::collections::HashMap;
         use chrono::Utc;
+        use std::collections::HashMap;
 
         let results = EvaluationResults {
             config_name: "M1".to_string(),
@@ -612,9 +612,9 @@ mod tests {
     fn test_event_match_all_variants() {
         use crate::ai::eval_commands::{CompareArgs, EvalArgs};
         use crate::ai::evaluation::{DatasetSource, EvaluationResults};
+        use chrono::Utc;
         use crossterm::event::{MouseButton, MouseEventKind};
         use std::collections::HashMap;
-        use chrono::Utc;
 
         // Create instances of all Event variants
         let events: Vec<Event> = vec![

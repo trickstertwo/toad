@@ -78,56 +78,78 @@ impl CheatSheet {
 
     /// Switch to previous category
     pub fn previous_category(&mut self) {
-        self.category = if self.category == 0 { 5 } else { self.category - 1 };
+        self.category = if self.category == 0 {
+            5
+        } else {
+            self.category - 1
+        };
     }
 
     /// Get cheat sheet content
     fn get_content(&self) -> Vec<(&'static str, Vec<(&'static str, &'static str)>)> {
         vec![
-            ("🚀 General", vec![
-                ("Ctrl+P", "Command palette"),
-                ("/", "Search"),
-                ("?", "Toggle help"),
-                ("Ctrl+C", "Quit"),
-                ("Esc", "Cancel/Exit mode"),
-            ]),
-            ("📁 Navigation", vec![
-                ("h/j/k/l", "Move left/down/up/right"),
-                ("gg", "Jump to top"),
-                ("G", "Jump to bottom"),
-                ("Ctrl+D/U", "Page down/up"),
-                ("Tab", "Switch panes"),
-            ]),
-            ("✏️  Editing", vec![
-                ("i", "Insert mode"),
-                ("a", "Append"),
-                ("v", "Visual mode"),
-                ("y", "Yank (copy)"),
-                ("p", "Paste"),
-                ("u", "Undo"),
-                ("Ctrl+R", "Redo"),
-            ]),
-            ("🌳 Git", vec![
-                ("Space", "Stage/unstage"),
-                ("c", "Commit"),
-                ("P", "Push"),
-                ("F", "Pull"),
-                ("b", "Branches"),
-                ("d", "Diff"),
-            ]),
-            ("🔍 Search", vec![
-                ("/", "Start search"),
-                ("n", "Next result"),
-                ("N", "Previous result"),
-                ("Ctrl+F", "Find in files"),
-            ]),
-            ("⚙️  Advanced", vec![
-                ("Ctrl+T", "New tab"),
-                ("Ctrl+W", "Close tab"),
-                ("Alt+1-9", "Switch to tab N"),
-                ("Ctrl+B", "Toggle sidebar"),
-                ("Ctrl+\\", "Split pane"),
-            ]),
+            (
+                "🚀 General",
+                vec![
+                    ("Ctrl+P", "Command palette"),
+                    ("/", "Search"),
+                    ("?", "Toggle help"),
+                    ("Ctrl+C", "Quit"),
+                    ("Esc", "Cancel/Exit mode"),
+                ],
+            ),
+            (
+                "📁 Navigation",
+                vec![
+                    ("h/j/k/l", "Move left/down/up/right"),
+                    ("gg", "Jump to top"),
+                    ("G", "Jump to bottom"),
+                    ("Ctrl+D/U", "Page down/up"),
+                    ("Tab", "Switch panes"),
+                ],
+            ),
+            (
+                "✏️  Editing",
+                vec![
+                    ("i", "Insert mode"),
+                    ("a", "Append"),
+                    ("v", "Visual mode"),
+                    ("y", "Yank (copy)"),
+                    ("p", "Paste"),
+                    ("u", "Undo"),
+                    ("Ctrl+R", "Redo"),
+                ],
+            ),
+            (
+                "🌳 Git",
+                vec![
+                    ("Space", "Stage/unstage"),
+                    ("c", "Commit"),
+                    ("P", "Push"),
+                    ("F", "Pull"),
+                    ("b", "Branches"),
+                    ("d", "Diff"),
+                ],
+            ),
+            (
+                "🔍 Search",
+                vec![
+                    ("/", "Start search"),
+                    ("n", "Next result"),
+                    ("N", "Previous result"),
+                    ("Ctrl+F", "Find in files"),
+                ],
+            ),
+            (
+                "⚙️  Advanced",
+                vec![
+                    ("Ctrl+T", "New tab"),
+                    ("Ctrl+W", "Close tab"),
+                    ("Alt+1-9", "Switch to tab N"),
+                    ("Ctrl+B", "Toggle sidebar"),
+                    ("Ctrl+\\", "Split pane"),
+                ],
+            ),
         ]
     }
 }
@@ -160,18 +182,20 @@ impl Widget for &CheatSheet {
 
         // Split into title and content
         let chunks = Layout::vertical([
-            Constraint::Length(3),  // Title
-            Constraint::Min(0),     // Content
-            Constraint::Length(1),  // Footer
+            Constraint::Length(3), // Title
+            Constraint::Min(0),    // Content
+            Constraint::Length(1), // Footer
         ])
         .split(overlay_area);
 
         // Render title using Text atoms
-        let title_text = Text::new("TOAD Cheat Sheet")
-            .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD));
+        let title_text = Text::new("TOAD Cheat Sheet").style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        );
         let separator = Text::new(" - ");
-        let subtitle_text = Text::new("Quick Reference")
-            .style(Style::default().fg(Color::Gray));
+        let subtitle_text = Text::new("Quick Reference").style(Style::default().fg(Color::Gray));
 
         let title_line = Line::from(vec![
             title_text.to_span(),
@@ -195,7 +219,11 @@ impl Widget for &CheatSheet {
         };
 
         // Calculate columns
-        let cols = if categories_to_show.len() > 3 { 3 } else { categories_to_show.len() };
+        let cols = if categories_to_show.len() > 3 {
+            3
+        } else {
+            categories_to_show.len()
+        };
         let col_width = 100 / cols as u16;
 
         // Create column constraints
@@ -211,17 +239,19 @@ impl Widget for &CheatSheet {
                 break;
             }
 
-            let category_header = Text::new(*category_name)
-                .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD));
+            let category_header = Text::new(*category_name).style(
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            );
 
             let mut lines = vec![Line::from(category_header.to_span()), Line::from("")];
 
             for (key, desc) in bindings {
-                let key_text = Text::new(format!("{:12}", key))
-                    .style(Style::default().fg(Color::Green));
+                let key_text =
+                    Text::new(format!("{:12}", key)).style(Style::default().fg(Color::Green));
                 let separator = Text::new(" → ");
-                let desc_text =
-                    Text::new(*desc).style(Style::default().fg(Color::White));
+                let desc_text = Text::new(*desc).style(Style::default().fg(Color::White));
 
                 lines.push(Line::from(vec![
                     key_text.to_span(),
@@ -240,8 +270,7 @@ impl Widget for &CheatSheet {
 
         // Render footer
         let footer_text = "Tab: Next category | Shift+Tab: Previous | Esc/?: Close";
-        let footer = Paragraph::new(footer_text)
-            .style(Style::default().fg(Color::DarkGray));
+        let footer = Paragraph::new(footer_text).style(Style::default().fg(Color::DarkGray));
         footer.render(chunks[2], buf);
     }
 }

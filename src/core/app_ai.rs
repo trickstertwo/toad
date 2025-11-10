@@ -23,7 +23,9 @@ impl App {
     pub(crate) fn process_ai_query(&mut self, query: String) {
         // Check if LLM client is available
         if !self.has_llm_client() {
-            self.toast_error("No LLM client available. Set ANTHROPIC_API_KEY environment variable.");
+            self.toast_error(
+                "No LLM client available. Set ANTHROPIC_API_KEY environment variable.",
+            );
             self.status_message =
                 "Error: ANTHROPIC_API_KEY not set. Cannot process AI queries.".to_string();
             return;

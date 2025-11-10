@@ -397,11 +397,8 @@ impl Default for ConflictResolver {
 impl Widget for &ConflictResolver {
     fn render(self, area: Rect, buf: &mut Buffer) {
         // Split into list and content
-        let chunks = Layout::horizontal([
-            Constraint::Percentage(30),
-            Constraint::Percentage(70),
-        ])
-        .split(area);
+        let chunks = Layout::horizontal([Constraint::Percentage(30), Constraint::Percentage(70)])
+            .split(area);
 
         // Render conflict list
         let items: Vec<ListItem> = self
@@ -465,16 +462,12 @@ impl Widget for &ConflictResolver {
                     ])
                     .split(chunks[1]);
 
-
                     // Left: Ours
                     let ours_text: Vec<Line> = conflict
                         .ours
                         .iter()
                         .map(|line| {
-                            Line::from(Span::styled(
-                                line,
-                                Style::default().fg(Color::Blue),
-                            ))
+                            Line::from(Span::styled(line, Style::default().fg(Color::Blue)))
                         })
                         .collect();
 
@@ -494,10 +487,7 @@ impl Widget for &ConflictResolver {
                         .theirs
                         .iter()
                         .map(|line| {
-                            Line::from(Span::styled(
-                                line,
-                                Style::default().fg(Color::Green),
-                            ))
+                            Line::from(Span::styled(line, Style::default().fg(Color::Green)))
                         })
                         .collect();
 
@@ -516,36 +506,40 @@ impl Widget for &ConflictResolver {
                     let content_area = chunks[1];
 
                     if self.view_mode == ConflictViewMode::Unified {
-                    let mut lines = vec![
-                        Line::from(Span::styled(
+                        let mut lines = vec![Line::from(Span::styled(
                             format!("<<<<<<< {}", self.our_branch),
-                            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
-                        )),
-                    ];
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD),
+                        ))];
 
-                    for line in &conflict.ours {
+                        for line in &conflict.ours {
+                            lines.push(Line::from(Span::styled(
+                                line,
+                                Style::default().fg(Color::Blue),
+                            )));
+                        }
+
                         lines.push(Line::from(Span::styled(
-                            line,
-                            Style::default().fg(Color::Blue),
+                            "=======",
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD),
                         )));
-                    }
 
-                    lines.push(Line::from(Span::styled(
-                        "=======",
-                        Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
-                    )));
+                        for line in &conflict.theirs {
+                            lines.push(Line::from(Span::styled(
+                                line,
+                                Style::default().fg(Color::Green),
+                            )));
+                        }
 
-                    for line in &conflict.theirs {
                         lines.push(Line::from(Span::styled(
-                            line,
-                            Style::default().fg(Color::Green),
+                            format!(">>>>>>> {}", self.their_branch),
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD),
                         )));
-                    }
-
-                    lines.push(Line::from(Span::styled(
-                        format!(">>>>>>> {}", self.their_branch),
-                        Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
-                    )));
 
                         let para = Paragraph::new(lines)
                             .block(
@@ -564,7 +558,9 @@ impl Widget for &ConflictResolver {
                         if let Some(base) = &conflict.base {
                             lines.push(Line::from(Span::styled(
                                 "BASE:",
-                                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+                                Style::default()
+                                    .fg(Color::Yellow)
+                                    .add_modifier(Modifier::BOLD),
                             )));
                             for line in base {
                                 lines.push(Line::from(Span::styled(
@@ -577,7 +573,9 @@ impl Widget for &ConflictResolver {
 
                         lines.push(Line::from(Span::styled(
                             format!("OURS ({}):", self.our_branch),
-                            Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD),
+                            Style::default()
+                                .fg(Color::Blue)
+                                .add_modifier(Modifier::BOLD),
                         )));
                         for line in &conflict.ours {
                             lines.push(Line::from(Span::styled(
@@ -589,7 +587,9 @@ impl Widget for &ConflictResolver {
                         lines.push(Line::from(""));
                         lines.push(Line::from(Span::styled(
                             format!("THEIRS ({}):", self.their_branch),
-                            Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+                            Style::default()
+                                .fg(Color::Green)
+                                .add_modifier(Modifier::BOLD),
                         )));
                         for line in &conflict.theirs {
                             lines.push(Line::from(Span::styled(
@@ -622,7 +622,8 @@ impl Widget for &ConflictResolver {
                 height: 1,
             };
 
-            let footer_text = "o: Choose Ours | t: Choose Theirs | b: Both | v: Toggle View | ↑↓: Navigate";
+            let footer_text =
+                "o: Choose Ours | t: Choose Theirs | b: Both | v: Toggle View | ↑↓: Navigate";
             let footer = Paragraph::new(footer_text).style(Style::default().fg(Color::DarkGray));
 
             footer.render(footer_area, buf);

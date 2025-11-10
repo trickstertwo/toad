@@ -389,18 +389,16 @@ impl EvaluationHarness {
             );
 
             // Create client with prompt caching if configured
-            LLMProvider::create_with_features(
-                &provider_config,
-                config.features.prompt_caching,
-            )?
+            LLMProvider::create_with_features(&provider_config, config.features.prompt_caching)?
         } else if config.features.routing_multi_model {
             // M3: Use multi-model racing (TRAE approach)
             use crate::ai::llm::RacingClient;
 
             tracing::info!("M3 Multi-model racing enabled for task {}", task.id);
 
-            let api_key = api_key
-                .context("Failed to get API key for racing. Set ANTHROPIC_API_KEY environment variable")?;
+            let api_key = api_key.context(
+                "Failed to get API key for racing. Set ANTHROPIC_API_KEY environment variable",
+            )?;
 
             // Create racing client from config
             let racing_client = RacingClient::from_config(
@@ -427,8 +425,8 @@ impl EvaluationHarness {
             let api_key = api_key
                 .context("Failed to get API key. Set ANTHROPIC_API_KEY environment variable")?;
 
-            let mut llm_client = AnthropicClient::new(api_key)
-                .with_model("claude-sonnet-4-20250514");
+            let mut llm_client =
+                AnthropicClient::new(api_key).with_model("claude-sonnet-4-20250514");
 
             // Enable prompt caching if configured (90% cost reduction)
             if config.features.prompt_caching {
@@ -449,8 +447,8 @@ impl EvaluationHarness {
 
         // Build AST context if M2 feature enabled
         let custom_prompt = if config.features.context_ast {
-            use crate::ai::context::ContextBuilder;
             use crate::ai::agent::PromptBuilder;
+            use crate::ai::context::ContextBuilder;
 
             tracing::info!("M2: Building AST context for task {}", task.id);
 
@@ -458,7 +456,10 @@ impl EvaluationHarness {
             // In real evaluation, this would be the cloned repo directory
             match ContextBuilder::new() {
                 Ok(builder) => {
-                    match builder.add_directory(".", &["py", "js", "ts", "tsx", "rs"]).await {
+                    match builder
+                        .add_directory(".", &["py", "js", "ts", "tsx", "rs"])
+                        .await
+                    {
                         Ok(builder) => {
                             let context = builder.build();
                             tracing::info!(
@@ -466,10 +467,12 @@ impl EvaluationHarness {
                                 context.file_contexts.len(),
                                 context.total_symbols
                             );
-                            Some(PromptBuilder::new()
-                                .with_task(task)
-                                .with_ast_context(context)
-                                .build())
+                            Some(
+                                PromptBuilder::new()
+                                    .with_task(task)
+                                    .with_ast_context(context)
+                                    .build(),
+                            )
                         }
                         Err(e) => {
                             // Log warning but continue without AST context
@@ -495,7 +498,9 @@ impl EvaluationHarness {
 
         // Execute task with AST-enhanced prompt if available (M2)
         let agent_result = if let Some(prompt) = custom_prompt {
-            agent.execute_task_with_prompt(task, Some(prompt), &mut metrics_collector).await?
+            agent
+                .execute_task_with_prompt(task, Some(prompt), &mut metrics_collector)
+                .await?
         } else {
             agent.execute_task(task, &mut metrics_collector).await?
         };
@@ -512,27 +517,29 @@ impl EvaluationHarness {
 
         // Extract race metadata if M3 racing was used
         if let Some(racing_client) = racing_client_ref
-            && let Some(race_result) = racing_client.get_last_race_result() {
-                let latency_improvement = race_result.latency_improvement()
-                    .map(|d| d.as_millis() as i64)
-                    .unwrap_or(0);
+            && let Some(race_result) = racing_client.get_last_race_result()
+        {
+            let latency_improvement = race_result
+                .latency_improvement()
+                .map(|d| d.as_millis() as i64)
+                .unwrap_or(0);
 
-                result.race_metadata = Some(RaceMetadata {
-                    winner_model: race_result.winner_model.clone(),
-                    total_cost_usd: race_result.total_cost(),
-                    wasted_cost_usd: race_result.total_wasted_cost(),
-                    latency_improvement_ms: latency_improvement,
-                    race_duration_ms: race_result.race_duration.as_millis() as u64,
-                });
+            result.race_metadata = Some(RaceMetadata {
+                winner_model: race_result.winner_model.clone(),
+                total_cost_usd: race_result.total_cost(),
+                wasted_cost_usd: race_result.total_wasted_cost(),
+                latency_improvement_ms: latency_improvement,
+                race_duration_ms: race_result.race_duration.as_millis() as u64,
+            });
 
-                tracing::info!(
-                    "M3 Race metadata: winner={}, total_cost=${:.4}, wasted=${:.4}, latency_improvement={}ms",
-                    race_result.winner_model,
-                    race_result.total_cost(),
-                    race_result.total_wasted_cost(),
-                    latency_improvement
-                );
-            }
+            tracing::info!(
+                "M3 Race metadata: winner={}, total_cost=${:.4}, wasted=${:.4}, latency_improvement={}ms",
+                race_result.winner_model,
+                race_result.total_cost(),
+                race_result.total_wasted_cost(),
+                latency_improvement
+            );
+        }
 
         // Extract cascade metadata if M4 cascading was used
         if cascade_difficulty.is_some() && cascade_tier.is_some() {
@@ -548,7 +555,11 @@ impl EvaluationHarness {
                 result.cascade_metadata.as_ref().unwrap().task_difficulty,
                 result.cascade_metadata.as_ref().unwrap().selected_tier,
                 result.cascade_metadata.as_ref().unwrap().tier_cost_usd,
-                result.cascade_metadata.as_ref().unwrap().routing_duration_ms
+                result
+                    .cascade_metadata
+                    .as_ref()
+                    .unwrap()
+                    .routing_duration_ms
             );
         }
 
@@ -658,13 +669,28 @@ mod tests {
         let m1_features = FeatureFlags::milestone_1();
 
         // M1 MUST have these enabled
-        assert!(m1_features.prompt_caching, "M1 must have prompt caching enabled (90% cost reduction)");
-        assert!(m1_features.tree_sitter_validation, "M1 must have tree-sitter validation enabled");
+        assert!(
+            m1_features.prompt_caching,
+            "M1 must have prompt caching enabled (90% cost reduction)"
+        );
+        assert!(
+            m1_features.tree_sitter_validation,
+            "M1 must have tree-sitter validation enabled"
+        );
 
         // M1 should NOT have these (simple baseline)
-        assert!(!m1_features.context_ast, "M1 should not have AST context (that's M2)");
-        assert!(!m1_features.smart_test_selection, "M1 should not have smart test selection (that's M2)");
-        assert!(!m1_features.routing_multi_model, "M1 should not have multi-model routing (that's M3)");
+        assert!(
+            !m1_features.context_ast,
+            "M1 should not have AST context (that's M2)"
+        );
+        assert!(
+            !m1_features.smart_test_selection,
+            "M1 should not have smart test selection (that's M2)"
+        );
+        assert!(
+            !m1_features.routing_multi_model,
+            "M1 should not have multi-model routing (that's M3)"
+        );
     }
 
     #[test]
@@ -684,16 +710,34 @@ mod tests {
         let m2_features = FeatureFlags::milestone_2();
 
         // M2 MUST have these enabled
-        assert!(m2_features.context_ast, "M2 must have AST context enabled (+2-5 points)");
-        assert!(m2_features.smart_test_selection, "M2 must have smart test selection enabled (+3-5 points)");
+        assert!(
+            m2_features.context_ast,
+            "M2 must have AST context enabled (+2-5 points)"
+        );
+        assert!(
+            m2_features.smart_test_selection,
+            "M2 must have smart test selection enabled (+3-5 points)"
+        );
 
         // M2 should inherit M1 features
-        assert!(m2_features.prompt_caching, "M2 should have prompt caching from M1");
-        assert!(m2_features.tree_sitter_validation, "M2 should have tree-sitter validation from M1");
+        assert!(
+            m2_features.prompt_caching,
+            "M2 should have prompt caching from M1"
+        );
+        assert!(
+            m2_features.tree_sitter_validation,
+            "M2 should have tree-sitter validation from M1"
+        );
 
         // M2 should NOT have M3+ features
-        assert!(!m2_features.routing_multi_model, "M2 should not have multi-model routing (that's M3)");
-        assert!(!m2_features.routing_cascade, "M2 should not have cascading routing (that's M4)");
+        assert!(
+            !m2_features.routing_multi_model,
+            "M2 should not have multi-model routing (that's M3)"
+        );
+        assert!(
+            !m2_features.routing_cascade,
+            "M2 should not have cascading routing (that's M4)"
+        );
     }
 
     #[test]
@@ -714,15 +758,30 @@ mod tests {
         let m4_features = FeatureFlags::milestone_4();
 
         // M4 MUST have cascading routing enabled
-        assert!(m4_features.routing_cascade, "M4 must have cascading routing enabled (70% cost reduction)");
+        assert!(
+            m4_features.routing_cascade,
+            "M4 must have cascading routing enabled (70% cost reduction)"
+        );
 
         // M4 should also have M3 features
-        assert!(m4_features.routing_multi_model, "M4 should have multi-model routing from M3");
-        assert!(m4_features.context_ast, "M4 should have AST context from M2");
-        assert!(m4_features.smart_test_selection, "M4 should have smart test selection from M2");
+        assert!(
+            m4_features.routing_multi_model,
+            "M4 should have multi-model routing from M3"
+        );
+        assert!(
+            m4_features.context_ast,
+            "M4 should have AST context from M2"
+        );
+        assert!(
+            m4_features.smart_test_selection,
+            "M4 should have smart test selection from M2"
+        );
 
         // M4 adds embeddings and failure memory
-        assert!(m4_features.context_embeddings, "M4 should have embeddings for better context");
+        assert!(
+            m4_features.context_embeddings,
+            "M4 should have embeddings for better context"
+        );
         assert!(m4_features.failure_memory, "M4 should have failure memory");
 
         // Core optimizations still enabled
@@ -746,8 +805,14 @@ mod tests {
         let config = ToadConfig::for_milestone(3);
 
         // M3 should have racing models configured
-        assert!(config.racing_models.len() >= 2, "M3 needs at least 2 models to race");
-        assert!(config.features.routing_multi_model, "M3 must have routing_multi_model enabled");
+        assert!(
+            config.racing_models.len() >= 2,
+            "M3 needs at least 2 models to race"
+        );
+        assert!(
+            config.features.routing_multi_model,
+            "M3 must have routing_multi_model enabled"
+        );
     }
 
     #[test]
@@ -800,19 +865,19 @@ mod tests {
     /// Note: Full racing is tested in racing.rs module tests
     #[test]
     fn test_m3_racing_client_creation() {
-        use crate::ai::llm::{RacingClient, LLMClient, mock::MockResponseBuilder};
+        use crate::ai::llm::{LLMClient, RacingClient, mock::MockResponseBuilder};
         use std::sync::Arc;
 
         // Create mock models for racing
         let model1 = Arc::new(
             MockResponseBuilder::new()
                 .with_text("Model 1 response")
-                .build()
+                .build(),
         );
         let model2 = Arc::new(
             MockResponseBuilder::new()
                 .with_text("Model 2 response")
-                .build()
+                .build(),
         );
 
         // Create racing client
@@ -878,12 +943,24 @@ mod tests {
         let m4_features = FeatureFlags::milestone_4();
 
         // M4 MUST have cascading routing enabled
-        assert!(m4_features.routing_cascade, "M4 must have cascading routing enabled (70% cost reduction)");
+        assert!(
+            m4_features.routing_cascade,
+            "M4 must have cascading routing enabled (70% cost reduction)"
+        );
 
         // M4 should inherit M3 features
-        assert!(m4_features.routing_multi_model, "M4 should have multi-model routing from M3");
-        assert!(m4_features.context_ast, "M4 should have AST context from M2");
-        assert!(m4_features.smart_test_selection, "M4 should have smart test selection from M2");
+        assert!(
+            m4_features.routing_multi_model,
+            "M4 should have multi-model routing from M3"
+        );
+        assert!(
+            m4_features.context_ast,
+            "M4 should have AST context from M2"
+        );
+        assert!(
+            m4_features.smart_test_selection,
+            "M4 should have smart test selection from M2"
+        );
 
         // M4 adds embeddings and failure memory
         assert!(m4_features.context_embeddings, "M4 should have embeddings");
@@ -911,13 +988,16 @@ mod tests {
         assert_eq!(metadata.task_difficulty, deserialized.task_difficulty);
         assert_eq!(metadata.selected_tier, deserialized.selected_tier);
         assert_eq!(metadata.tier_cost_usd, deserialized.tier_cost_usd);
-        assert_eq!(metadata.routing_duration_ms, deserialized.routing_duration_ms);
+        assert_eq!(
+            metadata.routing_duration_ms,
+            deserialized.routing_duration_ms
+        );
     }
 
     /// Test cascade tier selection for easy tasks
     #[test]
     fn test_cascade_tier_selection_easy() {
-        use crate::ai::routing::{CascadingRouter, TaskClassifier, Difficulty};
+        use crate::ai::routing::{CascadingRouter, Difficulty, TaskClassifier};
 
         let classifier = TaskClassifier::new();
         let router = CascadingRouter::new();
@@ -943,7 +1023,7 @@ mod tests {
     /// Test cascade tier selection for hard tasks
     #[test]
     fn test_cascade_tier_selection_hard() {
-        use crate::ai::routing::{CascadingRouter, TaskClassifier, Difficulty};
+        use crate::ai::routing::{CascadingRouter, Difficulty, TaskClassifier};
 
         let classifier = TaskClassifier::new();
         let router = CascadingRouter::with_api_key("test-key".to_string());
@@ -977,7 +1057,10 @@ mod tests {
 
         // Hard tasks cost money (cloud)
         assert!(ModelTier::CloudPremium.estimated_cost_usd() > 0.0);
-        assert!(ModelTier::CloudBest.estimated_cost_usd() > ModelTier::CloudPremium.estimated_cost_usd());
+        assert!(
+            ModelTier::CloudBest.estimated_cost_usd()
+                > ModelTier::CloudPremium.estimated_cost_usd()
+        );
 
         // Verify cost model (70% reduction from DavaJ)
         // Easy (40%) + Medium (40%) = 80% of tasks at $0
@@ -988,6 +1071,9 @@ mod tests {
         let total_cost = easy_cost + medium_cost + hard_cost;
 
         // Should be ~$200 for 500 tasks vs $1000 cloud-only (80% reduction)
-        assert!(total_cost < 500.0, "Total cost should be less than $500 for 500 tasks");
+        assert!(
+            total_cost < 500.0,
+            "Total cost should be less than $500 for 500 tasks"
+        );
     }
 }

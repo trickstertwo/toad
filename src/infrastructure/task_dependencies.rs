@@ -161,13 +161,21 @@ impl DependencyManager {
         if dependency_type.affects_scheduling()
             && self.would_create_cycle(&from_task, &to_task, dependency_type)
         {
-            return Err("Creating this dependency would create a circular dependency chain".to_string());
+            return Err(
+                "Creating this dependency would create a circular dependency chain".to_string(),
+            );
         }
 
         let id = format!("dep-{}", self.next_dependency_id);
         self.next_dependency_id += 1;
 
-        let dependency = Dependency::new(id.clone(), from_task.clone(), to_task.clone(), dependency_type, created_by);
+        let dependency = Dependency::new(
+            id.clone(),
+            from_task.clone(),
+            to_task.clone(),
+            dependency_type,
+            created_by,
+        );
 
         // Add to dependencies
         self.dependencies.insert(id.clone(), dependency);
@@ -237,9 +245,11 @@ impl DependencyManager {
         if let Some(dep_ids) = self.task_dependencies.get(task_id) {
             for dep_id in dep_ids {
                 if let Some(dep) = self.dependencies.get(dep_id)
-                    && dep.from_task == task_id && dep.dependency_type == DependencyType::Blocks {
-                        blocked.push(dep.to_task.clone());
-                    }
+                    && dep.from_task == task_id
+                    && dep.dependency_type == DependencyType::Blocks
+                {
+                    blocked.push(dep.to_task.clone());
+                }
             }
         }
 
@@ -310,7 +320,10 @@ impl DependencyManager {
 
         // Initialize nodes
         for (task_id, duration) in &task_durations {
-            nodes.insert(task_id.clone(), CriticalPathNode::new(task_id.clone(), *duration));
+            nodes.insert(
+                task_id.clone(),
+                CriticalPathNode::new(task_id.clone(), *duration),
+            );
         }
 
         // Forward pass: Calculate earliest start times
@@ -450,7 +463,13 @@ impl DependencyManager {
         for task in all_tasks {
             if !visited.contains(&task) {
                 let mut path = Vec::new();
-                self.dfs_cycle_detection(&task, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+                self.dfs_cycle_detection(
+                    &task,
+                    &mut visited,
+                    &mut rec_stack,
+                    &mut path,
+                    &mut cycles,
+                );
             }
         }
 
@@ -574,9 +593,7 @@ mod tests {
         );
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .contains("circular dependency"));
+        assert!(result.unwrap_err().contains("circular dependency"));
     }
 
     #[test]

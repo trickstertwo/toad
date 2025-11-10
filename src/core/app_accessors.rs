@@ -276,7 +276,10 @@ mod tests {
     fn test_evaluation_state_mut_accessor() {
         let mut app = App::new();
         let state = app.evaluation_state_mut();
-        assert!(state.is_none(), "Initial mutable evaluation state should be None");
+        assert!(
+            state.is_none(),
+            "Initial mutable evaluation state should be None"
+        );
     }
 
     #[test]
@@ -320,9 +323,15 @@ mod tests {
         let mut app = App::new();
         assert!(!app.show_performance(), "Performance should start hidden");
         app.toggle_performance();
-        assert!(app.show_performance(), "Performance should be shown after toggle");
+        assert!(
+            app.show_performance(),
+            "Performance should be shown after toggle"
+        );
         app.toggle_performance();
-        assert!(!app.show_performance(), "Performance should be hidden after second toggle");
+        assert!(
+            !app.show_performance(),
+            "Performance should be hidden after second toggle"
+        );
     }
 
     // ===== Toast Notification Tests =====

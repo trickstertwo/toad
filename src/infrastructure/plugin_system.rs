@@ -260,7 +260,10 @@ impl Plugin {
     /// Load the plugin
     pub fn load(&mut self) -> Result<(), String> {
         if self.state != PluginState::Discovered {
-            return Err(format!("Plugin is in state {:?}, expected Discovered", self.state));
+            return Err(format!(
+                "Plugin is in state {:?}, expected Discovered",
+                self.state
+            ));
         }
 
         self.state = PluginState::Loaded;
@@ -271,7 +274,10 @@ impl Plugin {
     /// Initialize the plugin
     pub fn initialize(&mut self) -> Result<(), String> {
         if self.state != PluginState::Loaded {
-            return Err(format!("Plugin is in state {:?}, expected Loaded", self.state));
+            return Err(format!(
+                "Plugin is in state {:?}, expected Loaded",
+                self.state
+            ));
         }
 
         self.state = PluginState::Ready;
@@ -296,7 +302,10 @@ impl Plugin {
     /// Pause the plugin
     pub fn pause(&mut self) -> Result<(), String> {
         if self.state != PluginState::Running {
-            return Err(format!("Plugin is in state {:?}, expected Running", self.state));
+            return Err(format!(
+                "Plugin is in state {:?}, expected Running",
+                self.state
+            ));
         }
 
         self.state = PluginState::Paused;
@@ -306,7 +315,10 @@ impl Plugin {
     /// Resume the plugin
     pub fn resume(&mut self) -> Result<(), String> {
         if self.state != PluginState::Paused {
-            return Err(format!("Plugin is in state {:?}, expected Paused", self.state));
+            return Err(format!(
+                "Plugin is in state {:?}, expected Paused",
+                self.state
+            ));
         }
 
         self.state = PluginState::Running;
@@ -393,10 +405,7 @@ impl PluginManager {
 
     /// Get plugins by state
     pub fn get_plugins_by_state(&self, state: PluginState) -> Vec<&Plugin> {
-        self.plugins
-            .values()
-            .filter(|p| p.state == state)
-            .collect()
+        self.plugins.values().filter(|p| p.state == state).collect()
     }
 
     /// Get plugins by runtime
@@ -478,19 +487,17 @@ impl PluginManager {
 
     /// Execute all plugins for a hook
     pub fn execute_hook(&mut self, hook: PluginHook) -> Result<usize, String> {
-        let plugin_ids: Vec<String> = self
-            .hooks
-            .get(&hook).cloned()
-            .unwrap_or_default();
+        let plugin_ids: Vec<String> = self.hooks.get(&hook).cloned().unwrap_or_default();
 
         let mut executed_count = 0;
 
         for plugin_id in plugin_ids {
             if let Some(plugin) = self.plugins.get_mut(&plugin_id)
-                && plugin.state == PluginState::Running {
-                    plugin.record_execution();
-                    executed_count += 1;
-                }
+                && plugin.state == PluginState::Running
+            {
+                plugin.record_execution();
+                executed_count += 1;
+            }
         }
 
         Ok(executed_count)
@@ -501,7 +508,9 @@ impl PluginManager {
         if let Some(plugin) = self.plugins.get(plugin_id) {
             for dep_id in &plugin.metadata.dependencies {
                 if let Some(dep_plugin) = self.plugins.get(dep_id) {
-                    if dep_plugin.state != PluginState::Running && dep_plugin.state != PluginState::Ready {
+                    if dep_plugin.state != PluginState::Running
+                        && dep_plugin.state != PluginState::Ready
+                    {
                         return Err(format!(
                             "Dependency {} is not ready (state: {:?})",
                             dep_id, dep_plugin.state
@@ -697,7 +706,10 @@ mod tests {
 
         plugin.set_error("Something went wrong".to_string());
         assert_eq!(plugin.state, PluginState::Error);
-        assert_eq!(plugin.error_message, Some("Something went wrong".to_string()));
+        assert_eq!(
+            plugin.error_message,
+            Some("Something went wrong".to_string())
+        );
 
         // Cannot enable from error state
         assert!(plugin.enable().is_err());

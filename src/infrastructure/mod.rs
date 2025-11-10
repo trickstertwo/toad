@@ -29,9 +29,9 @@ pub mod git_card_integration;
 pub mod history;
 pub mod import_export;
 pub mod key_sequences;
+pub mod keybinds;
 pub mod keyboard_recorder;
 pub mod keyboard_shortcuts;
-pub mod keybinds;
 pub mod mouse;
 pub mod multiple_views;
 pub mod plugin_system;
@@ -71,8 +71,8 @@ pub use card_comments::{
 };
 pub use clipboard::Clipboard;
 pub use communication_integrations::{
-    DiscordMessage, EmailConfig, EmailMessage, EventType, IntegrationManager,
-    IntegrationPlatform, NotificationEvent, SlackMessage, TeamsMessage, WebhookConfig,
+    DiscordMessage, EmailConfig, EmailMessage, EventType, IntegrationManager, IntegrationPlatform,
+    NotificationEvent, SlackMessage, TeamsMessage, WebhookConfig,
 };
 pub use cross_window_context::{
     ClipboardContentType, ClipboardEntry, CrossWindowContextManager, DragDropOperation,
@@ -80,19 +80,19 @@ pub use cross_window_context::{
 };
 pub use custom_keybindings::{ContextualBinding, CustomKeybindings, KeybindingContext};
 pub use custom_reports::{
-    Report, ReportBuilder, ReportFilter, ReportFormat, ReportFrequency, ReportManager,
-    ReportRow, ReportTemplate, ReportType, ScheduledReport,
+    Report, ReportBuilder, ReportFilter, ReportFormat, ReportFrequency, ReportManager, ReportRow,
+    ReportTemplate, ReportType, ScheduledReport,
 };
 pub use dashboard_metrics::{
     BlockedTask, BurndownData, BurnupData, ChartType, CumulativeFlowData, CycleTimeMetric,
-    DashboardMetrics, DataPoint, LeadTimeMetric, TeamMemberMetrics, TimePeriod, TimeInStageMetric,
+    DashboardMetrics, DataPoint, LeadTimeMetric, TeamMemberMetrics, TimeInStageMetric, TimePeriod,
     VelocityMetric, WipMetric,
 };
 pub use data_portability::{DataExporter, DataFormat, DataImporter};
-pub use file_attachments::{Attachment, AttachmentManager, AttachmentType, AttachmentVersion};
 pub use diff::{ChunkHeader, DiffHunk, DiffLine, DiffLineType, DiffParser, DiffStats, FileDiff};
 pub use errors::{ErrorEntry, ErrorHandler, ErrorSeverity};
 pub use fallback_mode::{BoxChars, FallbackMode};
+pub use file_attachments::{Attachment, AttachmentManager, AttachmentType, AttachmentVersion};
 pub use file_ops::{FileOpResult, FileOps};
 pub use filtering_search::{
     Filter, FilterCondition, FilterField, FilterManager, FilterOperator, LogicalOperator,
@@ -108,28 +108,23 @@ pub use import_export::{
     Importer, Snapshot, TaskData,
 };
 pub use key_sequences::{KeySequence, KeySequenceManager};
-pub use keyboard_recorder::{KeyboardRecorder, RecorderState, RecordedKey};
-pub use keyboard_shortcuts::{Shortcut, ShortcutAction, ShortcutCategory, ShortcutRegistry};
 pub use keybinds::{KeyBinding, KeyBindings};
+pub use keyboard_recorder::{KeyboardRecorder, RecordedKey, RecorderState};
+pub use keyboard_shortcuts::{Shortcut, ShortcutAction, ShortcutCategory, ShortcutRegistry};
 pub use mouse::{ClickAction, MouseAction, MouseState, ScrollDirection};
 pub use multiple_views::{
     CalendarMode, GroupBy, MindMapOrientation, SortBy, SortOrder, TimelineZoom, ViewConfig,
     ViewManager, ViewSettings, ViewType,
 };
 pub use plugin_system::{
-    Plugin, PluginCapability, PluginHook, PluginManager, PluginMetadata, PluginRuntime,
-    PluginState,
+    Plugin, PluginCapability, PluginHook, PluginManager, PluginMetadata, PluginRuntime, PluginState,
 };
-pub use project_management::{
-    Project, ProjectManager, ProjectStatus, ProjectTemplate, Workspace,
-};
+pub use project_management::{Project, ProjectManager, ProjectStatus, ProjectTemplate, Workspace};
 pub use rich_task_cards::{
     Assignee, CustomField, CustomFieldType, EffortEstimate, Priority, RichTaskCard,
     RichTaskCardManager, Subtask, Tag,
 };
-pub use task_dependencies::{
-    CriticalPathNode, Dependency, DependencyManager, DependencyType,
-};
+pub use task_dependencies::{CriticalPathNode, Dependency, DependencyManager, DependencyType};
 pub use team_collaboration::{
     Activity, ActivityType, BoardMember, CollaborationManager, Notification, NotificationType,
     Permission, Watcher,

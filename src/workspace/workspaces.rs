@@ -179,7 +179,9 @@ impl WorkspaceManager {
         let workspace = Workspace::new(id_str.clone(), name, root_path.into());
         self.workspaces.insert(id_str.clone(), workspace);
         // Safe: we just inserted this value above
-        self.workspaces.get(&id_str).expect("workspace was just inserted")
+        self.workspaces
+            .get(&id_str)
+            .expect("workspace was just inserted")
     }
 
     /// Get workspace by ID

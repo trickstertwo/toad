@@ -1,9 +1,9 @@
 //! Session manager tests
 
+use super::*;
 use std::collections::HashMap;
-    use super::*;
 
-    #[test]
+#[test]
 fn test_session_data_new() {
     let session = SessionData::new("test");
     assert_eq!(session.name(), "test");
@@ -476,7 +476,10 @@ fn test_session_manager_rapid_save_load_cycles() {
         manager.save_session("test");
         manager.clear_data();
         manager.load_session("test");
-        assert_eq!(manager.get_data("key"), Some(format!("value{}", i).as_str()));
+        assert_eq!(
+            manager.get_data("key"),
+            Some(format!("value{}", i).as_str())
+        );
     }
 }
 
@@ -764,7 +767,10 @@ fn test_comprehensive_session_manager_stress() {
     // Load and verify random sessions
     for i in (0..100).step_by(10) {
         manager.load_session(&format!("session{}", i));
-        assert_eq!(manager.active_session(), Some(format!("session{}", i).as_str()));
+        assert_eq!(
+            manager.active_session(),
+            Some(format!("session{}", i).as_str())
+        );
     }
 
     // Rename some sessions

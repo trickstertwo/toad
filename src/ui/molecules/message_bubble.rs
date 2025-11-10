@@ -149,7 +149,7 @@ impl<'a> MessageBubble<'a> {
                     let mut current_line = String::from("  ");
 
                     for word in words {
-                        if current_line.len() + word.len() + 1 <= max_width {
+                        if current_line.len() + word.len() < max_width {
                             if current_line.len() > 2 {
                                 current_line.push(' ');
                             }

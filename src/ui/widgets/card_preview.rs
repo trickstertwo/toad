@@ -310,11 +310,7 @@ impl CardPreview {
         let block = Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(border_color))
-            .title(format!(
-                " {} {} ",
-                self.priority.icon(),
-                self.title
-            ))
+            .title(format!(" {} {} ", self.priority.icon(), self.title))
             .title_style(
                 Style::default()
                     .fg(border_color)
@@ -555,7 +551,10 @@ mod tests {
             .position(PreviewPosition::Right);
 
         assert_eq!(preview.title(), "Fix authentication bug");
-        assert_eq!(preview.get_description(), Some("Users unable to log in with SSO"));
+        assert_eq!(
+            preview.get_description(),
+            Some("Users unable to log in with SSO")
+        );
         assert_eq!(preview.get_tags(), &["urgent", "security"]);
         assert_eq!(preview.get_priority(), CardPriority::Critical);
         assert_eq!(preview.position, PreviewPosition::Right);

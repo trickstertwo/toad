@@ -121,8 +121,12 @@ impl SearchState {
 
                 // Move past this match, respecting character boundaries
                 // Find the next valid char boundary after absolute_pos
-                let next_start = absolute_pos +
-                    search_line[absolute_pos..].chars().next().map(|c| c.len_utf8()).unwrap_or(1);
+                let next_start = absolute_pos
+                    + search_line[absolute_pos..]
+                        .chars()
+                        .next()
+                        .map(|c| c.len_utf8())
+                        .unwrap_or(1);
                 start = next_start;
             }
         }

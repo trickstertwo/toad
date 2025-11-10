@@ -588,9 +588,8 @@ fn test_quick_action_manager_remove_action() {
 #[test]
 fn test_quick_action_manager_get_by_category() {
     let mut manager = QuickActionManager::new();
-    manager.add_action(
-        QuickAction::new("save", "Save", "Ctrl+S").with_category(ActionCategory::File),
-    );
+    manager
+        .add_action(QuickAction::new("save", "Save", "Ctrl+S").with_category(ActionCategory::File));
     manager.add_action(
         QuickAction::new("search", "Search", "Ctrl+F").with_category(ActionCategory::Search),
     );

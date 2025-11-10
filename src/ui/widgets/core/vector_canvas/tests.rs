@@ -397,9 +397,7 @@ fn test_canvas_render_with_axes_disabled() {
 
 #[test]
 fn test_canvas_render_with_grid_and_no_axes() {
-    let mut canvas = Canvas::new()
-        .with_grid(true)
-        .with_axes(false);
+    let mut canvas = Canvas::new().with_grid(true).with_axes(false);
     canvas.rectangle(20.0, 20.0, 80.0, 80.0, Color::Green);
     let lines = canvas.render_lines(50, 50);
     assert!(!lines.is_empty());
@@ -542,7 +540,13 @@ fn test_shape_enum_clone() {
 #[test]
 fn test_canvas_fractional_coordinates() {
     let mut canvas = Canvas::new();
-    canvas.line(0.123456789, 0.987654321, 3.141592653, 2.718281828, Color::Red);
+    canvas.line(
+        0.123456789,
+        0.987654321,
+        3.141592653,
+        2.718281828,
+        Color::Red,
+    );
     canvas.circle(1.414213562, 1.732050808, 0.618033989, Color::Blue);
     canvas.point(2.236067977, 1.618033989, Color::Green, '●');
     assert_eq!(canvas.shape_count(), 3);

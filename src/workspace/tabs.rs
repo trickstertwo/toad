@@ -736,9 +736,7 @@ mod tests {
     // Builder Pattern
     #[test]
     fn test_tab_builder_pattern() {
-        let tab = Tab::new(0, "Complete")
-            .with_icon("🎯")
-            .with_closable(false);
+        let tab = Tab::new(0, "Complete").with_icon("🎯").with_closable(false);
 
         assert_eq!(tab.id, 0);
         assert_eq!(tab.title, "Complete");

@@ -761,8 +761,7 @@ mod tests {
     fn test_velocity_with_story_points() {
         let start = Utc::now();
         let end = start + Duration::weeks(1);
-        let metric = VelocityMetric::new(TimePeriod::Weekly, start, end, 10)
-            .with_story_points(50);
+        let metric = VelocityMetric::new(TimePeriod::Weekly, start, end, 10).with_story_points(50);
 
         assert_eq!(metric.story_points, Some(50));
     }

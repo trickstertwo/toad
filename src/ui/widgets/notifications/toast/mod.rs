@@ -12,8 +12,8 @@
 //! assert_eq!(toast.message(), "Operation completed successfully");
 //! ```
 
-mod state;
 mod render;
+mod state;
 #[cfg(test)]
 mod tests;
 

@@ -113,11 +113,7 @@ impl LLMClient for OllamaClient {
             .context("Failed to read response body")?;
 
         if !status.is_success() {
-            return Err(anyhow!(
-                "Ollama API error ({}): {}",
-                status,
-                response_text
-            ));
+            return Err(anyhow!("Ollama API error ({}): {}", status, response_text));
         }
 
         // Parse response
@@ -200,21 +196,16 @@ mod tests {
 
     #[test]
     fn test_temperature_clamping() {
-        let client = OllamaClient::new("llama2")
-            .with_temperature(1.5);
+        let client = OllamaClient::new("llama2").with_temperature(1.5);
         assert_eq!(client.temperature.unwrap(), 1.0);
 
-        let client = OllamaClient::new("llama2")
-            .with_temperature(-0.5);
+        let client = OllamaClient::new("llama2").with_temperature(-0.5);
         assert_eq!(client.temperature.unwrap(), 0.0);
     }
 
     #[test]
     fn test_message_conversion() {
-        let messages = vec![
-            Message::user("Hello"),
-            Message::assistant("Hi there!"),
-        ];
+        let messages = vec![Message::user("Hello"), Message::assistant("Hi there!")];
 
         let ollama_msgs = OllamaClient::to_ollama_messages(&messages);
         assert_eq!(ollama_msgs.len(), 2);

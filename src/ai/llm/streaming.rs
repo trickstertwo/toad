@@ -15,9 +15,7 @@ use std::task::{Context as TaskContext, Poll};
 #[derive(Debug, Clone)]
 pub enum StreamEvent {
     /// Message started with initial metadata
-    MessageStart {
-        message: MessageStart,
-    },
+    MessageStart { message: MessageStart },
 
     /// Content block started (text, tool_use, thinking)
     ContentBlockStart {
@@ -26,15 +24,10 @@ pub enum StreamEvent {
     },
 
     /// Content block delta (incremental content)
-    ContentBlockDelta {
-        index: usize,
-        delta: ContentDelta,
-    },
+    ContentBlockDelta { index: usize, delta: ContentDelta },
 
     /// Content block completed
-    ContentBlockStop {
-        index: usize,
-    },
+    ContentBlockStop { index: usize },
 
     /// Message metadata update (token usage)
     MessageDelta {
@@ -49,9 +42,7 @@ pub enum StreamEvent {
     Ping,
 
     /// Error occurred during streaming
-    Error {
-        error: ApiError,
-    },
+    Error { error: ApiError },
 }
 
 /// Initial message metadata
@@ -69,28 +60,17 @@ pub struct MessageStart {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ContentBlockStart {
-    Text {
-        text: String,
-    },
-    ToolUse {
-        id: String,
-        name: String,
-    },
-    Thinking {
-        thinking: String,
-    },
+    Text { text: String },
+    ToolUse { id: String, name: String },
+    Thinking { thinking: String },
 }
 
 /// Content delta (incremental content)
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ContentDelta {
-    TextDelta {
-        text: String,
-    },
-    InputJsonDelta {
-        partial_json: String,
-    },
+    TextDelta { text: String },
+    InputJsonDelta { partial_json: String },
 }
 
 /// Message delta information
@@ -191,8 +171,8 @@ impl MessageStream {
                     let data = event.data;
 
                     // Parse as SSE event
-                    let sse_event: SseEvent = serde_json::from_str(&data)
-                        .context("Failed to parse SSE event")?;
+                    let sse_event: SseEvent =
+                        serde_json::from_str(&data).context("Failed to parse SSE event")?;
 
                     // Convert to StreamEvent
                     Self::parse_event(sse_event)
@@ -234,7 +214,11 @@ impl MessageStream {
                 let index = event.index.context("Missing index")?;
                 let delta = match event.delta.context("Missing delta")? {
                     DeltaData::Content(d) => d,
-                    _ => return Err(anyhow::anyhow!("Invalid delta type for content_block_delta")),
+                    _ => {
+                        return Err(anyhow::anyhow!(
+                            "Invalid delta type for content_block_delta"
+                        ));
+                    }
                 };
                 Ok(StreamEvent::ContentBlockDelta { index, delta })
             }
@@ -275,10 +259,7 @@ impl MessageStream {
 impl Stream for MessageStream {
     type Item = Result<StreamEvent>;
 
-    fn poll_next(
-        self: Pin<&mut Self>,
-        cx: &mut TaskContext<'_>,
-    ) -> Poll<Option<Self::Item>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut TaskContext<'_>) -> Poll<Option<Self::Item>> {
         let mut this = self.project();
         this.inner.as_mut().poll_next(cx)
     }
@@ -331,22 +312,20 @@ impl StreamAccumulator {
                 }
             }
 
-            StreamEvent::ContentBlockDelta { delta, .. } => {
-                match delta {
-                    ContentDelta::TextDelta { text } => {
-                        if let Some(last) = self.text_blocks.last_mut() {
-                            last.push_str(&text);
-                        } else {
-                            self.text_blocks.push(text);
-                        }
-                    }
-                    ContentDelta::InputJsonDelta { partial_json } => {
-                        if let Some(json) = &mut self.current_tool_json {
-                            json.push_str(&partial_json);
-                        }
+            StreamEvent::ContentBlockDelta { delta, .. } => match delta {
+                ContentDelta::TextDelta { text } => {
+                    if let Some(last) = self.text_blocks.last_mut() {
+                        last.push_str(&text);
+                    } else {
+                        self.text_blocks.push(text);
                     }
                 }
-            }
+                ContentDelta::InputJsonDelta { partial_json } => {
+                    if let Some(json) = &mut self.current_tool_json {
+                        json.push_str(&partial_json);
+                    }
+                }
+            },
 
             StreamEvent::ContentBlockStop { .. } => {
                 // If we were accumulating tool JSON, parse it now
@@ -358,11 +337,7 @@ impl StreamAccumulator {
                     let input: serde_json::Value = serde_json::from_str(&json_str)
                         .context("Failed to parse tool input JSON")?;
 
-                    self.tool_uses.push(ToolUse {
-                        id,
-                        name,
-                        input,
-                    });
+                    self.tool_uses.push(ToolUse { id, name, input });
                 }
             }
 
@@ -443,7 +418,8 @@ mod tests {
                 role: "assistant".to_string(),
                 usage,
             },
-        }).unwrap();
+        })
+        .unwrap();
 
         // Simulate text content
         acc.process_event(StreamEvent::ContentBlockStart {
@@ -451,16 +427,19 @@ mod tests {
             content_block: ContentBlockStart::Text {
                 text: "Hello".to_string(),
             },
-        }).unwrap();
+        })
+        .unwrap();
 
         acc.process_event(StreamEvent::ContentBlockDelta {
             index: 0,
             delta: ContentDelta::TextDelta {
                 text: " world".to_string(),
             },
-        }).unwrap();
+        })
+        .unwrap();
 
-        acc.process_event(StreamEvent::ContentBlockStop { index: 0 }).unwrap();
+        acc.process_event(StreamEvent::ContentBlockStop { index: 0 })
+            .unwrap();
 
         assert_eq!(acc.text(), "Hello world");
         assert_eq!(acc.tool_uses().len(), 0);
@@ -477,7 +456,8 @@ mod tests {
                 id: "tool_123".to_string(),
                 name: "calculator".to_string(),
             },
-        }).unwrap();
+        })
+        .unwrap();
 
         // Send complete JSON in parts
         acc.process_event(StreamEvent::ContentBlockDelta {
@@ -485,14 +465,16 @@ mod tests {
             delta: ContentDelta::InputJsonDelta {
                 partial_json: "{\"a\":".to_string(),
             },
-        }).unwrap();
+        })
+        .unwrap();
 
         acc.process_event(StreamEvent::ContentBlockDelta {
             index: 0,
             delta: ContentDelta::InputJsonDelta {
                 partial_json: "1,\"b\":2}".to_string(),
             },
-        }).unwrap();
+        })
+        .unwrap();
 
         let result = acc.process_event(StreamEvent::ContentBlockStop { index: 0 });
         if let Err(e) = &result {

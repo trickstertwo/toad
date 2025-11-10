@@ -737,7 +737,10 @@ mod tests {
         let json = serde_json::to_string(&session).unwrap();
         let deserialized: SessionState = serde_json::from_str(&json).unwrap();
 
-        assert_eq!(deserialized.working_directory().to_str().unwrap(), "/home/用户/项目/日本語");
+        assert_eq!(
+            deserialized.working_directory().to_str().unwrap(),
+            "/home/用户/项目/日本語"
+        );
     }
 
     #[test]
@@ -748,7 +751,10 @@ mod tests {
         let json = serde_json::to_string(&session).unwrap();
         let deserialized: SessionState = serde_json::from_str(&json).unwrap();
 
-        assert_eq!(deserialized.working_directory().to_str().unwrap(), "/home/🐸/projects/🎉");
+        assert_eq!(
+            deserialized.working_directory().to_str().unwrap(),
+            "/home/🐸/projects/🎉"
+        );
     }
 
     #[test]
@@ -923,7 +929,10 @@ mod tests {
 
     #[test]
     fn test_save_creates_directory() {
-        let temp_dir = std::env::temp_dir().join("toad_test_nested").join("deep").join("path");
+        let temp_dir = std::env::temp_dir()
+            .join("toad_test_nested")
+            .join("deep")
+            .join("path");
         let temp_file = temp_dir.join("session.json");
 
         // Ensure directory doesn't exist
@@ -1061,7 +1070,10 @@ mod tests {
 
         // Verify all fields
         assert_eq!(deserialized.welcome_shown(), true);
-        assert_eq!(deserialized.working_directory().to_str().unwrap(), "/complex/path/🎨");
+        assert_eq!(
+            deserialized.working_directory().to_str().unwrap(),
+            "/complex/path/🎨"
+        );
         assert_eq!(deserialized.last_screen(), "ComplexScreen 日本語");
         assert_eq!(deserialized.plugin_count(), 42);
         assert_eq!(deserialized.history().len(), 10);

@@ -274,7 +274,11 @@ mod tests {
         let mut app = App::new();
         let initial = app.vim_mode();
         app.execute_palette_command("vim_mode");
-        assert_ne!(app.vim_mode(), initial, "Palette command should toggle vim mode");
+        assert_ne!(
+            app.vim_mode(),
+            initial,
+            "Palette command should toggle vim mode"
+        );
     }
 
     #[test]

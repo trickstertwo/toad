@@ -315,9 +315,10 @@ impl WindowManager {
         if self.windows.contains_key(&id) {
             // Update previous active window state
             if let Some(prev_id) = self.active_window
-                && let Some(window) = self.windows.get_mut(&prev_id) {
-                    window.set_state(WindowState::Background);
-                }
+                && let Some(window) = self.windows.get_mut(&prev_id)
+            {
+                window.set_state(WindowState::Background);
+            }
 
             // Update MRU order
             self.mru_order.retain(|&x| x != id);
@@ -385,9 +386,10 @@ impl WindowManager {
             if self.active_window == Some(id) {
                 self.active_window = self.mru_order.first().copied();
                 if let Some(new_active) = self.active_window
-                    && let Some(win) = self.windows.get_mut(&new_active) {
-                        win.set_state(WindowState::Active);
-                    }
+                    && let Some(win) = self.windows.get_mut(&new_active)
+                {
+                    win.set_state(WindowState::Active);
+                }
             }
 
             true
@@ -586,9 +588,18 @@ mod tests {
         let id2 = manager.create_window("Urgent");
         let id3 = manager.create_window("High");
 
-        manager.get_window_mut(id1).unwrap().set_priority(WindowPriority::Low);
-        manager.get_window_mut(id2).unwrap().set_priority(WindowPriority::Urgent);
-        manager.get_window_mut(id3).unwrap().set_priority(WindowPriority::High);
+        manager
+            .get_window_mut(id1)
+            .unwrap()
+            .set_priority(WindowPriority::Low);
+        manager
+            .get_window_mut(id2)
+            .unwrap()
+            .set_priority(WindowPriority::Urgent);
+        manager
+            .get_window_mut(id3)
+            .unwrap()
+            .set_priority(WindowPriority::High);
 
         let by_priority = manager.windows_by_priority();
         assert_eq!(by_priority[0].id(), id2); // Urgent first
@@ -602,7 +613,10 @@ mod tests {
         let id1 = manager.create_window("Saved");
         let id2 = manager.create_window("Unsaved");
 
-        manager.get_window_mut(id2).unwrap().set_unsaved_changes(true);
+        manager
+            .get_window_mut(id2)
+            .unwrap()
+            .set_unsaved_changes(true);
 
         let unsaved = manager.unsaved_windows();
         assert_eq!(unsaved.len(), 1);

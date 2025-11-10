@@ -378,9 +378,7 @@ mod tests {
 
     #[test]
     fn test_word_provider_10000_words() {
-        let words: Vec<String> = (0..10000)
-            .map(|i| format!("word{:05}", i))
-            .collect();
+        let words: Vec<String> = (0..10000).map(|i| format!("word{:05}", i)).collect();
         let provider = WordProvider::new(words);
         let suggestions = provider.get_suggestions("word0");
         // Should return top 10 matches (word00000-word00009, etc.)
@@ -391,10 +389,7 @@ mod tests {
     fn test_command_provider_1000_commands() {
         let mut provider = CommandProvider::new();
         for i in 0..1000 {
-            provider.add_command(
-                format!("cmd{:04}", i),
-                format!("Command {}", i),
-            );
+            provider.add_command(format!("cmd{:04}", i), format!("Command {}", i));
         }
         let suggestions = provider.get_suggestions("cmd0");
         assert_eq!(suggestions.len(), 10); // Truncated to 10
@@ -417,9 +412,7 @@ mod tests {
 
     #[test]
     fn test_large_suggestion_list_before_truncation() {
-        let words: Vec<String> = (0..100)
-            .map(|i| format!("test{:03}", i))
-            .collect();
+        let words: Vec<String> = (0..100).map(|i| format!("test{:03}", i)).collect();
         let provider = WordProvider::new(words);
         let suggestions = provider.get_suggestions("test");
         // Should be truncated to 10
@@ -501,7 +494,7 @@ mod tests {
     #[test]
     fn test_zero_width_characters() {
         let provider = WordProvider::new(vec![
-            "test\u{200B}word".to_string(), // Zero-width space
+            "test\u{200B}word".to_string(),    // Zero-width space
             "another\u{FEFF}word".to_string(), // Zero-width no-break space
         ]);
         let suggestions = provider.get_suggestions("test");
@@ -528,21 +521,15 @@ mod tests {
 
     #[test]
     fn test_single_character_input() {
-        let provider = WordProvider::new(vec![
-            "a".to_string(),
-            "ab".to_string(),
-            "abc".to_string(),
-        ]);
+        let provider =
+            WordProvider::new(vec!["a".to_string(), "ab".to_string(), "abc".to_string()]);
         let suggestions = provider.get_suggestions("a");
         assert_eq!(suggestions.len(), 3);
     }
 
     #[test]
     fn test_special_characters_input() {
-        let provider = WordProvider::new(vec![
-            "test!@#".to_string(),
-            "test$%^".to_string(),
-        ]);
+        let provider = WordProvider::new(vec!["test!@#".to_string(), "test$%^".to_string()]);
         let suggestions = provider.get_suggestions("test!");
         assert_eq!(suggestions.len(), 1);
         assert_eq!(suggestions[0].text, "test!@#");
@@ -552,10 +539,7 @@ mod tests {
 
     #[test]
     fn test_exact_prefix_vs_case_insensitive() {
-        let provider = WordProvider::new(vec![
-            "Test".to_string(),
-            "test".to_string(),
-        ]);
+        let provider = WordProvider::new(vec!["Test".to_string(), "test".to_string()]);
         let suggestions = provider.get_suggestions("test");
         // Exact match should score higher
         assert_eq!(suggestions[0].text, "test");
@@ -650,9 +634,7 @@ mod tests {
     #[test]
     fn test_manager_multiple_providers() {
         let mut manager = AutocompleteManager::new();
-        manager.add_provider(Box::new(WordProvider::new(vec![
-            "test".to_string(),
-        ])));
+        manager.add_provider(Box::new(WordProvider::new(vec!["test".to_string()])));
         manager.add_provider(Box::new(CommandProvider::new()));
         let suggestions = manager.get_suggestions("test");
         // Should combine suggestions from both providers
@@ -662,12 +644,8 @@ mod tests {
     #[test]
     fn test_manager_deduplication() {
         let mut manager = AutocompleteManager::new();
-        manager.add_provider(Box::new(WordProvider::new(vec![
-            "test".to_string(),
-        ])));
-        manager.add_provider(Box::new(WordProvider::new(vec![
-            "test".to_string(),
-        ])));
+        manager.add_provider(Box::new(WordProvider::new(vec!["test".to_string()])));
+        manager.add_provider(Box::new(WordProvider::new(vec!["test".to_string()])));
         let suggestions = manager.get_suggestions("test");
         // Should deduplicate "test" from both providers
         assert_eq!(suggestions.iter().filter(|s| s.text == "test").count(), 1);
@@ -676,12 +654,8 @@ mod tests {
     #[test]
     fn test_manager_truncation_to_20() {
         // Create two providers with different prefixes to get more than 10 total results
-        let words1: Vec<String> = (0..15)
-            .map(|i| format!("test{:02}", i))
-            .collect();
-        let words2: Vec<String> = (15..30)
-            .map(|i| format!("test{:02}", i))
-            .collect();
+        let words1: Vec<String> = (0..15).map(|i| format!("test{:02}", i)).collect();
+        let words2: Vec<String> = (15..30).map(|i| format!("test{:02}", i)).collect();
         let mut manager = AutocompleteManager::new();
         manager.add_provider(Box::new(WordProvider::new(words1)));
         manager.add_provider(Box::new(WordProvider::new(words2)));
@@ -693,9 +667,7 @@ mod tests {
     #[test]
     fn test_manager_clear() {
         let mut manager = AutocompleteManager::new();
-        manager.add_provider(Box::new(WordProvider::new(vec![
-            "test".to_string(),
-        ])));
+        manager.add_provider(Box::new(WordProvider::new(vec!["test".to_string()])));
         let _suggestions = manager.get_suggestions("test");
         assert!(manager.selected().is_some());
 
@@ -717,9 +689,7 @@ mod tests {
     #[test]
     fn test_navigation_single_suggestion() {
         let mut manager = AutocompleteManager::new();
-        manager.add_provider(Box::new(WordProvider::new(vec![
-            "test".to_string(),
-        ])));
+        manager.add_provider(Box::new(WordProvider::new(vec!["test".to_string()])));
         let _suggestions = manager.get_suggestions("test");
         assert_eq!(manager.selected().unwrap().text, "test");
 
@@ -887,9 +857,7 @@ mod tests {
     #[test]
     fn test_caching_behavior() {
         let mut manager = AutocompleteManager::new();
-        manager.add_provider(Box::new(WordProvider::new(vec![
-            "test".to_string(),
-        ])));
+        manager.add_provider(Box::new(WordProvider::new(vec!["test".to_string()])));
 
         // First query
         let suggestions1 = manager.get_suggestions("test");
@@ -911,10 +879,7 @@ mod tests {
         ])));
 
         let _suggestions = manager.get_suggestions("");
-        manager.cached_suggestions = vec![
-            Suggestion::new("a"),
-            Suggestion::new("b"),
-        ];
+        manager.cached_suggestions = vec![Suggestion::new("a"), Suggestion::new("b")];
         manager.selected = Some(0);
 
         // Verify state transitions
@@ -941,10 +906,7 @@ mod tests {
 
     #[test]
     fn test_case_sensitive_exact_match_priority() {
-        let provider = WordProvider::new(vec![
-            "Test".to_string(),
-            "test".to_string(),
-        ]);
+        let provider = WordProvider::new(vec!["Test".to_string(), "test".to_string()]);
         let suggestions = provider.get_suggestions("test");
         // Exact case match "test" should score higher than "Test"
         assert_eq!(suggestions[0].text, "test");

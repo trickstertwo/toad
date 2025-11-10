@@ -543,4 +543,3 @@ impl Widget for &ModeIndicator {
         buf.set_line(inner.x, inner.y, &line, inner.width);
     }
 }
-

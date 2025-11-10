@@ -65,9 +65,10 @@ impl PromptBuilder {
             ));
 
             if let Some(hints) = task.hints
-                && !hints.is_empty() {
-                    prompt.push_str(&format!("**Hints:**\n{}\n\n", hints));
-                }
+                && !hints.is_empty()
+            {
+                prompt.push_str(&format!("**Hints:**\n{}\n\n", hints));
+            }
         }
 
         prompt
@@ -135,10 +136,7 @@ Start by exploring the codebase to understand the problem context."#
         // Limit to top 10 most relevant files to avoid overwhelming the prompt
         let max_files = 10;
         if files.len() > max_files {
-            output.push_str(&format!(
-                "Showing {} most relevant files:\n\n",
-                max_files
-            ));
+            output.push_str(&format!("Showing {} most relevant files:\n\n", max_files));
         }
 
         for file_context in files.iter().take(max_files) {
@@ -154,10 +152,9 @@ Start by exploring the codebase to understand the problem context."#
             if !classes.is_empty() {
                 output.push_str("**Classes:**\n");
                 for class in classes {
-                    output.push_str(&format!("- `{}` (lines {}-{})\n",
-                        class.name,
-                        class.line_range.0,
-                        class.line_range.1
+                    output.push_str(&format!(
+                        "- `{}` (lines {}-{})\n",
+                        class.name, class.line_range.0, class.line_range.1
                     ));
                     if let Some(doc) = &class.docstring {
                         output.push_str(&format!("  {}\n", doc.lines().next().unwrap_or("")));
@@ -168,18 +165,17 @@ Start by exploring the codebase to understand the problem context."#
 
             if !functions.is_empty() {
                 output.push_str("**Functions:**\n");
-                for func in functions.iter().take(5) {  // Limit to 5 functions per file
+                for func in functions.iter().take(5) {
+                    // Limit to 5 functions per file
                     if let Some(sig) = &func.signature {
-                        output.push_str(&format!("- `{}` (lines {}-{})\n",
-                            sig,
-                            func.line_range.0,
-                            func.line_range.1
+                        output.push_str(&format!(
+                            "- `{}` (lines {}-{})\n",
+                            sig, func.line_range.0, func.line_range.1
                         ));
                     } else {
-                        output.push_str(&format!("- `{}` (lines {}-{})\n",
-                            func.name,
-                            func.line_range.0,
-                            func.line_range.1
+                        output.push_str(&format!(
+                            "- `{}` (lines {}-{})\n",
+                            func.name, func.line_range.0, func.line_range.1
                         ));
                     }
                     if let Some(doc) = &func.docstring {
@@ -187,7 +183,10 @@ Start by exploring the codebase to understand the problem context."#
                     }
                 }
                 if functions.len() > 5 {
-                    output.push_str(&format!("  ... and {} more functions\n", functions.len() - 5));
+                    output.push_str(&format!(
+                        "  ... and {} more functions\n",
+                        functions.len() - 5
+                    ));
                 }
                 output.push('\n');
             }
@@ -195,10 +194,9 @@ Start by exploring the codebase to understand the problem context."#
             if !interfaces.is_empty() {
                 output.push_str("**Interfaces:**\n");
                 for interface in interfaces {
-                    output.push_str(&format!("- `{}` (lines {}-{})\n",
-                        interface.name,
-                        interface.line_range.0,
-                        interface.line_range.1
+                    output.push_str(&format!(
+                        "- `{}` (lines {}-{})\n",
+                        interface.name, interface.line_range.0, interface.line_range.1
                     ));
                 }
                 output.push('\n');
@@ -207,10 +205,9 @@ Start by exploring the codebase to understand the problem context."#
             if !types.is_empty() {
                 output.push_str("**Type Aliases:**\n");
                 for type_alias in types {
-                    output.push_str(&format!("- `{}` (lines {}-{})\n",
-                        type_alias.name,
-                        type_alias.line_range.0,
-                        type_alias.line_range.1
+                    output.push_str(&format!(
+                        "- `{}` (lines {}-{})\n",
+                        type_alias.name, type_alias.line_range.0, type_alias.line_range.1
                     ));
                 }
                 output.push('\n');
@@ -297,12 +294,11 @@ mod tests {
         file_ctx.add_symbol(
             Symbol::new("test_function", SymbolKind::Function, (10, 20))
                 .with_signature("def test_function(x, y)")
-                .with_docstring("A test function")
+                .with_docstring("A test function"),
         );
 
         file_ctx.add_symbol(
-            Symbol::new("TestClass", SymbolKind::Class, (30, 50))
-                .with_docstring("A test class")
+            Symbol::new("TestClass", SymbolKind::Class, (30, 50)).with_docstring("A test class"),
         );
 
         context.add_file(file_ctx);

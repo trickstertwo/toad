@@ -377,10 +377,7 @@ impl LiveGraph {
     /// assert_eq!(graph.min(), Some(10.0));
     /// ```
     pub fn min(&self) -> Option<f64> {
-        self.data
-            .iter()
-            .copied()
-            .min_by(|a, b| a.total_cmp(b))
+        self.data.iter().copied().min_by(|a, b| a.total_cmp(b))
     }
 
     /// Get maximum data point
@@ -395,10 +392,7 @@ impl LiveGraph {
     /// assert_eq!(graph.max(), Some(30.0));
     /// ```
     pub fn max(&self) -> Option<f64> {
-        self.data
-            .iter()
-            .copied()
-            .max_by(|a, b| a.total_cmp(b))
+        self.data.iter().copied().max_by(|a, b| a.total_cmp(b))
     }
 
     /// Set graph type

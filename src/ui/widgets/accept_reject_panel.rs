@@ -153,7 +153,8 @@ impl AcceptRejectPanel {
 
     /// Add a proposed change
     pub fn add_change(&mut self, file_path: impl Into<String>, description: impl Into<String>) {
-        self.changes.push(ProposedChange::new(file_path, description));
+        self.changes
+            .push(ProposedChange::new(file_path, description));
 
         // Select first item if this is the first change
         if self.changes.len() == 1 {
@@ -168,9 +169,8 @@ impl AcceptRejectPanel {
         description: impl Into<String>,
         diff: impl Into<String>,
     ) {
-        self.changes.push(
-            ProposedChange::new(file_path, description).with_diff(diff)
-        );
+        self.changes
+            .push(ProposedChange::new(file_path, description).with_diff(diff));
 
         if self.changes.len() == 1 {
             self.list_state.select(Some(0));
@@ -200,9 +200,10 @@ impl AcceptRejectPanel {
     /// Reset current change to pending
     pub fn reset_current(&mut self) {
         if let Some(idx) = self.list_state.selected()
-            && let Some(change) = self.changes.get_mut(idx) {
-                change.reset();
-            }
+            && let Some(change) = self.changes.get_mut(idx)
+        {
+            change.reset();
+        }
     }
 
     /// Accept all pending changes
@@ -321,14 +322,15 @@ impl StatefulWidget for &AcceptRejectPanel {
     fn render(self, area: Rect, buf: &mut Buffer, _state: &mut Self::State) {
         // Determine layout based on preview mode
         let show_diff_preview = self.show_preview
-            && self.current_change().and_then(|c| c.diff.as_ref()).is_some();
+            && self
+                .current_change()
+                .and_then(|c| c.diff.as_ref())
+                .is_some();
 
         let (list_area, preview_area) = if show_diff_preview {
-            let chunks = Layout::horizontal([
-                Constraint::Percentage(50),
-                Constraint::Percentage(50),
-            ])
-            .split(area);
+            let chunks =
+                Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .split(area);
             (chunks[0], Some(chunks[1]))
         } else {
             (area, None)
@@ -346,12 +348,11 @@ impl StatefulWidget for &AcceptRejectPanel {
                 let content = vec![Line::from(vec![
                     Span::styled(
                         format!("{} ", icon),
-                        Style::default().fg(state_color).add_modifier(Modifier::BOLD),
+                        Style::default()
+                            .fg(state_color)
+                            .add_modifier(Modifier::BOLD),
                     ),
-                    Span::styled(
-                        format!("[{}] ", label),
-                        Style::default().fg(state_color),
-                    ),
+                    Span::styled(format!("[{}] ", label), Style::default().fg(state_color)),
                     Span::styled(&change.file_path, Style::default().fg(Color::Cyan)),
                     Span::raw(" - "),
                     Span::styled(&change.description, Style::default().fg(Color::White)),
@@ -387,18 +388,19 @@ impl StatefulWidget for &AcceptRejectPanel {
         // Render diff preview if enabled
         if let Some(preview_rect) = preview_area
             && let Some(change) = self.current_change()
-                && let Some(diff) = &change.diff {
-                    let preview = Paragraph::new(diff.as_str())
-                        .block(
-                            Block::default()
-                                .borders(Borders::ALL)
-                                .title("Diff Preview")
-                                .border_style(Style::default().fg(Color::Cyan)),
-                        )
-                        .style(Style::default().fg(Color::White));
+            && let Some(diff) = &change.diff
+        {
+            let preview = Paragraph::new(diff.as_str())
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title("Diff Preview")
+                        .border_style(Style::default().fg(Color::Cyan)),
+                )
+                .style(Style::default().fg(Color::White));
 
-                    preview.render(preview_rect, buf);
-                }
+            preview.render(preview_rect, buf);
+        }
 
         // Render footer with keybindings
         if area.height > 2 {
@@ -410,8 +412,7 @@ impl StatefulWidget for &AcceptRejectPanel {
             };
 
             let footer_text = "a: Accept | r: Reject | u: Reset | A: Accept All | R: Reject All | p: Toggle Preview | ↑↓: Navigate";
-            let footer = Paragraph::new(footer_text)
-                .style(Style::default().fg(Color::DarkGray));
+            let footer = Paragraph::new(footer_text).style(Style::default().fg(Color::DarkGray));
 
             footer.render(footer_area, buf);
         }
@@ -539,8 +540,7 @@ mod tests {
     #[test]
     fn test_change_with_diff() {
         let panel = AcceptRejectPanel::new();
-        let change = ProposedChange::new("src/main.rs", "Feature")
-            .with_diff("@@ -1,3 +1,4 @@");
+        let change = ProposedChange::new("src/main.rs", "Feature").with_diff("@@ -1,3 +1,4 @@");
 
         assert!(change.diff.is_some());
     }

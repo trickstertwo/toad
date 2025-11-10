@@ -21,8 +21,7 @@ use ratatui::{
 use serde::{Deserialize, Serialize};
 
 /// Spinner animation style
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum SpinnerStyle {
     /// Rotating dots: ⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏
     #[default]
@@ -81,7 +80,6 @@ impl SpinnerStyle {
         }
     }
 }
-
 
 /// Loading spinner widget
 #[derive(Debug, Clone)]

@@ -232,7 +232,7 @@ mod tests {
         use crate::config::FeatureFlags;
 
         let mut features = FeatureFlags::milestone_2();
-        features.smart_test_selection = false;  // Disable
+        features.smart_test_selection = false; // Disable
 
         let registry = ToolRegistry::m2_with_features(&features);
 
@@ -250,7 +250,11 @@ mod tests {
         let registry = ToolRegistry::m2_with_features(&features);
 
         // M2 with smart test selection = M1 + run_tests (9 tools)
-        assert_eq!(registry.count(), 9, "M2 should have 9 tools (M1 + run_tests)");
+        assert_eq!(
+            registry.count(),
+            9,
+            "M2 should have 9 tools (M1 + run_tests)"
+        );
 
         // Verify all M1 tools still present
         assert!(registry.get("read").is_some());
@@ -258,6 +262,9 @@ mod tests {
         assert!(registry.get("bash").is_some());
 
         // Verify M2 smart test selection tool is present
-        assert!(registry.get("run_tests").is_some(), "M2 should have run_tests tool");
+        assert!(
+            registry.get("run_tests").is_some(),
+            "M2 should have run_tests tool"
+        );
     }
 }

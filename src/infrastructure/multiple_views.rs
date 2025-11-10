@@ -324,12 +324,7 @@ impl ViewManager {
     }
 
     /// Creates a new view for a board
-    pub fn create_view(
-        &mut self,
-        view_type: ViewType,
-        name: String,
-        board_id: String,
-    ) -> String {
+    pub fn create_view(&mut self, view_type: ViewType, name: String, board_id: String) -> String {
         let id = format!("view-{}", self.next_view_id);
         self.next_view_id += 1;
 
@@ -345,7 +340,13 @@ impl ViewManager {
             .push(id.clone());
 
         // Set as active if first view for board
-        if self.board_views.get(&board_id).map(|v| v.len()).unwrap_or(0) == 1 {
+        if self
+            .board_views
+            .get(&board_id)
+            .map(|v| v.len())
+            .unwrap_or(0)
+            == 1
+        {
             self.active_views.insert(board_id, id.clone());
         }
 
@@ -378,11 +379,12 @@ impl ViewManager {
     /// Sets the active view for a board
     pub fn set_active_view(&mut self, board_id: String, view_id: String) -> bool {
         if let Some(view) = self.views.get_mut(&view_id)
-            && view.board_id == board_id {
-                view.touch();
-                self.active_views.insert(board_id, view_id);
-                return true;
-            }
+            && view.board_id == board_id
+        {
+            view.touch();
+            self.active_views.insert(board_id, view_id);
+            return true;
+        }
         false
     }
 
@@ -450,14 +452,15 @@ impl ViewManager {
         // If this was the active view, switch to another
         if let Some(active_id) = self.active_views.get(&view.board_id)
             && active_id == view_id
-                && let Some(view_ids) = self.board_views.get(&view.board_id) {
-                    if let Some(first_id) = view_ids.first() {
-                        self.active_views
-                            .insert(view.board_id.clone(), first_id.clone());
-                    } else {
-                        self.active_views.remove(&view.board_id);
-                    }
-                }
+            && let Some(view_ids) = self.board_views.get(&view.board_id)
+        {
+            if let Some(first_id) = view_ids.first() {
+                self.active_views
+                    .insert(view.board_id.clone(), first_id.clone());
+            } else {
+                self.active_views.remove(&view.board_id);
+            }
+        }
 
         Some(view)
     }
@@ -494,10 +497,7 @@ impl ViewManager {
 
     /// Gets view count for a board
     pub fn view_count_for_board(&self, board_id: &str) -> usize {
-        self.board_views
-            .get(board_id)
-            .map(|v| v.len())
-            .unwrap_or(0)
+        self.board_views.get(board_id).map(|v| v.len()).unwrap_or(0)
     }
 }
 
@@ -582,7 +582,8 @@ mod tests {
         // Should be automatically set as active (first view)
         assert_eq!(manager.get_active_view_id("board-1"), Some(&view_id));
 
-        let view_id2 = manager.create_view(ViewType::List, "List".to_string(), "board-1".to_string());
+        let view_id2 =
+            manager.create_view(ViewType::List, "List".to_string(), "board-1".to_string());
         manager.set_active_view("board-1".to_string(), view_id2.clone());
 
         assert_eq!(manager.get_active_view_id("board-1"), Some(&view_id2));
@@ -661,7 +662,8 @@ mod tests {
             "Kanban".to_string(),
             "board-1".to_string(),
         );
-        let list_id = manager.create_view(ViewType::List, "List".to_string(), "board-1".to_string());
+        let list_id =
+            manager.create_view(ViewType::List, "List".to_string(), "board-1".to_string());
 
         let switched = manager.switch_to_type("board-1", ViewType::List).unwrap();
         assert_eq!(switched, list_id);
@@ -807,7 +809,8 @@ mod tests {
             "Kanban".to_string(),
             "board-1".to_string(),
         );
-        let board2_view = manager.create_view(ViewType::List, "List".to_string(), "board-2".to_string());
+        let board2_view =
+            manager.create_view(ViewType::List, "List".to_string(), "board-2".to_string());
 
         assert_eq!(manager.get_active_view_id("board-1"), Some(&board1_view));
         assert_eq!(manager.get_active_view_id("board-2"), Some(&board2_view));

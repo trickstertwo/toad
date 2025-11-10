@@ -278,7 +278,9 @@ impl GitStatusPanel {
         // Branch info
         if let Some(ref branch) = self.branch {
             let mut spans = vec![
-                Text::new("⎇ ").style(Style::default().fg(Color::Cyan)).to_span(),
+                Text::new("⎇ ")
+                    .style(Style::default().fg(Color::Cyan))
+                    .to_span(),
                 Text::new(branch)
                     .style(
                         Style::default()
@@ -329,8 +331,8 @@ impl GitStatusPanel {
             }
 
             if !summary_parts.is_empty() {
-                let summary_text = Text::new(summary_parts.join(", "))
-                    .style(Style::default().fg(Color::DarkGray));
+                let summary_text =
+                    Text::new(summary_parts.join(", ")).style(Style::default().fg(Color::DarkGray));
                 lines.push(Line::from(summary_text.to_span()));
             }
         }
@@ -352,13 +354,12 @@ impl GitStatusPanel {
                 .style(Style::default().fg(file.status.color()));
 
             let selection_char = if file.selected { "☑ " } else { "☐ " };
-            let selection_text = Text::new(selection_char).style(
-                Style::default().fg(if file.selected {
+            let selection_text =
+                Text::new(selection_char).style(Style::default().fg(if file.selected {
                     Color::Green
                 } else {
                     Color::DarkGray
-                }),
-            );
+                }));
 
             let path_str = file.path.to_string_lossy().to_string();
             let path_text = Text::new(path_str);
@@ -372,8 +373,7 @@ impl GitStatusPanel {
         }
 
         if items.is_empty() {
-            let empty_text = Text::new("No changes")
-                .style(Style::default().fg(Color::DarkGray));
+            let empty_text = Text::new("No changes").style(Style::default().fg(Color::DarkGray));
             items.push(ListItem::new(Line::from(empty_text.to_span())));
         }
 
@@ -935,7 +935,10 @@ mod tests {
     fn test_branch_with_slashes() {
         let mut panel = GitStatusPanel::new();
         panel.set_branch("feature/TOAD-123/some-feature");
-        assert_eq!(panel.branch, Some("feature/TOAD-123/some-feature".to_string()));
+        assert_eq!(
+            panel.branch,
+            Some("feature/TOAD-123/some-feature".to_string())
+        );
     }
 
     #[test]

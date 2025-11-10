@@ -4,8 +4,8 @@
 //! These tests validate that platinum widgets work correctly when used together.
 
 use toad::ui::widgets::{
-    ChatPanel, GitDiffViewer, ModelInfo, ModelSelector, Spinner, SpinnerStyle, TokenCounter,
-    TokenUsage, CostModel,
+    ChatPanel, CostModel, GitDiffViewer, ModelInfo, ModelSelector, Spinner, SpinnerStyle,
+    TokenCounter, TokenUsage,
 };
 
 // =============================================================================
@@ -454,9 +454,7 @@ fn test_chat_panel_builder() {
 
 #[test]
 fn test_token_counter_builder() {
-    let counter = TokenCounter::new()
-        .with_budget(10.0)
-        .with_compact(true);
+    let counter = TokenCounter::new().with_budget(10.0).with_compact(true);
 
     assert_eq!(counter.session_cost(), 0.0);
 }

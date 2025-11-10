@@ -1,9 +1,9 @@
 use std::path::PathBuf;
+use toad::ComparisonResult;
+use toad::Metrics;
 /// Integration tests for TOAD evaluation framework
 use toad::config::{FeatureFlags, ToadConfig};
 use toad::{Complexity, EvaluationHarness, task_loader};
-use toad::Metrics;
-use toad::ComparisonResult;
 
 #[tokio::test]
 async fn test_basic_evaluation() {

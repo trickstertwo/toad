@@ -427,7 +427,11 @@ mod tests {
         assert!(cost > 0.0, "Expected cost > $0.0, got ${:.3}", cost);
 
         // Verify cost is approximately $0.525
-        assert!((cost - 0.525).abs() < 0.001, "Expected ~$0.525, got ${:.3}", cost);
+        assert!(
+            (cost - 0.525).abs() < 0.001,
+            "Expected ~$0.525, got ${:.3}",
+            cost
+        );
     }
 
     // Comprehensive TokenUsage tests

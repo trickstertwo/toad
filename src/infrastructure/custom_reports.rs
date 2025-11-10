@@ -140,7 +140,11 @@ pub struct ReportFilter {
 
 impl ReportFilter {
     /// Create a new filter
-    pub fn new(field: impl Into<String>, operator: impl Into<String>, value: impl Into<String>) -> Self {
+    pub fn new(
+        field: impl Into<String>,
+        operator: impl Into<String>,
+        value: impl Into<String>,
+    ) -> Self {
         Self {
             field: field.into(),
             operator: operator.into(),
@@ -612,10 +616,7 @@ impl ReportManager {
 
     /// Get enabled schedules
     pub fn enabled_schedules(&self) -> Vec<&ScheduledReport> {
-        self.schedules
-            .values()
-            .filter(|s| s.enabled)
-            .collect()
+        self.schedules.values().filter(|s| s.enabled).collect()
     }
 
     /// Generate report from template
@@ -872,8 +873,7 @@ mod tests {
     #[test]
     fn test_manager_generate_from_template() {
         let mut manager = ReportManager::new();
-        let template = ReportTemplate::new("Test", ReportType::Custom)
-            .add_column("Col1");
+        let template = ReportTemplate::new("Test", ReportType::Custom).add_column("Col1");
         let template_id = manager.save_template(template);
 
         let report_id = manager.generate_from_template(&template_id).unwrap();

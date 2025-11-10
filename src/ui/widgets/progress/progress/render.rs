@@ -2,12 +2,7 @@
 
 use super::MultiStageProgress;
 use crate::ui::theme::ToadTheme;
-use ratatui::{
-    buffer::Buffer,
-    layout::Rect,
-    style::Style,
-    widgets::Widget,
-};
+use ratatui::{buffer::Buffer, layout::Rect, style::Style, widgets::Widget};
 
 impl Widget for &MultiStageProgress {
     fn render(self, area: Rect, buf: &mut Buffer) {

@@ -5,7 +5,7 @@
 use std::path::PathBuf;
 use std::time::Duration;
 use toad::ui::widgets::{
-    Animation, AnimationState, EditorMode, EasingFunction, IndicatorStyle, ModeIndicator,
+    Animation, AnimationState, EasingFunction, EditorMode, IndicatorStyle, ModeIndicator,
     MultiStageProgress, ProgressBar, StageStatus,
 };
 use toad::workspace::{Workspace, WorkspaceManager};
@@ -24,8 +24,8 @@ fn test_animation_creation() {
 
 #[test]
 fn test_animation_with_easing() {
-    let anim = Animation::new(0.0, 100.0, Duration::from_secs(1))
-        .with_easing(EasingFunction::EaseInOut);
+    let anim =
+        Animation::new(0.0, 100.0, Duration::from_secs(1)).with_easing(EasingFunction::EaseInOut);
     assert_eq!(anim.current_value(), 0.0);
 }
 
@@ -157,8 +157,7 @@ fn test_animation_multiple_easing_types() {
     ];
 
     for easing in easings {
-        let mut anim =
-            Animation::new(0.0, 100.0, Duration::from_millis(100)).with_easing(easing);
+        let mut anim = Animation::new(0.0, 100.0, Duration::from_millis(100)).with_easing(easing);
         anim.start();
         anim.tick(Duration::from_millis(50));
 

@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn test_evaluation_progress_event_without_state() {
-        use crate::core::event::{Event, EvaluationProgress};
+        use crate::core::event::{EvaluationProgress, Event};
 
         let mut app = App::new();
         app.evaluation_state = None;
@@ -214,8 +214,8 @@ mod tests {
 
     #[test]
     fn test_evaluation_progress_event_with_state() {
-        use crate::core::event::{Event, EvaluationProgress};
         use crate::core::app_state::EvaluationState;
+        use crate::core::event::{EvaluationProgress, Event};
 
         let mut app = App::new();
         app.evaluation_state = Some(EvaluationState {
@@ -248,8 +248,8 @@ mod tests {
 
     #[test]
     fn test_evaluation_progress_event_without_message() {
-        use crate::core::event::{Event, EvaluationProgress};
         use crate::core::app_state::EvaluationState;
+        use crate::core::event::{EvaluationProgress, Event};
 
         let mut app = App::new();
         app.evaluation_state = Some(EvaluationState {
@@ -284,8 +284,8 @@ mod tests {
     #[test]
     fn test_evaluation_complete_event() {
         use crate::ai::evaluation::EvaluationResults;
-        use crate::core::event::Event;
         use crate::core::app_state::EvaluationState;
+        use crate::core::event::Event;
         use chrono::Utc;
         use std::collections::HashMap;
 
@@ -322,8 +322,8 @@ mod tests {
 
     #[test]
     fn test_evaluation_error_event() {
-        use crate::core::event::Event;
         use crate::core::app_state::{AppScreen, EvaluationState};
+        use crate::core::event::Event;
 
         let mut app = App::new();
         app.screen = AppScreen::Evaluation;
@@ -346,8 +346,8 @@ mod tests {
 
     #[test]
     fn test_evaluation_error_sets_error_field() {
-        use crate::core::event::Event;
         use crate::core::app_state::EvaluationState;
+        use crate::core::event::Event;
 
         let mut app = App::new();
         app.evaluation_state = Some(EvaluationState {
@@ -367,8 +367,8 @@ mod tests {
 
     #[test]
     fn test_evaluation_error_clears_handle() {
-        use crate::core::event::Event;
         use crate::core::app_state::EvaluationState;
+        use crate::core::event::Event;
 
         let mut app = App::new();
         app.evaluation_state = Some(EvaluationState {
