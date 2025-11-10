@@ -14,6 +14,7 @@
 //! # Screens
 //!
 //! - [`welcome`]: Welcome splash screen with logo and quick tips
+//! - [`main_screen`]: Main command interface with input and status
 //! - [`evaluation`]: Real-time evaluation progress display
 //!
 //! # Examples
@@ -41,7 +42,9 @@
 //! ```
 
 pub mod evaluation;
+pub mod main_screen;
 pub mod welcome;
 
 pub use evaluation::EvaluationScreen;
+pub use main_screen::MainScreen;
 pub use welcome::WelcomeScreen;
