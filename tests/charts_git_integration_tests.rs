@@ -5,7 +5,7 @@
 use ratatui::style::Color;
 use toad::ui::widgets::{
     BarChart, BarData, BarDirection, DiffLine, DiffLineType, FileStatus, GitCommit, GitDiffViewer,
-    GitFile, GitGraph, GitStatusPanel, GraphType, LiveGraph, ScatterPlot, ScatterPlot, ScatterSeries,
+    GitFile, GitGraph, GitStatusPanel, GraphType, LiveGraph, ScatterPlot, ScatterSeries,
 };
 
 // ==================== BarChart Tests ====================
@@ -48,13 +48,17 @@ fn test_bar_direction() {
 #[test]
 fn test_scatter_plot_simple_creation() {
     let data = vec![(1.0, 2.0), (2.0, 4.0), (3.0, 6.0)];
-    let _plot = ScatterPlot::new(data);
+    let series = ScatterSeries::new("Data", data);
+    let _plot = ScatterPlot::new().add_series(series);
 }
 
 #[test]
 fn test_scatter_plot_simple_builder() {
     let data = vec![(1.0, 1.0), (2.0, 2.0)];
-    let _plot = ScatterPlot::new(data).with_title("Analysis");
+    let series = ScatterSeries::new("Data", data);
+    let _plot = ScatterPlot::new()
+        .add_series(series)
+        .with_title("Analysis");
 }
 
 // ==================== ScatterPlot Tests (with series) ====================

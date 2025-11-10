@@ -5,9 +5,10 @@
 
 use std::path::PathBuf;
 use toad::ui::widgets::{
-    ChatPanel, CostModel, FileStatus, GitCommit, GitDiffViewer, GitGraph, GitStatusPanel,
-    InputField, LineChart, ModelInfo, ModelSelector, MultiStageProgress, SessionManager, Spinner,
-    SpinnerStyle, ToastManager, TokenCounter, TokenUsage, WorkspaceManager,
+    ChatPanel, CostModel, DataSeries, FileStatus, GitCommit, GitDiffViewer, GitGraph,
+    GitStatusPanel, InputField, LineChart, ModelInfo, ModelSelector, MultiStageProgress,
+    SessionManager, Spinner, SpinnerStyle, ToastManager, TokenCounter, TokenUsage,
+    WorkspaceManager,
 };
 
 // ==================== E2E: Performance Monitoring Dashboard ====================
@@ -15,9 +16,9 @@ use toad::ui::widgets::{
 #[test]
 fn test_e2e_performance_monitoring_dashboard() {
     // Simulate real-time performance monitoring with multiple charts and metrics
-    let mut cpu_chart = LineChart::new(vec![]);
-    let mut memory_chart = LineChart::new(vec![]);
-    let mut network_chart = LineChart::new(vec![]);
+    let mut cpu_data = Vec::new();
+    let mut memory_data = Vec::new();
+    let mut network_data = Vec::new();
     let mut session = SessionManager::new();
 
     // Collect performance data over time (simulating 100 time points)
@@ -26,28 +27,35 @@ fn test_e2e_performance_monitoring_dashboard() {
 
         // CPU usage with spikes
         let cpu = 30.0 + 20.0 * (time / 10.0).sin() + if i % 15 == 0 { 25.0 } else { 0.0 };
-        cpu_chart.add_point(cpu);
+        cpu_data.push(cpu);
 
         // Memory usage gradually increasing
         let memory = 40.0 + time * 0.5;
-        memory_chart.add_point(memory);
+        memory_data.push(memory);
 
         // Network traffic with bursts
         let network = 10.0 + 15.0 * (time / 5.0).cos() + if i % 20 == 0 { 30.0 } else { 0.0 };
-        network_chart.add_point(network);
+        network_data.push(network);
     }
 
+    // Create charts from collected data
+    let cpu_series = DataSeries::new("CPU", cpu_data.clone());
+    let cpu_chart = LineChart::new().add_series(cpu_series);
+
+    let memory_series = DataSeries::new("Memory", memory_data.clone());
+    let memory_chart = LineChart::new().add_series(memory_series);
+
+    let network_series = DataSeries::new("Network", network_data.clone());
+    let network_chart = LineChart::new().add_series(network_series);
+
     // Verify large dataset handling
-    assert_eq!(cpu_chart.data().len(), 100);
-    assert_eq!(memory_chart.data().len(), 100);
-    assert_eq!(network_chart.data().len(), 100);
+    assert_eq!(cpu_data.len(), 100);
+    assert_eq!(memory_data.len(), 100);
+    assert_eq!(network_data.len(), 100);
 
     // Analyze performance metrics
-    let cpu_max = cpu_chart
-        .data()
-        .iter()
-        .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    let memory_last = memory_chart.data().last().copied().unwrap_or(0.0);
+    let cpu_max = cpu_data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let memory_last = memory_data.last().copied().unwrap_or(0.0);
 
     assert!(cpu_max > 50.0); // Detected CPU spike
     assert!(memory_last > 80.0); // Memory increased over time
@@ -59,6 +67,9 @@ fn test_e2e_performance_monitoring_dashboard() {
     session.save_session("performance_monitoring");
 
     assert!(session.has_session("performance_monitoring"));
+    assert_eq!(cpu_chart.series_count(), 1);
+    assert_eq!(memory_chart.series_count(), 1);
+    assert_eq!(network_chart.series_count(), 1);
 }
 
 // ==================== E2E: Concurrent Workspace Operations ====================
@@ -559,7 +570,7 @@ fn test_e2e_realtime_diff_analysis_workflow() {
     let mut diff_viewer = GitDiffViewer::new();
     let mut chat = ChatPanel::new();
     let mut toasts = ToastManager::new();
-    let mut stats_chart = LineChart::new(vec![]);
+    let mut stats_data = Vec::new();
 
     // Analyze multiple diffs and track statistics
     let diffs = vec![
@@ -602,7 +613,7 @@ fn test_e2e_realtime_diff_analysis_workflow() {
 
         // Track net changes
         let net_change = additions as f64 - deletions as f64;
-        stats_chart.add_point(net_change);
+        stats_data.push(net_change);
 
         toasts.info(&format!(
             "{}: +{} -{} (net: {:+})",
@@ -612,12 +623,17 @@ fn test_e2e_realtime_diff_analysis_workflow() {
         // Save analysis
     }
 
+    // Create chart from collected data
+    let stats_series = DataSeries::new("Net Changes", stats_data.clone());
+    let stats_chart = LineChart::new().add_series(stats_series);
+
     // Verify analysis
     assert_eq!(chat.message_count(), 6); // 3 user + 3 assistant
-    assert_eq!(stats_chart.data().len(), 3);
+    assert_eq!(stats_data.len(), 3);
     assert_eq!(toasts.len(), 3);
 
     // Calculate total impact
-    let total_net_change: f64 = stats_chart.data().iter().sum();
+    let total_net_change: f64 = stats_data.iter().sum();
     assert!(total_net_change > 0.0); // Net positive change (more additions)
+    assert_eq!(stats_chart.series_count(), 1);
 }

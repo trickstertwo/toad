@@ -154,6 +154,6 @@ fn test_config_serialization() {
     let json = serde_json::to_string(&config).unwrap();
     let deserialized: ToadConfig = serde_json::from_str(&json).unwrap();
 
-    assert_eq!(config.model, deserialized.model);
+    assert_eq!(config.provider.model, deserialized.provider.model);
     assert_eq!(config.max_context_tokens, deserialized.max_context_tokens);
 }
