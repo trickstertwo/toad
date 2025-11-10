@@ -647,7 +647,7 @@ fn test_e2e_terminal_size_variations() {
             .draw(|frame| {
                 toad::core::ui::render(&mut app, frame);
             })
-            .expect(&format!("Failed to render at {}x{}", width, height));
+            .unwrap_or_else(|_| panic!("Failed to render at {}x{}", width, height));
     }
 }
 
@@ -782,7 +782,7 @@ fn test_e2e_input_field_with_unicode() {
         .expect("Should render with Unicode input");
 
     // Verify input field contains Unicode
-    assert!(app.input_field().value().len() > 0, "Input field should contain Unicode");
+    assert!(!app.input_field().value().is_empty(), "Input field should contain Unicode");
 }
 
 #[test]
@@ -804,10 +804,8 @@ fn test_e2e_very_small_terminal() {
             .draw(|frame| {
                 toad::core::ui::render(&mut app, frame);
             })
-            .expect(&format!(
-                "Should render without panic at very small size {}x{}",
-                width, height
-            ));
+            .unwrap_or_else(|_| panic!("Should render without panic at very small size {}x{}",
+                width, height));
     }
 }
 
@@ -826,7 +824,7 @@ fn test_e2e_input_field_very_long_text() {
 
     // Should not crash with very long input
     assert!(
-        app.input_field().value().len() > 0,
+        !app.input_field().value().is_empty(),
         "Input field should handle long text"
     );
 }
@@ -948,7 +946,7 @@ fn test_e2e_multiple_backspaces() {
     app.update(key_event(KeyCode::Char('l'))).ok();
     app.update(key_event(KeyCode::Char('o'))).ok();
 
-    assert!(app.input_field().value().len() > 0);
+    assert!(!app.input_field().value().is_empty());
 
     // Backspace all characters
     for _ in 0..10 {
@@ -984,7 +982,7 @@ fn test_e2e_terminal_resize_during_operation() {
         .expect("Should render after resize");
 
     // Input should still be there
-    assert!(app.input_field().value().len() > 0, "Input should persist after resize");
+    assert!(!app.input_field().value().is_empty(), "Input should persist after resize");
 }
 
 // =============================================================================
@@ -1388,7 +1386,7 @@ fn test_e2e_rapid_component_updates() {
 
     // Final verification
     assert!(app.tabs().count() > 0);
-    assert!(app.toasts().len() > 0);
+    assert!(!app.toasts().is_empty());
 
     // Final render
     terminal

@@ -4,6 +4,11 @@
 //! and history tracking. Integrates with the modal system for user-friendly
 //! error presentation.
 //!
+//! # Related Modules
+//!
+//! For LLM-specific error types (API failures, rate limits, network errors),
+//! see [`crate::ai::llm::errors`].
+//!
 //! # Examples
 //!
 //! ## Basic Error Handling

@@ -27,9 +27,11 @@ pub mod workspace;
 
 // Re-exports for convenience
 pub use ai::{
-    Agent, AnthropicClient, CompareArgs, ComparisonResult, EvalArgs, EvalCommand, EvaluationHandle,
-    EvaluationHarness, EvaluationResults, LLMClient, Metrics, MetricsCollector, ShowConfigArgs,
-    Task, TaskResult, ToolRegistry, parse_eval_command, start_comparison, start_evaluation,
+    Agent, AggregateMetrics, AnthropicClient, CompareArgs, ComparisonResult, Complexity,
+    DatasetManager, DatasetSource, EvalArgs, EvalCommand, EvaluationHandle, EvaluationHarness,
+    EvaluationResults, ExperimentManager, ExperimentStatus, LLMClient, Metrics, MetricsCollector,
+    QualityMetrics, Recommendation, ShowConfigArgs, Task, TaskResult, ToolRegistry,
+    parse_eval_command, start_comparison, start_evaluation, task_loader,
 };
 pub use commands::{CommandMode, CommandRegistry};
 pub use config::{

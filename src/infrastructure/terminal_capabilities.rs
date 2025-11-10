@@ -110,11 +110,10 @@ impl TerminalCapabilities {
     /// Detect color support level
     fn detect_color_support(term_name: &str) -> ColorSupport {
         // Check COLORTERM for truecolor
-        if let Ok(colorterm) = env::var("COLORTERM") {
-            if colorterm.contains("truecolor") || colorterm.contains("24bit") {
+        if let Ok(colorterm) = env::var("COLORTERM")
+            && (colorterm.contains("truecolor") || colorterm.contains("24bit")) {
                 return ColorSupport::TrueColor;
             }
-        }
 
         // Check TERM for color hints
         if term_name.contains("truecolor") || term_name.contains("24bit") {
@@ -145,17 +144,15 @@ impl TerminalCapabilities {
     /// Detect Unicode support
     fn detect_unicode_support() -> bool {
         // Check locale for UTF-8
-        if let Ok(lang) = env::var("LANG") {
-            if lang.to_uppercase().contains("UTF-8") || lang.to_uppercase().contains("UTF8") {
+        if let Ok(lang) = env::var("LANG")
+            && (lang.to_uppercase().contains("UTF-8") || lang.to_uppercase().contains("UTF8")) {
                 return true;
             }
-        }
 
-        if let Ok(lc_all) = env::var("LC_ALL") {
-            if lc_all.to_uppercase().contains("UTF-8") || lc_all.to_uppercase().contains("UTF8") {
+        if let Ok(lc_all) = env::var("LC_ALL")
+            && (lc_all.to_uppercase().contains("UTF-8") || lc_all.to_uppercase().contains("UTF8")) {
                 return true;
             }
-        }
 
         // Default to true for modern systems
         true
@@ -176,15 +173,14 @@ impl TerminalCapabilities {
     /// Detect styled underlines (curly, colored, etc.)
     fn detect_styled_underlines(term_name: &str, term_program: Option<&str>) -> bool {
         // Known terminals with styled underline support
-        if let Some(program) = term_program {
-            if program.contains("iTerm")
+        if let Some(program) = term_program
+            && (program.contains("iTerm")
                 || program.contains("WezTerm")
                 || program.contains("kitty")
-                || program.contains("Alacritty")
+                || program.contains("Alacritty"))
             {
                 return true;
             }
-        }
 
         term_name.contains("kitty") || term_name.contains("wezterm")
     }
@@ -198,23 +194,21 @@ impl TerminalCapabilities {
     /// Detect Nerd Fonts support
     fn detect_nerd_fonts(term_program: Option<&str>) -> bool {
         // Check for terminals known to support Nerd Fonts well
-        if let Some(program) = term_program {
-            if program.contains("iTerm")
+        if let Some(program) = term_program
+            && (program.contains("iTerm")
                 || program.contains("WezTerm")
                 || program.contains("kitty")
                 || program.contains("Alacritty")
-                || program.contains("Windows Terminal")
+                || program.contains("Windows Terminal"))
             {
                 return true;
             }
-        }
 
         // Check environment variable
-        if let Ok(nerd_fonts) = env::var("NERD_FONTS") {
-            if nerd_fonts == "1" || nerd_fonts.to_lowercase() == "true" {
+        if let Ok(nerd_fonts) = env::var("NERD_FONTS")
+            && (nerd_fonts == "1" || nerd_fonts.to_lowercase() == "true") {
                 return true;
             }
-        }
 
         // Conservative default
         false

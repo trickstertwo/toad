@@ -582,7 +582,7 @@ impl AutomationManager {
     /// Execute bulk action (simulated)
     pub fn execute_bulk_action(
         &self,
-        action: BulkActionType,
+        _action: BulkActionType,
         task_ids: &[String],
     ) -> BulkActionResult {
         // In a real implementation, this would apply the action to tasks

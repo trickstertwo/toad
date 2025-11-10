@@ -436,7 +436,7 @@ impl PluginManager {
             for hook in &plugin.hooks.clone() {
                 self.hooks
                     .entry(*hook)
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(plugin_id.to_string());
             }
 
@@ -480,19 +480,17 @@ impl PluginManager {
     pub fn execute_hook(&mut self, hook: PluginHook) -> Result<usize, String> {
         let plugin_ids: Vec<String> = self
             .hooks
-            .get(&hook)
-            .map(|ids| ids.clone())
+            .get(&hook).cloned()
             .unwrap_or_default();
 
         let mut executed_count = 0;
 
         for plugin_id in plugin_ids {
-            if let Some(plugin) = self.plugins.get_mut(&plugin_id) {
-                if plugin.state == PluginState::Running {
+            if let Some(plugin) = self.plugins.get_mut(&plugin_id)
+                && plugin.state == PluginState::Running {
                     plugin.record_execution();
                     executed_count += 1;
                 }
-            }
         }
 
         Ok(executed_count)

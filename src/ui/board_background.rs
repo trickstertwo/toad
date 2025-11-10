@@ -235,21 +235,21 @@ impl BoardBackground {
 
         match pattern {
             PatternType::Dots => {
-                if x % 4 == 0 && y % 2 == 0 {
+                if x.is_multiple_of(4) && y.is_multiple_of(2) {
                     Some('·')
                 } else {
                     Some(' ')
                 }
             }
             PatternType::Grid => {
-                if x % 8 == 0 || y % 4 == 0 {
+                if x.is_multiple_of(8) || y.is_multiple_of(4) {
                     Some('┼')
                 } else {
                     Some(' ')
                 }
             }
             PatternType::Diagonal => {
-                if (x + y) % 6 == 0 {
+                if (x + y).is_multiple_of(6) {
                     Some('╱')
                 } else if (x + y) % 6 == 3 {
                     Some('╲')
@@ -258,7 +258,7 @@ impl BoardBackground {
                 }
             }
             PatternType::Checkerboard => {
-                if (x / 4 + y / 2) % 2 == 0 {
+                if (x / 4 + y / 2).is_multiple_of(2) {
                     Some('█')
                 } else {
                     Some(' ')
@@ -273,7 +273,7 @@ impl BoardBackground {
                 }
             }
             PatternType::Hexagons => {
-                if (x % 6 == 0 && y % 3 == 0) || (x % 6 == 3 && y % 3 == 1) {
+                if (x.is_multiple_of(6) && y.is_multiple_of(3)) || (x % 6 == 3 && y % 3 == 1) {
                     Some('⬡')
                 } else {
                     Some(' ')
@@ -289,22 +289,22 @@ impl BoardBackground {
                 PatternType::Dots => {
                     let grid_x = (x * 20.0) as u16;
                     let grid_y = (y * 20.0) as u16;
-                    grid_x % 4 == 0 && grid_y % 4 == 0
+                    grid_x.is_multiple_of(4) && grid_y.is_multiple_of(4)
                 }
                 PatternType::Grid => {
                     let grid_x = (x * 20.0) as u16;
                     let grid_y = (y * 20.0) as u16;
-                    grid_x % 5 == 0 || grid_y % 5 == 0
+                    grid_x.is_multiple_of(5) || grid_y.is_multiple_of(5)
                 }
                 PatternType::Diagonal => {
                     let grid_x = (x * 20.0) as u16;
                     let grid_y = (y * 20.0) as u16;
-                    (grid_x + grid_y) % 4 == 0
+                    (grid_x + grid_y).is_multiple_of(4)
                 }
                 PatternType::Checkerboard => {
                     let grid_x = (x * 10.0) as u16;
                     let grid_y = (y * 10.0) as u16;
-                    (grid_x + grid_y) % 2 == 0
+                    (grid_x + grid_y).is_multiple_of(2)
                 }
                 PatternType::Waves => {
                     ((x * 10.0).sin() + (y * 10.0).sin()) > 0.0
@@ -312,7 +312,7 @@ impl BoardBackground {
                 PatternType::Hexagons => {
                     let grid_x = (x * 15.0) as u16;
                     let grid_y = (y * 15.0) as u16;
-                    (grid_x % 3 == 0 && grid_y % 2 == 0) || (grid_x % 3 == 1 && grid_y % 2 == 1)
+                    (grid_x.is_multiple_of(3) && grid_y.is_multiple_of(2)) || (grid_x % 3 == 1 && grid_y % 2 == 1)
                 }
             }
         } else {

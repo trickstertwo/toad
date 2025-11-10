@@ -259,7 +259,7 @@ impl BoardManager {
 
         self.board_columns
             .entry(board_id.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(id.clone());
 
         if let Some(board) = self.boards.get_mut(&board_id) {
@@ -307,11 +307,10 @@ impl BoardManager {
         }
 
         // Remove card from old column if it exists
-        if let Some(old_position) = self.card_positions.get(&card_id) {
-            if let Some(old_column) = self.columns.get_mut(&old_position.column_id) {
+        if let Some(old_position) = self.card_positions.get(&card_id)
+            && let Some(old_column) = self.columns.get_mut(&old_position.column_id) {
                 old_column.card_ids.retain(|id| id != &card_id);
             }
-        }
 
         // Add card to new column
         if let Some(column) = self.columns.get_mut(&to_column_id) {
@@ -377,7 +376,7 @@ impl BoardManager {
 
         self.board_swimlanes
             .entry(board_id.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(id.clone());
 
         if let Some(board) = self.boards.get_mut(&board_id) {

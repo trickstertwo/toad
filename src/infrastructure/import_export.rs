@@ -306,7 +306,7 @@ impl Importer {
         let mut board = BoardData::new("imported", "Imported from Asana");
         let mut tasks_imported = 0;
         let mut errors = Vec::new();
-        let mut warnings = Vec::new();
+        let warnings = Vec::new();
 
         // Simple CSV parsing (in real implementation, use csv crate)
         for (idx, line) in data.lines().skip(1).enumerate() {

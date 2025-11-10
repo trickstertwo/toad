@@ -15,7 +15,7 @@
 //!     .effect(BorderEffect::Glow);
 //! ```
 
-use crate::ui::gradient::{Gradient, GradientDirection};
+use crate::ui::gradient::Gradient;
 use crate::infrastructure::{FallbackMode, TerminalCapabilities};
 use ratatui::style::Color;
 use ratatui::widgets::BorderType;

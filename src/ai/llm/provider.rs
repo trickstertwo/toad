@@ -2,7 +2,7 @@
 ///
 /// Supports Anthropic, OpenAI, Ollama (local), and GitHub Models
 use super::{AnthropicClient, GitHubClient, LLMClient, OllamaClient};
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::env;
 

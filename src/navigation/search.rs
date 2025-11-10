@@ -102,7 +102,7 @@ impl SearchState {
 
                 // Calculate the actual byte length of the matched text in the original line
                 // This is needed because case conversion can change byte lengths for some Unicode
-                let matched_text = &search_line[absolute_pos..absolute_pos + query.len()];
+                let _matched_text = &search_line[absolute_pos..absolute_pos + query.len()];
                 let original_match_len = if self.case_sensitive {
                     query.len()
                 } else {

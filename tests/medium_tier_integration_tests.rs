@@ -4,7 +4,7 @@
 //! in realistic multi-component scenarios.
 
 use toad::workspace::{SessionState, TabManager};
-use toad::ui::widgets::{ToastManager, ToastLevel};
+use toad::ui::widgets::ToastManager;
 use toad::infrastructure::history::History;
 use toad::navigation::search::SearchState;
 use std::path::PathBuf;

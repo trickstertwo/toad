@@ -102,7 +102,7 @@ fn test_chat_panel_clear() {
 fn test_chat_message_creation() {
     let msg = ChatMessage::new(MessageRole::User, "Hello");
 
-    assert!(msg.formatted_time().len() > 0);
+    assert!(!msg.formatted_time().is_empty());
 }
 
 #[test]
@@ -331,8 +331,8 @@ fn test_model_info_indicators() {
     let cost_indicator = model.cost_indicator();
     let speed_indicator = model.speed_indicator();
 
-    assert!(cost_indicator.len() > 0);
-    assert!(speed_indicator.len() > 0);
+    assert!(!cost_indicator.is_empty());
+    assert!(!speed_indicator.is_empty());
 }
 
 // ==================== FileOps Tests ====================
