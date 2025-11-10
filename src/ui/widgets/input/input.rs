@@ -13,13 +13,13 @@
 //! - Sharing state between widgets
 //! - Serializing/deserializing input state
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::text::Text, theme::ToadTheme};
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Modifier, Style},
-    text::{Line, Span},
+    text::Line,
     widgets::Paragraph,
+    Frame,
 };
 
 /// Pure input state (Model in Elm Architecture)
@@ -600,16 +600,15 @@ impl InputField {
         let cursor_position = self.state.cursor_position();
 
         let display_text = if value.is_empty() {
-            // Show placeholder
-            Line::from(vec![
-                Span::styled("> ", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled(
-                    &self.placeholder,
-                    Style::default()
-                        .fg(ToadTheme::DARK_GRAY)
-                        .add_modifier(Modifier::ITALIC),
-                ),
-            ])
+            // Show placeholder - use Text atoms
+            let prompt_text = Text::new("> ").style(Style::default().fg(ToadTheme::TOAD_GREEN));
+            let placeholder_text = Text::new(&self.placeholder).style(
+                Style::default()
+                    .fg(ToadTheme::DARK_GRAY)
+                    .add_modifier(Modifier::ITALIC),
+            );
+
+            Line::from(vec![prompt_text.to_span(), placeholder_text.to_span()])
         } else {
             // Show actual input
             let before_cursor = &value[..cursor_position];
@@ -627,31 +626,30 @@ impl InputField {
                 &after_cursor[1..]
             };
 
-            let mut spans = vec![
-                Span::styled("> ", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled(before_cursor, Style::default().fg(ToadTheme::FOREGROUND)),
-            ];
+            // Use Text atoms for all components
+            let prompt_text = Text::new("> ").style(Style::default().fg(ToadTheme::TOAD_GREEN));
+            let before_text =
+                Text::new(before_cursor).style(Style::default().fg(ToadTheme::FOREGROUND));
+
+            let mut spans = vec![prompt_text.to_span(), before_text.to_span()];
 
             if self.is_focused && self.cursor_visible {
                 // Show cursor with green background (blinking when visible)
-                spans.push(Span::styled(
-                    cursor_char,
+                let cursor_text = Text::new(cursor_char).style(
                     Style::default()
                         .fg(ToadTheme::BLACK)
                         .bg(ToadTheme::TOAD_GREEN),
-                ));
+                );
+                spans.push(cursor_text.to_span());
             } else {
                 // No cursor or cursor hidden (during blink)
-                spans.push(Span::styled(
-                    cursor_char,
-                    Style::default().fg(ToadTheme::FOREGROUND),
-                ));
+                let cursor_text =
+                    Text::new(cursor_char).style(Style::default().fg(ToadTheme::FOREGROUND));
+                spans.push(cursor_text.to_span());
             }
 
-            spans.push(Span::styled(
-                rest,
-                Style::default().fg(ToadTheme::FOREGROUND),
-            ));
+            let rest_text = Text::new(rest).style(Style::default().fg(ToadTheme::FOREGROUND));
+            spans.push(rest_text.to_span());
 
             Line::from(spans)
         };

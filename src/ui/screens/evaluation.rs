@@ -215,7 +215,7 @@ impl EvaluationScreen {
     /// screen.render(area, &mut buf);
     /// ```
     pub fn render(&self, area: Rect, buf: &mut Buffer) {
-        self.panel.render(area, buf);
+        (&self.panel).render(area, buf);
     }
 }
 
@@ -227,13 +227,13 @@ impl Default for EvaluationScreen {
 
 impl Widget for EvaluationScreen {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        self.render(area, buf);
+        (&self).render(area, buf);
     }
 }
 
 impl Widget for &EvaluationScreen {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        self.panel.render(area, buf);
+        (&self.panel).render(area, buf);
     }
 }
 

@@ -221,7 +221,7 @@ impl Default for MainScreen {
 
 impl Widget for MainScreen {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        self.render(area, buf);
+        (&self).render(area, buf);
     }
 }
 

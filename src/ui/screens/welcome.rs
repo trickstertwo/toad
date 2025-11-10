@@ -208,7 +208,7 @@ impl Default for WelcomeScreen {
 
 impl Widget for WelcomeScreen {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        self.render(area, buf);
+        (&self).render(area, buf);
     }
 }
 

@@ -372,7 +372,7 @@ impl Default for EvalPanel {
 
 impl Widget for EvalPanel {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        self.render(area, buf);
+        (&self).render(area, buf);
     }
 }
 
