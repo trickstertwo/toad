@@ -33,12 +33,12 @@ Expand beyond coding to email automation, web generation, business automation, p
 
 ## 🚀 Phase Roadmap
 
-| Phase | Focus | Duration | TUI Features | Status |
-|-------|-------|----------|--------------|--------|
-| **Phase 0** | Foundation (Fix Architecture) | 2-3 weeks | N/A (refactor) | 🔴 REQUIRED |
-| **Phase 1** | AI Commanding Center | 8-10 weeks | BASIC + AI PLATINUM | ⏸️ BLOCKED |
-| **Phase 2** | Developer Productivity | 6-8 weeks | MEDIUM + Dev ADVANCED/PLATINUM | 📅 PLANNED |
-| **Phase 3** | Automation Platform | 12+ weeks | PM PLATINUM (Kanban, etc.) | 🔮 FUTURE |
+| Phase       | Focus                         | Duration   | TUI Features                   | Status      |
+|-------------|-------------------------------|------------|--------------------------------|-------------|
+| **Phase 0** | Foundation (Fix Architecture) | 2-3 weeks  | N/A (refactor)                 | 🔴 REQUIRED |
+| **Phase 1** | AI Commanding Center          | 8-10 weeks | BASIC + AI PLATINUM            | ⏸️ BLOCKED  |
+| **Phase 2** | Developer Productivity        | 6-8 weeks  | MEDIUM + Dev ADVANCED/PLATINUM | 📅 PLANNED  |
+| **Phase 3** | Automation Platform           | 12+ weeks  | PM PLATINUM (Kanban, etc.)     | 🔮 FUTURE   |
 
 ---
 
