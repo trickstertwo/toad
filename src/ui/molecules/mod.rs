@@ -39,6 +39,7 @@
 //! ```
 
 pub mod agent_step_item;
+pub mod api_call_metrics;
 pub mod context_window;
 pub mod cost_tracker;
 pub mod metric_card;
@@ -49,6 +50,7 @@ pub mod token_counter;
 pub mod tool_execution_item;
 
 pub use agent_step_item::{AgentStepItem, StepStatus};
+pub use api_call_metrics::{APICallMetrics, ThrottleStatus};
 pub use context_window::{ContextWindow, UsageState};
 pub use cost_tracker::{BudgetStatus, CostTracker};
 pub use metric_card::MetricCard;
