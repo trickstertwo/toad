@@ -293,6 +293,174 @@ impl Default for InputState {
     }
 }
 
+#[cfg(test)]
+mod input_state_tests {
+    use super::*;
+
+    // Test InputState in isolation to prove it's independently usable without UI layer
+
+    #[test]
+    fn test_state_new() {
+        let state = InputState::new();
+        assert_eq!(state.value(), "");
+        assert_eq!(state.cursor_position(), 0);
+    }
+
+    #[test]
+    fn test_state_with_value() {
+        let state = InputState::with_value("hello".to_string());
+        assert_eq!(state.value(), "hello");
+        assert_eq!(state.cursor_position(), 5);
+    }
+
+    #[test]
+    fn test_state_insert_and_delete() {
+        let mut state = InputState::new();
+        state.insert_char('a');
+        state.insert_char('b');
+        state.insert_char('c');
+        assert_eq!(state.value(), "abc");
+        assert_eq!(state.cursor_position(), 3);
+
+        state.delete_char();
+        assert_eq!(state.value(), "ab");
+        assert_eq!(state.cursor_position(), 2);
+    }
+
+    #[test]
+    fn test_state_cursor_movement() {
+        let mut state = InputState::with_value("test".to_string());
+        assert_eq!(state.cursor_position(), 4);
+
+        state.move_cursor_left();
+        assert_eq!(state.cursor_position(), 3);
+
+        state.move_cursor_start();
+        assert_eq!(state.cursor_position(), 0);
+
+        state.move_cursor_right();
+        assert_eq!(state.cursor_position(), 1);
+
+        state.move_cursor_end();
+        assert_eq!(state.cursor_position(), 4);
+    }
+
+    #[test]
+    fn test_state_unicode_handling() {
+        let mut state = InputState::new();
+        state.insert_char('🐸');
+        state.insert_char('日');
+        assert_eq!(state.value(), "🐸日");
+        // Emoji is 4 bytes, Japanese char is 3 bytes
+        assert_eq!(state.cursor_position(), 7);
+
+        state.delete_char();
+        assert_eq!(state.value(), "🐸");
+        assert_eq!(state.cursor_position(), 4);
+    }
+
+    #[test]
+    fn test_state_clear() {
+        let mut state = InputState::with_value("data".to_string());
+        state.clear();
+        assert_eq!(state.value(), "");
+        assert_eq!(state.cursor_position(), 0);
+    }
+
+    #[test]
+    fn test_state_set_value() {
+        let mut state = InputState::new();
+        state.set_value("first".to_string());
+        assert_eq!(state.value(), "first");
+        assert_eq!(state.cursor_position(), 5);
+
+        state.set_value("second".to_string());
+        assert_eq!(state.value(), "second");
+        assert_eq!(state.cursor_position(), 6);
+    }
+
+    #[test]
+    fn test_state_clone() {
+        let state1 = InputState::with_value("clone".to_string());
+        let state2 = state1.clone();
+        assert_eq!(state1.value(), state2.value());
+        assert_eq!(state1.cursor_position(), state2.cursor_position());
+    }
+
+    #[test]
+    fn test_state_equality() {
+        let state1 = InputState::with_value("test".to_string());
+        let state2 = InputState::with_value("test".to_string());
+        let state3 = InputState::with_value("other".to_string());
+
+        assert_eq!(state1, state2);
+        assert_ne!(state1, state3);
+    }
+
+    #[test]
+    fn test_state_default() {
+        let state = InputState::default();
+        assert_eq!(state.value(), "");
+        assert_eq!(state.cursor_position(), 0);
+    }
+
+    #[test]
+    fn test_state_insert_at_middle() {
+        let mut state = InputState::with_value("ac".to_string());
+        state.cursor_position = 1; // After 'a'
+        state.insert_char('b');
+        assert_eq!(state.value(), "abc");
+        assert_eq!(state.cursor_position(), 2);
+    }
+
+    #[test]
+    fn test_state_boundary_conditions() {
+        let mut state = InputState::new();
+
+        // Delete on empty
+        state.delete_char();
+        assert_eq!(state.value(), "");
+
+        // Move left at start
+        state.move_cursor_left();
+        assert_eq!(state.cursor_position(), 0);
+
+        state.set_value("x".to_string());
+
+        // Move right at end
+        state.move_cursor_right();
+        assert_eq!(state.cursor_position(), 1);
+    }
+
+    #[test]
+    fn test_state_independence_from_ui() {
+        // This test proves InputState has no UI dependencies
+        // We can create, mutate, and test it without any Frame, Rect, or Style
+        let mut state = InputState::new();
+        state.insert_char('i');
+        state.insert_char('n');
+        state.insert_char('d');
+        state.insert_char('e');
+        state.insert_char('p');
+        state.insert_char('e');
+        state.insert_char('n');
+        state.insert_char('d');
+        state.insert_char('e');
+        state.insert_char('n');
+        state.insert_char('t');
+
+        assert_eq!(state.value(), "independent");
+        assert_eq!(state.cursor_position(), 11);
+
+        // All operations work without any UI context
+        state.move_cursor_start();
+        state.move_cursor_right();
+        state.move_cursor_right();
+        state.delete_char();
+        assert_eq!(state.value(), "idependent");
+    }
+}
+
 /// A single-line text input widget (View in Elm Architecture)
 ///
 /// This widget wraps [`InputState`] and adds UI-specific concerns:
