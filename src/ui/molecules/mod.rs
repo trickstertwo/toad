@@ -38,6 +38,7 @@
 //! let counter = TokenCounter::new(1500, 0.045);
 //! ```
 
+pub mod agent_step_item;
 pub mod context_window;
 pub mod cost_tracker;
 pub mod metric_card;
@@ -47,6 +48,7 @@ pub mod task_item;
 pub mod token_counter;
 pub mod tool_execution_item;
 
+pub use agent_step_item::{AgentStepItem, StepStatus};
 pub use context_window::{ContextWindow, UsageState};
 pub use cost_tracker::{BudgetStatus, CostTracker};
 pub use metric_card::MetricCard;
