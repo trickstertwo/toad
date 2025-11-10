@@ -39,6 +39,7 @@
 //! ```
 
 pub mod context_window;
+pub mod cost_tracker;
 pub mod metric_card;
 pub mod model_selector;
 pub mod progress_bar;
@@ -46,6 +47,7 @@ pub mod task_item;
 pub mod token_counter;
 
 pub use context_window::{ContextWindow, UsageState};
+pub use cost_tracker::{BudgetStatus, CostTracker};
 pub use metric_card::MetricCard;
 pub use model_selector::ModelSelector;
 pub use progress_bar::ProgressBar;
