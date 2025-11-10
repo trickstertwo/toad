@@ -35,6 +35,9 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         AppScreen::Evaluation => {
             render_evaluation(app, frame, area);
         }
+        AppScreen::PSXFrogger => {
+            render_psx_frogger(app, frame, area);
+        }
     }
 }
 
@@ -401,4 +404,30 @@ fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
 
     // Render toasts on top
     app.toasts_mut().render(frame, area);
+}
+
+/// Render the PSX Frogger game screen
+fn render_psx_frogger(app: &mut App, frame: &mut Frame, area: Rect) {
+    // Simple full-screen game layout
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Min(0),    // Game area
+            Constraint::Length(1), // Status bar
+        ])
+        .split(area);
+
+    // Render the game widget
+    frame.render_widget(app.psx_frogger(), chunks[0]);
+
+    // Render status bar
+    let status_line = Line::from(vec![
+        Span::styled(" ", Style::default()),
+        Span::styled(
+            app.status_message(),
+            Style::default().fg(ToadTheme::FOREGROUND),
+        ),
+    ]);
+    let status_paragraph = Paragraph::new(status_line);
+    frame.render_widget(status_paragraph, chunks[1]);
 }

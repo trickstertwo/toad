@@ -54,6 +54,12 @@ impl App {
                 "clear" => {
                     self.status_message = "Screen cleared".to_string();
                 }
+                "toad" => {
+                    use crate::core::app_state::AppScreen;
+                    self.screen = AppScreen::PSXFrogger;
+                    self.psx_frogger.reset();
+                    self.status_message = "🐸 PSX FROGGER - Let's hop! 🐸".to_string();
+                }
                 _ => {
                     self.status_message = format!("Unknown command: /{}", command);
                 }
