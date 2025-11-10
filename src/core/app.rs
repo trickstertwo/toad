@@ -96,6 +96,9 @@ pub struct App {
 
     /// Whether AI processing is in progress
     pub(crate) ai_processing: bool,
+
+    /// Tick counter for cursor blinking (toggles every 2 ticks = 500ms)
+    tick_count: u32,
 }
 
 impl std::fmt::Debug for App {
@@ -128,6 +131,7 @@ impl std::fmt::Debug for App {
             .field("llm_client", &"<LLMClient>") // Skip Debug for trait object
             .field("conversation_view", &"<ConversationView>") // Skip for large widget
             .field("ai_processing", &self.ai_processing)
+            .field("tick_count", &self.tick_count)
             .finish()
     }
 }
@@ -198,6 +202,7 @@ impl Default for App {
             llm_client,
             conversation_view: ConversationView::new(),
             ai_processing: false,
+            tick_count: 0,
         }
     }
 }
@@ -227,6 +232,12 @@ impl App {
                 Ok(())
             }
             Event::Tick => {
+                // Handle cursor blinking (every 2 ticks = 500ms)
+                self.tick_count = self.tick_count.wrapping_add(1);
+                if self.tick_count % 2 == 0 {
+                    self.input_field.toggle_cursor();
+                }
+
                 // Toasts are automatically cleaned up during render
                 Ok(())
             }

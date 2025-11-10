@@ -489,6 +489,8 @@ pub struct InputField {
     placeholder: String,
     /// Whether the input is focused
     is_focused: bool,
+    /// Cursor visibility (for blinking animation)
+    cursor_visible: bool,
 }
 
 impl InputField {
@@ -498,6 +500,7 @@ impl InputField {
             state: InputState::new(),
             placeholder: "Enter @ to mention files or / for commands".to_string(),
             is_focused: false,
+            cursor_visible: true,
         }
     }
 
@@ -562,6 +565,35 @@ impl InputField {
         self.state.clear();
     }
 
+    /// Toggle cursor visibility (for blinking animation)
+    ///
+    /// Call this on tick events to create blinking effect.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::InputField;
+    ///
+    /// let mut input = InputField::new();
+    /// assert!(input.is_cursor_visible());
+    ///
+    /// input.toggle_cursor();
+    /// assert!(!input.is_cursor_visible());
+    /// ```
+    pub fn toggle_cursor(&mut self) {
+        self.cursor_visible = !self.cursor_visible;
+    }
+
+    /// Get cursor visibility state
+    pub fn is_cursor_visible(&self) -> bool {
+        self.cursor_visible
+    }
+
+    /// Set cursor visibility
+    pub fn set_cursor_visible(&mut self, visible: bool) {
+        self.cursor_visible = visible;
+    }
+
     /// Render the input field
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let value = self.state.value();
@@ -600,8 +632,8 @@ impl InputField {
                 Span::styled(before_cursor, Style::default().fg(ToadTheme::FOREGROUND)),
             ];
 
-            if self.is_focused {
-                // Show cursor
+            if self.is_focused && self.cursor_visible {
+                // Show cursor with green background (blinking when visible)
                 spans.push(Span::styled(
                     cursor_char,
                     Style::default()
@@ -609,6 +641,7 @@ impl InputField {
                         .bg(ToadTheme::TOAD_GREEN),
                 ));
             } else {
+                // No cursor or cursor hidden (during blink)
                 spans.push(Span::styled(
                     cursor_char,
                     Style::default().fg(ToadTheme::FOREGROUND),
@@ -1425,5 +1458,82 @@ mod tests {
 
         // Verify state is consistent
         assert!(input.state.cursor_position() <= input.value().len());
+    }
+
+    // ===== Cursor Blinking Tests =====
+
+    #[test]
+    fn test_cursor_visible_default() {
+        let input = InputField::new();
+        assert!(input.is_cursor_visible());
+    }
+
+    #[test]
+    fn test_toggle_cursor() {
+        let mut input = InputField::new();
+
+        assert!(input.is_cursor_visible());
+
+        input.toggle_cursor();
+        assert!(!input.is_cursor_visible());
+
+        input.toggle_cursor();
+        assert!(input.is_cursor_visible());
+    }
+
+    #[test]
+    fn test_set_cursor_visible() {
+        let mut input = InputField::new();
+
+        input.set_cursor_visible(false);
+        assert!(!input.is_cursor_visible());
+
+        input.set_cursor_visible(true);
+        assert!(input.is_cursor_visible());
+    }
+
+    #[test]
+    fn test_cursor_blink_cycle() {
+        let mut input = InputField::new();
+
+        // Start: visible (true)
+        assert!(input.is_cursor_visible());
+
+        // Simulate 10 toggles
+        for _ in 0..10 {
+            let before = input.is_cursor_visible();
+            input.toggle_cursor();
+            assert_ne!(input.is_cursor_visible(), before);
+        }
+
+        // After 10 toggles: true → false → true → false → ... → true
+        // Odd toggles go to false, even toggles go to true
+        // Toggle 10 (even) ends at true
+        assert!(input.is_cursor_visible());
+    }
+
+    #[test]
+    fn test_cursor_visibility_with_focus() {
+        let mut input = InputField::new();
+        input.set_focused(true);
+        input.set_value("test".to_string());
+
+        // Cursor should be visible by default
+        assert!(input.is_cursor_visible());
+
+        // Hide cursor
+        input.set_cursor_visible(false);
+        assert!(!input.is_cursor_visible());
+
+        // Changing focus doesn't affect cursor visibility flag
+        input.set_focused(false);
+        assert!(!input.is_cursor_visible());
+
+        input.set_focused(true);
+        assert!(!input.is_cursor_visible());
+
+        // Show cursor again
+        input.set_cursor_visible(true);
+        assert!(input.is_cursor_visible());
     }
 }
