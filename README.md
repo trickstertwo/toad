@@ -38,8 +38,6 @@ cargo test
 
 ## Documentation
 
-- **[M0_README.md](M0_README.md)** - Milestone 0 implementation details
-- **[M0_VALIDATION.md](M0_VALIDATION.md)** - Milestone 0 validation & completeness
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Complete system architecture
 - **[ITERATIVE_IMPLEMENTATION_PLAN.md](ITERATIVE_IMPLEMENTATION_PLAN.md)** - 5-milestone roadmap
 
