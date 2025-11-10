@@ -14,12 +14,13 @@
 //! panel.set_branch("main");
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, StatefulWidget, Widget},
+    text::Line,
+    widgets::{Block, List, ListItem, ListState, StatefulWidget, Widget},
 };
 use std::path::PathBuf;
 
@@ -270,39 +271,42 @@ impl GitStatusPanel {
         (modified, staged, untracked)
     }
 
-    /// Render header lines
+    /// Render header lines using Text atoms
     fn render_header(&self) -> Vec<Line<'static>> {
         let mut lines = Vec::new();
 
         // Branch info
         if let Some(ref branch) = self.branch {
             let mut spans = vec![
-                Span::styled("⎇ ", Style::default().fg(Color::Cyan)),
-                Span::styled(
-                    branch.clone(),
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
+                Text::new("⎇ ").style(Style::default().fg(Color::Cyan)).to_span(),
+                Text::new(branch)
+                    .style(
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    )
+                    .to_span(),
             ];
 
             // Ahead/behind info
             if self.ahead > 0 || self.behind > 0 {
-                spans.push(Span::raw(" "));
+                spans.push(Text::new(" ").to_span());
                 if self.ahead > 0 {
-                    spans.push(Span::styled(
-                        format!("↑{}", self.ahead),
-                        Style::default().fg(Color::Green),
-                    ));
+                    spans.push(
+                        Text::new(format!("↑{}", self.ahead))
+                            .style(Style::default().fg(Color::Green))
+                            .to_span(),
+                    );
                 }
                 if self.behind > 0 {
                     if self.ahead > 0 {
-                        spans.push(Span::raw(" "));
+                        spans.push(Text::new(" ").to_span());
                     }
-                    spans.push(Span::styled(
-                        format!("↓{}", self.behind),
-                        Style::default().fg(Color::Red),
-                    ));
+                    spans.push(
+                        Text::new(format!("↓{}", self.behind))
+                            .style(Style::default().fg(Color::Red))
+                            .to_span(),
+                    );
                 }
             }
 
@@ -325,10 +329,9 @@ impl GitStatusPanel {
             }
 
             if !summary_parts.is_empty() {
-                lines.push(Line::from(Span::styled(
-                    summary_parts.join(", "),
-                    Style::default().fg(Color::DarkGray),
-                )));
+                let summary_text = Text::new(summary_parts.join(", "))
+                    .style(Style::default().fg(Color::DarkGray));
+                lines.push(Line::from(summary_text.to_span()));
             }
         }
 
@@ -339,19 +342,17 @@ impl GitStatusPanel {
         lines
     }
 
-    /// Render file list items
+    /// Render file list items using Text atoms
     fn render_list_items(&self) -> Vec<ListItem<'static>> {
         let mut items = Vec::new();
 
         for file in &self.files {
-            let status_span = Span::styled(
-                format!("{} ", file.status.char()),
-                Style::default().fg(file.status.color()),
-            );
+            // Use Text atoms for each component
+            let status_text = Text::new(format!("{} ", file.status.char()))
+                .style(Style::default().fg(file.status.color()));
 
             let selection_char = if file.selected { "☑ " } else { "☐ " };
-            let selection_span = Span::styled(
-                selection_char,
+            let selection_text = Text::new(selection_char).style(
                 Style::default().fg(if file.selected {
                     Color::Green
                 } else {
@@ -360,17 +361,20 @@ impl GitStatusPanel {
             );
 
             let path_str = file.path.to_string_lossy().to_string();
-            let path_span = Span::raw(path_str);
+            let path_text = Text::new(path_str);
 
-            let line = Line::from(vec![selection_span, status_span, path_span]);
+            let line = Line::from(vec![
+                selection_text.to_span(),
+                status_text.to_span(),
+                path_text.to_span(),
+            ]);
             items.push(ListItem::new(line));
         }
 
         if items.is_empty() {
-            items.push(ListItem::new(Line::from(Span::styled(
-                "No changes",
-                Style::default().fg(Color::DarkGray),
-            ))));
+            let empty_text = Text::new("No changes")
+                .style(Style::default().fg(Color::DarkGray));
+            items.push(ListItem::new(Line::from(empty_text.to_span())));
         }
 
         items
@@ -385,11 +389,11 @@ impl StatefulWidget for &GitStatusPanel {
         let header_lines = self.render_header();
         let list_items = self.render_list_items();
 
-        // Create block with title
-        let block = Block::default()
-            .borders(Borders::ALL)
-            .title(self.title.clone())
-            .border_style(Style::default().fg(Color::Cyan));
+        // Create block with title using Block atom
+        let block = AtomBlock::new()
+            .title(&self.title)
+            .border_style(Style::default().fg(Color::Cyan))
+            .to_ratatui();
 
         let inner = block.inner(area);
         block.render(area, buf);
