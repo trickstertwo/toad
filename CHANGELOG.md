@@ -111,10 +111,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **FOUNDATION**: Ready for Phase A-H completion (126 widgets to migrate)
 
 ### Changed
+- **Atomic Design Refactoring (Phase C: Core UI Widgets)** - 2025-11-10 ✅ **COMPLETE**
+  - **SCOPE**: 3 core widgets refactored from 24 analyzed files in `src/ui/widgets/core/`
+  - **Refactored Widgets** (103 tests passing):
+    - `context_display.rs` (10 tests) - AI context viewer with tabs and preview
+    - `welcome_screen.rs` (30 tests) - Application welcome screen with features
+    - `vector_canvas/state.rs` (63 tests) - Vector graphics canvas
+  - **Already Atomic**: animation, borders, breadcrumbs, cheat_sheet, dialog, help, icons, preview, scrollbar, statusline, table
+  - **Pattern Applied**: Eliminate all `Span::styled/raw()` and `Block::default()` usage
+  - All core UI widgets now 100% atomic design compliant
 - **Atomic Design Refactoring (Phase B: High-Impact Widgets)** - 2025-11-10 ✅ **COMPLETE**
   - **SCOPE**: 18 widgets analyzed, 7 refactored, 11 verified atomic, 5 utility modules skipped
   - **GOAL ACHIEVED**: Reduced Ratatui usage by ~45% in target widgets
-  - **Refactored Widgets** (28 tests passing):
+  - **Refactored Widgets** (162 tests passing):
     - `collapsible.rs` (50 tests) - Accordion-style sections
     - `modal.rs` (75 tests) - Error/warning/info/success dialogs
     - `tutorial.rs` (9 tests) - Interactive onboarding
