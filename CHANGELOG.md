@@ -11,13 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Agent coordination: Declare work BEFORE starting to prevent conflicts -->
 <!-- Format: - [Module/Feature] Brief description (@claude-name or @username) -->
 <!-- Remove from this section when complete and move to appropriate category below -->
-- [Phase A: Atomic Design Completion] Critical duplicates resolved (@claude) - 2025-11-10 ✅ **COMPLETE**
-  - ✅ Removed duplicate AcceptRejectPanel widget (organism is canonical)
-  - ✅ Deprecated old ProgressBar widget (molecule preferred for new code)
-  - ✅ Created ATOMIC_DESIGN_MIGRATION.md with migration guide
-  - ✅ Added deprecation warnings with clear migration paths
-  - **IMPACT**: Zero duplicate implementations, clear upgrade path for users
-  - **NEXT**: Phase B - Migrate high-impact widgets (20 widgets)
+- [Phase B: Atomic Design Migration] Migrate high-impact widgets (18 widgets) (@claude) - 2025-11-10 🚧 **IN PROGRESS**
+  - **SCOPE**: 18 widgets across 6 phases
+  - **GOAL**: Reduce Ratatui usage by 45% (270→120 Span calls, 66→20 Block calls)
+  - **STATUS**: Phase 3 - Notification & Progress (2/5 complete)
+  - **PROGRESS**: 2 widgets refactored (collapsible, modal) - 125 tests passing
+  - **VERIFIED**: 6 widgets already atomic (help, breadcrumbs, panel, dialog, input, fps)
+  - **SKIPPED**: 5 utility modules (borders, icons, animation - no rendering code)
+  - **DEV DOCS**: .toad/active/phase-b-atomic/ (plan.md, context.md, tasks.md, template.md)
+  - **PREVIOUS**: Phase A - Critical duplicates resolved ✅ (2025-11-10)
 
 <!-- COMPLETED 2025-11-10: Phase 0 Foundation - Architecture cleanup and SoC patterns -->
 <!-- COMPLETED 2025-11-08: Agent system restructured -->
