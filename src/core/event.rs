@@ -5,7 +5,7 @@
 
 use crate::ai::eval_commands::{CompareArgs, EvalArgs};
 use crate::ai::evaluation::{EvaluationResults, TaskResult};
-use crossterm::event::{self, KeyEvent, MouseEvent};
+use crossterm::event::{self, KeyEvent, KeyEventKind, MouseEvent};
 use std::time::Duration;
 
 /// Events that can occur in the application (Message in Elm Architecture)
@@ -99,7 +99,15 @@ impl EventHandler {
         // Check if there's an event available
         if event::poll(self.tick_rate)? {
             match event::read()? {
-                event::Event::Key(key) => Ok(Event::Key(key)),
+                event::Event::Key(key) => {
+                    // Only process key press events, ignore release and repeat
+                    // This prevents double input when a key is pressed and released
+                    if key.kind == KeyEventKind::Press {
+                        Ok(Event::Key(key))
+                    } else {
+                        Ok(Event::Tick)
+                    }
+                }
                 event::Event::Mouse(mouse) => Ok(Event::Mouse(mouse)),
                 event::Event::Resize(width, height) => Ok(Event::Resize(width, height)),
                 _ => Ok(Event::Tick),
