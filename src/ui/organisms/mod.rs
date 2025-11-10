@@ -14,6 +14,7 @@
 //! # Organisms
 //!
 //! - [`eval_panel`]: Evaluation progress panel (composes ProgressBar, MetricCard, TaskItem)
+//! - [`accept_reject_panel`]: Code approval panel (composes ProgressBar, MetricCard, TaskItem)
 //!
 //! # Examples
 //!
@@ -38,6 +39,8 @@
 //! panel.render(area, &mut buf);
 //! ```
 
+pub mod accept_reject_panel;
 pub mod eval_panel;
 
+pub use accept_reject_panel::{AcceptRejectPanel, ChangeState, ChangeStatus};
 pub use eval_panel::{EvalPanel, TaskState, TaskStatus};
