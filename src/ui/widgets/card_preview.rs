@@ -14,13 +14,13 @@
 //!     .priority("High");
 //! ```
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::{block::Block as AtomBlock, text::Text as AtomText}, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    text::Line,
+    widgets::{Borders, Paragraph, Wrap},
 };
 
 /// Card priority level
@@ -307,7 +307,7 @@ impl CardPreview {
         // Create border with priority color
         let border_color = self.priority.color();
 
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(border_color))
             .title(format!(" {} {} ", self.priority.icon(), self.title))
@@ -315,7 +315,8 @@ impl CardPreview {
                 Style::default()
                     .fg(border_color)
                     .add_modifier(Modifier::BOLD),
-            );
+            )
+            .to_ratatui();
 
         // Create content lines
         let mut lines = Vec::new();
@@ -323,32 +324,37 @@ impl CardPreview {
         // Add status if present
         if let Some(status) = &self.status {
             lines.push(Line::from(vec![
-                Span::styled(
-                    "Status: ",
-                    Style::default()
-                        .fg(ToadTheme::DARK_GRAY)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(status, Style::default().fg(ToadTheme::TOAD_GREEN)),
+                AtomText::new("Status: ")
+                    .style(
+                        Style::default()
+                            .fg(ToadTheme::DARK_GRAY)
+                            .add_modifier(Modifier::BOLD),
+                    )
+                    .to_span(),
+                AtomText::new(status)
+                    .style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                    .to_span(),
             ]));
             lines.push(Line::from(""));
         }
 
         // Add description if present
         if let Some(description) = &self.description {
-            lines.push(Line::from(vec![Span::styled(
-                "Description:",
-                Style::default()
-                    .fg(ToadTheme::DARK_GRAY)
-                    .add_modifier(Modifier::BOLD),
-            )]));
+            lines.push(Line::from(vec![AtomText::new("Description:")
+                .style(
+                    Style::default()
+                        .fg(ToadTheme::DARK_GRAY)
+                        .add_modifier(Modifier::BOLD),
+                )
+                .to_span()]));
 
             // Split description into lines for scrolling
             for line in description.lines().skip(self.scroll_offset as usize) {
-                lines.push(Line::from(Span::styled(
-                    line,
-                    Style::default().fg(ToadTheme::FOREGROUND),
-                )));
+                lines.push(Line::from(
+                    AtomText::new(line)
+                        .style(Style::default().fg(ToadTheme::FOREGROUND))
+                        .to_span(),
+                ));
             }
             lines.push(Line::from(""));
         }
@@ -357,25 +363,27 @@ impl CardPreview {
         if self.show_metadata {
             // Tags
             if !self.tags.is_empty() {
-                lines.push(Line::from(vec![Span::styled(
-                    "Tags: ",
-                    Style::default()
-                        .fg(ToadTheme::DARK_GRAY)
-                        .add_modifier(Modifier::BOLD),
-                )]));
+                lines.push(Line::from(vec![AtomText::new("Tags: ")
+                    .style(
+                        Style::default()
+                            .fg(ToadTheme::DARK_GRAY)
+                            .add_modifier(Modifier::BOLD),
+                    )
+                    .to_span()]));
 
-                let tag_spans: Vec<Span> = self
+                let tag_spans: Vec<_> = self
                     .tags
                     .iter()
                     .flat_map(|tag| {
                         vec![
-                            Span::styled(
-                                format!(" #{} ", tag),
-                                Style::default()
-                                    .fg(ToadTheme::TOAD_GREEN)
-                                    .bg(ToadTheme::DARK_GRAY),
-                            ),
-                            Span::raw(" "),
+                            AtomText::new(format!(" #{} ", tag))
+                                .style(
+                                    Style::default()
+                                        .fg(ToadTheme::TOAD_GREEN)
+                                        .bg(ToadTheme::DARK_GRAY),
+                                )
+                                .to_span(),
+                            AtomText::new(" ").to_span(),
                         ]
                     })
                     .collect();
@@ -386,26 +394,32 @@ impl CardPreview {
             // Due date
             if let Some(due_date) = &self.due_date {
                 lines.push(Line::from(vec![
-                    Span::styled(
-                        "Due: ",
-                        Style::default()
-                            .fg(ToadTheme::DARK_GRAY)
-                            .add_modifier(Modifier::BOLD),
-                    ),
-                    Span::styled(due_date, Style::default().fg(ratatui::style::Color::Yellow)),
+                    AtomText::new("Due: ")
+                        .style(
+                            Style::default()
+                                .fg(ToadTheme::DARK_GRAY)
+                                .add_modifier(Modifier::BOLD),
+                        )
+                        .to_span(),
+                    AtomText::new(due_date)
+                        .style(Style::default().fg(ratatui::style::Color::Yellow))
+                        .to_span(),
                 ]));
             }
 
             // Assignee
             if let Some(assignee) = &self.assignee {
                 lines.push(Line::from(vec![
-                    Span::styled(
-                        "Assigned to: ",
-                        Style::default()
-                            .fg(ToadTheme::DARK_GRAY)
-                            .add_modifier(Modifier::BOLD),
-                    ),
-                    Span::styled(assignee, Style::default().fg(ToadTheme::FOREGROUND)),
+                    AtomText::new("Assigned to: ")
+                        .style(
+                            Style::default()
+                                .fg(ToadTheme::DARK_GRAY)
+                                .add_modifier(Modifier::BOLD),
+                        )
+                        .to_span(),
+                    AtomText::new(assignee)
+                        .style(Style::default().fg(ToadTheme::FOREGROUND))
+                        .to_span(),
                 ]));
             }
         }
