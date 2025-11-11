@@ -111,6 +111,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **FOUNDATION**: Ready for Phase A-H completion (126 widgets to migrate)
 
 ### Changed
+- **Atomic Design Refactoring (Phase E: Layout & Selection Widgets)** - 2025-11-10 ✅ **COMPLETE**
+  - **SCOPE**: 7 layout and selection widgets refactored from multiple directories
+  - **Refactored Widgets** (439 tests passing, 1 pre-existing failure):
+    - `layout/floating/state.rs` (88 tests) - Floating window with dragging/minimizing
+    - `layout/split/state.rs` (121 tests, 1 pre-existing failure) - Split pane widget
+    - `selection/multiselect/state.rs` (70 tests) - Multi-select for bulk operations
+    - `selection/context_menu.rs` (15 tests) - Right-click/keybind context menu
+    - `layout/window_switcher.rs` (5 tests) - Alt+Tab style window switching
+    - `selection/model_selector/state.rs` (98 tests) - AI model selection widget
+    - `selection/quick_actions_panel.rs` (42 tests) - Quick actions panel
+  - **Pattern Applied**: All `Span::styled/raw()` → `Text::new().style().to_span()`, `Block::default()` → `AtomBlock::new().to_ratatui()`
+  - All layout and selection widgets now 100% atomic design compliant
 - **Atomic Design Refactoring (Phase D: Input Widgets)** - 2025-11-10 ✅ **COMPLETE**
   - **SCOPE**: 5 input widgets refactored from 18 analyzed files in `src/ui/widgets/input/`
   - **Refactored Widgets** (346 tests passing):

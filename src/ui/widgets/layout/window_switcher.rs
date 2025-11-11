@@ -16,13 +16,13 @@
 //! ```
 
 use crate::ui::multi_window::{Window, WindowManager, WindowPriority, WindowState};
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::{block::Block as AtomBlock, text::Text as AtomText}, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
+    text::Line,
+    widgets::{Borders, List, ListItem, ListState, Paragraph, Wrap},
 };
 
 /// Window switcher display mode
@@ -153,7 +153,7 @@ impl WindowSwitcher {
 
     /// Render empty state
     fn render_empty(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::DARK_GRAY))
             .title(" Window Switcher ")
@@ -161,7 +161,8 @@ impl WindowSwitcher {
                 Style::default()
                     .fg(ToadTheme::TOAD_GREEN)
                     .add_modifier(Modifier::BOLD),
-            );
+            )
+            .to_ratatui();
 
         let text = Paragraph::new("No windows open")
             .block(block)
@@ -214,7 +215,7 @@ impl WindowSwitcher {
             })
             .collect();
 
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
             .title(" Windows (Ctrl+Tab) ")
@@ -222,7 +223,8 @@ impl WindowSwitcher {
                 Style::default()
                     .fg(ToadTheme::TOAD_GREEN)
                     .add_modifier(Modifier::BOLD),
-            );
+            )
+            .to_ratatui();
 
         let list = List::new(items)
             .block(block)
@@ -291,30 +293,32 @@ impl WindowSwitcher {
 
                 let lines = vec![
                     Line::from(vec![
-                        Span::styled(
-                            format!("{}. ", idx + 1),
-                            Style::default().fg(ToadTheme::DARK_GRAY),
-                        ),
-                        Span::styled(state_text, Style::default().fg(priority_color)),
-                        Span::raw(" "),
-                        Span::styled(
-                            window.title(),
-                            Style::default()
-                                .fg(priority_color)
-                                .add_modifier(Modifier::BOLD),
-                        ),
-                        Span::styled(unsaved, Style::default().fg(ratatui::style::Color::Yellow)),
+                        AtomText::new(format!("{}. ", idx + 1))
+                            .style(Style::default().fg(ToadTheme::DARK_GRAY))
+                            .to_span(),
+                        AtomText::new(state_text)
+                            .style(Style::default().fg(priority_color))
+                            .to_span(),
+                        AtomText::new(" ").to_span(),
+                        AtomText::new(window.title())
+                            .style(
+                                Style::default()
+                                    .fg(priority_color)
+                                    .add_modifier(Modifier::BOLD),
+                            )
+                            .to_span(),
+                        AtomText::new(unsaved)
+                            .style(Style::default().fg(ratatui::style::Color::Yellow))
+                            .to_span(),
                     ]),
                     Line::from(vec![
-                        Span::styled("   ", Style::default()),
-                        Span::styled(
-                            format!("📁 {} ", workspace),
-                            Style::default().fg(ToadTheme::DARK_GRAY),
-                        ),
-                        Span::styled(
-                            format!("⏱ {}", idle_text),
-                            Style::default().fg(ToadTheme::DARK_GRAY),
-                        ),
+                        AtomText::new("   ").to_span(),
+                        AtomText::new(format!("📁 {} ", workspace))
+                            .style(Style::default().fg(ToadTheme::DARK_GRAY))
+                            .to_span(),
+                        AtomText::new(format!("⏱ {}", idle_text))
+                            .style(Style::default().fg(ToadTheme::DARK_GRAY))
+                            .to_span(),
                     ]),
                 ];
 
@@ -322,7 +326,7 @@ impl WindowSwitcher {
             })
             .collect();
 
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
             .title(" Windows (Detailed) ")
@@ -330,7 +334,8 @@ impl WindowSwitcher {
                 Style::default()
                     .fg(ToadTheme::TOAD_GREEN)
                     .add_modifier(Modifier::BOLD),
-            );
+            )
+            .to_ratatui();
 
         let list = List::new(items)
             .block(block)
@@ -346,7 +351,7 @@ impl WindowSwitcher {
 
     /// Render preview pane
     fn render_preview(&self, frame: &mut Frame, area: Rect, window: &Window) {
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::DARK_GRAY))
             .title(format!(" {} ", window.title()))
@@ -354,7 +359,8 @@ impl WindowSwitcher {
                 Style::default()
                     .fg(ToadTheme::TOAD_GREEN)
                     .add_modifier(Modifier::BOLD),
-            );
+            )
+            .to_ratatui();
 
         let preview_text = window.preview_text().unwrap_or("No preview available");
 

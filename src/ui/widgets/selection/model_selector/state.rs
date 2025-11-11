@@ -2,12 +2,13 @@
 //!
 //! Displays available AI models with their capabilities, pricing, and performance characteristics.
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState},
+    text::Line,
+    widgets::{Borders, List, ListItem, ListState},
 };
 use serde::{Deserialize, Serialize};
 
@@ -295,59 +296,67 @@ impl ModelSelector {
                 let mut spans = Vec::new();
 
                 // Model name
-                spans.push(Span::styled(
-                    &model.name,
-                    Style::default()
-                        .fg(if model.available {
-                            Color::White
-                        } else {
-                            Color::DarkGray
-                        })
-                        .add_modifier(if idx == self.selected {
-                            Modifier::BOLD
-                        } else {
-                            Modifier::empty()
-                        }),
-                ));
+                spans.push(
+                    AtomText::new(&model.name)
+                        .style(
+                            Style::default()
+                                .fg(if model.available {
+                                    Color::White
+                                } else {
+                                    Color::DarkGray
+                                })
+                                .add_modifier(if idx == self.selected {
+                                    Modifier::BOLD
+                                } else {
+                                    Modifier::empty()
+                                }),
+                        )
+                        .to_span(),
+                );
 
-                spans.push(Span::raw(" "));
+                spans.push(AtomText::new(" ").to_span());
 
                 // Provider
-                spans.push(Span::styled(
-                    format!("({})", model.provider),
-                    Style::default().fg(Color::DarkGray),
-                ));
+                spans.push(
+                    AtomText::new(format!("({})", model.provider))
+                        .style(Style::default().fg(Color::DarkGray))
+                        .to_span(),
+                );
 
                 // Context window
                 if self.show_details {
-                    spans.push(Span::raw(" | "));
-                    spans.push(Span::styled(
-                        format!("{}tok", model.formatted_context()),
-                        Style::default().fg(Color::Cyan),
-                    ));
+                    spans.push(AtomText::new(" | ").to_span());
+                    spans.push(
+                        AtomText::new(format!("{}tok", model.formatted_context()))
+                            .style(Style::default().fg(Color::Cyan))
+                            .to_span(),
+                    );
 
                     // Cost indicator
-                    spans.push(Span::raw(" "));
-                    spans.push(Span::styled(
-                        model.cost_indicator(),
-                        Style::default().fg(Color::Yellow),
-                    ));
+                    spans.push(AtomText::new(" ").to_span());
+                    spans.push(
+                        AtomText::new(model.cost_indicator())
+                            .style(Style::default().fg(Color::Yellow))
+                            .to_span(),
+                    );
 
                     // Speed indicator
-                    spans.push(Span::raw(" "));
-                    spans.push(Span::styled(
-                        model.speed_indicator(),
-                        Style::default().fg(Color::Green),
-                    ));
+                    spans.push(AtomText::new(" ").to_span());
+                    spans.push(
+                        AtomText::new(model.speed_indicator())
+                            .style(Style::default().fg(Color::Green))
+                            .to_span(),
+                    );
                 }
 
                 // Availability indicator
                 if !model.available {
-                    spans.push(Span::raw(" "));
-                    spans.push(Span::styled(
-                        "[unavailable]",
-                        Style::default().fg(Color::Red),
-                    ));
+                    spans.push(AtomText::new(" ").to_span());
+                    spans.push(
+                        AtomText::new("[unavailable]")
+                            .style(Style::default().fg(Color::Red))
+                            .to_span(),
+                    );
                 }
 
                 ListItem::new(Line::from(spans))
@@ -357,14 +366,15 @@ impl ModelSelector {
         // Create list widget
         let list = List::new(items)
             .block(
-                Block::default()
+                AtomBlock::new()
                     .borders(Borders::ALL)
                     .title(if self.show_details {
                         " Model Selector (↹ toggle details) "
                     } else {
                         " Model Selector "
                     })
-                    .style(Style::default().fg(Color::White)),
+                    .style(Style::default().fg(Color::White))
+                    .to_ratatui(),
             )
             .highlight_style(
                 Style::default()
@@ -381,12 +391,13 @@ impl ModelSelector {
         {
             // Show capabilities at the bottom
             let caps_text = format!("Capabilities: {}", model.capabilities.join(", "));
-            let caps_line = Line::from(vec![Span::styled(
-                caps_text,
-                Style::default()
-                    .fg(Color::Cyan)
-                    .add_modifier(Modifier::ITALIC),
-            )]);
+            let caps_line = Line::from(vec![AtomText::new(caps_text)
+                .style(
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::ITALIC),
+                )
+                .to_span()]);
 
             // Render at bottom of area
             if area.height > 2 {
