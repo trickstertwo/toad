@@ -29,7 +29,7 @@
 
 use crate::ui::atoms::{Block, Icon, Text};
 use crate::ui::molecules::MetricCard;
-use crate::ui::nerd_fonts::UiIcon;
+use crate::ui::primitives::nerd_fonts::UiIcon;
 use crate::ui::theme::ToadTheme;
 use ratatui::{
     buffer::Buffer,

@@ -15,7 +15,7 @@
 //! let switcher = WindowSwitcher::new(&manager);
 //! ```
 
-use crate::ui::multi_window::{Window, WindowManager, WindowPriority, WindowState};
+use crate::ui::layout::multi_window::{Window, WindowManager, WindowPriority, WindowState};
 use crate::ui::{atoms::{block::Block as AtomBlock, text::Text as AtomText}, theme::ToadTheme};
 use ratatui::{
     Frame,

@@ -13,7 +13,7 @@
 //! ```
 
 use crate::infrastructure::{FallbackMode, TerminalCapabilities};
-use crate::ui::gradient::Gradient;
+use crate::ui::effects::gradient::Gradient;
 use ratatui::style::Color;
 
 /// Background style type
@@ -360,7 +360,7 @@ pub struct BoardBackgrounds;
 impl BoardBackgrounds {
     /// TOAD brand gradient background
     pub fn toad_brand() -> BoardBackground {
-        use crate::ui::gradient::Gradients;
+        use crate::ui::effects::gradient::Gradients;
         BoardBackground::gradient(Gradients::toad_brand())
     }
 
@@ -376,13 +376,13 @@ impl BoardBackgrounds {
 
     /// Ocean gradient
     pub fn ocean() -> BoardBackground {
-        use crate::ui::gradient::Gradients;
+        use crate::ui::effects::gradient::Gradients;
         BoardBackground::gradient(Gradients::ocean())
     }
 
     /// Sunset gradient
     pub fn sunset() -> BoardBackground {
-        use crate::ui::gradient::Gradients;
+        use crate::ui::effects::gradient::Gradients;
         BoardBackground::gradient(Gradients::sunset())
     }
 
@@ -411,7 +411,7 @@ mod tests {
 
     #[test]
     fn test_gradient_background() {
-        use crate::ui::gradient::{Gradient, GradientDirection};
+        use crate::ui::effects::gradient::{Gradient, GradientDirection};
 
         let gradient = Gradient::linear(Color::Red, Color::Blue, GradientDirection::Horizontal);
         let bg = BoardBackground::gradient(gradient);
@@ -462,7 +462,7 @@ mod tests {
 
     #[test]
     fn test_color_at_gradient() {
-        use crate::ui::gradient::{Gradient, GradientDirection};
+        use crate::ui::effects::gradient::{Gradient, GradientDirection};
 
         let gradient = Gradient::linear(Color::Red, Color::Blue, GradientDirection::Horizontal);
         let bg = BoardBackground::gradient(gradient);
@@ -483,7 +483,7 @@ mod tests {
     #[test]
     fn test_with_fallback() {
         use crate::infrastructure::ColorSupport;
-        use crate::ui::gradient::{Gradient, GradientDirection};
+        use crate::ui::effects::gradient::{Gradient, GradientDirection};
 
         let gradient = Gradient::linear(
             Color::Rgb(255, 0, 0),

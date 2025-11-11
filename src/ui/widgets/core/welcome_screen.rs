@@ -4,7 +4,7 @@
 
 use crate::ui::{
     atoms::{block::Block, text::Text},
-    logo,
+    primitives::logo,
     theme::ToadTheme,
 };
 use ratatui::{

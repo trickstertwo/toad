@@ -142,7 +142,7 @@ impl MetricCard {
     /// let card = MetricCard::success("Tests", "All Passed");
     /// ```
     pub fn success(label: impl Into<String>, value: impl Into<String>) -> Self {
-        use crate::ui::nerd_fonts::UiIcon;
+        use crate::ui::primitives::nerd_fonts::UiIcon;
 
         Self::new(label, value)
             .icon(
@@ -162,7 +162,7 @@ impl MetricCard {
     /// let card = MetricCard::error("Tests", "3 Failed");
     /// ```
     pub fn error(label: impl Into<String>, value: impl Into<String>) -> Self {
-        use crate::ui::nerd_fonts::UiIcon;
+        use crate::ui::primitives::nerd_fonts::UiIcon;
 
         Self::new(label, value)
             .icon(Icon::ui(UiIcon::Error).style(Style::default().fg(ToadTheme::RED)))
@@ -180,7 +180,7 @@ impl MetricCard {
     /// let card = MetricCard::warning("Performance", "Slow");
     /// ```
     pub fn warning(label: impl Into<String>, value: impl Into<String>) -> Self {
-        use crate::ui::nerd_fonts::UiIcon;
+        use crate::ui::primitives::nerd_fonts::UiIcon;
 
         Self::new(label, value)
             .icon(Icon::ui(UiIcon::Warning).style(Style::default().fg(ToadTheme::YELLOW)))
@@ -271,7 +271,7 @@ impl MetricCard {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::nerd_fonts::UiIcon;
+    use crate::ui::primitives::nerd_fonts::UiIcon;
 
     #[test]
     fn test_metric_card_new() {

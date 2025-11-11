@@ -20,7 +20,7 @@
 //! ```
 
 use crate::ui::atoms::Icon;
-use crate::ui::nerd_fonts::UiIcon;
+use crate::ui::primitives::nerd_fonts::UiIcon;
 use crate::ui::theme::ToadTheme;
 use ratatui::{
     style::Style,
