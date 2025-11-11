@@ -1,11 +1,11 @@
 //! Progress widget state and data structures
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::block::Block as AtomBlock, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Gauge},
+    widgets::{Borders, Gauge},
 };
 use std::time::{Duration, Instant};
 
@@ -167,7 +167,7 @@ impl ProgressBar {
 
         let gauge = Gauge::default()
             .block(
-                Block::default()
+                AtomBlock::new()
                     .title(format!(" {} ", self.title))
                     .title_style(
                         Style::default()
@@ -175,7 +175,8 @@ impl ProgressBar {
                             .add_modifier(Modifier::BOLD),
                     )
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(ToadTheme::TOAD_GREEN)),
+                    .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                    .to_ratatui(),
             )
             .gauge_style(
                 Style::default()
@@ -597,7 +598,7 @@ impl MultiStageProgress {
 
         let gauge = Gauge::default()
             .block(
-                Block::default()
+                AtomBlock::new()
                     .title(format!(" {} ", self.title))
                     .title_style(
                         Style::default()
@@ -605,7 +606,8 @@ impl MultiStageProgress {
                             .add_modifier(Modifier::BOLD),
                     )
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(ToadTheme::TOAD_GREEN)),
+                    .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                    .to_ratatui(),
             )
             .gauge_style(
                 Style::default()

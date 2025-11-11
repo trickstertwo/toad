@@ -236,3 +236,253 @@ impl DataTable {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_table_column_new() {
+        let col = TableColumn::new("Name", 20);
+        assert_eq!(col.header, "Name");
+        assert_eq!(col.width, 20);
+        assert_eq!(col.alignment, ColumnAlignment::Left);
+    }
+
+    #[test]
+    fn test_table_column_with_alignment() {
+        let col = TableColumn::new("Age", 10).with_alignment(ColumnAlignment::Right);
+        assert_eq!(col.alignment, ColumnAlignment::Right);
+    }
+
+    #[test]
+    fn test_data_table_new() {
+        let columns = vec![
+            TableColumn::new("Name", 20),
+            TableColumn::new("Age", 10),
+        ];
+        let table = DataTable::new("People", columns.clone());
+        assert_eq!(table.title, "People");
+        assert_eq!(table.columns.len(), 2);
+        assert_eq!(table.rows.len(), 0);
+        assert_eq!(table.selected(), Some(0));
+        assert!(table.show_header);
+    }
+
+    #[test]
+    fn test_add_row() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        table.add_row(vec!["Alice".to_string()]);
+        assert_eq!(table.row_count(), 1);
+
+        table.add_row(vec!["Bob".to_string()]);
+        assert_eq!(table.row_count(), 2);
+    }
+
+    #[test]
+    fn test_set_rows() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        let rows = vec![
+            vec!["Alice".to_string()],
+            vec!["Bob".to_string()],
+            vec!["Charlie".to_string()],
+        ];
+
+        table.set_rows(rows);
+        assert_eq!(table.row_count(), 3);
+        assert_eq!(table.selected(), Some(0));
+    }
+
+    #[test]
+    fn test_selected_row() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        table.add_row(vec!["Alice".to_string()]);
+        table.add_row(vec!["Bob".to_string()]);
+
+        assert_eq!(table.selected_row(), Some(&vec!["Alice".to_string()]));
+
+        table.select_next();
+        assert_eq!(table.selected_row(), Some(&vec!["Bob".to_string()]));
+    }
+
+    #[test]
+    fn test_select_next_wraps_around() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        table.add_row(vec!["Alice".to_string()]);
+        table.add_row(vec!["Bob".to_string()]);
+
+        assert_eq!(table.selected(), Some(0));
+
+        table.select_next();
+        assert_eq!(table.selected(), Some(1));
+
+        table.select_next(); // Should wrap to 0
+        assert_eq!(table.selected(), Some(0));
+    }
+
+    #[test]
+    fn test_select_previous_wraps_around() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        table.add_row(vec!["Alice".to_string()]);
+        table.add_row(vec!["Bob".to_string()]);
+
+        assert_eq!(table.selected(), Some(0));
+
+        table.select_previous(); // Should wrap to last
+        assert_eq!(table.selected(), Some(1));
+
+        table.select_previous();
+        assert_eq!(table.selected(), Some(0));
+    }
+
+    #[test]
+    fn test_select_first() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        table.add_row(vec!["Alice".to_string()]);
+        table.add_row(vec!["Bob".to_string()]);
+        table.add_row(vec!["Charlie".to_string()]);
+
+        table.select_last();
+        assert_eq!(table.selected(), Some(2));
+
+        table.select_first();
+        assert_eq!(table.selected(), Some(0));
+    }
+
+    #[test]
+    fn test_select_last() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        table.add_row(vec!["Alice".to_string()]);
+        table.add_row(vec!["Bob".to_string()]);
+        table.add_row(vec!["Charlie".to_string()]);
+
+        assert_eq!(table.selected(), Some(0));
+
+        table.select_last();
+        assert_eq!(table.selected(), Some(2));
+    }
+
+    #[test]
+    fn test_clear() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        table.add_row(vec!["Alice".to_string()]);
+        table.add_row(vec!["Bob".to_string()]);
+
+        assert_eq!(table.row_count(), 2);
+        assert!(table.selected().is_some());
+
+        table.clear();
+        assert_eq!(table.row_count(), 0);
+        assert_eq!(table.selected(), None);
+    }
+
+    #[test]
+    fn test_select_next_on_empty_table() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        table.select_next(); // Should not panic
+        assert_eq!(table.row_count(), 0);
+    }
+
+    #[test]
+    fn test_select_previous_on_empty_table() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        table.select_previous(); // Should not panic
+        assert_eq!(table.row_count(), 0);
+    }
+
+    #[test]
+    fn test_select_first_on_empty_table() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        table.select_first(); // Should not panic
+        assert_eq!(table.selected(), Some(0)); // Initial state
+    }
+
+    #[test]
+    fn test_select_last_on_empty_table() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        table.select_last(); // Should not panic
+        assert_eq!(table.selected(), Some(0)); // Initial state unchanged
+    }
+
+    #[test]
+    fn test_set_show_header() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        assert!(table.show_header);
+
+        table.set_show_header(false);
+        assert!(!table.show_header);
+
+        table.set_show_header(true);
+        assert!(table.show_header);
+    }
+
+    #[test]
+    fn test_selected_row_on_empty_table() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let table = DataTable::new("Test", columns);
+
+        assert_eq!(table.selected_row(), None);
+    }
+
+    #[test]
+    fn test_row_count() {
+        let columns = vec![TableColumn::new("Name", 20)];
+        let mut table = DataTable::new("Test", columns);
+
+        assert_eq!(table.row_count(), 0);
+
+        table.add_row(vec!["Alice".to_string()]);
+        assert_eq!(table.row_count(), 1);
+
+        table.add_row(vec!["Bob".to_string()]);
+        assert_eq!(table.row_count(), 2);
+
+        table.clear();
+        assert_eq!(table.row_count(), 0);
+    }
+
+    #[test]
+    fn test_multi_column_table() {
+        let columns = vec![
+            TableColumn::new("Name", 20),
+            TableColumn::new("Age", 10),
+            TableColumn::new("City", 15),
+        ];
+        let mut table = DataTable::new("People", columns);
+
+        table.add_row(vec!["Alice".to_string(), "30".to_string(), "NYC".to_string()]);
+        table.add_row(vec!["Bob".to_string(), "25".to_string(), "LA".to_string()]);
+
+        assert_eq!(table.row_count(), 2);
+        assert_eq!(table.selected_row().unwrap().len(), 3);
+        assert_eq!(table.selected_row().unwrap()[0], "Alice");
+        assert_eq!(table.selected_row().unwrap()[1], "30");
+        assert_eq!(table.selected_row().unwrap()[2], "NYC");
+    }
+}
