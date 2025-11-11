@@ -19,12 +19,13 @@
 //!     .with_value_label("Revenue ($K)");
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Widget},
+    text::Line,
+    widgets::{Borders, Widget},
 };
 
 /// Direction for bar rendering
@@ -272,10 +273,11 @@ impl BarChart {
 
         // Title
         if let Some(title) = &self.title {
-            lines.push(Line::from(Span::styled(
-                title.clone(),
-                Style::default().fg(Color::Cyan),
-            )));
+            lines.push(Line::from(
+                AtomText::new(title.clone())
+                    .style(Style::default().fg(Color::Cyan))
+                    .to_span(),
+            ));
         }
 
         if self.bars.is_empty() {
@@ -368,9 +370,11 @@ impl BarChart {
             };
 
             lines.push(Line::from(vec![
-                Span::raw(format!("{:>10} |", bar.label)),
-                Span::styled(bar_str, Style::default().fg(bar.color)),
-                Span::raw(value_str),
+                AtomText::new(format!("{:>10} |", bar.label)).to_span(),
+                AtomText::new(bar_str)
+                    .style(Style::default().fg(bar.color))
+                    .to_span(),
+                AtomText::new(value_str).to_span(),
             ]));
         }
     }
@@ -379,7 +383,7 @@ impl BarChart {
 impl Widget for &BarChart {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let lines = self.render_lines(area.width, area.height);
-        let block = Block::default().borders(Borders::ALL);
+        let block = AtomBlock::new().borders(Borders::ALL).to_ratatui();
         let inner = block.inner(area);
 
         block.render(area, buf);
