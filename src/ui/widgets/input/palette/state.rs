@@ -2,14 +2,14 @@
 //!
 //! Fuzzy-searchable command launcher similar to VSCode/Sublime
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::{block::Block as AtomBlock, text::Text as AtomText}, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
+    text::Line,
     widgets::{
-        Block, Borders, List, ListItem, ListState, Paragraph, Scrollbar, ScrollbarOrientation,
+        Borders, List, ListItem, ListState, Paragraph, Scrollbar, ScrollbarOrientation,
         ScrollbarState,
     },
 };
@@ -251,7 +251,7 @@ impl CommandPalette {
         let palette_area = horizontal[1];
 
         // Main palette block
-        let palette_block = Block::default()
+        let palette_block = AtomBlock::new()
             .title(" Command Palette ")
             .title_style(
                 Style::default()
@@ -260,7 +260,8 @@ impl CommandPalette {
             )
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
-            .style(Style::default().bg(ToadTheme::BLACK));
+            .style(Style::default().bg(ToadTheme::BLACK))
+            .to_ratatui();
 
         let inner = palette_block.inner(palette_area);
         frame.render_widget(palette_block, palette_area);
@@ -286,10 +287,11 @@ impl CommandPalette {
     }
 
     fn render_search_box(&self, frame: &mut Frame, area: Rect) {
-        let search_block = Block::default()
+        let search_block = AtomBlock::new()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
-            .title(" Search ");
+            .title(" Search ")
+            .to_ratatui();
 
         let inner = search_block.inner(area);
         frame.render_widget(search_block, area);
@@ -311,20 +313,24 @@ impl CommandPalette {
         };
 
         let mut spans = vec![
-            Span::styled(before_cursor, Style::default().fg(ToadTheme::FOREGROUND)),
-            Span::styled(
-                cursor_char,
-                Style::default()
-                    .fg(ToadTheme::BLACK)
-                    .bg(ToadTheme::TOAD_GREEN),
-            ),
+            AtomText::new(before_cursor)
+                .style(Style::default().fg(ToadTheme::FOREGROUND))
+                .to_span(),
+            AtomText::new(cursor_char)
+                .style(
+                    Style::default()
+                        .fg(ToadTheme::BLACK)
+                        .bg(ToadTheme::TOAD_GREEN),
+                )
+                .to_span(),
         ];
 
         if !rest.is_empty() {
-            spans.push(Span::styled(
-                rest,
-                Style::default().fg(ToadTheme::FOREGROUND),
-            ));
+            spans.push(
+                AtomText::new(rest)
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
+            );
         }
 
         let search_text = Line::from(spans);
@@ -339,15 +345,18 @@ impl CommandPalette {
             .map(|&idx| {
                 let cmd = &self.commands[idx];
                 let content = vec![
-                    Line::from(vec![Span::styled(
-                        &cmd.label,
-                        Style::default()
-                            .fg(ToadTheme::FOREGROUND)
-                            .add_modifier(Modifier::BOLD),
-                    )]),
+                    Line::from(vec![AtomText::new(&cmd.label)
+                        .style(
+                            Style::default()
+                                .fg(ToadTheme::FOREGROUND)
+                                .add_modifier(Modifier::BOLD),
+                        )
+                        .to_span()]),
                     Line::from(vec![
-                        Span::styled("  ", Style::default()),
-                        Span::styled(&cmd.description, Style::default().fg(ToadTheme::GRAY)),
+                        AtomText::new("  ").style(Style::default()).to_span(),
+                        AtomText::new(&cmd.description)
+                            .style(Style::default().fg(ToadTheme::GRAY))
+                            .to_span(),
                     ]),
                 ];
                 ListItem::new(content)
@@ -390,12 +399,15 @@ impl CommandPalette {
             "↑↓ Navigate · Enter Select · Esc Close · {} results",
             self.filtered.len()
         );
-        let help_line = Line::from(Span::styled(
-            help,
-            Style::default()
-                .fg(ToadTheme::DARK_GRAY)
-                .add_modifier(Modifier::ITALIC),
-        ));
+        let help_line = Line::from(
+            AtomText::new(help)
+                .style(
+                    Style::default()
+                        .fg(ToadTheme::DARK_GRAY)
+                        .add_modifier(Modifier::ITALIC),
+                )
+                .to_span(),
+        );
         let help_paragraph = Paragraph::new(help_line).alignment(Alignment::Center);
         frame.render_widget(help_paragraph, area);
     }
