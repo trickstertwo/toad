@@ -1,63 +1,54 @@
 //! Custom widgets for Toad TUI
 //!
 //! Reusable UI components following Ratatui patterns
+//!
+//! # Module Organization
+//!
+//! - **ai**: AI-powered widgets (diff view, suggestions)
+//! - **charts**: Data visualization charts
+//! - **chat_panel**: Chat interface components
+//! - **conversation**: Conversation view widgets
+//! - **core**: Core UI primitives (dialogs, tables, help, collapsible, undo/redo)
+//! - **files**: File management (tree, preview, cards)
+//! - **git**: Git operations (branches, commits, diffs, conflicts, staging)
+//! - **input**: User input (text areas, vim mode, macros, mode indicators)
+//! - **layout**: Layout management (splits, floating, panels, tabs)
+//! - **notifications**: Notifications and alerts (toasts, modals, tutorials)
+//! - **performance**: Performance monitoring (FPS, profiling, metrics, memory)
+//! - **progress**: Progress indicators
+//! - **selection**: Selection widgets (context menus, pickers, multiselect)
+//! - **session_manager**: Session management
+//! - **workspace**: Workspace management
 
-pub mod ai_diff_view;
-pub mod card_preview;
+pub mod ai;
 pub mod charts;
 pub mod chat_panel;
-pub mod collapsible;
-pub mod conflict_resolver;
-pub mod contextual_help;
 pub mod conversation;
 pub mod core;
-pub mod event_metrics;
-pub mod file_preview_manager;
-pub mod filetree;
-pub mod fps;
+pub mod files;
 pub mod git;
 pub mod input;
 pub mod layout;
-pub mod memory;
-pub mod mode_indicator;
 pub mod notifications;
+pub mod performance;
 pub mod progress;
-pub mod render_profiler;
 pub mod selection;
 pub mod session_manager;
-pub mod suggestions_widget;
-pub mod undo_redo;
-pub mod vim_macros;
 pub mod workspace;
 
-pub use ai_diff_view::{AIDiffLine, AIDiffLineType, AIDiffView, DiffHunk, DiffViewMode};
-pub use card_preview::{CardPreview, CardPriority, PreviewPosition};
+// Re-export all types for backwards compatibility
+pub use ai::*;
 pub use charts::*;
 pub use chat_panel::{ChatMessage, ChatPanel, MessageRole};
-pub use collapsible::{CollapsibleList, CollapsibleSection};
-pub use conflict_resolver::{
-    ConflictRegion, ConflictResolution, ConflictResolver, ConflictViewMode,
-};
-pub use context_menu::{ContextMenu, MenuItem};
-pub use contextual_help::{ContextualHelp, HelpContext, HelpEntry};
 pub use conversation::ConversationView;
 pub use core::*;
-pub use event_metrics::EventMetrics;
-pub use file_preview_manager::{FilePreviewManager, PreviewState};
-pub use filetree::{FileTree, FileTreeNode, FileTreeNodeType};
-pub use floating::{FloatingWindow, FloatingWindowManager, WindowPosition};
-pub use fps::FpsCounter;
+pub use files::*;
 pub use git::*;
 pub use input::*;
 pub use layout::*;
-pub use memory::{MemoryMonitor, MemoryStats};
-pub use mode_indicator::{EditorMode, IndicatorStyle, ModeIndicator};
 pub use notifications::*;
+pub use performance::*;
 pub use progress::*;
-pub use render_profiler::{ComponentStats, RenderProfiler};
 pub use selection::*;
 pub use session_manager::{SessionData, SessionManager};
-pub use suggestions_widget::{RelevanceScore, SmartSuggestions, Suggestion};
-pub use undo_redo::{Action, UndoRedoManager};
-pub use vim_macros::{MacroAction, MacroRecorder, MarkRegistry};
 pub use workspace::{Workspace, WorkspaceManager};
