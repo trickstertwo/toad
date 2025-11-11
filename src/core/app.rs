@@ -376,6 +376,7 @@ impl App {
     }
 
     /// Get conversation history
+    #[allow(dead_code)]
     pub(crate) fn conversation(&self) -> &[Message] {
         &self.conversation
     }
@@ -387,6 +388,7 @@ impl App {
     }
 
     /// Clear conversation history
+    #[allow(dead_code)]
     pub(crate) fn clear_conversation(&mut self) {
         self.conversation.clear();
         self.conversation_view.clear();
@@ -403,6 +405,7 @@ impl App {
     }
 
     /// Check if AI is currently processing
+    #[allow(dead_code)]
     pub(crate) fn is_ai_processing(&self) -> bool {
         self.ai_processing
     }

@@ -500,6 +500,7 @@ impl LLMClient for AnthropicClient {
 #[derive(Debug, Deserialize)]
 struct AnthropicErrorResponse {
     #[serde(rename = "type")]
+    #[allow(dead_code)]
     response_type: String,
     error: AnthropicError,
 }

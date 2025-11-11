@@ -7,6 +7,7 @@ use tree_sitter::{Node, Parser, Query, QueryCursor};
 
 /// TypeScript AST parser (supports both TS and TSX)
 pub struct TypeScriptParser {
+    #[allow(dead_code)]
     parser: Parser,
     function_query: Query,
     arrow_function_query: Query,

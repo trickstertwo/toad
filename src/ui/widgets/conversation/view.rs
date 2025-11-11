@@ -23,7 +23,7 @@
 //! // Then render: view.render(&mut frame, area);
 //! ```
 
-use crate::ai::llm::{Message, Role};
+use crate::ai::llm::Message;
 use crate::ui::{
     atoms::{text::Text as AtomText, Block},
     molecules::MessageBubble,

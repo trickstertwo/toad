@@ -7,6 +7,7 @@ use tree_sitter::{Node, Parser, Query, QueryCursor};
 
 /// Python AST parser
 pub struct PythonParser {
+    #[allow(dead_code)]
     parser: Parser,
     function_query: Query,
     class_query: Query,

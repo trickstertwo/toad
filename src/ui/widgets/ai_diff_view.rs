@@ -170,6 +170,7 @@ pub struct AIDiffView {
     /// AI explanation of changes
     explanation: Option<String>,
     /// Show line numbers
+    #[allow(dead_code)]
     show_line_numbers: bool,
 }
 

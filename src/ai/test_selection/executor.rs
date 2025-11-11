@@ -29,6 +29,7 @@ pub struct TestExecutionResult {
 ///
 /// Selects and runs only relevant tests based on code changes
 pub struct TestExecutor {
+    #[allow(dead_code)]
     selector: TestSelector,
 }
 

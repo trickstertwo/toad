@@ -120,6 +120,7 @@ pub struct FileTree {
     flattened: Vec<usize>, // Indices into the tree for visible items
     list_state: ListState,
     title: String,
+    #[allow(dead_code)]
     fs_service: FilesystemService,
 }
 

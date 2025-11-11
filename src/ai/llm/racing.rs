@@ -159,6 +159,7 @@ pub struct RacingClient {
     models: Vec<Arc<dyn LLMClient>>,
 
     /// Selection strategy (currently only FirstComplete supported)
+    #[allow(dead_code)]
     strategy: SelectionStrategy,
 
     /// Model names for logging/metrics (cached from models)
