@@ -15,6 +15,7 @@
 
 // Domain modules
 pub mod ai;
+pub mod benchmarks; // Phase 1: Multi-benchmark evaluation infrastructure
 pub mod commands;
 pub mod config;
 pub mod core;

@@ -71,6 +71,7 @@ arrow = "57.0.0"
 
 # Testing
 mockall = "0.13.1"
+humantime-serde = "1.1.1"
 
 [dev-dependencies]
 tempfile = "3.8"
