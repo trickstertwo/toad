@@ -111,6 +111,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **FOUNDATION**: Ready for Phase A-H completion (126 widgets to migrate)
 
 ### Changed
+- **Atomic Design Refactoring (Phase F: Specialized Widgets)** - 2025-11-11 ✅ **COMPLETE**
+  - **SCOPE**: 5 specialized widgets (git, progress, notifications) refactored
+  - **Refactored Widgets** (189+ tests passing):
+    - `progress/token_counter.rs` (45 tests) - Token usage tracking with cost calculation
+    - `git/git_diff_viewer/state.rs` (75 tests) - Git diff viewer with syntax highlighting
+    - `notifications/startup_tips.rs` (7 tests) - Startup tips display system
+    - `git/git_graph/state.rs` (62 tests) - Git commit graph visualization
+    - `git/git_branch_manager.rs` (2/5 tests, 3 require git executable) - Interactive branch manager
+  - **Pattern Applied**: All `Span::styled/raw()` → `AtomText::new().style().to_span()`, `Block::default()` → `AtomBlock::new().to_ratatui()`
+  - Total instances migrated: 60 Span + 6 Block across 5 files
+  - All specialized widgets now 100% atomic design compliant
 - **Atomic Design Refactoring (Phase E: Layout & Selection Widgets)** - 2025-11-10 ✅ **COMPLETE**
   - **SCOPE**: 7 layout and selection widgets refactored from multiple directories
   - **Refactored Widgets** (439 tests passing, 1 pre-existing failure):
