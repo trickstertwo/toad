@@ -233,3 +233,154 @@ pub trait BenchmarkExecutor: Send + Sync {
     /// ```
     fn get_metadata(&self) -> &BenchmarkMetadata;
 }
+
+/// Factory function to create a benchmark executor by name
+///
+/// This function provides a convenient way to instantiate benchmark executors
+/// dynamically based on a string identifier. Useful for CLI arguments, config files,
+/// and the orchestrator (Phase 5).
+///
+/// # Supported Benchmarks
+///
+/// - `"swebench-verified"`: SWE-bench Verified (500 tasks)
+/// - `"swebench-lite"`: SWE-bench Lite (300 tasks)
+/// - `"swebench-full"`: SWE-bench Full (2,294 tasks)
+/// - `"livecodebench"`: LiveCodeBench (stub, not yet implemented)
+///
+/// # Parameters
+///
+/// - `name`: Benchmark identifier (case-insensitive)
+///
+/// # Returns
+///
+/// Returns a boxed trait object implementing `BenchmarkExecutor`.
+///
+/// # Errors
+///
+/// Returns error if:
+/// - Benchmark name is not recognized
+/// - Benchmark is not available (future implementations)
+///
+/// # Examples
+///
+/// ```
+/// use toad::benchmarks::get_executor;
+///
+/// // Create SWE-bench Verified executor
+/// let executor = get_executor("swebench-verified").unwrap();
+/// assert_eq!(executor.get_metadata().name, "SWE-bench Verified");
+///
+/// // Create LiveCodeBench executor (stub)
+/// let executor = get_executor("livecodebench").unwrap();
+/// assert_eq!(executor.get_metadata().name, "LiveCodeBench");
+///
+/// // Invalid name returns error
+/// let result = get_executor("unknown-benchmark");
+/// assert!(result.is_err());
+/// ```
+pub fn get_executor(name: &str) -> Result<Box<dyn BenchmarkExecutor>> {
+    use crate::ai::evaluation::DatasetSource;
+
+    match name.to_lowercase().as_str() {
+        "swebench-verified" | "swebench_verified" | "verified" => {
+            Ok(Box::new(swebench::SweBenchExecutor::new(
+                DatasetSource::Verified,
+            )))
+        }
+        "swebench-lite" | "swebench_lite" | "lite" => Ok(Box::new(swebench::SweBenchExecutor::new(
+            DatasetSource::Lite,
+        ))),
+        "swebench-full" | "swebench_full" | "full" => Ok(Box::new(swebench::SweBenchExecutor::new(
+            DatasetSource::Full,
+        ))),
+        "livecodebench" | "live-code-bench" | "lcb" => {
+            Ok(Box::new(livecodebench::LiveCodeBenchExecutor::new()))
+        }
+        _ => anyhow::bail!(
+            "Unknown benchmark: '{}'. \
+             \
+             Supported benchmarks: \
+             - swebench-verified (SWE-bench Verified, 500 tasks) \
+             - swebench-lite (SWE-bench Lite, 300 tasks) \
+             - swebench-full (SWE-bench Full, 2,294 tasks) \
+             - livecodebench (LiveCodeBench, stub)",
+            name
+        ),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_executor_swebench_verified() {
+        let executor = get_executor("swebench-verified").unwrap();
+        let metadata = executor.get_metadata();
+        assert_eq!(metadata.name, "SWE-bench Verified");
+        assert_eq!(metadata.total_tasks, 500);
+    }
+
+    #[test]
+    fn test_get_executor_swebench_lite() {
+        let executor = get_executor("swebench-lite").unwrap();
+        let metadata = executor.get_metadata();
+        assert_eq!(metadata.name, "SWE-bench Lite");
+        assert_eq!(metadata.total_tasks, 300);
+    }
+
+    #[test]
+    fn test_get_executor_swebench_full() {
+        let executor = get_executor("swebench-full").unwrap();
+        let metadata = executor.get_metadata();
+        assert_eq!(metadata.name, "SWE-bench Full");
+        assert_eq!(metadata.total_tasks, 2294);
+    }
+
+    #[test]
+    fn test_get_executor_livecodebench() {
+        let executor = get_executor("livecodebench").unwrap();
+        let metadata = executor.get_metadata();
+        assert_eq!(metadata.name, "LiveCodeBench");
+        assert_eq!(metadata.total_tasks, 400);
+    }
+
+    #[test]
+    fn test_get_executor_case_insensitive() {
+        // Test case insensitivity
+        assert!(get_executor("SWEBENCH-VERIFIED").is_ok());
+        assert!(get_executor("SWEBench-Lite").is_ok());
+        assert!(get_executor("LiveCodeBench").is_ok());
+    }
+
+    #[test]
+    fn test_get_executor_aliases() {
+        // Test alternative names
+        assert!(get_executor("verified").is_ok());
+        assert!(get_executor("lite").is_ok());
+        assert!(get_executor("full").is_ok());
+        assert!(get_executor("lcb").is_ok());
+        assert!(get_executor("live-code-bench").is_ok());
+        assert!(get_executor("swebench_verified").is_ok());
+    }
+
+    #[test]
+    fn test_get_executor_unknown_name() {
+        let result = get_executor("unknown-benchmark");
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(err_msg.contains("Unknown benchmark"));
+        assert!(err_msg.contains("unknown-benchmark"));
+    }
+
+    #[test]
+    fn test_get_executor_returns_trait_object() {
+        // Verify we can call trait methods on the returned object
+        let mut executor = get_executor("livecodebench").unwrap();
+        let metadata = executor.get_metadata();
+        assert!(!metadata.name.is_empty());
+
+        // This should compile (trait object is properly sized)
+        let _: &dyn BenchmarkExecutor = executor.as_ref();
+    }
+}
