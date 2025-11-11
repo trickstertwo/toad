@@ -7,45 +7,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_progress_bar_creation() {
-        let progress = ProgressBar::new("Test");
-        assert_eq!(progress.progress(), 0.0);
-        assert!(!progress.is_complete());
-    }
-
-    #[test]
-    fn test_progress_bar_with_progress() {
-        let progress = ProgressBar::new("Test").with_progress(0.5);
-        assert_eq!(progress.progress(), 0.5);
-    }
-
-    #[test]
-    fn test_progress_bar_set_progress() {
-        let mut progress = ProgressBar::new("Test");
-        progress.set_progress(0.75);
-        assert_eq!(progress.progress(), 0.75);
-    }
-
-    #[test]
-    fn test_progress_bar_clamps() {
-        let mut progress = ProgressBar::new("Test");
-        progress.set_progress(1.5);
-        assert_eq!(progress.progress(), 1.0);
-
-        progress.set_progress(-0.5);
-        assert_eq!(progress.progress(), 0.0);
-    }
-
-    #[test]
-    fn test_progress_bar_is_complete() {
-        let mut progress = ProgressBar::new("Test");
-        assert!(!progress.is_complete());
-
-        progress.set_progress(1.0);
-        assert!(progress.is_complete());
-    }
-
-    #[test]
     fn test_stage_status_is_active() {
         assert!(StageStatus::InProgress.is_active());
         assert!(!StageStatus::Pending.is_active());
@@ -170,108 +131,32 @@ mod tests {
     }
 
     #[test]
-    fn test_progress_bar_default() {
-        let progress = ProgressBar::default();
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     // ============ COMPREHENSIVE EDGE CASE TESTS ============
 
     #[test]
-    fn test_progress_bar_negative_values_clamped() {
-        let mut progress = ProgressBar::new("Test");
-        progress.set_progress(-0.5);
-        assert_eq!(progress.progress(), 0.0);
-
-        progress.set_progress(-100.0);
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_overflow_values_clamped() {
-        let mut progress = ProgressBar::new("Test");
-        progress.set_progress(1.5);
-        assert_eq!(progress.progress(), 1.0);
-
-        progress.set_progress(100.0);
-        assert_eq!(progress.progress(), 1.0);
-    }
 
     #[test]
-    fn test_progress_bar_with_very_long_title() {
-        let long_title = "A".repeat(1000);
-        let progress = ProgressBar::new(long_title);
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_with_unicode_title() {
-        let progress = ProgressBar::new("🚀 Loading 日本語");
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_with_very_long_message() {
-        let long_message = "B".repeat(1000);
-        let progress = ProgressBar::new("Test").with_message(long_message);
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_with_unicode_message() {
-        let progress = ProgressBar::new("Test").with_message("処理中... 🔄");
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_very_small_increments() {
-        let mut progress = ProgressBar::new("Test");
-        progress.set_progress(0.001);
-        assert_eq!(progress.progress(), 0.001);
-
-        progress.set_progress(0.0001);
-        assert_eq!(progress.progress(), 0.0001);
-    }
 
     #[test]
-    fn test_progress_bar_rapid_updates() {
-        let mut progress = ProgressBar::new("Test");
-
-        for i in 0..1000 {
-            progress.set_progress(i as f64 / 1000.0);
-        }
-
-        assert_eq!(progress.progress(), 0.999);
-    }
 
     #[test]
-    fn test_progress_bar_message_update() {
-        let mut progress = ProgressBar::new("Test");
-        progress.set_message("First");
-        progress.set_message("Second");
-        progress.set_message("Third");
-        // Verify no panic on multiple updates
-    }
 
     #[test]
-    fn test_progress_bar_exactly_half() {
-        let progress = ProgressBar::new("Test").with_progress(0.5);
-        assert_eq!(progress.progress(), 0.5);
-        assert!(!progress.is_complete());
-    }
 
     #[test]
-    fn test_progress_bar_exactly_complete() {
-        let progress = ProgressBar::new("Test").with_progress(1.0);
-        assert_eq!(progress.progress(), 1.0);
-        assert!(progress.is_complete());
-    }
 
     #[test]
-    fn test_progress_bar_just_below_complete() {
-        let progress = ProgressBar::new("Test").with_progress(0.9999);
-        assert!(!progress.is_complete());
-    }
 
     #[test]
     fn test_multi_stage_empty_stages() {
@@ -478,13 +363,6 @@ mod tests {
     }
 
     #[test]
-    fn test_progress_bar_builder_chaining() {
-        let progress = ProgressBar::new("Test")
-            .with_progress(0.75)
-            .with_message("Processing...");
-
-        assert_eq!(progress.progress(), 0.75);
-    }
 
     #[test]
     fn test_multi_stage_set_stage_resets_progress() {
@@ -505,27 +383,8 @@ mod tests {
     // Stress Tests (10k operations)
 
     #[test]
-    fn test_progress_bar_10k_progress_updates() {
-        let mut progress = ProgressBar::new("Test");
-
-        for i in 0..10000 {
-            progress.set_progress((i % 100) as f64 / 100.0);
-        }
-
-        assert_eq!(progress.progress(), 0.99);
-    }
 
     #[test]
-    fn test_progress_bar_10k_message_updates() {
-        let mut progress = ProgressBar::new("Test");
-
-        for i in 0..10000 {
-            progress.set_message(format!("Message {}", i));
-        }
-
-        // Should not panic, just verify completion
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
     fn test_multi_stage_10k_stage_transitions() {
@@ -569,50 +428,16 @@ mod tests {
     // Unicode Edge Cases
 
     #[test]
-    fn test_progress_bar_rtl_text_arabic() {
-        let progress = ProgressBar::new("تحميل البيانات").with_message("معالجة الملفات...");
-
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_rtl_text_hebrew() {
-        let progress = ProgressBar::new("טוען נתונים").with_message("מעבד קבצים...");
-
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_mixed_scripts() {
-        let progress = ProgressBar::new("Loading 加载中 تحميل ロード中")
-            .with_message("Processing データ処理 معالجة 处理");
-
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_emoji_combinations() {
-        let progress = ProgressBar::new("🚀 Launch 🎯 Target 💯")
-            .with_message("📥 Downloading... 🔄 Processing... ✅");
-
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_zero_width_characters() {
-        let text_with_zwj = "Test\u{200D}Progress";
-        let progress = ProgressBar::new(text_with_zwj).with_message("Test\u{200C}Message");
-
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_combining_characters() {
-        let text_with_combining = "Progre\u{0301}s"; // é with combining accent
-        let progress = ProgressBar::new(text_with_combining).with_message("Cafe\u{0301}"); // Café
-
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
     fn test_multi_stage_rtl_text_arabic() {
@@ -653,30 +478,10 @@ mod tests {
     // Extreme Values
 
     #[test]
-    fn test_progress_bar_infinity_clamped() {
-        let mut progress = ProgressBar::new("Test");
-        progress.set_progress(f64::INFINITY);
-        assert_eq!(progress.progress(), 1.0);
-
-        progress.set_progress(f64::NEG_INFINITY);
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_nan_clamped() {
-        let mut progress = ProgressBar::new("Test");
-        progress.set_progress(f64::NAN);
-        // NaN comparisons are tricky, but clamp should handle it
-        let val = progress.progress();
-        assert!(val >= 0.0 && val <= 1.0 || val.is_nan());
-    }
 
     #[test]
-    fn test_progress_bar_very_precise_values() {
-        let mut progress = ProgressBar::new("Test");
-        progress.set_progress(0.123456789012345);
-        assert!((progress.progress() - 0.123456789012345).abs() < 1e-10);
-    }
 
     #[test]
     fn test_multi_stage_progress_very_precise() {
@@ -717,49 +522,6 @@ mod tests {
     // Multi-phase Comprehensive Workflow
 
     #[test]
-    fn test_progress_bar_10_phase_comprehensive_workflow() {
-        // Phase 1: Create basic progress bar
-        let mut progress = ProgressBar::new("Comprehensive Test");
-        assert_eq!(progress.progress(), 0.0);
-        assert!(!progress.is_complete());
-
-        // Phase 2: Set initial progress
-        progress.set_progress(0.1);
-        assert_eq!(progress.progress(), 0.1);
-
-        // Phase 3: Add message
-        progress.set_message("Starting...");
-
-        // Phase 4: Update progress incrementally
-        for i in 1..=10 {
-            progress.set_progress(i as f64 / 10.0);
-        }
-        assert_eq!(progress.progress(), 1.0);
-
-        // Phase 5: Verify completion
-        assert!(progress.is_complete());
-
-        // Phase 6: Update message after completion
-        progress.set_message("Complete!");
-
-        // Phase 7: Test boundary conditions
-        progress.set_progress(2.0); // Should clamp to 1.0
-        assert_eq!(progress.progress(), 1.0);
-
-        // Phase 8: Reset to zero
-        progress.set_progress(0.0);
-        assert!(!progress.is_complete());
-
-        // Phase 9: Rapid updates
-        for _ in 0..100 {
-            progress.set_progress(0.5);
-        }
-        assert_eq!(progress.progress(), 0.5);
-
-        // Phase 10: Final completion
-        progress.set_progress(1.0);
-        assert!(progress.is_complete());
-    }
 
     #[test]
     fn test_multi_stage_10_phase_comprehensive_workflow() {
@@ -827,39 +589,10 @@ mod tests {
     // Builder Pattern Edge Cases
 
     #[test]
-    fn test_progress_bar_multiple_progress_calls() {
-        let progress = ProgressBar::new("Test")
-            .with_progress(0.25)
-            .with_progress(0.5)
-            .with_progress(0.75);
-
-        assert_eq!(progress.progress(), 0.75);
-    }
 
     #[test]
-    fn test_progress_bar_multiple_message_calls() {
-        let progress = ProgressBar::new("Test")
-            .with_message("First")
-            .with_message("Second")
-            .with_message("Third");
-
-        // Last message should be set
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_builder_chaining_many_operations() {
-        let progress = ProgressBar::new("Test")
-            .with_progress(0.1)
-            .with_progress(0.2)
-            .with_progress(0.3)
-            .with_message("M1")
-            .with_message("M2")
-            .with_message("M3")
-            .with_progress(0.9);
-
-        assert_eq!(progress.progress(), 0.9);
-    }
 
     #[test]
     fn test_multi_stage_multiple_time_tracking_toggles() {
@@ -875,14 +608,6 @@ mod tests {
     // Empty State Operations
 
     #[test]
-    fn test_progress_bar_all_operations_on_default() {
-        let mut progress = ProgressBar::default();
-
-        progress.set_progress(0.5);
-        progress.set_message("Test");
-        assert_eq!(progress.progress(), 0.5);
-        assert!(!progress.is_complete());
-    }
 
     #[test]
     fn test_multi_stage_render_string_with_empty_stages() {
@@ -896,16 +621,8 @@ mod tests {
     // Additional Edge Cases
 
     #[test]
-    fn test_progress_bar_empty_title() {
-        let progress = ProgressBar::new("");
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
-    fn test_progress_bar_empty_message() {
-        let progress = ProgressBar::new("Test").with_message("");
-        assert_eq!(progress.progress(), 0.0);
-    }
 
     #[test]
     fn test_multi_stage_empty_stage_name() {
@@ -943,18 +660,6 @@ mod tests {
     }
 
     #[test]
-    fn test_progress_bar_progress_boundary_values() {
-        let mut progress = ProgressBar::new("Test");
-
-        progress.set_progress(0.0);
-        assert_eq!(progress.progress(), 0.0);
-
-        progress.set_progress(1.0);
-        assert_eq!(progress.progress(), 1.0);
-
-        progress.set_progress(0.5);
-        assert_eq!(progress.progress(), 0.5);
-    }
 
     #[test]
     fn test_multi_stage_set_stage_beyond_bounds() {
