@@ -111,6 +111,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **FOUNDATION**: Ready for Phase A-H completion (126 widgets to migrate)
 
 ### Changed
+- **Atomic Design Refactoring (Phase D: Input Widgets)** - 2025-11-10 ✅ **COMPLETE**
+  - **SCOPE**: 5 input widgets refactored from 18 analyzed files in `src/ui/widgets/input/`
+  - **Refactored Widgets** (346 tests passing):
+    - `textarea/state.rs` (73 tests) - Multi-line text editor
+    - `vim_mode/state.rs` (64 tests) - Vim-style modal editing system
+    - `input_dialog/state.rs` (55 tests) - Modal input dialog with validation
+    - `input_prompt/state.rs` (45 tests) - Single-line input prompt
+    - `palette/state.rs` (108 tests) - Fuzzy-searchable command palette
+  - **Already Atomic**: command_palette, input (main input widgets already compliant)
+  - **Pattern Applied**: Eliminate all `Span::styled/raw()` and `Block::default()` usage in input rendering
+  - All input widgets now 100% atomic design compliant
 - **Atomic Design Refactoring (Phase C: Core UI Widgets)** - 2025-11-10 ✅ **COMPLETE**
   - **SCOPE**: 3 core widgets refactored from 24 analyzed files in `src/ui/widgets/core/`
   - **Refactored Widgets** (103 tests passing):
