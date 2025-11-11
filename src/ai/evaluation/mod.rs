@@ -25,6 +25,10 @@ pub use models::{
     AggregateMetrics, BehavioralMetrics, BenchmarkResult, EvaluationRun, StatisticalSummary,
 };
 
+// Phase 3: Storage and serialization
+pub mod storage;
+pub use storage::StorageManager;
+
 /// Complexity level of a task
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Complexity {
