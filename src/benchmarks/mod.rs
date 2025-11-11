@@ -368,9 +368,16 @@ mod tests {
     fn test_get_executor_unknown_name() {
         let result = get_executor("unknown-benchmark");
         assert!(result.is_err());
-        let err_msg = result.unwrap_err().to_string();
-        assert!(err_msg.contains("Unknown benchmark"));
-        assert!(err_msg.contains("unknown-benchmark"));
+
+        // Extract error without requiring Debug on Ok variant
+        match result {
+            Err(e) => {
+                let err_msg = e.to_string();
+                assert!(err_msg.contains("Unknown benchmark"));
+                assert!(err_msg.contains("unknown-benchmark"));
+            }
+            Ok(_) => panic!("Expected error, got Ok"),
+        }
     }
 
     #[test]

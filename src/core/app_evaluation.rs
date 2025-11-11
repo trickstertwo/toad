@@ -193,18 +193,13 @@ mod tests {
         let mut app = App::new();
         app.evaluation_state = None;
 
-        let progress = EvaluationProgress {
-            current_task: 5,
-            total_tasks: 10,
-            task_id: "task-123".to_string(),
-            current_step: Some(3),
-            max_steps: Some(25),
-            last_tool: Some("Read".to_string()),
-            total_tokens: 1000,
-            total_cost: 0.05,
-            message: Some("Processing...".to_string()),
-            last_result: None,
-        };
+        let mut progress = EvaluationProgress::new(5, 10, "task-123".to_string());
+        progress.current_step = Some(3);
+        progress.max_steps = Some(25);
+        progress.last_tool = Some("Read".to_string());
+        progress.total_tokens = 1000;
+        progress.total_cost = 0.05;
+        progress.message = Some("Processing...".to_string());
 
         let event = Event::EvaluationProgress(progress);
         app.update(event).unwrap();
@@ -225,18 +220,13 @@ mod tests {
             error: None,
         });
 
-        let progress = EvaluationProgress {
-            current_task: 3,
-            total_tasks: 10,
-            task_id: "task-456".to_string(),
-            current_step: Some(5),
-            max_steps: Some(25),
-            last_tool: Some("Edit".to_string()),
-            total_tokens: 2000,
-            total_cost: 0.10,
-            message: Some("Working on task...".to_string()),
-            last_result: None,
-        };
+        let mut progress = EvaluationProgress::new(3, 10, "task-456".to_string());
+        progress.current_step = Some(5);
+        progress.max_steps = Some(25);
+        progress.last_tool = Some("Edit".to_string());
+        progress.total_tokens = 2000;
+        progress.total_cost = 0.10;
+        progress.message = Some("Working on task...".to_string());
 
         let event = Event::EvaluationProgress(progress.clone());
         app.update(event).unwrap();
@@ -259,18 +249,7 @@ mod tests {
             error: None,
         });
 
-        let progress = EvaluationProgress {
-            current_task: 7,
-            total_tasks: 15,
-            task_id: "task-789".to_string(),
-            current_step: None,
-            max_steps: None,
-            last_tool: None,
-            total_tokens: 0,
-            total_cost: 0.0,
-            message: None,
-            last_result: None,
-        };
+        let progress = EvaluationProgress::new(7, 15, "task-789".to_string());
 
         let event = Event::EvaluationProgress(progress);
         app.update(event).unwrap();
