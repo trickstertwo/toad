@@ -154,6 +154,15 @@ impl App {
                     // TODO: Implement page up for scrollable content
                 }
             }
+            // Ctrl+L to clear conversation history
+            (KeyCode::Char('l'), KeyModifiers::CONTROL) => {
+                if !self.conversation_view.is_streaming() {
+                    self.clear_conversation();
+                    self.status_message = "Conversation cleared".to_string();
+                } else {
+                    self.status_message = "Cannot clear during streaming".to_string();
+                }
+            }
             // Ctrl+P opens command palette
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
                 self.show_palette = true;
@@ -218,7 +227,10 @@ impl App {
                     self.status_message = format!("Tab {} does not exist", number);
                 }
             }
-            // Enter submits the command
+            // Shift+Enter inserts newline, Enter submits
+            (KeyCode::Enter, KeyModifiers::SHIFT) => {
+                self.input_field.insert_char('\n');
+            }
             (KeyCode::Enter, _) => {
                 let input = self.input_field.value().to_string();
                 if !input.is_empty() {
