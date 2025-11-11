@@ -21,7 +21,7 @@ impl App {
     /// - `Ctrl+C`: Quit application
     /// - `Ctrl+D`: Quit if input empty, otherwise page down
     /// - `Ctrl+P`: Open command palette
-    /// - `Ctrl+E`: Open Evaluation Center
+    /// - `Ctrl+V`: Open Evaluation Center
     /// - `Ctrl+?`: Toggle help screen
     ///
     /// ## Tab Management
@@ -36,7 +36,7 @@ impl App {
     /// - `Backspace`: Delete character
     /// - `Left`/`Right`: Move cursor
     /// - `Home`/`End`: Jump to start/end
-    /// - `Ctrl+A`: Emacs-style jump to start
+    /// - `Ctrl+A`/`Ctrl+E`: Emacs-style start/end
     /// - `Ctrl+U`: Clear input
     /// - Regular characters: Insert into input
     ///
@@ -150,8 +150,8 @@ impl App {
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
                 self.show_palette = true;
             }
-            // Ctrl+E opens evaluation center
-            (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
+            // Ctrl+V opens evaluation center
+            (KeyCode::Char('v'), KeyModifiers::CONTROL) => {
                 use crate::core::app_state::AppScreen;
                 self.screen = AppScreen::Evaluation;
                 self.status_message = "Opened Evaluation Center".to_string();
@@ -236,9 +236,12 @@ impl App {
             (KeyCode::End, _) => {
                 self.input_field.move_cursor_end();
             }
-            // Ctrl+A (Emacs-style cursor to start)
+            // Ctrl+A / Ctrl+E (Emacs-style)
             (KeyCode::Char('a'), KeyModifiers::CONTROL) => {
                 self.input_field.move_cursor_start();
+            }
+            (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
+                self.input_field.move_cursor_end();
             }
             // Page Up/Down keys
             (KeyCode::PageUp, _) => {
