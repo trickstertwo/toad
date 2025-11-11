@@ -234,6 +234,8 @@ impl App {
             (KeyCode::Enter, _) => {
                 let input = self.input_field.value().to_string();
                 if !input.is_empty() {
+                    // Add to command history before processing
+                    self.command_history.add(input.clone());
                     self.process_command(&input);
                     self.input_field.clear();
                 }
@@ -242,7 +244,22 @@ impl App {
             (KeyCode::Backspace, _) => {
                 self.input_field.delete_char();
             }
-            // Arrow keys move cursor
+            // Up arrow navigates to older command in history
+            (KeyCode::Up, _) => {
+                if let Some(command) = self.command_history.older() {
+                    self.input_field.set_value(command.clone());
+                }
+            }
+            // Down arrow navigates to newer command in history
+            (KeyCode::Down, _) => {
+                if let Some(command) = self.command_history.newer() {
+                    self.input_field.set_value(command.clone());
+                } else {
+                    // At the end of history, clear input
+                    self.input_field.clear();
+                }
+            }
+            // Arrow keys move cursor (only left/right now, up/down for history)
             (KeyCode::Left, _) => {
                 self.input_field.move_cursor_left();
             }

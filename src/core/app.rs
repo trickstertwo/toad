@@ -7,6 +7,7 @@ use crate::ai::llm::{AnthropicClient, LLMClient, Message};
 use crate::config::Config;
 use crate::core::app_state::{AppScreen, EvaluationState};
 use crate::core::event::Event;
+use crate::infrastructure::history::History;
 use crate::performance::PerformanceMetrics;
 use crate::ui::widgets::{
     conversation::ConversationView,
@@ -104,6 +105,9 @@ pub struct App {
 
     /// Tick counter for cursor blinking (toggles every 2 ticks = 500ms)
     tick_count: u32,
+
+    /// Command history for up/down arrow navigation
+    pub(crate) command_history: History,
 }
 
 impl std::fmt::Debug for App {
@@ -208,6 +212,7 @@ impl Default for App {
             conversation_view: ConversationView::new(),
             ai_processing: false,
             tick_count: 0,
+            command_history: History::load_or_new(1000),
         }
     }
 }
