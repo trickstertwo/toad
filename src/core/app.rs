@@ -240,6 +240,10 @@ impl App {
                 self.tick_count = self.tick_count.wrapping_add(1);
                 if self.tick_count % 2 == 0 {
                     self.input_field.toggle_cursor();
+                    // Toggle streaming cursor if streaming
+                    if self.conversation_view.is_streaming() {
+                        self.conversation_view.toggle_cursor();
+                    }
                 }
 
                 // Toasts are automatically cleaned up during render
@@ -302,6 +306,18 @@ impl App {
             }
             Event::AIResponse(message) => {
                 self.handle_ai_response(message);
+                Ok(())
+            }
+            Event::AIStreamStart => {
+                self.handle_ai_stream_start();
+                Ok(())
+            }
+            Event::AIStreamDelta(content) => {
+                self.handle_ai_stream_delta(content);
+                Ok(())
+            }
+            Event::AIStreamComplete => {
+                self.handle_ai_stream_complete();
                 Ok(())
             }
             Event::AIError(error) => {

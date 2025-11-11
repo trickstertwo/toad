@@ -62,13 +62,50 @@ impl App {
         // Build conversation history for context
         let conversation = self.conversation.clone();
 
-        // Spawn async task to process query
+        // Spawn async task to process query with streaming
         tokio::spawn(async move {
-            match llm_client.send_message(conversation, None).await {
-                Ok(response) => {
-                    // Send AI response back to main thread
-                    let assistant_message = Message::assistant(response.content);
-                    let _ = event_tx.send(crate::core::event::Event::AIResponse(assistant_message));
+            use crate::ai::llm::streaming::{ContentDelta, StreamEvent};
+            use futures::StreamExt;
+
+            match llm_client.send_message_stream(conversation, None).await {
+                Ok(mut stream) => {
+                    // Send stream start event
+                    let _ = event_tx.send(crate::core::event::Event::AIStreamStart);
+
+                    // Process streaming events
+                    while let Some(result) = stream.next().await {
+                        match result {
+                            Ok(event) => match event {
+                                StreamEvent::ContentBlockDelta { delta, .. } => {
+                                    // Extract text from delta and send to UI
+                                    if let ContentDelta::TextDelta { text } = delta {
+                                        let _ = event_tx
+                                            .send(crate::core::event::Event::AIStreamDelta(text));
+                                    }
+                                }
+                                StreamEvent::Error { error } => {
+                                    // Error during streaming
+                                    let _ = event_tx.send(crate::core::event::Event::AIError(
+                                        format!("{}: {}", error.error_type, error.message),
+                                    ));
+                                    return;
+                                }
+                                _ => {
+                                    // Ignore other event types (MessageStart, Ping, etc.)
+                                }
+                            },
+                            Err(e) => {
+                                // Stream error
+                                let _ = event_tx.send(crate::core::event::Event::AIError(
+                                    e.to_string(),
+                                ));
+                                return;
+                            }
+                        }
+                    }
+
+                    // Send stream complete event
+                    let _ = event_tx.send(crate::core::event::Event::AIStreamComplete);
                 }
                 Err(e) => {
                     // Send error back to main thread
@@ -98,6 +135,30 @@ impl App {
         // Add error message to conversation
         let error_msg = Message::assistant(format!("Error: {}", error));
         self.add_message(error_msg);
+    }
+
+    /// Handle AI stream start event
+    ///
+    /// Called when AI starts streaming a response.
+    pub(crate) fn handle_ai_stream_start(&mut self) {
+        self.conversation_view.start_streaming();
+        self.status_message = "AI is responding...".to_string();
+    }
+
+    /// Handle AI stream delta event
+    ///
+    /// Called when AI sends a chunk of streaming content.
+    pub(crate) fn handle_ai_stream_delta(&mut self, content: String) {
+        self.conversation_view.append_streaming_content(&content);
+    }
+
+    /// Handle AI stream complete event
+    ///
+    /// Called when AI finishes streaming a response.
+    pub(crate) fn handle_ai_stream_complete(&mut self) {
+        self.conversation_view.complete_streaming();
+        self.set_ai_processing(false);
+        self.status_message = "AI response complete".to_string();
     }
 }
 
