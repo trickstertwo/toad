@@ -19,6 +19,12 @@ pub use dataset_manager::{DatasetInfo, DatasetManager, DatasetSource};
 pub mod experiment_manager;
 pub use experiment_manager::{Experiment, ExperimentManager, ExperimentResults, ExperimentStatus};
 
+// Phase 1: Multi-benchmark evaluation models
+pub mod models;
+pub use models::{
+    AggregateMetrics, BehavioralMetrics, BenchmarkResult, EvaluationRun, StatisticalSummary,
+};
+
 /// Complexity level of a task
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Complexity {
