@@ -124,9 +124,17 @@ impl App {
         }
 
         match (key.code, key.modifiers) {
-            // Quit on Ctrl+C
+            // Cancel streaming on Ctrl+C, or quit if not streaming
             (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
-                self.should_quit = true;
+                if self.conversation_view.is_streaming() {
+                    // Cancel streaming response
+                    self.conversation_view.cancel_streaming();
+                    self.set_ai_processing(false);
+                    self.status_message = "Streaming cancelled".to_string();
+                } else {
+                    // Quit application
+                    self.should_quit = true;
+                }
             }
             // Ctrl+D for page down (Vim-style), or quit if input is focused and empty
             (KeyCode::Char('d'), KeyModifiers::CONTROL) => {

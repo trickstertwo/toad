@@ -156,9 +156,12 @@ impl App {
     ///
     /// Called when AI finishes streaming a response.
     pub(crate) fn handle_ai_stream_complete(&mut self) {
-        self.conversation_view.complete_streaming();
-        self.set_ai_processing(false);
-        self.status_message = "AI response complete".to_string();
+        // Only complete if still streaming (handles cancellation gracefully)
+        if self.conversation_view.is_streaming() {
+            self.conversation_view.complete_streaming();
+            self.set_ai_processing(false);
+            self.status_message = "AI response complete".to_string();
+        }
     }
 }
 
