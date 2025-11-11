@@ -24,12 +24,13 @@
 //! viewer.set_diff(diff);
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, StatefulWidget, Widget},
+    text::Line,
+    widgets::{Borders, List, ListItem, ListState, StatefulWidget, Widget},
 };
 
 /// Type of diff line
@@ -375,10 +376,11 @@ impl GitDiffViewer {
                     (None, None) => "         ".to_string(),
                 };
 
-                spans.push(Span::styled(
-                    line_no_str,
-                    Style::default().fg(Color::DarkGray),
-                ));
+                spans.push(
+                    AtomText::new(line_no_str)
+                        .style(Style::default().fg(Color::DarkGray))
+                        .to_span(),
+                );
             }
 
             // Add the line text with appropriate styling
@@ -398,16 +400,17 @@ impl GitDiffViewer {
                 }
             }
 
-            spans.push(Span::styled(line.text.clone(), style));
+            spans.push(AtomText::new(line.text.clone()).style(style).to_span());
 
             items.push(ListItem::new(Line::from(spans)));
         }
 
         if items.is_empty() {
-            items.push(ListItem::new(Line::from(Span::styled(
-                "No diff to display",
-                Style::default().fg(Color::DarkGray),
-            ))));
+            items.push(ListItem::new(Line::from(
+                AtomText::new("No diff to display")
+                    .style(Style::default().fg(Color::DarkGray))
+                    .to_span(),
+            )));
         }
 
         items
@@ -428,10 +431,11 @@ impl StatefulWidget for &GitDiffViewer {
             self.title.clone()
         };
 
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::ALL)
             .title(title)
-            .border_style(Style::default().fg(Color::Cyan));
+            .border_style(Style::default().fg(Color::Cyan))
+            .to_ratatui();
 
         let list = List::new(items)
             .block(block)
