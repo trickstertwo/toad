@@ -14,14 +14,15 @@ impl App {
     /// This is the primary event handler for the main TUI interface. It handles:
     ///
     /// ## Modal Overlays
-    /// - **Help Screen** (`show_help = true`): `Esc` or `?` closes help
+    /// - **Help Screen** (`show_help = true`): `Esc` or `Ctrl+?` closes help
     /// - **Command Palette** (`show_palette = true`): Navigation and command execution
     ///
     /// ## Global Commands
     /// - `Ctrl+C`: Quit application
     /// - `Ctrl+D`: Quit if input empty, otherwise page down
     /// - `Ctrl+P`: Open command palette
-    /// - `?`: Toggle help screen
+    /// - `Ctrl+E`: Open Evaluation Center
+    /// - `Ctrl+?`: Toggle help screen
     ///
     /// ## Tab Management
     /// - `Tab`: Next tab (or focus next panel if input focused)
@@ -35,7 +36,7 @@ impl App {
     /// - `Backspace`: Delete character
     /// - `Left`/`Right`: Move cursor
     /// - `Home`/`End`: Jump to start/end
-    /// - `Ctrl+A`/`Ctrl+E`: Emacs-style start/end
+    /// - `Ctrl+A`: Emacs-style jump to start
     /// - `Ctrl+U`: Clear input
     /// - Regular characters: Insert into input
     ///
@@ -149,8 +150,14 @@ impl App {
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
                 self.show_palette = true;
             }
-            // Toggle help screen with '?' (shift+/)
-            (KeyCode::Char('?'), _) => {
+            // Ctrl+E opens evaluation center
+            (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
+                use crate::core::app_state::AppScreen;
+                self.screen = AppScreen::Evaluation;
+                self.status_message = "Opened Evaluation Center".to_string();
+            }
+            // Toggle help screen with Ctrl+? (Ctrl+Shift+/)
+            (KeyCode::Char('?'), KeyModifiers::CONTROL | KeyModifiers::SHIFT) => {
                 self.show_help = !self.show_help;
             }
             // Tab cycling: Tab for next tab, Shift+Tab for previous tab
@@ -229,12 +236,9 @@ impl App {
             (KeyCode::End, _) => {
                 self.input_field.move_cursor_end();
             }
-            // Ctrl+A / Ctrl+E (Emacs-style)
+            // Ctrl+A (Emacs-style cursor to start)
             (KeyCode::Char('a'), KeyModifiers::CONTROL) => {
                 self.input_field.move_cursor_start();
-            }
-            (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
-                self.input_field.move_cursor_end();
             }
             // Page Up/Down keys
             (KeyCode::PageUp, _) => {
