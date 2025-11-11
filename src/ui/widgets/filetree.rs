@@ -3,15 +3,16 @@
 //! Collapsible directory tree for browsing files
 
 use crate::services::FilesystemService;
-use crate::ui::theme::ToadTheme;
+use crate::ui::{
+    atoms::{block::Block as AtomBlock, text::Text as AtomText},
+    theme::ToadTheme,
+};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{
-        Block, Borders, List, ListItem, ListState, Scrollbar, ScrollbarOrientation, ScrollbarState,
-    },
+    text::Line,
+    widgets::{Borders, List, ListItem, ListState, Scrollbar, ScrollbarOrientation, ScrollbarState},
 };
 use std::path::{Path, PathBuf};
 
@@ -329,7 +330,7 @@ impl FileTree {
 
     /// Render the file tree
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
-        let block = Block::default()
+        let block = AtomBlock::new()
             .title(format!(" {} ", self.title))
             .title_style(
                 Style::default()
@@ -337,7 +338,8 @@ impl FileTree {
                     .add_modifier(Modifier::BOLD),
             )
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(ToadTheme::TOAD_GREEN));
+            .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+            .to_ratatui();
 
         let inner = block.inner(area);
         frame.render_widget(block, area);
@@ -399,7 +401,7 @@ impl FileTree {
 
         // Build line by cloning strings to make it 'static
         let line_text = format!("{}{}{}", indent, icon, node.name);
-        let line = Line::from(Span::styled(line_text, style));
+        let line = Line::from(AtomText::new(line_text).style(style).to_span());
 
         items.push(ListItem::new(line));
         *nodes_seen += 1;
