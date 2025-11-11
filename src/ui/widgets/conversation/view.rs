@@ -24,14 +24,16 @@
 //! ```
 
 use crate::ai::llm::{Message, Role};
-use crate::ui::atoms::Block;
-use crate::ui::molecules::MessageBubble;
-use crate::ui::theme::ToadTheme;
+use crate::ui::{
+    atoms::{text::Text as AtomText, Block},
+    molecules::MessageBubble,
+    theme::ToadTheme,
+};
 use ratatui::{
     Frame,
     layout::{Alignment, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
+    text::Line,
     widgets::{Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState},
 };
 
@@ -205,12 +207,15 @@ impl ConversationView {
 
         if self.messages.is_empty() {
             // Show empty state
-            lines.push(Line::from(vec![Span::styled(
+            lines.push(Line::from(vec![AtomText::new(
                 "No messages yet. Start typing to chat with AI...",
+            )
+            .style(
                 Style::default()
                     .fg(ToadTheme::GRAY)
                     .add_modifier(Modifier::ITALIC),
-            )]));
+            )
+            .to_span()]));
         } else {
             let max_width = inner.width.saturating_sub(2) as usize;
 
