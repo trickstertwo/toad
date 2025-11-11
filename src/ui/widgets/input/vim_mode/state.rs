@@ -18,12 +18,13 @@
 //! assert_eq!(mode.current_mode(), EditMode::Normal);
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Widget},
+    text::Line,
+    widgets::{Borders, Widget},
 };
 
 /// Editing mode
@@ -512,21 +513,25 @@ impl ModeIndicator {
         let mut spans = vec![];
 
         // Mode name
-        spans.push(Span::styled(
-            format!(" {} ", self.mode.name()),
-            Style::default()
-                .fg(Color::Black)
-                .bg(self.mode.color())
-                .add_modifier(Modifier::BOLD),
-        ));
+        spans.push(
+            AtomText::new(format!(" {} ", self.mode.name()))
+                .style(
+                    Style::default()
+                        .fg(Color::Black)
+                        .bg(self.mode.color())
+                        .add_modifier(Modifier::BOLD),
+                )
+                .to_span(),
+        );
 
         // Key hints
         if self.show_hints && !self.compact {
-            spans.push(Span::raw(" ".to_string()));
-            spans.push(Span::styled(
-                self.mode.key_hint().to_string(),
-                Style::default().fg(Color::DarkGray),
-            ));
+            spans.push(AtomText::new(" ".to_string()).to_span());
+            spans.push(
+                AtomText::new(self.mode.key_hint().to_string())
+                    .style(Style::default().fg(Color::DarkGray))
+                    .to_span(),
+            );
         }
 
         Line::from(spans)
@@ -536,7 +541,7 @@ impl ModeIndicator {
 impl Widget for &ModeIndicator {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let line = self.render_line();
-        let block = Block::default().borders(Borders::NONE);
+        let block = AtomBlock::new().borders(Borders::NONE).to_ratatui();
         let inner = block.inner(area);
 
         block.render(area, buf);
