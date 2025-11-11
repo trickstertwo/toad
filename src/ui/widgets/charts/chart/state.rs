@@ -1,16 +1,15 @@
 /// let chart = LineChart::new(data);
 /// assert_eq!(chart.data().len(), 5);
 /// ```
+use crate::ui::{atoms::{block::Block as AtomBlock, text::Text as AtomText}, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    text::Line,
+    widgets::{Borders, Paragraph},
 };
 use serde::{Deserialize, Serialize};
-
-use crate::ui::theme::ToadTheme;
 
 /// Line chart style
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -186,29 +185,32 @@ impl LineChart {
 
         // Add chart lines
         for line in sparkline {
-            lines_to_render.push(Line::from(Span::styled(
-                line,
-                Style::default().fg(self.color),
-            )));
+            lines_to_render.push(Line::from(
+                AtomText::new(line)
+                    .style(Style::default().fg(self.color))
+                    .to_span(),
+            ));
         }
 
         // Add min/max labels if showing values
         if self.show_values && !self.data.is_empty() {
             let (min, max) = self.bounds();
             let info = format!(" Min: {:.2}  Max: {:.2} ", min, max);
-            lines_to_render.push(Line::from(Span::styled(
-                info,
-                Style::default().fg(ToadTheme::GRAY),
-            )));
+            lines_to_render.push(Line::from(
+                AtomText::new(info)
+                    .style(Style::default().fg(ToadTheme::GRAY))
+                    .to_span(),
+            ));
         }
 
         let paragraph = if self.show_border {
             let title = self.title.as_deref().unwrap_or("Chart");
             Paragraph::new(lines_to_render).block(
-                Block::default()
+                AtomBlock::new()
                     .borders(Borders::ALL)
                     .title(title)
-                    .border_style(Style::default().fg(ToadTheme::BORDER)),
+                    .border_style(Style::default().fg(ToadTheme::BORDER))
+                    .to_ratatui(),
             )
         } else {
             Paragraph::new(lines_to_render)
@@ -379,9 +381,13 @@ impl BarChart {
                     };
 
                     lines_to_render.push(Line::from(vec![
-                        Span::styled(bar, Style::default().fg(self.color)),
-                        Span::raw(" "),
-                        Span::styled(text, Style::default().fg(ToadTheme::LIGHT_GRAY)),
+                        AtomText::new(bar)
+                            .style(Style::default().fg(self.color))
+                            .to_span(),
+                        AtomText::new(" ").to_span(),
+                        AtomText::new(text)
+                            .style(Style::default().fg(ToadTheme::LIGHT_GRAY))
+                            .to_span(),
                     ]));
                 }
             }
@@ -399,8 +405,12 @@ impl BarChart {
                     };
 
                     lines_to_render.push(Line::from(vec![
-                        Span::styled(text, Style::default().fg(ToadTheme::LIGHT_GRAY)),
-                        Span::styled(bar, Style::default().fg(self.color)),
+                        AtomText::new(text)
+                            .style(Style::default().fg(ToadTheme::LIGHT_GRAY))
+                            .to_span(),
+                        AtomText::new(bar)
+                            .style(Style::default().fg(self.color))
+                            .to_span(),
                     ]));
                 }
             }
@@ -409,10 +419,11 @@ impl BarChart {
         let paragraph = if self.show_border {
             let title = self.title.as_deref().unwrap_or("Bar Chart");
             Paragraph::new(lines_to_render).block(
-                Block::default()
+                AtomBlock::new()
                     .borders(Borders::ALL)
                     .title(title)
-                    .border_style(Style::default().fg(ToadTheme::BORDER)),
+                    .border_style(Style::default().fg(ToadTheme::BORDER))
+                    .to_ratatui(),
             )
         } else {
             Paragraph::new(lines_to_render)
@@ -577,19 +588,21 @@ impl ScatterPlot {
         let mut lines_to_render: Vec<Line> = Vec::new();
         for row in grid {
             let line_str: String = row.into_iter().collect();
-            lines_to_render.push(Line::from(Span::styled(
-                line_str,
-                Style::default().fg(self.color),
-            )));
+            lines_to_render.push(Line::from(
+                AtomText::new(line_str)
+                    .style(Style::default().fg(self.color))
+                    .to_span(),
+            ));
         }
 
         let paragraph = if self.show_border {
             let title = self.title.as_deref().unwrap_or("Scatter Plot");
             Paragraph::new(lines_to_render).block(
-                Block::default()
+                AtomBlock::new()
                     .borders(Borders::ALL)
                     .title(title)
-                    .border_style(Style::default().fg(ToadTheme::BORDER)),
+                    .border_style(Style::default().fg(ToadTheme::BORDER))
+                    .to_ratatui(),
             )
         } else {
             Paragraph::new(lines_to_render)
