@@ -2,7 +2,6 @@
 ///
 /// This module provides infrastructure for running evaluations in the background
 /// while sending progress updates to the TUI event loop.
-use crate::ai::agent::Agent;
 use crate::ai::eval_commands::{CompareArgs, EvalArgs};
 use crate::ai::evaluation::{DatasetManager, EvaluationResults, Task, TaskLoader, TaskResult};
 use crate::ai::tools::ToolRegistry;
@@ -66,18 +65,9 @@ async fn run_evaluation_inner(
     cancel_rx: &mut mpsc::Receiver<()>,
 ) -> anyhow::Result<EvaluationResults> {
     // Load tasks
-    let _ = event_tx.send(Event::EvaluationProgress(EvaluationProgress {
-        current_task: 0,
-        total_tasks: 0,
-        task_id: "Loading tasks...".to_string(),
-        current_step: None,
-        max_steps: None,
-        last_tool: None,
-        total_tokens: 0,
-        total_cost: 0.0,
-        message: Some("Loading dataset...".to_string()),
-        last_result: None,
-    }));
+    let mut progress = EvaluationProgress::new(0, 0, "Loading tasks...".to_string());
+    progress.message = Some("Loading dataset...".to_string());
+    let _ = event_tx.send(Event::EvaluationProgress(progress));
 
     let tasks = load_tasks(&args.dataset, args.count).await?;
 
@@ -146,43 +136,37 @@ async fn run_tasks_with_progress(
         let current_task = idx + 1;
 
         // Send progress update - starting task
-        let _ = event_tx.send(Event::EvaluationProgress(EvaluationProgress {
-            current_task,
-            total_tasks,
-            task_id: task.id.clone(),
-            current_step: Some(0),
-            max_steps: Some(25), // Default agent max steps
-            last_tool: None,
-            total_tokens,
-            total_cost,
-            message: Some(format!("Starting task: {}", task.id)),
-            last_result: None,
-        }));
+        let mut progress = EvaluationProgress::new(current_task, total_tasks, task.id.clone());
+        progress.current_step = Some(0);
+        progress.max_steps = Some(25);
+        progress.total_tokens = total_tokens;
+        progress.total_cost = total_cost;
+        progress.message = Some(format!("Starting task: {}", task.id));
+        progress.problem_statement = Some(task.problem_statement.clone());
+        progress.expected_solution = task.solution_patch.clone();
+        let _ = event_tx.send(Event::EvaluationProgress(progress));
 
-        // Run the task
-        let result = run_single_task(&task, config).await?;
+        // Run the task with progress updates
+        let result = run_single_task(&task, config, event_tx.clone(), current_task, total_tasks).await?;
 
         // Update totals
         total_tokens += result.total_tokens;
         total_cost += result.cost_usd;
 
         // Send progress update - task complete
-        let _ = event_tx.send(Event::EvaluationProgress(EvaluationProgress {
-            current_task,
-            total_tasks,
-            task_id: task.id.clone(),
-            current_step: Some(25),
-            max_steps: Some(25),
-            last_tool: None,
-            total_tokens,
-            total_cost,
-            message: Some(format!(
-                "Completed task: {} ({})",
-                task.id,
-                if result.solved { "solved" } else { "failed" }
-            )),
-            last_result: Some(result.clone()),
-        }));
+        let mut progress = EvaluationProgress::new(current_task, total_tasks, task.id.clone());
+        progress.current_step = Some(25);
+        progress.max_steps = Some(25);
+        progress.total_tokens = total_tokens;
+        progress.total_cost = total_cost;
+        progress.message = Some(format!(
+            "Completed task: {} ({})",
+            task.id,
+            if result.solved { "solved" } else { "failed" }
+        ));
+        progress.last_result = Some(result.clone());
+        progress.files_modified = result.files_modified.clone();
+        let _ = event_tx.send(Event::EvaluationProgress(progress));
 
         results.push(result);
     }
@@ -221,9 +205,16 @@ async fn run_tasks_with_progress(
 }
 
 /// Run a single task
-async fn run_single_task(task: &Task, config: &ToadConfig) -> anyhow::Result<TaskResult> {
-    use crate::ai::agent::PromptBuilder;
+async fn run_single_task(
+    task: &Task,
+    config: &ToadConfig,
+    event_tx: mpsc::UnboundedSender<Event>,
+    current_task: usize,
+    total_tasks: usize,
+) -> anyhow::Result<TaskResult> {
+    use crate::ai::agent::{Agent, PromptBuilder, ProgressCallback};
     use crate::ai::metrics::MetricsCollector;
+    use std::sync::Arc;
 
     // Build AST context if feature enabled
     let custom_prompt = if config.features.context_ast {
@@ -261,8 +252,18 @@ async fn run_single_task(task: &Task, config: &ToadConfig) -> anyhow::Result<Tas
     // Create tool registry with feature flags
     let tool_registry = ToolRegistry::m1_with_features(&config.features);
 
-    // Create agent
-    let agent = Agent::new(llm_client, tool_registry);
+    // Create progress callback for real-time updates
+    let progress_callback: ProgressCallback = Arc::new(move |mut progress| {
+        // Fill in task position
+        progress.current_task = current_task;
+        progress.total_tasks = total_tasks;
+
+        // Send progress event
+        let _ = event_tx.send(Event::EvaluationProgress(progress));
+    });
+
+    // Create agent with progress callback
+    let agent = Agent::new(llm_client, tool_registry).with_progress_callback(progress_callback);
 
     // Create metrics collector
     let mut metrics_collector = MetricsCollector::new();
@@ -329,18 +330,9 @@ async fn run_comparison_inner(
     // Run baseline evaluation
     let baseline_config = ToadConfig::for_milestone(args.baseline as u8);
 
-    let _ = event_tx.send(Event::EvaluationProgress(EvaluationProgress {
-        current_task: 0,
-        total_tasks: task_count * 2, // Two runs
-        task_id: "Baseline".to_string(),
-        current_step: None,
-        max_steps: None,
-        last_tool: None,
-        total_tokens: 0,
-        total_cost: 0.0,
-        message: Some("Running baseline evaluation...".to_string()),
-        last_result: None,
-    }));
+    let mut progress = EvaluationProgress::new(0, task_count * 2, "Baseline".to_string());
+    progress.message = Some("Running baseline evaluation...".to_string());
+    let _ = event_tx.send(Event::EvaluationProgress(progress));
 
     let baseline_results =
         run_tasks_with_progress(tasks.clone(), &baseline_config, event_tx.clone(), cancel_rx)
@@ -349,18 +341,9 @@ async fn run_comparison_inner(
     // Run test evaluation
     let test_config = ToadConfig::for_milestone(args.test as u8);
 
-    let _ = event_tx.send(Event::EvaluationProgress(EvaluationProgress {
-        current_task: task_count,
-        total_tasks: task_count * 2,
-        task_id: "Test".to_string(),
-        current_step: None,
-        max_steps: None,
-        last_tool: None,
-        total_tokens: 0,
-        total_cost: 0.0,
-        message: Some("Running test evaluation...".to_string()),
-        last_result: None,
-    }));
+    let mut progress = EvaluationProgress::new(task_count, task_count * 2, "Test".to_string());
+    progress.message = Some("Running test evaluation...".to_string());
+    let _ = event_tx.send(Event::EvaluationProgress(progress));
 
     let test_results =
         run_tasks_with_progress(tasks, &test_config, event_tx.clone(), cancel_rx).await?;

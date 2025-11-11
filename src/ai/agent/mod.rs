@@ -9,8 +9,10 @@ use crate::ai::evaluation::Task;
 use crate::ai::llm::{LLMClient, Message, StopReason, ToolUse};
 use crate::ai::metrics::MetricsCollector;
 use crate::ai::tools::ToolRegistry;
+use crate::core::event::{EvaluationProgress, ToolExecution};
 use anyhow::{Context, Result, anyhow};
 use serde_json::json;
+use std::sync::Arc;
 
 pub mod prompts;
 
@@ -19,11 +21,15 @@ pub use prompts::PromptBuilder;
 /// Maximum number of agent steps before giving up
 const MAX_AGENT_STEPS: u32 = 25;
 
+/// Progress callback type for real-time updates
+pub type ProgressCallback = Arc<dyn Fn(EvaluationProgress) + Send + Sync>;
+
 /// M1 agent with simple tool use loop
 pub struct Agent {
     llm_client: Box<dyn LLMClient>,
     tool_registry: ToolRegistry,
     max_steps: u32,
+    progress_callback: Option<ProgressCallback>,
 }
 
 impl Agent {
@@ -32,11 +38,17 @@ impl Agent {
             llm_client,
             tool_registry,
             max_steps: MAX_AGENT_STEPS,
+            progress_callback: None,
         }
     }
 
     pub fn with_max_steps(mut self, max_steps: u32) -> Self {
         self.max_steps = max_steps;
+        self
+    }
+
+    pub fn with_progress_callback(mut self, callback: ProgressCallback) -> Self {
+        self.progress_callback = Some(callback);
         self
     }
 
@@ -61,8 +73,10 @@ impl Agent {
         // Use custom prompt if provided, otherwise build default
         let prompt = custom_prompt.unwrap_or_else(|| PromptBuilder::new().with_task(task).build());
 
-        let mut conversation = vec![Message::user(prompt)];
+        let mut conversation = vec![Message::user(prompt.clone())];
         let mut step_count = 0;
+        let mut tool_executions = Vec::new();
+        let mut files_modified = Vec::new();
 
         // Build tool schemas for LLM
         let tool_schemas = self.build_tool_schemas();
@@ -79,6 +93,8 @@ impl Agent {
                 });
             }
 
+            let step_start = std::time::Instant::now();
+
             // Send message to LLM
             let response = self
                 .llm_client
@@ -86,24 +102,59 @@ impl Agent {
                 .await
                 .context("Failed to get LLM response")?;
 
+            let api_latency = step_start.elapsed().as_millis() as u64;
+
             // Record first response time
             if step_count == 1 {
                 metrics.record_first_response();
             }
 
             // Record token usage
+            let step_cost = response.usage.calculate_cost();
             metrics.record_api_call(
                 response.usage.input_tokens as u64,
                 response.usage.output_tokens as u64,
                 response.usage.cache_read_tokens.unwrap_or(0) as u64,
-                response.usage.calculate_cost(),
+                step_cost,
             );
+
+            // Send progress update if callback is set
+            if let Some(ref callback) = self.progress_callback {
+                let current_metrics = metrics.snapshot();
+                let mut progress = EvaluationProgress::new(0, 0, task.id.clone());
+                progress.current_step = Some(step_count as usize);
+                progress.max_steps = Some(self.max_steps as usize);
+                progress.total_tokens = current_metrics.total_tokens();
+                progress.total_cost = current_metrics.cost_usd;
+                progress.conversation = conversation.clone();
+                progress.tool_executions = tool_executions.clone();
+                progress.problem_statement = Some(task.problem_statement.clone());
+                progress.expected_solution = task.solution_patch.clone();
+                progress.current_thinking = Some(response.content.clone());
+                progress.files_modified = files_modified.clone();
+                progress.step_duration_ms = Some(step_start.elapsed().as_millis() as u64);
+                progress.api_latencies_ms = vec![api_latency];
+                progress.step_input_tokens = Some(response.usage.input_tokens);
+                progress.step_output_tokens = Some(response.usage.output_tokens);
+                progress.cache_read_tokens = response.usage.cache_read_tokens;
+                progress.message = Some(format!("Step {}/{}: {}", step_count, self.max_steps,
+                    if !response.content.is_empty() {
+                        &response.content[..std::cmp::min(100, response.content.len())]
+                    } else {
+                        "Processing tools..."
+                    }));
+
+                callback(progress);
+            }
 
             // Handle response based on stop reason
             match response.stop_reason {
                 StopReason::ToolUse => {
                     // Execute tools and continue
-                    let tool_results = self.execute_tools(&response.tool_uses, metrics).await?;
+                    let (tool_results, tool_execution_records) = self.execute_tools_with_tracking(&response.tool_uses, metrics, &mut files_modified).await?;
+
+                    // Add tool executions to tracking
+                    tool_executions.extend(tool_execution_records);
 
                     // Add assistant message with tool uses
                     conversation.push(Message::assistant(if response.content.is_empty() {
@@ -113,6 +164,25 @@ impl Agent {
                     }));
                 }
                 StopReason::EndTurn | StopReason::MaxTokens | StopReason::StopSequence => {
+                    // Add final assistant message
+                    conversation.push(Message::assistant(response.content.clone()));
+
+                    // Send final progress update
+                    if let Some(ref callback) = self.progress_callback {
+                        let current_metrics = metrics.snapshot();
+                        let mut progress = EvaluationProgress::new(0, 0, task.id.clone());
+                        progress.current_step = Some(step_count as usize);
+                        progress.max_steps = Some(self.max_steps as usize);
+                        progress.total_tokens = current_metrics.total_tokens();
+                        progress.total_cost = current_metrics.cost_usd;
+                        progress.conversation = conversation.clone();
+                        progress.tool_executions = tool_executions.clone();
+                        progress.files_modified = files_modified.clone();
+                        progress.message = Some("Task complete".to_string());
+
+                        callback(progress);
+                    }
+
                     // Task complete or hit limit
                     return Ok(AgentResult {
                         success: true,
@@ -124,23 +194,73 @@ impl Agent {
         }
     }
 
-    /// Execute a list of tool uses
+    /// Execute a list of tool uses with tracking
+    async fn execute_tools_with_tracking(
+        &self,
+        tool_uses: &[ToolUse],
+        metrics: &mut MetricsCollector,
+        files_modified: &mut Vec<std::path::PathBuf>,
+    ) -> Result<(String, Vec<ToolExecution>)> {
+        let mut results = Vec::new();
+        let mut executions = Vec::new();
+
+        for tool_use in tool_uses {
+            let tool_start = std::time::Instant::now();
+            let result = self.execute_single_tool(tool_use, metrics).await;
+            let duration_ms = tool_start.elapsed().as_millis() as u64;
+
+            let (success, output, error) = match result {
+                Ok(output) => {
+                    // Track file modifications for Write and Edit tools
+                    if tool_use.name == "write" || tool_use.name == "edit" {
+                        if let Some(path_value) = tool_use.input.get("file_path")
+                            .or_else(|| tool_use.input.get("path"))
+                        {
+                            if let Some(path_str) = path_value.as_str() {
+                                files_modified.push(std::path::PathBuf::from(path_str));
+                            }
+                        }
+                    }
+
+                    results.push(format!(
+                        "Tool: {}\nID: {}\nResult: {}",
+                        tool_use.name, tool_use.id, output
+                    ));
+                    (true, output, None)
+                }
+                Err(e) => {
+                    let error_msg = format!("Error: {}", e);
+                    results.push(format!(
+                        "Tool: {}\nID: {}\nResult: {}",
+                        tool_use.name, tool_use.id, error_msg
+                    ));
+                    (false, String::new(), Some(error_msg))
+                }
+            };
+
+            executions.push(ToolExecution {
+                tool_name: tool_use.name.clone(),
+                input: tool_use.input.clone(),
+                output,
+                success,
+                error,
+                duration_ms,
+                timestamp: chrono::Utc::now(),
+            });
+        }
+
+        Ok((results.join("\n\n"), executions))
+    }
+
+    /// Execute a list of tool uses (legacy method)
     async fn execute_tools(
         &self,
         tool_uses: &[ToolUse],
         metrics: &mut MetricsCollector,
     ) -> Result<String> {
-        let mut results = Vec::new();
-
-        for tool_use in tool_uses {
-            let result = self.execute_single_tool(tool_use, metrics).await?;
-            results.push(format!(
-                "Tool: {}\nID: {}\nResult: {}",
-                tool_use.name, tool_use.id, result
-            ));
-        }
-
-        Ok(results.join("\n\n"))
+        let mut files_modified = Vec::new();
+        let (results, _) = self.execute_tools_with_tracking(tool_uses, metrics, &mut files_modified).await?;
+        Ok(results)
     }
 
     /// Execute a single tool
