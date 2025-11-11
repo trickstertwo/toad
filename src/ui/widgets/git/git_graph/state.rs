@@ -20,12 +20,13 @@
 //!     .with_parent("abc123"));
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Widget},
+    text::Line,
+    widgets::{Borders, Widget},
 };
 use std::collections::HashMap;
 
@@ -418,12 +419,15 @@ impl GitGraph {
 
         // Title
         if let Some(ref title) = self.title {
-            lines.push(Line::from(Span::styled(
-                title.clone(),
-                Style::default()
-                    .fg(Color::Cyan)
-                    .add_modifier(Modifier::BOLD),
-            )));
+            lines.push(Line::from(
+                AtomText::new(title.clone())
+                    .style(
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    )
+                    .to_span(),
+            ));
             lines.push(Line::from(""));
         }
 
@@ -457,27 +461,33 @@ impl GitGraph {
             };
 
             let mut spans = vec![
-                Span::styled(graph_char, Style::default().fg(commit.color)),
-                Span::raw(" "),
+                AtomText::new(graph_char)
+                    .style(Style::default().fg(commit.color))
+                    .to_span(),
+                AtomText::new(" ").to_span(),
             ];
 
             // Hash
-            spans.push(Span::styled(
-                format!("{:7}", commit.hash()),
-                Style::default().fg(Color::Yellow),
-            ));
-            spans.push(Span::raw(" "));
+            spans.push(
+                AtomText::new(format!("{:7}", commit.hash()))
+                    .style(Style::default().fg(Color::Yellow))
+                    .to_span(),
+            );
+            spans.push(AtomText::new(" ").to_span());
 
             // Branch name
             if self.show_branches
                 && let Some(branch) = commit.branch()
             {
-                spans.push(Span::styled(
-                    format!("({}) ", branch),
-                    Style::default()
-                        .fg(Color::Green)
-                        .add_modifier(Modifier::BOLD),
-                ));
+                spans.push(
+                    AtomText::new(format!("({}) ", branch))
+                        .style(
+                            Style::default()
+                                .fg(Color::Green)
+                                .add_modifier(Modifier::BOLD),
+                        )
+                        .to_span(),
+                );
             }
 
             // Message
@@ -488,16 +498,17 @@ impl GitGraph {
                 commit.message().to_string()
             };
 
-            spans.push(Span::raw(message));
+            spans.push(AtomText::new(message).to_span());
 
             // Author
             if self.show_authors
                 && let Some(author) = commit.author()
             {
-                spans.push(Span::styled(
-                    format!(" <{}>", author),
-                    Style::default().fg(Color::DarkGray),
-                ));
+                spans.push(
+                    AtomText::new(format!(" <{}>", author))
+                        .style(Style::default().fg(Color::DarkGray))
+                        .to_span(),
+                );
             }
 
             lines.push(Line::from(spans));
@@ -508,10 +519,11 @@ impl GitGraph {
                 && let Some(parent) = commit.parent()
                 && hash_to_index.contains_key(parent)
             {
-                lines.push(Line::from(Span::styled(
-                    "│",
-                    Style::default().fg(commit.color),
-                )));
+                lines.push(Line::from(
+                    AtomText::new("│")
+                        .style(Style::default().fg(commit.color))
+                        .to_span(),
+                ));
             }
         }
 
@@ -522,7 +534,7 @@ impl GitGraph {
 impl Widget for &GitGraph {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let lines = self.render_lines(area.width);
-        let block = Block::default().borders(Borders::ALL);
+        let block = AtomBlock::new().borders(Borders::ALL).to_ratatui();
         let inner = block.inner(area);
 
         block.render(area, buf);
