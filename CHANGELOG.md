@@ -20,6 +20,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- COMPLETED 2025-11-09: M4 Cascading Routing implementation -->
 
 ### Added
+- **Evaluation System: Phase 2 Benchmark Abstraction Layer** (COMPLETE - 2025-11-11)
+  - **BenchmarkExecutor Trait** (1,473 LOC, 16 tests):
+    - `src/benchmarks/mod.rs` (387 lines): Async trait definition with Send + Sync bounds
+    - `src/benchmarks/swebench.rs` (446 lines): SWE-bench adapter wrapping existing M0 code
+    - `src/benchmarks/livecodebench.rs` (261 lines): LiveCodeBench stub for future implementation
+    - Factory function `get_executor()` (77 lines): Dynamic executor creation by name
+  - **Trait Interface**:
+    - `setup()`: Load dataset, validate, initialize resources
+    - `run_task()`: Execute single task with timeouts and context
+    - `cleanup()`: Release resources, stop containers
+    - `get_metadata()`: Benchmark info (name, tasks, contamination risk)
+  - **SWE-bench Adapter**:
+    - Wraps existing `Agent`, `DatasetManager`, `MetricsCollector`
+    - Supports all variants: Verified (500), Lite (300), Full (2,294)
+    - Timeout handling with `tokio::time::timeout`
+    - Zero code duplication from M0 implementation
+  - **LiveCodeBench Stub**:
+    - All methods call `unimplemented!()` with detailed TODOs
+    - Comprehensive Phase 3-4 implementation checklist
+    - Hardcoded metadata for compilation and type checking
+  - **Factory Function**:
+    - Case-insensitive name matching (swebench-verified, lite, lcb, etc.)
+    - Returns `Box<dyn BenchmarkExecutor>` for dynamic dispatch
+    - Clear error messages for unknown benchmarks
+    - Multiple aliases for convenience
+  - **Architecture**:
+    - Adapter pattern preserves existing M0 code unchanged
+    - Trait objects enable heterogeneous collections (Phase 5)
+    - Async trait with `#[async_trait]` for I/O-bound operations
+    - Send + Sync bounds for concurrent execution
+  - **Quality Gates Met**:
+    - Library compiles: `cargo check --lib` ✅
+    - Zero warnings in Phase 2 modules ✅
+    - 16 unit tests (3 SWE-bench + 5 LiveCodeBench + 8 factory) ✅
+    - All public items documented ✅
+  - **Next**: Phase 3 - Orchestrator for concurrent multi-benchmark evaluation
 - **Evaluation System: Phase 1 Core Infrastructure** (COMPLETE - 2025-11-11)
   - **Multi-Benchmark Abstraction** (1,004 LOC, 6 tests):
     - `src/benchmarks/types.rs` (450 lines): Task, BenchmarkMetadata, ExecutionContext, ProgressEvent
