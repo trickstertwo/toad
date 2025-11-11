@@ -1,9 +1,9 @@
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::block::Block as AtomBlock, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
-    widgets::{Block, BorderType},
+    widgets::BorderType,
 };
 use thiserror::Error;
 
@@ -611,13 +611,17 @@ impl SplitPane {
 
         // Render panes with focus indicator
         if self.focused_pane == 0 {
-            let block1 = Block::default().border_style(Style::default().fg(ToadTheme::TOAD_GREEN));
+            let block1 = AtomBlock::new()
+                .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                .to_ratatui();
             let inner1 = block1.inner(pane1);
             frame.render_widget(block1, pane1);
             left(frame, inner1);
             right(frame, pane2);
         } else {
-            let block2 = Block::default().border_style(Style::default().fg(ToadTheme::TOAD_GREEN));
+            let block2 = AtomBlock::new()
+                .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                .to_ratatui();
             let inner2 = block2.inner(pane2);
             left(frame, pane1);
             frame.render_widget(block2, pane2);
