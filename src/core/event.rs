@@ -54,6 +54,31 @@ pub enum Event {
     AIError(String),
 }
 
+/// Tool execution details for real-time tracking
+#[derive(Debug, Clone)]
+pub struct ToolExecution {
+    /// Tool name (e.g., "read", "write", "bash")
+    pub tool_name: String,
+
+    /// Tool input (JSON)
+    pub input: serde_json::Value,
+
+    /// Tool output
+    pub output: String,
+
+    /// Success status
+    pub success: bool,
+
+    /// Error message if failed
+    pub error: Option<String>,
+
+    /// Duration in milliseconds
+    pub duration_ms: u64,
+
+    /// Timestamp
+    pub timestamp: chrono::DateTime<chrono::Utc>,
+}
+
 /// Progress information for a running evaluation
 #[derive(Debug, Clone)]
 pub struct EvaluationProgress {
@@ -86,6 +111,89 @@ pub struct EvaluationProgress {
 
     /// Result of most recently completed task
     pub last_result: Option<TaskResult>,
+
+    // ===== NEW FIELDS FOR MAXIMUM VISIBILITY =====
+    /// Full conversation history (user and assistant messages)
+    pub conversation: Vec<Message>,
+
+    /// All tool executions with inputs/outputs
+    pub tool_executions: Vec<ToolExecution>,
+
+    /// Problem statement for current task
+    pub problem_statement: Option<String>,
+
+    /// Expected solution context
+    pub expected_solution: Option<String>,
+
+    /// Current thinking/response from LLM
+    pub current_thinking: Option<String>,
+
+    /// Files modified so far
+    pub files_modified: Vec<std::path::PathBuf>,
+
+    /// Test output if tests were run
+    pub test_output: Option<String>,
+
+    /// Error log (all errors encountered)
+    pub error_log: Vec<String>,
+
+    /// Duration of current step in milliseconds
+    pub step_duration_ms: Option<u64>,
+
+    /// API call latencies (milliseconds per call)
+    pub api_latencies_ms: Vec<u64>,
+
+    /// Token usage per step
+    pub tokens_per_step: Vec<u64>,
+
+    /// Cost per step
+    pub cost_per_step: Vec<f64>,
+
+    /// Input tokens for current step
+    pub step_input_tokens: Option<u32>,
+
+    /// Output tokens for current step
+    pub step_output_tokens: Option<u32>,
+
+    /// Cache hit (read tokens)
+    pub cache_read_tokens: Option<u32>,
+}
+
+impl EvaluationProgress {
+    /// Create a new progress struct with default values for new fields
+    pub fn new(
+        current_task: usize,
+        total_tasks: usize,
+        task_id: String,
+    ) -> Self {
+        Self {
+            current_task,
+            total_tasks,
+            task_id,
+            current_step: None,
+            max_steps: None,
+            last_tool: None,
+            total_tokens: 0,
+            total_cost: 0.0,
+            message: None,
+            last_result: None,
+            conversation: Vec::new(),
+            tool_executions: Vec::new(),
+            problem_statement: None,
+            expected_solution: None,
+            current_thinking: None,
+            files_modified: Vec::new(),
+            test_output: None,
+            error_log: Vec::new(),
+            step_duration_ms: None,
+            api_latencies_ms: Vec::new(),
+            tokens_per_step: Vec::new(),
+            cost_per_step: Vec::new(),
+            step_input_tokens: None,
+            step_output_tokens: None,
+            cache_read_tokens: None,
+        }
+    }
 }
 
 /// Event handler that polls for terminal events

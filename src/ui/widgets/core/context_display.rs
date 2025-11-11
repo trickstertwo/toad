@@ -14,12 +14,13 @@
 //! display.add_message("user", "Fix the bug");
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, StatefulWidget, Tabs, Widget},
+    text::Line,
+    widgets::{Borders, List, ListItem, ListState, Paragraph, StatefulWidget, Tabs, Widget},
 };
 
 /// Type of context item
@@ -383,10 +384,11 @@ impl Widget for &ContextDisplay {
 
         let tabs = Tabs::new(tab_titles)
             .block(
-                Block::default()
+                AtomBlock::new()
                     .borders(Borders::ALL)
                     .title("AI Context View")
-                    .border_style(Style::default().fg(Color::Cyan)),
+                    .border_style(Style::default().fg(Color::Cyan))
+                    .to_ratatui(),
             )
             .select(tab_index)
             .style(Style::default().fg(Color::White))
@@ -423,26 +425,31 @@ impl Widget for &ContextDisplay {
                 let label = item.context_type.label();
 
                 let mut spans = vec![
-                    Span::styled(format!("{} ", icon), Style::default()),
-                    Span::styled(
-                        format!("[{}] ", label),
-                        Style::default().fg(color).add_modifier(Modifier::BOLD),
-                    ),
-                    Span::styled(&item.name, Style::default().fg(Color::White)),
+                    AtomText::new(format!("{} ", icon))
+                        .style(Style::default())
+                        .to_span(),
+                    AtomText::new(format!("[{}] ", label))
+                        .style(Style::default().fg(color).add_modifier(Modifier::BOLD))
+                        .to_span(),
+                    AtomText::new(&item.name)
+                        .style(Style::default().fg(Color::White))
+                        .to_span(),
                 ];
 
                 if let Some(tokens) = item.token_count {
-                    spans.push(Span::styled(
-                        format!(" ({} tokens)", tokens),
-                        Style::default().fg(Color::DarkGray),
-                    ));
+                    spans.push(
+                        AtomText::new(format!(" ({} tokens)", tokens))
+                            .style(Style::default().fg(Color::DarkGray))
+                            .to_span(),
+                    );
                 }
 
                 if let Some(metadata) = &item.metadata {
-                    spans.push(Span::styled(
-                        format!(" [{}]", metadata),
-                        Style::default().fg(Color::Gray),
-                    ));
+                    spans.push(
+                        AtomText::new(format!(" [{}]", metadata))
+                            .style(Style::default().fg(Color::Gray))
+                            .to_span(),
+                    );
                 }
 
                 ListItem::new(vec![Line::from(spans)])
@@ -458,10 +465,11 @@ impl Widget for &ContextDisplay {
 
         let list = List::new(items)
             .block(
-                Block::default()
+                AtomBlock::new()
                     .borders(Borders::ALL)
                     .title(list_title)
-                    .border_style(Style::default().fg(Color::Yellow)),
+                    .border_style(Style::default().fg(Color::Yellow))
+                    .to_ratatui(),
             )
             .highlight_style(
                 Style::default()
@@ -478,10 +486,11 @@ impl Widget for &ContextDisplay {
         {
             let preview = Paragraph::new(item.content.as_str())
                 .block(
-                    Block::default()
+                    AtomBlock::new()
                         .borders(Borders::ALL)
                         .title(format!("Preview: {}", item.name))
-                        .border_style(Style::default().fg(Color::Cyan)),
+                        .border_style(Style::default().fg(Color::Cyan))
+                        .to_ratatui(),
                 )
                 .style(Style::default().fg(Color::White))
                 .wrap(ratatui::widgets::Wrap { trim: false });

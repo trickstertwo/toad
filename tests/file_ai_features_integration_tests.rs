@@ -6,7 +6,7 @@
 use std::path::PathBuf;
 use toad::infrastructure::{FileOpResult, FileOps};
 use toad::navigation::{Bookmark, BookmarkManager, RecentFile, RecentFiles};
-use toad::ui::widgets::{ChatMessage, ChatPanel, MessageRole};
+use toad::ui::widgets::chat_panel::{ChatMessage, ChatPanel, MessageRole};
 
 // ============================================================================
 // Bookmark Integration Tests

@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 const DEFAULT_BASE_URL: &str = "http://localhost:11434";
+#[allow(dead_code)]
 const DEFAULT_MODEL: &str = "llama2";
 
 /// Ollama API client for local models
@@ -161,6 +162,7 @@ struct OllamaMessage {
 /// Ollama API response
 #[derive(Debug, Deserialize)]
 struct OllamaResponse {
+    #[allow(dead_code)]
     model: String,
     message: OllamaMessage,
     done: bool,

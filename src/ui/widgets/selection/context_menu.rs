@@ -11,13 +11,13 @@
 /// menu.add_item(MenuItem::action("Copy", "Ctrl+C"));
 /// assert_eq!(menu.item_count(), 1);
 /// ```
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::{block::Block as AtomBlock, text::Text as AtomText}, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem},
+    text::Line,
+    widgets::{Borders, List, ListItem},
 };
 use serde::{Deserialize, Serialize};
 
@@ -300,11 +300,12 @@ impl ContextMenu {
 
     /// Render the context menu
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::DARK_GRAY))
             .title(self.title.as_deref().unwrap_or("Menu"))
-            .title_style(Style::default().fg(ToadTheme::FOREGROUND));
+            .title_style(Style::default().fg(ToadTheme::FOREGROUND))
+            .to_ratatui();
 
         let items: Vec<ListItem> = self
             .items
@@ -315,10 +316,11 @@ impl ContextMenu {
 
                 match item {
                     MenuItem::Separator => {
-                        let line = Line::from(Span::styled(
-                            "─".repeat(area.width.saturating_sub(4) as usize),
-                            Style::default().fg(ToadTheme::DARK_GRAY),
-                        ));
+                        let line = Line::from(
+                            AtomText::new("─".repeat(area.width.saturating_sub(4) as usize))
+                                .style(Style::default().fg(ToadTheme::DARK_GRAY))
+                                .to_span(),
+                        );
                         ListItem::new(line)
                     }
                     MenuItem::Action {
@@ -343,28 +345,31 @@ impl ContextMenu {
 
                         // Selection indicator
                         if is_selected {
-                            spans.push(Span::styled("> ", style));
+                            spans.push(AtomText::new("> ").style(style).to_span());
                         } else {
-                            spans.push(Span::raw("  "));
+                            spans.push(AtomText::new("  ").to_span());
                         }
 
                         // Icon if present
                         if let Some(icon_str) = icon {
-                            spans.push(Span::styled(format!("{} ", icon_str), style));
+                            spans.push(AtomText::new(format!("{} ", icon_str)).style(style).to_span());
                         }
 
                         // Label
-                        spans.push(Span::styled(label, style));
+                        spans.push(AtomText::new(label).style(style).to_span());
 
                         // Shortcut (right-aligned)
                         if let Some(shortcut_str) = shortcut {
-                            spans.push(Span::raw(" "));
-                            spans.push(Span::styled(
-                                shortcut_str,
-                                Style::default()
-                                    .fg(ToadTheme::DARK_GRAY)
-                                    .add_modifier(Modifier::DIM),
-                            ));
+                            spans.push(AtomText::new(" ").to_span());
+                            spans.push(
+                                AtomText::new(shortcut_str)
+                                    .style(
+                                        Style::default()
+                                            .fg(ToadTheme::DARK_GRAY)
+                                            .add_modifier(Modifier::DIM),
+                                    )
+                                    .to_span(),
+                            );
                         }
 
                         ListItem::new(Line::from(spans))

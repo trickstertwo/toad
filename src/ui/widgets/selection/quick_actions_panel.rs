@@ -15,12 +15,13 @@
 //! assert_eq!(actions.action_count(), 3);
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Widget},
+    text::Line,
+    widgets::{Borders, Widget},
 };
 
 /// Quick action item
@@ -480,21 +481,24 @@ impl QuickActions {
 
                 // Selection indicator
                 if is_selected {
-                    spans.push(Span::styled(
-                        "> ".to_string(),
-                        Style::default()
-                            .fg(Color::Cyan)
-                            .add_modifier(Modifier::BOLD),
-                    ));
+                    spans.push(
+                        AtomText::new("> ")
+                            .style(
+                                Style::default()
+                                    .fg(Color::Cyan)
+                                    .add_modifier(Modifier::BOLD),
+                            )
+                            .to_span(),
+                    );
                 } else {
-                    spans.push(Span::raw("  ".to_string()));
+                    spans.push(AtomText::new("  ").to_span());
                 }
 
                 // Icon
                 if self.show_icons
                     && let Some(icon) = action.icon()
                 {
-                    spans.push(Span::raw(format!("{} ", icon)));
+                    spans.push(AtomText::new(format!("{} ", icon)).to_span());
                 }
 
                 // Label
@@ -508,17 +512,18 @@ impl QuickActions {
                     Style::default().fg(Color::Gray)
                 };
 
-                spans.push(Span::styled(action.label().to_string(), label_style));
+                spans.push(AtomText::new(action.label()).style(label_style).to_span());
 
                 // Keybind
                 if self.show_keybinds
                     && let Some(keybind) = action.keybind()
                 {
-                    spans.push(Span::raw(" ".to_string()));
-                    spans.push(Span::styled(
-                        format!("[{}]", keybind),
-                        Style::default().fg(Color::DarkGray),
-                    ));
+                    spans.push(AtomText::new(" ").to_span());
+                    spans.push(
+                        AtomText::new(format!("[{}]", keybind))
+                            .style(Style::default().fg(Color::DarkGray))
+                            .to_span(),
+                    );
                 }
 
                 lines.push(Line::from(spans));
@@ -528,21 +533,24 @@ impl QuickActions {
 
                 // Selection indicator
                 if is_selected {
-                    label_spans.push(Span::styled(
-                        "> ".to_string(),
-                        Style::default()
-                            .fg(Color::Cyan)
-                            .add_modifier(Modifier::BOLD),
-                    ));
+                    label_spans.push(
+                        AtomText::new("> ")
+                            .style(
+                                Style::default()
+                                    .fg(Color::Cyan)
+                                    .add_modifier(Modifier::BOLD),
+                            )
+                            .to_span(),
+                    );
                 } else {
-                    label_spans.push(Span::raw("  ".to_string()));
+                    label_spans.push(AtomText::new("  ").to_span());
                 }
 
                 // Icon
                 if self.show_icons
                     && let Some(icon) = action.icon()
                 {
-                    label_spans.push(Span::raw(format!("{} ", icon)));
+                    label_spans.push(AtomText::new(format!("{} ", icon)).to_span());
                 }
 
                 // Label
@@ -556,17 +564,18 @@ impl QuickActions {
                     Style::default().fg(Color::Cyan)
                 };
 
-                label_spans.push(Span::styled(action.label().to_string(), label_style));
+                label_spans.push(AtomText::new(action.label()).style(label_style).to_span());
 
                 // Keybind on same line
                 if self.show_keybinds
                     && let Some(keybind) = action.keybind()
                 {
-                    label_spans.push(Span::raw(" ".to_string()));
-                    label_spans.push(Span::styled(
-                        format!("[{}]", keybind),
-                        Style::default().fg(Color::DarkGray),
-                    ));
+                    label_spans.push(AtomText::new(" ").to_span());
+                    label_spans.push(
+                        AtomText::new(format!("[{}]", keybind))
+                            .style(Style::default().fg(Color::DarkGray))
+                            .to_span(),
+                    );
                 }
 
                 lines.push(Line::from(label_spans));
@@ -574,11 +583,10 @@ impl QuickActions {
                 // Description on next line
                 if self.show_descriptions && !action.description().is_empty() {
                     lines.push(Line::from(vec![
-                        Span::raw("    ".to_string()),
-                        Span::styled(
-                            action.description().to_string(),
-                            Style::default().fg(Color::DarkGray),
-                        ),
+                        AtomText::new("    ").to_span(),
+                        AtomText::new(action.description())
+                            .style(Style::default().fg(Color::DarkGray))
+                            .to_span(),
                     ]));
                 }
             }
@@ -590,7 +598,7 @@ impl QuickActions {
 
 impl Widget for &QuickActions {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let mut block = Block::default()
+        let mut block = AtomBlock::new()
             .borders(Borders::ALL)
             .style(Style::default());
 
@@ -598,6 +606,7 @@ impl Widget for &QuickActions {
             block = block.title(title.clone());
         }
 
+        let block = block.to_ratatui();
         let inner = block.inner(area);
         block.render(area, buf);
 

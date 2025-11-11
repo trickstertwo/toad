@@ -18,4 +18,4 @@ mod state;
 mod tests;
 
 // Re-export all public types
-pub use state::{MultiStageProgress, ProgressBar, StageStatus};
+pub use state::{MultiStageProgress, StageStatus};

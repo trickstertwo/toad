@@ -16,12 +16,12 @@ use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    widgets::{Block, Borders, List, ListItem, ListState},
+    widgets::{Borders, List, ListItem, ListState},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::block::Block as AtomBlock, theme::ToadTheme};
 
 /// Selection mode for multi-select
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -430,7 +430,7 @@ impl<T: std::fmt::Display> MultiSelect<T> {
             .collect();
 
         let list = List::new(items)
-            .block(Block::default().borders(Borders::ALL))
+            .block(AtomBlock::new().borders(Borders::ALL).to_ratatui())
             .highlight_style(
                 Style::default()
                     .bg(ToadTheme::TOAD_GREEN_DARK)

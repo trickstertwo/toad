@@ -16,7 +16,7 @@
 //! ```
 
 use crate::infrastructure::{FallbackMode, TerminalCapabilities};
-use crate::ui::gradient::Gradient;
+use crate::ui::effects::gradient::Gradient;
 use ratatui::style::Color;
 use ratatui::widgets::BorderType;
 
@@ -307,7 +307,7 @@ pub struct BorderStyles;
 impl BorderStyles {
     /// TOAD brand border (green-blue gradient)
     pub fn toad_brand() -> EnhancedBorder {
-        use crate::ui::gradient::Gradients;
+        use crate::ui::effects::gradient::Gradients;
         EnhancedBorder::new()
             .gradient(Gradients::toad_brand())
             .rounded(true)
@@ -358,7 +358,7 @@ impl BorderStyles {
 
     /// Sunset gradient border
     pub fn sunset() -> EnhancedBorder {
-        use crate::ui::gradient::Gradients;
+        use crate::ui::effects::gradient::Gradients;
         EnhancedBorder::new()
             .gradient(Gradients::sunset())
             .rounded(true)
@@ -366,7 +366,7 @@ impl BorderStyles {
 
     /// Ocean gradient border
     pub fn ocean() -> EnhancedBorder {
-        use crate::ui::gradient::Gradients;
+        use crate::ui::effects::gradient::Gradients;
         EnhancedBorder::new()
             .gradient(Gradients::ocean())
             .rounded(true)
@@ -396,7 +396,7 @@ mod tests {
 
     #[test]
     fn test_border_with_gradient() {
-        use crate::ui::gradient::{Gradient, GradientDirection};
+        use crate::ui::effects::gradient::{Gradient, GradientDirection};
 
         let gradient = Gradient::linear(Color::Red, Color::Blue, GradientDirection::Horizontal);
         let border = EnhancedBorder::new().gradient(gradient);
@@ -473,7 +473,7 @@ mod tests {
 
     #[test]
     fn test_with_fallback() {
-        use crate::ui::gradient::{Gradient, GradientDirection};
+        use crate::ui::effects::gradient::{Gradient, GradientDirection};
 
         let gradient = Gradient::linear(
             Color::Rgb(255, 0, 0),

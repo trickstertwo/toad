@@ -3,10 +3,13 @@
 //! Tests for BarChart, ScatterPlot, LiveGraph, GitGraph, GitStatusPanel, GitDiffViewer.
 
 use ratatui::style::Color;
-use toad::ui::widgets::{
-    BarChart, BarData, BarDirection, DiffLine, DiffLineType, FileStatus, GitCommit, GitDiffViewer,
-    GitFile, GitGraph, GitStatusPanel, GraphType, LiveGraph, ScatterPlot, ScatterSeries,
-};
+use toad::ui::widgets::charts::bar_chart::{BarData, BarDirection};
+use toad::ui::widgets::charts::chart::{BarChart, ScatterPlot};
+use toad::ui::widgets::charts::live_graph::{GraphType, LiveGraph};
+use toad::ui::widgets::charts::scatter_plot::{ScatterSeries};
+use toad::ui::widgets::git::git_diff_viewer::{DiffLine, DiffLineType, GitDiffViewer};
+use toad::ui::widgets::git::git_graph::{GitCommit, GitGraph};
+use toad::ui::widgets::git::git_status_panel::{FileStatus, GitFile, GitStatusPanel};
 
 // ==================== BarChart Tests ====================
 

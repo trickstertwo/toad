@@ -11,12 +11,12 @@
 /// let sparkline = Sparkline::new(data);
 /// assert_eq!(sparkline.data().len(), 5);
 /// ```
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::block::Block as AtomBlock, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Borders, Paragraph},
 };
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -297,22 +297,20 @@ impl Sparkline {
         };
 
         let paragraph = if self.show_border {
-            let block = Block::default()
+            let mut block = AtomBlock::new()
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(ToadTheme::TOAD_GREEN));
 
-            let block = if let Some(ref title) = self.title {
-                block.title(format!(" {} ", title)).title_style(
+            if let Some(ref title) = self.title {
+                block = block.title(format!(" {} ", title)).title_style(
                     Style::default()
                         .fg(ToadTheme::TOAD_GREEN)
                         .add_modifier(Modifier::BOLD),
-                )
-            } else {
-                block
-            };
+                );
+            }
 
             Paragraph::new(sparkline_text)
-                .block(block)
+                .block(block.to_ratatui())
                 .style(Style::default().fg(ToadTheme::FOREGROUND))
         } else {
             Paragraph::new(sparkline_text).style(Style::default().fg(ToadTheme::FOREGROUND))

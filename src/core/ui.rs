@@ -6,7 +6,7 @@
 use crate::core::app::App;
 use crate::core::app_state::AppScreen;
 use crate::ui::theme::ToadTheme;
-use crate::ui::widgets::WelcomeScreen;
+use crate::ui::widgets::core::welcome_screen::WelcomeScreen;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -163,13 +163,417 @@ fn render_shortcuts_bar(frame: &mut Frame, area: Rect) {
     frame.render_widget(shortcuts_paragraph, area);
 }
 
-/// Render the evaluation screen
+/// Render the evaluation screen with comprehensive real-time visibility
 fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
-    // Create a centered dialog-style layout
+    // Get evaluation state
+    let eval_state = app.evaluation_state();
+
+    // If no evaluation running or completed, show simple message
+    if eval_state.is_none() {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+            .title("Evaluation Center")
+            .title_style(
+                Style::default()
+                    .fg(ToadTheme::TOAD_GREEN)
+                    .add_modifier(Modifier::BOLD),
+            );
+        let inner = block.inner(area);
+        frame.render_widget(block, area);
+
+        let msg = Paragraph::new("Starting evaluation...")
+            .style(Style::default().fg(ToadTheme::GRAY));
+        frame.render_widget(msg, inner);
+        return;
+    }
+
+    let state = eval_state.unwrap();
+
+    // Create main layout: Header + Content
+    let main_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3), // Header with task info
+            Constraint::Min(0),     // Content area
+        ])
+        .split(area);
+
+    // Render header with task progress
+    render_evaluation_header(frame, main_chunks[0], &state);
+
+    // If evaluation has results or error, show completion screen
+    if state.results.is_some() || state.error.is_some() {
+        render_evaluation_complete(frame, main_chunks[1], &state);
+        app.toasts_mut().render(frame, area);
+        return;
+    }
+
+    // Otherwise show running evaluation with multi-panel layout
+    if let Some(progress) = &state.progress {
+        render_evaluation_running(frame, main_chunks[1], progress);
+    }
+
+    // Render toasts on top
+    app.toasts_mut().render(frame, area);
+}
+
+/// Render evaluation header with task progress
+fn render_evaluation_header(frame: &mut Frame, area: Rect, state: &crate::core::app_state::EvaluationState) {
+    if let Some(progress) = &state.progress {
+        let header_block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+            .title(format!(
+                " Evaluation: Task {}/{} - Step {}/{} ",
+                progress.current_task,
+                progress.total_tasks,
+                progress.current_step.unwrap_or(0),
+                progress.max_steps.unwrap_or(25)
+            ))
+            .title_style(
+                Style::default()
+                    .fg(ToadTheme::TOAD_GREEN)
+                    .add_modifier(Modifier::BOLD),
+            );
+
+        let inner = header_block.inner(area);
+        frame.render_widget(header_block, area);
+
+        // Show task ID and metrics on one line
+        let info_line = Line::from(vec![
+            Span::styled("Task: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled(progress.task_id.clone(), Style::default().fg(ToadTheme::WHITE)),
+            Span::styled("  │  Tokens: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled(
+                format!("{}", progress.total_tokens),
+                Style::default().fg(ToadTheme::BLUE),
+            ),
+            Span::styled("  Cost: $", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled(
+                format!("{:.4}", progress.total_cost),
+                Style::default().fg(ToadTheme::TOAD_GREEN),
+            ),
+        ]);
+
+        let info_paragraph = Paragraph::new(info_line);
+        frame.render_widget(info_paragraph, inner);
+    }
+}
+
+/// Render running evaluation with multi-panel layout
+fn render_evaluation_running(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress) {
+    // Create 3-column layout: Conversation | Tool Log | Metrics
+    let columns = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(40), // Conversation
+            Constraint::Percentage(40), // Tool log + Files
+            Constraint::Percentage(20), // Metrics
+        ])
+        .split(area);
+
+    // Render conversation panel
+    render_conversation_panel(frame, columns[0], progress);
+
+    // Split middle column: Tool log (top) + Files (bottom)
+    let middle_split = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage(70), // Tool log
+            Constraint::Percentage(30), // Files modified
+        ])
+        .split(columns[1]);
+
+    render_tool_log_panel(frame, middle_split[0], progress);
+    render_files_panel(frame, middle_split[1], progress);
+
+    // Render metrics panel
+    render_metrics_panel(frame, columns[2], progress);
+}
+
+/// Render conversation panel showing LLM messages
+fn render_conversation_panel(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(ToadTheme::BLUE))
+        .title(" Conversation ")
+        .title_style(Style::default().fg(ToadTheme::BLUE).add_modifier(Modifier::BOLD));
+
+    let inner = block.inner(area);
+    frame.render_widget(block, area);
+
+    let mut lines = vec![];
+
+    // Show last N messages (scroll to bottom)
+    let max_messages = (inner.height as usize).saturating_sub(2);
+    let start_idx = progress.conversation.len().saturating_sub(max_messages);
+
+    for (idx, message) in progress.conversation.iter().skip(start_idx).enumerate() {
+        if idx > 0 {
+            lines.push(Line::from(""));
+        }
+
+        let (prefix, color) = match message.role {
+            crate::ai::llm::Role::User => ("▶ User", ToadTheme::TOAD_GREEN),
+            crate::ai::llm::Role::Assistant => ("◀ Assistant", ToadTheme::BLUE),
+        };
+
+        lines.push(Line::from(Span::styled(
+            prefix,
+            Style::default().fg(color).add_modifier(Modifier::BOLD),
+        )));
+
+        // Show first 200 characters of content (truncate if too long)
+        let content = &message.content;
+        let truncated_content;
+        let display_content = if content.len() > 200 {
+            truncated_content = format!("{}...", &content[..200]);
+            &truncated_content
+        } else {
+            content
+        };
+
+        for line in display_content.lines().take(3) {
+            lines.push(Line::from(Span::styled(
+                line.to_string(),
+                Style::default().fg(ToadTheme::WHITE),
+            )));
+        }
+    }
+
+    if lines.is_empty() {
+        lines.push(Line::from(Span::styled(
+            "Waiting for conversation...",
+            Style::default().fg(ToadTheme::GRAY),
+        )));
+    }
+
+    let paragraph = Paragraph::new(lines).wrap(ratatui::widgets::Wrap { trim: false });
+    frame.render_widget(paragraph, inner);
+}
+
+/// Render tool execution log
+fn render_tool_log_panel(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(ToadTheme::YELLOW))
+        .title(format!(" Tool Executions ({}) ", progress.tool_executions.len()))
+        .title_style(Style::default().fg(ToadTheme::YELLOW).add_modifier(Modifier::BOLD));
+
+    let inner = block.inner(area);
+    frame.render_widget(block, area);
+
+    let mut lines = vec![];
+
+    // Show last N tool executions
+    let max_tools = (inner.height as usize).saturating_sub(2);
+    let start_idx = progress.tool_executions.len().saturating_sub(max_tools);
+
+    for (idx, tool) in progress.tool_executions.iter().skip(start_idx).enumerate() {
+        if idx > 0 {
+            lines.push(Line::from(""));
+        }
+
+        let status_icon = if tool.success { "✓" } else { "✗" };
+        let status_color = if tool.success { ToadTheme::TOAD_GREEN } else { ToadTheme::RED };
+
+        lines.push(Line::from(vec![
+            Span::styled(
+                format!("{} ", status_icon),
+                Style::default().fg(status_color).add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                tool.tool_name.clone(),
+                Style::default().fg(ToadTheme::YELLOW),
+            ),
+            Span::styled(
+                format!(" ({}ms)", tool.duration_ms),
+                Style::default().fg(ToadTheme::GRAY),
+            ),
+        ]));
+
+        // Show output preview (first line only)
+        let output_preview = tool.output.lines().next().unwrap_or("");
+        if !output_preview.is_empty() {
+            let truncated = if output_preview.len() > 60 {
+                format!("{}...", &output_preview[..60])
+            } else {
+                output_preview.to_string()
+            };
+            lines.push(Line::from(Span::styled(
+                format!("  {}", truncated),
+                Style::default().fg(ToadTheme::GRAY),
+            )));
+        }
+    }
+
+    if lines.is_empty() {
+        lines.push(Line::from(Span::styled(
+            "No tools executed yet",
+            Style::default().fg(ToadTheme::GRAY),
+        )));
+    }
+
+    let paragraph = Paragraph::new(lines);
+    frame.render_widget(paragraph, inner);
+}
+
+/// Render files modified panel
+fn render_files_panel(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(ToadTheme::GRAY))
+        .title(format!(" Files Modified ({}) ", progress.files_modified.len()))
+        .title_style(Style::default().fg(ToadTheme::GRAY));
+
+    let inner = block.inner(area);
+    frame.render_widget(block, area);
+
+    let mut lines = vec![];
+
+    for file in progress.files_modified.iter().take(inner.height as usize) {
+        let file_name = file.file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("<unknown>");
+        lines.push(Line::from(vec![
+            Span::styled("● ", Style::default().fg(ToadTheme::TOAD_GREEN)),
+            Span::styled(file_name, Style::default().fg(ToadTheme::WHITE)),
+        ]));
+    }
+
+    if lines.is_empty() {
+        lines.push(Line::from(Span::styled(
+            "No files modified yet",
+            Style::default().fg(ToadTheme::GRAY),
+        )));
+    }
+
+    let paragraph = Paragraph::new(lines);
+    frame.render_widget(paragraph, inner);
+}
+
+/// Render metrics panel with per-step details
+fn render_metrics_panel(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
-        .title("Evaluation Running")
+        .title(" Metrics ")
+        .title_style(Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD));
+
+    let inner = block.inner(area);
+    frame.render_widget(block, area);
+
+    let mut lines = vec![];
+
+    // Current step metrics
+    if let Some(step) = progress.current_step {
+        lines.push(Line::from(vec![
+            Span::styled("Step: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled(
+                format!("{}/{}", step, progress.max_steps.unwrap_or(25)),
+                Style::default().fg(ToadTheme::WHITE),
+            ),
+        ]));
+    }
+
+    lines.push(Line::from(""));
+
+    // Token metrics
+    lines.push(Line::from(vec![
+            Span::styled("Total Tokens:", Style::default().fg(ToadTheme::GRAY)),
+        ]));
+    lines.push(Line::from(vec![
+        Span::styled(
+            format!("  {}", progress.total_tokens),
+            Style::default().fg(ToadTheme::BLUE),
+        ),
+    ]));
+
+    if let Some(input_tokens) = progress.step_input_tokens {
+        lines.push(Line::from(""));
+        lines.push(Line::from(vec![
+            Span::styled("Step In/Out:", Style::default().fg(ToadTheme::GRAY)),
+        ]));
+        lines.push(Line::from(vec![
+            Span::styled(
+                format!("  {} / {}", input_tokens, progress.step_output_tokens.unwrap_or(0)),
+                Style::default().fg(ToadTheme::BLUE),
+            ),
+        ]));
+    }
+
+    if let Some(cache_tokens) = progress.cache_read_tokens {
+        if cache_tokens > 0 {
+            lines.push(Line::from(vec![
+                Span::styled("  Cache: ", Style::default().fg(ToadTheme::GRAY)),
+                Span::styled(
+                    format!("{}", cache_tokens),
+                    Style::default().fg(ToadTheme::TOAD_GREEN),
+                ),
+            ]));
+        }
+    }
+
+    // Cost metrics
+    lines.push(Line::from(""));
+    lines.push(Line::from(vec![
+        Span::styled("Total Cost:", Style::default().fg(ToadTheme::GRAY)),
+    ]));
+    lines.push(Line::from(vec![
+        Span::styled(
+            format!("  ${:.4}", progress.total_cost),
+            Style::default().fg(ToadTheme::TOAD_GREEN),
+        ),
+    ]));
+
+    // Latency
+    if let Some(duration) = progress.step_duration_ms {
+        lines.push(Line::from(""));
+        lines.push(Line::from(vec![
+            Span::styled("Step Time:", Style::default().fg(ToadTheme::GRAY)),
+        ]));
+        lines.push(Line::from(vec![
+            Span::styled(
+                format!("  {}ms", duration),
+                Style::default().fg(ToadTheme::YELLOW),
+            ),
+        ]));
+    }
+
+    // Current thinking preview
+    if let Some(thinking) = &progress.current_thinking {
+        if !thinking.is_empty() {
+            lines.push(Line::from(""));
+            lines.push(Line::from(vec![
+                Span::styled("Thinking:", Style::default().fg(ToadTheme::GRAY)),
+            ]));
+            let preview = if thinking.len() > 100 {
+                format!("{}...", &thinking[..100])
+            } else {
+                thinking.clone()
+            };
+            for line in preview.lines().take(3) {
+                lines.push(Line::from(vec![
+                    Span::styled(
+                        format!("  {}", line),
+                        Style::default().fg(ToadTheme::WHITE),
+                    ),
+                ]));
+            }
+        }
+    }
+
+    let paragraph = Paragraph::new(lines);
+    frame.render_widget(paragraph, inner);
+}
+
+/// Render evaluation completion screen
+fn render_evaluation_complete(frame: &mut Frame, area: Rect, state: &crate::core::app_state::EvaluationState) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+        .title(" Evaluation Complete ")
         .title_style(
             Style::default()
                 .fg(ToadTheme::TOAD_GREEN)
@@ -179,177 +583,84 @@ fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
     let inner = block.inner(area);
     frame.render_widget(block, area);
 
-    // Get evaluation state
-    let eval_state = app.evaluation_state();
-
     let mut lines = vec![];
 
-    if let Some(state) = eval_state {
-        // Show progress if available
-        if let Some(progress) = &state.progress {
-            lines.push(Line::from(vec![
-                Span::styled("Task: ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled(
-                    format!("{}/{}", progress.current_task, progress.total_tasks),
-                    Style::default().fg(ToadTheme::TOAD_GREEN),
-                ),
-            ]));
-
-            lines.push(Line::from(vec![
-                Span::styled("Current: ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled(
-                    progress.task_id.clone(),
-                    Style::default().fg(ToadTheme::WHITE),
-                ),
-            ]));
-
-            if let Some(step) = progress.current_step
-                && let Some(max_steps) = progress.max_steps
-            {
-                lines.push(Line::from(vec![
-                    Span::styled("Agent Step: ", Style::default().fg(ToadTheme::GRAY)),
-                    Span::styled(
-                        format!("{}/{}", step, max_steps),
-                        Style::default().fg(ToadTheme::BLUE),
-                    ),
-                ]));
-            }
-
-            if let Some(tool) = &progress.last_tool {
-                lines.push(Line::from(vec![
-                    Span::styled("Last Tool: ", Style::default().fg(ToadTheme::GRAY)),
-                    Span::styled(tool.clone(), Style::default().fg(ToadTheme::YELLOW)),
-                ]));
-            }
-
-            lines.push(Line::from(""));
-            lines.push(Line::from(vec![
-                Span::styled("Tokens: ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled(
-                    format!("{}", progress.total_tokens),
-                    Style::default().fg(ToadTheme::BLUE),
-                ),
-                Span::styled("  Cost: ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled(
-                    format!("${:.4}", progress.total_cost),
-                    Style::default().fg(ToadTheme::TOAD_GREEN),
-                ),
-            ]));
-
-            if let Some(msg) = &progress.message {
-                lines.push(Line::from(""));
-                lines.push(Line::from(vec![Span::styled(
-                    msg.clone(),
-                    Style::default().fg(ToadTheme::WHITE),
-                )]));
-            }
-        }
-
-        // Show results if complete
-        if let Some(results) = &state.results {
-            lines.push(Line::from(""));
-            lines.push(Line::from(vec![Span::styled(
-                "✓ Evaluation Complete",
+    // Show results if complete
+    if let Some(results) = &state.results {
+        lines.push(Line::from(vec![Span::styled(
+            "✓ Evaluation Complete",
+            Style::default()
+                .fg(ToadTheme::TOAD_GREEN)
+                .add_modifier(Modifier::BOLD),
+        )]));
+        lines.push(Line::from(""));
+        lines.push(Line::from(vec![
+            Span::styled("Accuracy: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled(
+                format!("{:.1}%", results.accuracy),
                 Style::default()
                     .fg(ToadTheme::TOAD_GREEN)
                     .add_modifier(Modifier::BOLD),
-            )]));
-            lines.push(Line::from(""));
-            lines.push(Line::from(vec![
-                Span::styled("Accuracy: ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled(
-                    format!("{:.1}%", results.accuracy),
-                    Style::default()
-                        .fg(ToadTheme::TOAD_GREEN)
-                        .add_modifier(Modifier::BOLD),
-                ),
-            ]));
-            lines.push(Line::from(vec![
-                Span::styled("Tasks Solved: ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled(
-                    format!("{}/{}", results.tasks_solved, results.total_tasks),
-                    Style::default().fg(ToadTheme::WHITE),
-                ),
-            ]));
-            lines.push(Line::from(vec![
-                Span::styled("Avg Cost: ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled(
-                    format!("${:.4}", results.avg_cost_usd),
-                    Style::default().fg(ToadTheme::TOAD_GREEN),
-                ),
-            ]));
-            lines.push(Line::from(vec![
-                Span::styled("Avg Duration: ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled(
-                    format!("{}ms", results.avg_duration_ms),
-                    Style::default().fg(ToadTheme::BLUE),
-                ),
-            ]));
-            lines.push(Line::from(""));
-            lines.push(Line::from(vec![
-                Span::styled("Press ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled("q", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled(" or ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled("Esc", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled(
-                    " to return to main screen",
-                    Style::default().fg(ToadTheme::GRAY),
-                ),
-            ]));
-        }
+            ),
+        ]));
+        lines.push(Line::from(vec![
+            Span::styled("Tasks Solved: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled(
+                format!("{}/{}", results.tasks_solved, results.total_tasks),
+                Style::default().fg(ToadTheme::WHITE),
+            ),
+        ]));
+        lines.push(Line::from(vec![
+            Span::styled("Avg Cost: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled(
+                format!("${:.4}", results.avg_cost_usd),
+                Style::default().fg(ToadTheme::TOAD_GREEN),
+            ),
+        ]));
+        lines.push(Line::from(vec![
+            Span::styled("Avg Duration: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled(
+                format!("{}ms", results.avg_duration_ms),
+                Style::default().fg(ToadTheme::BLUE),
+            ),
+        ]));
+        lines.push(Line::from(""));
+        lines.push(Line::from(vec![
+            Span::styled("Press ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("q", Style::default().fg(ToadTheme::TOAD_GREEN)),
+            Span::styled(" or ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("Esc", Style::default().fg(ToadTheme::TOAD_GREEN)),
+            Span::styled(
+                " to return to main screen",
+                Style::default().fg(ToadTheme::GRAY),
+            ),
+        ]));
+    }
 
-        // Show error if any
-        if let Some(error) = &state.error {
-            lines.push(Line::from(""));
-            lines.push(Line::from(vec![Span::styled(
-                "✗ Evaluation Failed",
-                Style::default()
-                    .fg(ToadTheme::RED)
-                    .add_modifier(Modifier::BOLD),
-            )]));
-            lines.push(Line::from(""));
-            lines.push(Line::from(vec![Span::styled(
-                error.clone(),
-                Style::default().fg(ToadTheme::RED),
-            )]));
-            lines.push(Line::from(""));
-            lines.push(Line::from(vec![
-                Span::styled("Press ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled("Esc", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled(
-                    " to return to main screen",
-                    Style::default().fg(ToadTheme::GRAY),
-                ),
-            ]));
-        }
-
-        // Show cancel hint if still running
-        let is_running = state
-            .handle
-            .as_ref()
-            .map(|h| h.is_running())
-            .unwrap_or(false);
-
-        if is_running && state.error.is_none() && state.results.is_none() {
-            lines.push(Line::from(""));
-            lines.push(Line::from(vec![
-                Span::styled("Press ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled("Ctrl+C", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled(" or ", Style::default().fg(ToadTheme::GRAY)),
-                Span::styled("Esc", Style::default().fg(ToadTheme::TOAD_GREEN)),
-                Span::styled(" to cancel", Style::default().fg(ToadTheme::GRAY)),
-            ]));
-        }
-    } else {
+    // Show error if any
+    if let Some(error) = &state.error {
         lines.push(Line::from(vec![Span::styled(
-            "Starting evaluation...",
-            Style::default().fg(ToadTheme::GRAY),
+            "✗ Evaluation Failed",
+            Style::default()
+                .fg(ToadTheme::RED)
+                .add_modifier(Modifier::BOLD),
         )]));
+        lines.push(Line::from(""));
+        lines.push(Line::from(vec![Span::styled(
+            error.clone(),
+            Style::default().fg(ToadTheme::RED),
+        )]));
+        lines.push(Line::from(""));
+        lines.push(Line::from(vec![
+            Span::styled("Press ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("Esc", Style::default().fg(ToadTheme::TOAD_GREEN)),
+            Span::styled(
+                " to return to main screen",
+                Style::default().fg(ToadTheme::GRAY),
+            ),
+        ]));
     }
 
     let paragraph = Paragraph::new(lines).alignment(Alignment::Left);
     frame.render_widget(paragraph, inner);
-
-    // Render toasts on top
-    app.toasts_mut().render(frame, area);
 }

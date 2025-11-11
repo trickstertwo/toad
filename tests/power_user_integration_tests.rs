@@ -1,11 +1,12 @@
 /// Integration tests for power user features (PLATINUM tier)
 ///
 /// Tests for Minimap, Breadcrumbs, MultiSelect, TokenCounter, ModelSelector
-use toad::ui::multiselect::SelectionMode;
-use toad::ui::widgets::{
-    BreadcrumbSegment, Breadcrumbs, CostModel, Minimap, MinimapMode, ModelInfo, ModelSelector,
-    MultiSelect, TokenCounter, TokenUsage,
-};
+use toad::ui::widgets::selection::multiselect::SelectionMode;
+use toad::ui::widgets::core::breadcrumbs::{BreadcrumbSegment, Breadcrumbs};
+use toad::ui::widgets::layout::minimap::{Minimap, MinimapMode};
+use toad::ui::widgets::progress::token_counter::{CostModel, TokenCounter, TokenUsage};
+use toad::ui::widgets::selection::model_selector::{ModelInfo, ModelSelector};
+use toad::ui::widgets::selection::multiselect::{MultiSelect};
 
 // ============================================================================
 // Minimap Integration Tests

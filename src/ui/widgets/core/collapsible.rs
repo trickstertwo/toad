@@ -10,13 +10,16 @@
 /// let section = CollapsibleSection::new("Section 1", "Content here");
 /// assert!(!section.is_expanded());
 /// ```
-use crate::ui::theme::ToadTheme;
+use crate::ui::{
+    atoms::{block::Block as AtomBlock, text::Text},
+    theme::ToadTheme,
+};
 use ratatui::{
     Frame,
     layout::{Constraint, Layout, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    text::Line,
+    widgets::{Borders, Paragraph},
 };
 use serde::{Deserialize, Serialize};
 
@@ -306,14 +309,15 @@ impl CollapsibleList {
             };
 
             let header_text = Line::from(vec![
-                Span::styled(section.indicator(), header_style),
-                Span::raw(" "),
-                Span::styled(&section.title, header_style),
+                Text::new(section.indicator()).style(header_style).to_span(),
+                Text::new(" ").to_span(),
+                Text::new(&section.title).style(header_style).to_span(),
             ]);
 
-            let header_block = Block::default()
+            let header_block = AtomBlock::new()
                 .borders(Borders::ALL)
-                .border_style(border_style);
+                .border_style(border_style)
+                .to_ratatui();
 
             let header_para = Paragraph::new(header_text).block(header_block);
             frame.render_widget(header_para, chunks[chunk_idx]);
@@ -321,9 +325,10 @@ impl CollapsibleList {
 
             // Render content if expanded
             if section.is_expanded() && chunk_idx < chunks.len() {
-                let content_block = Block::default()
+                let content_block = AtomBlock::new()
                     .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
-                    .border_style(border_style);
+                    .border_style(border_style)
+                    .to_ratatui();
 
                 let content_para = Paragraph::new(section.content())
                     .block(content_block)

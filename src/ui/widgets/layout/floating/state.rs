@@ -2,12 +2,12 @@
 /// assert_eq!(window.title(), "Settings");
 /// assert!(!window.is_minimized());
 /// ```
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::block::Block as AtomBlock, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    widgets::{Borders, Paragraph, Wrap},
 };
 use serde::{Deserialize, Serialize};
 
@@ -245,7 +245,7 @@ impl FloatingWindow {
             self.title.clone()
         };
 
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
             .title(title_text)
@@ -254,7 +254,8 @@ impl FloatingWindow {
                     .fg(ToadTheme::TOAD_GREEN)
                     .add_modifier(Modifier::BOLD),
             )
-            .style(Style::default().bg(ToadTheme::BLACK));
+            .style(Style::default().bg(ToadTheme::BLACK))
+            .to_ratatui();
 
         if self.minimized {
             frame.render_widget(block, area);

@@ -4,10 +4,9 @@
 
 use toad::infrastructure::FileOps;
 use toad::navigation::{Bookmark, BookmarkManager, RecentFiles};
-use toad::ui::widgets::{
-    ChatMessage, ChatPanel, CostModel, MessageRole, ModelInfo, ModelSelector, TokenCounter,
-    TokenUsage,
-};
+use toad::ui::widgets::chat_panel::{ChatMessage, ChatPanel, MessageRole};
+use toad::ui::widgets::progress::token_counter::{CostModel, TokenCounter, TokenUsage};
+use toad::ui::widgets::selection::model_selector::{ModelInfo, ModelSelector};
 
 // ==================== ChatPanel Tests ====================
 

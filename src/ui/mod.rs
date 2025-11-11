@@ -4,42 +4,47 @@
 //!
 //! # Atomic UI Design
 //!
-//! Following Atomic Design methodology for Phase 1 refactoring:
+//! Following Atomic Design methodology:
 //! - **atoms**: Fundamental primitives (text, block, button, icon)
 //! - **molecules**: Composite components (metric_card, task_item, progress_bar)
 //! - **organisms**: Complex compositions (eval_panel)
 //! - **screens**: Full screen layouts (evaluation, welcome, main)
+//!
+//! # Module Organization
+//!
+//! - **primitives**: Basic building blocks (box_drawing, nerd_fonts, logo)
+//! - **effects**: Visual effects (animations, gradients)
+//! - **rendering**: Rendering utilities (backgrounds, canvas, borders)
+//! - **layout**: Layout management (responsive, multi-window)
+//! - **syntax**: Syntax highlighting
+//! - **theme**: Theme system
+//! - **widgets**: Stateful UI components
 
-pub mod animations;
 pub mod atoms;
-pub mod board_background;
-pub mod box_drawing;
-pub mod enhanced_borders;
-pub mod gradient;
-pub mod logo;
+pub mod effects;
+pub mod layout;
 pub mod molecules;
-pub mod multi_window;
-pub mod nerd_fonts;
 pub mod organisms;
-pub mod pixel_canvas;
-pub mod responsive_layout;
+pub mod primitives;
+pub mod rendering;
 pub mod screens;
 pub mod syntax;
 pub mod theme;
 pub mod widgets;
 
-// Re-exports
-pub use animations::{Animation, AnimationState, EasingFunction, TransitionManager};
-pub use board_background::{BackgroundStyle, BoardBackground, BoardBackgrounds, PatternType};
-pub use box_drawing::{BoxBuilder, BoxChars, BoxStyle};
-pub use enhanced_borders::{
-    BorderEffect, BorderStyles, BorderThickness, CornerStyle, EnhancedBorder,
+// Re-exports for convenience
+pub use effects::{
+    Animation, AnimationState, ColorStop, EasingFunction, Gradient, GradientDirection,
+    GradientType, Gradients, TransitionManager,
 };
-pub use gradient::{ColorStop, Gradient, GradientDirection, GradientType, Gradients};
-pub use multi_window::{Window, WindowId, WindowManager, WindowPriority, WindowState};
-pub use nerd_fonts::{GitStatus, NerdFonts, UiIcon, supports_nerd_fonts};
-pub use pixel_canvas::{Canvas, Pixel, Shape};
-pub use responsive_layout::{ResponsiveLayout, ScreenSize};
+pub use layout::{
+    ResponsiveLayout, ScreenSize, Window, WindowId, WindowManager, WindowPriority, WindowState,
+};
+pub use primitives::{BoxBuilder, BoxChars, BoxStyle, GitStatus, NerdFonts, UiIcon, supports_nerd_fonts};
+pub use rendering::{
+    BackgroundStyle, BoardBackground, BoardBackgrounds, BorderEffect, BorderStyles,
+    BorderThickness, Canvas, CornerStyle, EnhancedBorder, PatternType, Pixel, Shape,
+};
 pub use syntax::{HighlightTheme, HighlightedSpan, Language, SyntaxHighlighter};
 pub use theme::ToadTheme;
 pub use widgets::*;

@@ -3,7 +3,10 @@
 //! Tests for data visualization (LineChart) and user input (InputField, Dialog) widgets.
 
 use ratatui::style::Color;
-use toad::ui::widgets::{ConfirmDialog, DataSeries, DialogOption, InputField, LineChart};
+use toad::ui::widgets::charts::chart::{LineChart};
+use toad::ui::widgets::charts::line_chart::{DataSeries};
+use toad::ui::widgets::core::dialog::{ConfirmDialog, DialogOption};
+use toad::ui::widgets::input::input::{InputField};
 
 // ==================== LineChart Tests ====================
 

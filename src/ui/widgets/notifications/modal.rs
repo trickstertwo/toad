@@ -2,13 +2,16 @@
 //!
 //! Error, warning, info, and success modals
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{
+    atoms::{block::Block as AtomBlock, text::Text},
+    theme::ToadTheme,
+};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    text::Line,
+    widgets::{Borders, Paragraph, Wrap},
 };
 
 /// Modal type
@@ -152,12 +155,13 @@ impl Modal {
             .as_deref()
             .unwrap_or(self.modal_type.title_prefix());
 
-        let block = Block::default()
-            .title(format!(" {} {} ", self.modal_type.icon(), title))
+        let block = AtomBlock::new()
+            .title(&format!(" {} {} ", self.modal_type.icon(), title))
             .title_style(Style::default().fg(color).add_modifier(Modifier::BOLD))
             .borders(Borders::ALL)
             .border_style(Style::default().fg(color))
-            .style(Style::default().bg(ToadTheme::BLACK));
+            .style(Style::default().bg(ToadTheme::BLACK))
+            .to_ratatui();
 
         let inner = block.inner(modal_area);
         frame.render_widget(block, modal_area);
@@ -175,21 +179,25 @@ impl Modal {
         // Render message
         let mut lines = vec![
             Line::from(""),
-            Line::from(Span::styled(
-                &self.message,
-                Style::default()
-                    .fg(ToadTheme::FOREGROUND)
-                    .add_modifier(Modifier::BOLD),
-            )),
+            Line::from(
+                Text::new(&self.message)
+                    .style(
+                        Style::default()
+                            .fg(ToadTheme::FOREGROUND)
+                            .add_modifier(Modifier::BOLD),
+                    )
+                    .to_span(),
+            ),
         ];
 
         if !self.details.is_empty() {
             lines.push(Line::from(""));
             for detail in &self.details {
-                lines.push(Line::from(Span::styled(
-                    detail,
-                    Style::default().fg(ToadTheme::GRAY),
-                )));
+                lines.push(Line::from(
+                    Text::new(detail)
+                        .style(Style::default().fg(ToadTheme::GRAY))
+                        .to_span(),
+                ));
             }
         }
 
@@ -201,10 +209,11 @@ impl Modal {
 
         // Render button
         let button_text = format!("[ {} ]", self.button_label);
-        let button_line = Line::from(Span::styled(
-            button_text,
-            Style::default().fg(color).add_modifier(Modifier::BOLD),
-        ));
+        let button_line = Line::from(
+            Text::new(button_text)
+                .style(Style::default().fg(color).add_modifier(Modifier::BOLD))
+                .to_span(),
+        );
         let button_paragraph = Paragraph::new(button_line).alignment(Alignment::Center);
 
         frame.render_widget(button_paragraph, chunks[2]);

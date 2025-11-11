@@ -24,12 +24,13 @@
 //! resolver.load_conflict("src/main.rs", conflict);
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text};
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, StatefulWidget, Widget},
+    text::Line,
+    widgets::{Borders, List, ListItem, ListState, Paragraph, StatefulWidget, Widget},
 };
 
 /// Conflict region in a file
@@ -411,19 +412,18 @@ impl Widget for &ConflictResolver {
                 let label = conflict.resolution.label();
 
                 let content = vec![Line::from(vec![
-                    Span::styled(format!("{} ", icon), Style::default().fg(color)),
-                    Span::styled(
-                        format!("[{}] ", label),
-                        Style::default().fg(color).add_modifier(Modifier::BOLD),
-                    ),
-                    Span::styled(
-                        format!("Conflict {} ", idx + 1),
-                        Style::default().fg(Color::White),
-                    ),
-                    Span::styled(
-                        format!("({}:{})", conflict.start_line, conflict.end_line),
-                        Style::default().fg(Color::DarkGray),
-                    ),
+                    Text::new(format!("{} ", icon))
+                        .style(Style::default().fg(color))
+                        .to_span(),
+                    Text::new(format!("[{}] ", label))
+                        .style(Style::default().fg(color).add_modifier(Modifier::BOLD))
+                        .to_span(),
+                    Text::new(format!("Conflict {} ", idx + 1))
+                        .style(Style::default().fg(Color::White))
+                        .to_span(),
+                    Text::new(format!("({}:{})", conflict.start_line, conflict.end_line))
+                        .style(Style::default().fg(Color::DarkGray))
+                        .to_span(),
                 ])];
 
                 ListItem::new(content)
@@ -438,10 +438,11 @@ impl Widget for &ConflictResolver {
 
         let list = List::new(items)
             .block(
-                Block::default()
+                AtomBlock::new()
                     .borders(Borders::ALL)
-                    .title(title)
-                    .border_style(Style::default().fg(Color::Yellow)),
+                    .title(&title)
+                    .border_style(Style::default().fg(Color::Yellow))
+                    .to_ratatui(),
             )
             .highlight_style(
                 Style::default()
@@ -467,16 +468,21 @@ impl Widget for &ConflictResolver {
                         .ours
                         .iter()
                         .map(|line| {
-                            Line::from(Span::styled(line, Style::default().fg(Color::Blue)))
+                            Line::from(
+                                Text::new(line)
+                                    .style(Style::default().fg(Color::Blue))
+                                    .to_span(),
+                            )
                         })
                         .collect();
 
                     let ours_para = Paragraph::new(ours_text)
                         .block(
-                            Block::default()
+                            AtomBlock::new()
                                 .borders(Borders::ALL)
-                                .title(format!("◀ {} (Ours)", self.our_branch))
-                                .border_style(Style::default().fg(Color::Blue)),
+                                .title(&format!("◀ {} (Ours)", self.our_branch))
+                                .border_style(Style::default().fg(Color::Blue))
+                                .to_ratatui(),
                         )
                         .wrap(ratatui::widgets::Wrap { trim: false });
 
@@ -487,16 +493,21 @@ impl Widget for &ConflictResolver {
                         .theirs
                         .iter()
                         .map(|line| {
-                            Line::from(Span::styled(line, Style::default().fg(Color::Green)))
+                            Line::from(
+                                Text::new(line)
+                                    .style(Style::default().fg(Color::Green))
+                                    .to_span(),
+                            )
                         })
                         .collect();
 
                     let theirs_para = Paragraph::new(theirs_text)
                         .block(
-                            Block::default()
+                            AtomBlock::new()
                                 .borders(Borders::ALL)
-                                .title(format!("▶ {} (Theirs)", self.their_branch))
-                                .border_style(Style::default().fg(Color::Green)),
+                                .title(&format!("▶ {} (Theirs)", self.their_branch))
+                                .border_style(Style::default().fg(Color::Green))
+                                .to_ratatui(),
                         )
                         .wrap(ratatui::widgets::Wrap { trim: false });
 
@@ -506,47 +517,59 @@ impl Widget for &ConflictResolver {
                     let content_area = chunks[1];
 
                     if self.view_mode == ConflictViewMode::Unified {
-                        let mut lines = vec![Line::from(Span::styled(
-                            format!("<<<<<<< {}", self.our_branch),
-                            Style::default()
-                                .fg(Color::Cyan)
-                                .add_modifier(Modifier::BOLD),
-                        ))];
+                        let mut lines = vec![Line::from(
+                            Text::new(format!("<<<<<<< {}", self.our_branch))
+                                .style(
+                                    Style::default()
+                                        .fg(Color::Cyan)
+                                        .add_modifier(Modifier::BOLD),
+                                )
+                                .to_span(),
+                        )];
 
                         for line in &conflict.ours {
-                            lines.push(Line::from(Span::styled(
-                                line,
-                                Style::default().fg(Color::Blue),
-                            )));
+                            lines.push(Line::from(
+                                Text::new(line)
+                                    .style(Style::default().fg(Color::Blue))
+                                    .to_span(),
+                            ));
                         }
 
-                        lines.push(Line::from(Span::styled(
-                            "=======",
-                            Style::default()
-                                .fg(Color::Cyan)
-                                .add_modifier(Modifier::BOLD),
-                        )));
+                        lines.push(Line::from(
+                            Text::new("=======")
+                                .style(
+                                    Style::default()
+                                        .fg(Color::Cyan)
+                                        .add_modifier(Modifier::BOLD),
+                                )
+                                .to_span(),
+                        ));
 
                         for line in &conflict.theirs {
-                            lines.push(Line::from(Span::styled(
-                                line,
-                                Style::default().fg(Color::Green),
-                            )));
+                            lines.push(Line::from(
+                                Text::new(line)
+                                    .style(Style::default().fg(Color::Green))
+                                    .to_span(),
+                            ));
                         }
 
-                        lines.push(Line::from(Span::styled(
-                            format!(">>>>>>> {}", self.their_branch),
-                            Style::default()
-                                .fg(Color::Cyan)
-                                .add_modifier(Modifier::BOLD),
-                        )));
+                        lines.push(Line::from(
+                            Text::new(format!(">>>>>>> {}", self.their_branch))
+                                .style(
+                                    Style::default()
+                                        .fg(Color::Cyan)
+                                        .add_modifier(Modifier::BOLD),
+                                )
+                                .to_span(),
+                        ));
 
                         let para = Paragraph::new(lines)
                             .block(
-                                Block::default()
+                                AtomBlock::new()
                                     .borders(Borders::ALL)
                                     .title("Unified View")
-                                    .border_style(Style::default().fg(Color::Cyan)),
+                                    .border_style(Style::default().fg(Color::Cyan))
+                                    .to_ratatui(),
                             )
                             .wrap(ratatui::widgets::Wrap { trim: false });
 
@@ -556,54 +579,67 @@ impl Widget for &ConflictResolver {
                         let mut lines = Vec::new();
 
                         if let Some(base) = &conflict.base {
-                            lines.push(Line::from(Span::styled(
-                                "BASE:",
-                                Style::default()
-                                    .fg(Color::Yellow)
-                                    .add_modifier(Modifier::BOLD),
-                            )));
+                            lines.push(Line::from(
+                                Text::new("BASE:")
+                                    .style(
+                                        Style::default()
+                                            .fg(Color::Yellow)
+                                            .add_modifier(Modifier::BOLD),
+                                    )
+                                    .to_span(),
+                            ));
                             for line in base {
-                                lines.push(Line::from(Span::styled(
-                                    line,
-                                    Style::default().fg(Color::Yellow),
-                                )));
+                                lines.push(Line::from(
+                                    Text::new(line)
+                                        .style(Style::default().fg(Color::Yellow))
+                                        .to_span(),
+                                ));
                             }
                             lines.push(Line::from(""));
                         }
 
-                        lines.push(Line::from(Span::styled(
-                            format!("OURS ({}):", self.our_branch),
-                            Style::default()
-                                .fg(Color::Blue)
-                                .add_modifier(Modifier::BOLD),
-                        )));
+                        lines.push(Line::from(
+                            Text::new(format!("OURS ({}):", self.our_branch))
+                                .style(
+                                    Style::default()
+                                        .fg(Color::Blue)
+                                        .add_modifier(Modifier::BOLD),
+                                )
+                                .to_span(),
+                        ));
                         for line in &conflict.ours {
-                            lines.push(Line::from(Span::styled(
-                                line,
-                                Style::default().fg(Color::Blue),
-                            )));
+                            lines.push(Line::from(
+                                Text::new(line)
+                                    .style(Style::default().fg(Color::Blue))
+                                    .to_span(),
+                            ));
                         }
 
                         lines.push(Line::from(""));
-                        lines.push(Line::from(Span::styled(
-                            format!("THEIRS ({}):", self.their_branch),
-                            Style::default()
-                                .fg(Color::Green)
-                                .add_modifier(Modifier::BOLD),
-                        )));
+                        lines.push(Line::from(
+                            Text::new(format!("THEIRS ({}):", self.their_branch))
+                                .style(
+                                    Style::default()
+                                        .fg(Color::Green)
+                                        .add_modifier(Modifier::BOLD),
+                                )
+                                .to_span(),
+                        ));
                         for line in &conflict.theirs {
-                            lines.push(Line::from(Span::styled(
-                                line,
-                                Style::default().fg(Color::Green),
-                            )));
+                            lines.push(Line::from(
+                                Text::new(line)
+                                    .style(Style::default().fg(Color::Green))
+                                    .to_span(),
+                            ));
                         }
 
                         let para = Paragraph::new(lines)
                             .block(
-                                Block::default()
+                                AtomBlock::new()
                                     .borders(Borders::ALL)
                                     .title("Three-Way View")
-                                    .border_style(Style::default().fg(Color::Magenta)),
+                                    .border_style(Style::default().fg(Color::Magenta))
+                                    .to_ratatui(),
                             )
                             .wrap(ratatui::widgets::Wrap { trim: false });
 

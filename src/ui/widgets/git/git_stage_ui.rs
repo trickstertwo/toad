@@ -17,14 +17,17 @@
 //! # }
 //! ```
 
-use crate::git::{FileChange, GitService};
+use crate::{
+    git::{FileChange, GitService},
+    ui::atoms::{block::Block as AtomBlock, text::Text as AtomText},
+};
 use anyhow::Result;
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, StatefulWidget, Widget},
+    text::Line,
+    widgets::{Borders, List, ListItem, ListState, Paragraph, StatefulWidget, Widget},
 };
 use std::path::PathBuf;
 
@@ -419,25 +422,35 @@ impl Widget for &mut GitStageUI {
 
         // Render header with branch info
         let header = Paragraph::new(vec![Line::from(vec![
-            Span::styled("Branch: ", Style::default().fg(Color::Gray)),
-            Span::styled(
-                &self.branch,
-                Style::default()
-                    .fg(Color::Cyan)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled("  |  ", Style::default().fg(Color::Gray)),
-            Span::styled(
-                format!("Unstaged: {}", self.unstaged.len()),
-                Style::default().fg(Color::Yellow),
-            ),
-            Span::styled("  |  ", Style::default().fg(Color::Gray)),
-            Span::styled(
-                format!("Staged: {}", self.staged.len()),
-                Style::default().fg(Color::Green),
-            ),
+            AtomText::new("Branch: ")
+                .style(Style::default().fg(Color::Gray))
+                .to_span(),
+            AtomText::new(&self.branch)
+                .style(
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                )
+                .to_span(),
+            AtomText::new("  |  ")
+                .style(Style::default().fg(Color::Gray))
+                .to_span(),
+            AtomText::new(format!("Unstaged: {}", self.unstaged.len()))
+                .style(Style::default().fg(Color::Yellow))
+                .to_span(),
+            AtomText::new("  |  ")
+                .style(Style::default().fg(Color::Gray))
+                .to_span(),
+            AtomText::new(format!("Staged: {}", self.staged.len()))
+                .style(Style::default().fg(Color::Green))
+                .to_span(),
         ])])
-        .block(Block::default().borders(Borders::ALL).title("Git Stage"));
+        .block(
+            AtomBlock::new()
+                .borders(Borders::ALL)
+                .title("Git Stage")
+                .to_ratatui(),
+        );
         header.render(chunks[0], buf);
 
         // Split panes area horizontally
@@ -452,10 +465,12 @@ impl Widget for &mut GitStageUI {
                 let style = Style::default().fg(entry.change.color());
                 let marker = if entry.is_selected { "[x] " } else { "[ ] " };
                 ListItem::new(Line::from(vec![
-                    Span::styled(marker, style),
-                    Span::styled(entry.change.char(), style.add_modifier(Modifier::BOLD)),
-                    Span::raw(" "),
-                    Span::raw(entry.path.display().to_string()),
+                    AtomText::new(marker).style(style).to_span(),
+                    AtomText::new(entry.change.char())
+                        .style(style.add_modifier(Modifier::BOLD))
+                        .to_span(),
+                    AtomText::new(" ").to_span(),
+                    AtomText::new(entry.path.display().to_string()).to_span(),
                 ]))
             })
             .collect();
@@ -468,10 +483,11 @@ impl Widget for &mut GitStageUI {
 
         let unstaged_list = List::new(unstaged_items)
             .block(
-                Block::default()
+                AtomBlock::new()
                     .borders(Borders::ALL)
                     .title("Unstaged")
-                    .border_style(unstaged_border),
+                    .border_style(unstaged_border)
+                    .to_ratatui(),
             )
             .highlight_style(
                 Style::default()
@@ -489,10 +505,12 @@ impl Widget for &mut GitStageUI {
                 let style = Style::default().fg(entry.change.color());
                 let marker = if entry.is_selected { "[x] " } else { "[ ] " };
                 ListItem::new(Line::from(vec![
-                    Span::styled(marker, style),
-                    Span::styled(entry.change.char(), style.add_modifier(Modifier::BOLD)),
-                    Span::raw(" "),
-                    Span::raw(entry.path.display().to_string()),
+                    AtomText::new(marker).style(style).to_span(),
+                    AtomText::new(entry.change.char())
+                        .style(style.add_modifier(Modifier::BOLD))
+                        .to_span(),
+                    AtomText::new(" ").to_span(),
+                    AtomText::new(entry.path.display().to_string()).to_span(),
                 ]))
             })
             .collect();
@@ -505,10 +523,11 @@ impl Widget for &mut GitStageUI {
 
         let staged_list = List::new(staged_items)
             .block(
-                Block::default()
+                AtomBlock::new()
                     .borders(Borders::ALL)
                     .title("Staged")
-                    .border_style(staged_border),
+                    .border_style(staged_border)
+                    .to_ratatui(),
             )
             .highlight_style(
                 Style::default()

@@ -20,7 +20,7 @@ use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
     text::Line,
-    widgets::{Block, List, ListItem, ListState, StatefulWidget, Widget},
+    widgets::{List, ListItem, ListState, StatefulWidget, Widget},
 };
 use std::path::PathBuf;
 

@@ -29,7 +29,7 @@
 //! ```
 
 use crate::ui::atoms::text::Text;
-use crate::ui::nerd_fonts::{GitStatus, NerdFonts, UiIcon};
+use crate::ui::primitives::nerd_fonts::{GitStatus, NerdFonts, UiIcon};
 use ratatui::style::Style;
 use std::path::Path;
 

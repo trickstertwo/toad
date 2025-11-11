@@ -31,13 +31,13 @@
 //!     });
 //! ```
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::{block::Block as AtomBlock, text::Text as AtomText}, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Clear, Paragraph},
+    text::Line,
+    widgets::{Borders, Clear, Paragraph},
 };
 
 /// Input dialog state
@@ -398,11 +398,12 @@ impl InputDialog {
             ToadTheme::TOAD_GREEN
         };
 
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(border_color))
             .title(self.title.as_str())
-            .style(Style::default().bg(ToadTheme::BLACK));
+            .style(Style::default().bg(ToadTheme::BLACK))
+            .to_ratatui();
 
         let inner = block.inner(dialog_area);
         frame.render_widget(block, dialog_area);
@@ -421,12 +422,13 @@ impl InputDialog {
 
         // Render input field
         let input_text = if self.value.is_empty() {
-            Line::from(vec![Span::styled(
-                &self.placeholder,
-                Style::default()
-                    .fg(ToadTheme::GRAY)
-                    .add_modifier(Modifier::ITALIC),
-            )])
+            Line::from(vec![AtomText::new(&self.placeholder)
+                .style(
+                    Style::default()
+                        .fg(ToadTheme::GRAY)
+                        .add_modifier(Modifier::ITALIC),
+                )
+                .to_span()])
         } else {
             // Show text with cursor
             let before_cursor = &self.value[..self.cursor_position];
@@ -434,38 +436,47 @@ impl InputDialog {
             let after_cursor = &self.value[self.cursor_position.min(self.value.len())..];
 
             Line::from(vec![
-                Span::styled(before_cursor, Style::default().fg(ToadTheme::FOREGROUND)),
-                Span::styled(
-                    cursor_char.to_string(),
-                    Style::default()
-                        .fg(ToadTheme::BLACK)
-                        .bg(ToadTheme::TOAD_GREEN),
-                ),
-                Span::styled(after_cursor, Style::default().fg(ToadTheme::FOREGROUND)),
+                AtomText::new(before_cursor)
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
+                AtomText::new(cursor_char.to_string())
+                    .style(
+                        Style::default()
+                            .fg(ToadTheme::BLACK)
+                            .bg(ToadTheme::TOAD_GREEN),
+                    )
+                    .to_span(),
+                AtomText::new(after_cursor)
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
             ])
         };
 
-        let input_block = Block::default()
+        let input_block = AtomBlock::new()
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(ToadTheme::GRAY));
+            .border_style(Style::default().fg(ToadTheme::GRAY))
+            .to_ratatui();
 
         let input_inner = input_block.inner(chunks[1]);
         frame.render_widget(input_block, chunks[1]);
         frame.render_widget(Paragraph::new(input_text), input_inner);
 
         // Render help text
-        let help = Paragraph::new(Line::from(vec![Span::styled(
-            &self.help_text,
-            Style::default().fg(ToadTheme::GRAY),
-        )]))
-        .alignment(Alignment::Center);
+        let help = Paragraph::new(Line::from(vec![AtomText::new(&self.help_text)
+            .style(Style::default().fg(ToadTheme::GRAY))
+            .to_span()]))
+            .alignment(Alignment::Center);
         frame.render_widget(help, chunks[3]);
 
         // Render error message if present
         if let Some(error) = &self.validation_error {
             let error_text = Paragraph::new(Line::from(vec![
-                Span::styled("✗ ", Style::default().fg(ToadTheme::RED)),
-                Span::styled(error, Style::default().fg(ToadTheme::RED)),
+                AtomText::new("✗ ")
+                    .style(Style::default().fg(ToadTheme::RED))
+                    .to_span(),
+                AtomText::new(error)
+                    .style(Style::default().fg(ToadTheme::RED))
+                    .to_span(),
             ]))
             .alignment(Alignment::Center);
             frame.render_widget(error_text, chunks[4]);

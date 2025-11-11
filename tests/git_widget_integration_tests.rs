@@ -3,7 +3,9 @@
 //! Tests cross-widget interactions and workflows for GitStatusPanel, GitGraph,
 //! GitDiffViewer, and related git functionality.
 
-use toad::ui::widgets::{FileStatus, GitCommit, GitDiffViewer, GitFile, GitGraph, GitStatusPanel};
+use toad::ui::widgets::git::git_diff_viewer::{GitDiffViewer};
+use toad::ui::widgets::git::git_graph::{GitCommit, GitGraph};
+use toad::ui::widgets::git::git_status_panel::{FileStatus, GitFile, GitStatusPanel};
 
 // ==================== Git Status Panel Tests ====================
 

@@ -17,13 +17,13 @@
 //! assert_eq!(prompt.value(), "Alice");
 //! ```
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::{block::Block as AtomBlock, text::Text as AtomText}, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    text::Line,
+    widgets::{Borders, Paragraph, Wrap},
 };
 
 /// Input prompt modal for collecting user text input.
@@ -355,7 +355,7 @@ impl InputPrompt {
         let modal_area = horizontal[1];
 
         // Render modal block
-        let block = Block::default()
+        let block = AtomBlock::new()
             .title(format!(" {} ", self.title))
             .title_style(
                 Style::default()
@@ -364,7 +364,8 @@ impl InputPrompt {
             )
             .borders(Borders::ALL)
             .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
-            .style(Style::default().bg(ToadTheme::BLACK));
+            .style(Style::default().bg(ToadTheme::BLACK))
+            .to_ratatui();
 
         let inner = block.inner(modal_area);
         frame.render_widget(block, modal_area);
@@ -384,12 +385,15 @@ impl InputPrompt {
         // Render message
         let message_lines = vec![
             Line::from(""),
-            Line::from(Span::styled(
-                &self.message,
-                Style::default()
-                    .fg(ToadTheme::FOREGROUND)
-                    .add_modifier(Modifier::BOLD),
-            )),
+            Line::from(
+                AtomText::new(&self.message)
+                    .style(
+                        Style::default()
+                            .fg(ToadTheme::FOREGROUND)
+                            .add_modifier(Modifier::BOLD),
+                    )
+                    .to_span(),
+            ),
         ];
 
         let message_paragraph = Paragraph::new(message_lines)
@@ -399,25 +403,29 @@ impl InputPrompt {
         frame.render_widget(message_paragraph, chunks[0]);
 
         // Render input field
-        let input_block = Block::default()
+        let input_block = AtomBlock::new()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(if self.is_focused {
                 ToadTheme::TOAD_GREEN
             } else {
                 ToadTheme::DARK_GRAY
-            }));
+            }))
+            .to_ratatui();
 
         let input_inner = input_block.inner(chunks[2]);
         frame.render_widget(input_block, chunks[2]);
 
         // Render input text with cursor
         let input_line = if self.input_value.is_empty() {
-            Line::from(Span::styled(
-                &self.placeholder,
-                Style::default()
-                    .fg(ToadTheme::DARK_GRAY)
-                    .add_modifier(Modifier::ITALIC),
-            ))
+            Line::from(
+                AtomText::new(&self.placeholder)
+                    .style(
+                        Style::default()
+                            .fg(ToadTheme::DARK_GRAY)
+                            .add_modifier(Modifier::ITALIC),
+                    )
+                    .to_span(),
+            )
         } else {
             let before_cursor = &self.input_value[..self.cursor_position];
             let after_cursor = &self.input_value[self.cursor_position..];
@@ -434,29 +442,33 @@ impl InputPrompt {
                 &after_cursor[cursor_char.len()..]
             };
 
-            let mut spans = vec![Span::styled(
-                before_cursor,
-                Style::default().fg(ToadTheme::FOREGROUND),
-            )];
+            let mut spans = vec![AtomText::new(before_cursor)
+                .style(Style::default().fg(ToadTheme::FOREGROUND))
+                .to_span()];
 
             if self.is_focused {
-                spans.push(Span::styled(
-                    cursor_char,
-                    Style::default()
-                        .fg(ToadTheme::BLACK)
-                        .bg(ToadTheme::TOAD_GREEN),
-                ));
+                spans.push(
+                    AtomText::new(cursor_char)
+                        .style(
+                            Style::default()
+                                .fg(ToadTheme::BLACK)
+                                .bg(ToadTheme::TOAD_GREEN),
+                        )
+                        .to_span(),
+                );
             } else {
-                spans.push(Span::styled(
-                    cursor_char,
-                    Style::default().fg(ToadTheme::FOREGROUND),
-                ));
+                spans.push(
+                    AtomText::new(cursor_char)
+                        .style(Style::default().fg(ToadTheme::FOREGROUND))
+                        .to_span(),
+                );
             }
 
-            spans.push(Span::styled(
-                rest,
-                Style::default().fg(ToadTheme::FOREGROUND),
-            ));
+            spans.push(
+                AtomText::new(rest)
+                    .style(Style::default().fg(ToadTheme::FOREGROUND))
+                    .to_span(),
+            );
 
             Line::from(spans)
         };
@@ -466,10 +478,18 @@ impl InputPrompt {
 
         // Render help text
         let help_text = Line::from(vec![
-            Span::styled("Enter", Style::default().fg(ToadTheme::TOAD_GREEN)),
-            Span::styled(" to confirm, ", Style::default().fg(ToadTheme::GRAY)),
-            Span::styled("Esc", Style::default().fg(ToadTheme::TOAD_GREEN)),
-            Span::styled(" to cancel", Style::default().fg(ToadTheme::GRAY)),
+            AtomText::new("Enter")
+                .style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                .to_span(),
+            AtomText::new(" to confirm, ")
+                .style(Style::default().fg(ToadTheme::GRAY))
+                .to_span(),
+            AtomText::new("Esc")
+                .style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                .to_span(),
+            AtomText::new(" to cancel")
+                .style(Style::default().fg(ToadTheme::GRAY))
+                .to_span(),
         ]);
 
         let help_paragraph = Paragraph::new(help_text).alignment(Alignment::Center);

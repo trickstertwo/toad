@@ -7,6 +7,7 @@ use tree_sitter::{Node, Parser, Query, QueryCursor};
 
 /// JavaScript AST parser (supports both JS and JSX)
 pub struct JavaScriptParser {
+    #[allow(dead_code)]
     parser: Parser,
     function_query: Query,
     arrow_function_query: Query,

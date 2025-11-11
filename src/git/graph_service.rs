@@ -4,7 +4,7 @@
 //! fetching real commit history and converting it to the widget format.
 
 use crate::git::{CommitInfo, GitService};
-use crate::ui::widgets::{GitCommit, GitGraph};
+use crate::ui::widgets::git::git_graph::{GitCommit, GitGraph};
 use anyhow::Result;
 use ratatui::style::Color;
 use std::collections::HashMap;

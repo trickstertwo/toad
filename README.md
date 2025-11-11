@@ -38,7 +38,7 @@ cargo test
 
 ## Documentation
 
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Complete system architecture
+- **[ARCHITECTURE.md](dev/ARCHITECTURE.md)** - Complete system architecture
 - **[ITERATIVE_IMPLEMENTATION_PLAN.md](ITERATIVE_IMPLEMENTATION_PLAN.md)** - 5-milestone roadmap
 
 ## Research Reports

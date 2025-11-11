@@ -141,6 +141,7 @@ struct MessageStartData {
     role: String,
     model: String,
     usage: StreamUsage,
+    #[allow(dead_code)]
     content: Vec<serde_json::Value>, // Empty initially
 }
 

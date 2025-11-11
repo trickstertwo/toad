@@ -14,12 +14,13 @@
 //! assert_eq!(suggestions.suggestion_count(), 2);
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Widget},
+    text::Line,
+    widgets::{Borders, Widget},
 };
 
 /// Suggestion relevance score
@@ -457,29 +458,33 @@ impl SmartSuggestions {
 
             // Selection indicator
             if is_selected {
-                spans.push(Span::styled(
-                    "> ".to_string(),
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ));
+                spans.push(
+                    AtomText::new("> ")
+                        .style(
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD),
+                        )
+                        .to_span(),
+                );
             } else {
-                spans.push(Span::raw("  ".to_string()));
+                spans.push(AtomText::new("  ").to_span());
             }
 
             // Icon
             if let Some(icon) = suggestion.icon() {
-                spans.push(Span::raw(format!("{} ", icon)));
+                spans.push(AtomText::new(format!("{} ", icon)).to_span());
             }
 
             // Category
             if self.show_categories
                 && let Some(category) = suggestion.category()
             {
-                spans.push(Span::styled(
-                    format!("[{}] ", category),
-                    Style::default().fg(Color::DarkGray),
-                ));
+                spans.push(
+                    AtomText::new(format!("[{}] ", category))
+                        .style(Style::default().fg(Color::DarkGray))
+                        .to_span(),
+                );
             }
 
             // Label
@@ -490,15 +495,20 @@ impl SmartSuggestions {
             } else {
                 Style::default().fg(suggestion.relevance_color())
             };
-            spans.push(Span::styled(suggestion.label().to_string(), label_style));
+            spans.push(
+                AtomText::new(suggestion.label())
+                    .style(label_style)
+                    .to_span(),
+            );
 
             // Relevance score
             if self.show_scores {
                 let score_text = format!(" ({:.0}%)", suggestion.relevance() * 100.0);
-                spans.push(Span::styled(
-                    score_text,
-                    Style::default().fg(suggestion.relevance_color()),
-                ));
+                spans.push(
+                    AtomText::new(score_text)
+                        .style(Style::default().fg(suggestion.relevance_color()))
+                        .to_span(),
+                );
             }
 
             lines.push(Line::from(spans));
@@ -508,17 +518,18 @@ impl SmartSuggestions {
                 && let Some(reason) = suggestion.reason()
             {
                 lines.push(Line::from(vec![
-                    Span::raw("    ".to_string()),
-                    Span::styled(reason.to_string(), Style::default().fg(Color::DarkGray)),
+                    AtomText::new("    ").to_span(),
+                    AtomText::new(reason)
+                        .style(Style::default().fg(Color::DarkGray))
+                        .to_span(),
                 ]));
             }
         }
 
         if lines.is_empty() {
-            lines.push(Line::from(vec![Span::styled(
-                "  No suggestions available".to_string(),
-                Style::default().fg(Color::DarkGray),
-            )]));
+            lines.push(Line::from(vec![AtomText::new("  No suggestions available")
+                .style(Style::default().fg(Color::DarkGray))
+                .to_span()]));
         }
 
         lines
@@ -527,7 +538,7 @@ impl SmartSuggestions {
 
 impl Widget for &SmartSuggestions {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let mut block = Block::default()
+        let mut block = AtomBlock::new()
             .borders(Borders::ALL)
             .style(Style::default());
 
@@ -535,6 +546,7 @@ impl Widget for &SmartSuggestions {
             block = block.title(title.clone());
         }
 
+        let block = block.to_ratatui();
         let inner = block.inner(area);
         block.render(area, buf);
 

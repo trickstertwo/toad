@@ -19,12 +19,13 @@
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Style},
-    text::{Line, Span},
-    widgets::{Block, Paragraph, Widget},
+    text::Line,
+    widgets::{Paragraph, Widget},
 };
 
 /// Component render statistics
@@ -408,8 +409,10 @@ impl RenderProfiler {
 
         // Header
         lines.push(Line::from(vec![
-            Span::styled("Render Profiler", Style::default().fg(Color::Cyan)),
-            Span::raw(format!(" ({} components)", self.component_count())),
+            AtomText::new("Render Profiler")
+                .style(Style::default().fg(Color::Cyan))
+                .to_span(),
+            AtomText::new(format!(" ({} components)", self.component_count())).to_span(),
         ]));
 
         if self.components.is_empty() {
@@ -432,19 +435,24 @@ impl RenderProfiler {
 
             if self.show_details {
                 lines.push(Line::from(vec![
-                    Span::styled(format!("  {}", name), Style::default().fg(color)),
-                    Span::raw(format!(
+                    AtomText::new(format!("  {}", name))
+                        .style(Style::default().fg(color))
+                        .to_span(),
+                    AtomText::new(format!(
                         ": {:.2}ms avg ({:.2}-{:.2}ms, {} renders)",
                         avg_ms,
                         stats.min_ms(),
                         stats.max_ms(),
                         stats.render_count
-                    )),
+                    ))
+                    .to_span(),
                 ]));
             } else {
                 lines.push(Line::from(vec![
-                    Span::styled(format!("  {}", name), Style::default().fg(color)),
-                    Span::raw(format!(": {:.2}ms", avg_ms)),
+                    AtomText::new(format!("  {}", name))
+                        .style(Style::default().fg(color))
+                        .to_span(),
+                    AtomText::new(format!(": {:.2}ms", avg_ms)).to_span(),
                 ]));
             }
         }
@@ -474,7 +482,7 @@ impl Default for RenderProfiler {
 impl Widget for &RenderProfiler {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let lines = self.render_lines();
-        let paragraph = Paragraph::new(lines).block(Block::default());
+        let paragraph = Paragraph::new(lines).block(AtomBlock::new().to_ratatui());
         paragraph.render(area, buf);
     }
 }

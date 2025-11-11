@@ -2,13 +2,13 @@
 //!
 //! Multi-line text editing with cursor navigation
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::{block::Block as AtomBlock, text::Text as AtomText}, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState},
+    text::Line,
+    widgets::{Borders, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState},
 };
 
 /// Multi-line text editor
@@ -262,7 +262,7 @@ impl Textarea {
 
     /// Render the textarea
     pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::default()
+        let block = AtomBlock::new()
             .title(format!(" {} ", self.title))
             .title_style(
                 Style::default()
@@ -270,7 +270,8 @@ impl Textarea {
                     .add_modifier(Modifier::BOLD),
             )
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(ToadTheme::TOAD_GREEN));
+            .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+            .to_ratatui();
 
         let inner = block.inner(area);
         frame.render_widget(block, area);
@@ -298,7 +299,7 @@ impl Textarea {
                 Style::default().fg(ToadTheme::FOREGROUND)
             };
 
-            display_lines.push(Line::from(Span::styled(line_text, style)));
+            display_lines.push(Line::from(AtomText::new(line_text).style(style).to_span()));
         }
 
         let paragraph = Paragraph::new(display_lines);

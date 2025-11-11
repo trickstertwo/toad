@@ -22,7 +22,7 @@
 //! ```
 
 use crate::ui::atoms::{Block, Text};
-use crate::ui::logo::{TAGLINE, TOAD_LOGO};
+use crate::ui::primitives::logo::{TAGLINE, TOAD_LOGO};
 use crate::ui::theme::ToadTheme;
 use ratatui::{
     buffer::Buffer,

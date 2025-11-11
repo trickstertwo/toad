@@ -19,13 +19,16 @@
 //! # }
 //! ```
 
-use crate::{services::FilesystemService, ui::syntax::Language};
+use crate::{
+    services::FilesystemService,
+    ui::{atoms::{block::Block as AtomBlock, text::Text as AtomText}, syntax::Language},
+};
 use anyhow::Result;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Line, Span},
+    text::Line,
     widgets::{Block, Borders, Paragraph, Widget, Wrap},
 };
 use std::path::{Path, PathBuf};
@@ -301,14 +304,15 @@ impl Widget for &FilePreviewManager {
             String::from("Preview")
         };
 
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::ALL)
             .title(title)
             .border_style(match self.state {
                 PreviewState::Loading => Style::default().fg(Color::Yellow),
                 PreviewState::Error => Style::default().fg(Color::Red),
                 _ => Style::default().fg(Color::Cyan),
-            });
+            })
+            .to_ratatui();
 
         // Render based on state
         match self.state {
@@ -365,13 +369,14 @@ impl FilePreviewManager {
             .map(|(idx, line)| {
                 let line_num = idx + 1;
                 Line::from(vec![
-                    Span::styled(
-                        format!("{:4} │ ", line_num),
-                        Style::default()
-                            .fg(Color::DarkGray)
-                            .add_modifier(Modifier::DIM),
-                    ),
-                    Span::raw(line),
+                    AtomText::new(format!("{:4} │ ", line_num))
+                        .style(
+                            Style::default()
+                                .fg(Color::DarkGray)
+                                .add_modifier(Modifier::DIM),
+                        )
+                        .to_span(),
+                    AtomText::new(line).to_span(),
                 ])
             })
             .collect();

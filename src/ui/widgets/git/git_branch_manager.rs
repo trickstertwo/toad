@@ -17,14 +17,17 @@
 //! # }
 //! ```
 
-use crate::git::{BranchInfo, GitService};
+use crate::{
+    git::{BranchInfo, GitService},
+    ui::atoms::{block::Block as AtomBlock, text::Text as AtomText},
+};
 use anyhow::Result;
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, StatefulWidget, Widget},
+    text::Line,
+    widgets::{Borders, List, ListItem, ListState, Paragraph, StatefulWidget, Widget},
 };
 
 /// Branch operation mode
@@ -408,24 +411,29 @@ impl Widget for &mut GitBranchManager {
 
         // Render header
         let header_text = vec![Line::from(vec![
-            Span::styled("Current: ", Style::default().fg(Color::Gray)),
-            Span::styled(
-                &self.current_branch,
-                Style::default()
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled("  |  ", Style::default().fg(Color::Gray)),
-            Span::styled(
-                format!("Branches: {}", self.branches.len()),
-                Style::default().fg(Color::Cyan),
-            ),
+            AtomText::new("Current: ")
+                .style(Style::default().fg(Color::Gray))
+                .to_span(),
+            AtomText::new(&self.current_branch)
+                .style(
+                    Style::default()
+                        .fg(Color::Green)
+                        .add_modifier(Modifier::BOLD),
+                )
+                .to_span(),
+            AtomText::new("  |  ")
+                .style(Style::default().fg(Color::Gray))
+                .to_span(),
+            AtomText::new(format!("Branches: {}", self.branches.len()))
+                .style(Style::default().fg(Color::Cyan))
+                .to_span(),
         ])];
 
         let header = Paragraph::new(header_text).block(
-            Block::default()
+            AtomBlock::new()
                 .borders(Borders::ALL)
-                .title("Branch Manager"),
+                .title("Branch Manager")
+                .to_ratatui(),
         );
         header.render(chunks[0], buf);
 
@@ -450,15 +458,22 @@ impl Widget for &mut GitBranchManager {
                 };
 
                 ListItem::new(Line::from(vec![
-                    Span::styled(marker, style),
-                    Span::styled(&branch.name, style),
-                    Span::styled(ahead_behind, Style::default().fg(Color::Gray)),
+                    AtomText::new(marker).style(style).to_span(),
+                    AtomText::new(&branch.name).style(style).to_span(),
+                    AtomText::new(ahead_behind)
+                        .style(Style::default().fg(Color::Gray))
+                        .to_span(),
                 ]))
             })
             .collect();
 
         let list = List::new(items)
-            .block(Block::default().borders(Borders::ALL).title("Branches"))
+            .block(
+                AtomBlock::new()
+                    .borders(Borders::ALL)
+                    .title("Branches")
+                    .to_ratatui(),
+            )
             .highlight_style(
                 Style::default()
                     .bg(Color::DarkGray)
@@ -471,29 +486,32 @@ impl Widget for &mut GitBranchManager {
         let input_text = match self.mode {
             BranchMode::Create | BranchMode::Rename => {
                 vec![Line::from(vec![
-                    Span::styled("> ", Style::default().fg(Color::Cyan)),
-                    Span::raw(&self.input_buffer),
-                    Span::styled("█", Style::default().bg(Color::White).fg(Color::Black)),
+                    AtomText::new("> ")
+                        .style(Style::default().fg(Color::Cyan))
+                        .to_span(),
+                    AtomText::new(&self.input_buffer).to_span(),
+                    AtomText::new("█")
+                        .style(Style::default().bg(Color::White).fg(Color::Black))
+                        .to_span(),
                 ])]
             }
             _ => {
                 if let Some(err) = &self.error {
-                    vec![Line::from(vec![Span::styled(
-                        err,
-                        Style::default().fg(Color::Red),
-                    )])]
+                    vec![Line::from(vec![AtomText::new(err)
+                        .style(Style::default().fg(Color::Red))
+                        .to_span()])]
                 } else if let Some(msg) = &self.message {
-                    vec![Line::from(vec![Span::styled(
-                        msg,
-                        Style::default().fg(Color::Cyan),
-                    )])]
+                    vec![Line::from(vec![AtomText::new(msg)
+                        .style(Style::default().fg(Color::Cyan))
+                        .to_span()])]
                 } else {
                     vec![Line::from("")]
                 }
             }
         };
 
-        let input_widget = Paragraph::new(input_text).block(Block::default().borders(Borders::ALL));
+        let input_widget = Paragraph::new(input_text)
+            .block(AtomBlock::new().borders(Borders::ALL).to_ratatui());
         input_widget.render(chunks[2], buf);
 
         // Render footer

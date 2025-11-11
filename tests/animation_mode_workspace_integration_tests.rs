@@ -4,10 +4,7 @@
 
 use std::path::PathBuf;
 use std::time::Duration;
-use toad::ui::widgets::{
-    Animation, AnimationState, EasingFunction, EditorMode, IndicatorStyle, ModeIndicator,
-    MultiStageProgress, ProgressBar, StageStatus,
-};
+use toad::ui::widgets::progress::progress::{MultiStageProgress};
 use toad::workspace::{Workspace, WorkspaceManager};
 
 // ============================================================================
@@ -418,67 +415,6 @@ fn test_stage_status() {
 }
 
 // ============================================================================
-// ProgressBar Integration Tests
-// ============================================================================
-
-#[test]
-fn test_progress_bar_creation() {
-    let progress = ProgressBar::new("Loading");
-    assert_eq!(progress.progress(), 0.0);
-    assert!(!progress.is_complete());
-}
-
-#[test]
-fn test_progress_bar_with_progress() {
-    let progress = ProgressBar::new("Loading").with_progress(0.75);
-    assert_eq!(progress.progress(), 0.75);
-    assert!(!progress.is_complete());
-}
-
-#[test]
-fn test_progress_bar_with_message() {
-    let progress = ProgressBar::new("Loading").with_message("Processing files...");
-    assert_eq!(progress.progress(), 0.0);
-}
-
-#[test]
-fn test_progress_bar_set_progress() {
-    let mut progress = ProgressBar::new("Loading");
-    progress.set_progress(0.5);
-    assert_eq!(progress.progress(), 0.5);
-
-    progress.set_progress(1.0);
-    assert_eq!(progress.progress(), 1.0);
-    assert!(progress.is_complete());
-}
-
-#[test]
-fn test_progress_bar_set_message() {
-    let mut progress = ProgressBar::new("Loading");
-    progress.set_message("Step 1");
-    // Message is internal, just ensure it doesn't panic
-    assert_eq!(progress.progress(), 0.0);
-}
-
-#[test]
-fn test_progress_bar_completion() {
-    let incomplete = ProgressBar::new("Loading").with_progress(0.99);
-    assert!(!incomplete.is_complete());
-
-    let complete = ProgressBar::new("Loading").with_progress(1.0);
-    assert!(complete.is_complete());
-}
-
-#[test]
-fn test_progress_bar_clamping() {
-    let over = ProgressBar::new("Test").with_progress(1.5);
-    assert_eq!(over.progress(), 1.0);
-
-    let under = ProgressBar::new("Test").with_progress(-0.5);
-    assert_eq!(under.progress(), 0.0);
-}
-
-// ============================================================================
 // WorkspaceManager Integration Tests
 // ============================================================================
 
@@ -696,22 +632,6 @@ fn test_workspace_manager_clear() {
 // ============================================================================
 // Cross-Feature Integration Tests
 // ============================================================================
-
-#[test]
-fn test_animation_with_progress_bar() {
-    let mut anim = Animation::new(0.0, 1.0, Duration::from_secs(1));
-    let mut progress = ProgressBar::new("Animated Loading");
-
-    anim.start();
-
-    // Simulate several animation frames
-    for _ in 0..10 {
-        anim.tick(Duration::from_millis(100));
-        progress.set_progress(anim.current_value());
-    }
-
-    assert!(progress.is_complete());
-}
 
 #[test]
 fn test_multi_stage_with_mode_indicator() {

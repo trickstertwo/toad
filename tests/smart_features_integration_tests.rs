@@ -2,11 +2,12 @@
 //!
 //! Tests for undo/redo, breadcrumbs, context menus, minimap, and multiselect.
 
-use toad::ui::multiselect::SelectionMode;
-use toad::ui::widgets::{
-    Action, BreadcrumbSegment, Breadcrumbs, ContextMenu, MenuItem, Minimap, MinimapMode,
-    MultiSelect, UndoRedoManager,
-};
+use toad::ui::widgets::selection::multiselect::SelectionMode;
+use toad::ui::widgets::core::breadcrumbs::{BreadcrumbSegment, Breadcrumbs};
+use toad::ui::widgets::core::undo_redo::{Action, UndoRedoManager};
+use toad::ui::widgets::layout::minimap::{Minimap, MinimapMode};
+use toad::ui::widgets::selection::context_menu::{ContextMenu, MenuItem};
+use toad::ui::widgets::selection::multiselect::{MultiSelect};
 
 // ==================== UndoRedoManager Tests ====================
 

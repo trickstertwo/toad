@@ -12,12 +12,13 @@
 //! assert!(tip.is_some());
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Clear, Paragraph, Widget, Wrap},
+    text::Line,
+    widgets::{Borders, Clear, Paragraph, Widget, Wrap},
 };
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -251,41 +252,53 @@ impl Widget for &StartupTips {
             // Render tip content
             let mut lines = vec![
                 Line::from(vec![
-                    Span::styled("💡 ", Style::default().fg(Color::Yellow)),
-                    Span::styled(
-                        &tip.title,
-                        Style::default()
-                            .fg(Color::Cyan)
-                            .add_modifier(Modifier::BOLD),
-                    ),
+                    AtomText::new("💡 ")
+                        .style(Style::default().fg(Color::Yellow))
+                        .to_span(),
+                    AtomText::new(&tip.title)
+                        .style(
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD),
+                        )
+                        .to_span(),
                 ]),
                 Line::from(""),
-                Line::from(Span::styled(
-                    &tip.description,
-                    Style::default().fg(Color::White),
-                )),
+                Line::from(
+                    AtomText::new(&tip.description)
+                        .style(Style::default().fg(Color::White))
+                        .to_span(),
+                ),
             ];
 
             if let Some(keybinding) = &tip.keybinding {
                 lines.push(Line::from(""));
                 lines.push(Line::from(vec![
-                    Span::styled("Keybinding: ", Style::default().fg(Color::Gray)),
-                    Span::styled(keybinding, Style::default().fg(Color::Green)),
+                    AtomText::new("Keybinding: ")
+                        .style(Style::default().fg(Color::Gray))
+                        .to_span(),
+                    AtomText::new(keybinding)
+                        .style(Style::default().fg(Color::Green))
+                        .to_span(),
                 ]));
             }
 
             lines.push(Line::from(""));
-            lines.push(Line::from(vec![Span::styled(
-                format!("Tip {} of {}", self.current + 1, self.tips.len()),
-                Style::default().fg(Color::DarkGray),
-            )]));
+            lines.push(Line::from(vec![AtomText::new(format!(
+                "Tip {} of {}",
+                self.current + 1,
+                self.tips.len()
+            ))
+            .style(Style::default().fg(Color::DarkGray))
+            .to_span()]));
 
             let para = Paragraph::new(lines)
                 .block(
-                    Block::default()
+                    AtomBlock::new()
                         .borders(Borders::ALL)
                         .title("💡 Tip of the Day")
-                        .border_style(Style::default().fg(Color::Yellow)),
+                        .border_style(Style::default().fg(Color::Yellow))
+                        .to_ratatui(),
                 )
                 .wrap(Wrap { trim: false })
                 .alignment(Alignment::Left);

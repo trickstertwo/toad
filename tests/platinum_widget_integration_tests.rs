@@ -3,10 +3,11 @@
 //! Tests cross-widget interactions and workflows specific to platinum features.
 //! These tests validate that platinum widgets work correctly when used together.
 
-use toad::ui::widgets::{
-    ChatPanel, CostModel, GitDiffViewer, ModelInfo, ModelSelector, Spinner, SpinnerStyle,
-    TokenCounter, TokenUsage,
-};
+use toad::ui::widgets::chat_panel::{ChatPanel};
+use toad::ui::widgets::git::git_diff_viewer::{GitDiffViewer};
+use toad::ui::widgets::progress::spinner::{Spinner, SpinnerStyle};
+use toad::ui::widgets::progress::token_counter::{CostModel, TokenCounter, TokenUsage};
+use toad::ui::widgets::selection::model_selector::{ModelInfo, ModelSelector};
 
 // =============================================================================
 // AI WORKFLOW INTEGRATION TESTS

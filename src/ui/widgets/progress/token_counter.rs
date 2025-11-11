@@ -3,12 +3,13 @@
 //! Displays token usage statistics including input/output tokens, cost estimates,
 //! and remaining budget.
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     Frame,
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    text::Line,
+    widgets::{Borders, Paragraph},
 };
 use serde::{Deserialize, Serialize};
 
@@ -252,10 +253,11 @@ impl TokenCounter {
 
     /// Render full view
     fn render_full(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::default()
+        let block = AtomBlock::new()
             .borders(Borders::ALL)
             .title(" Token Usage ")
-            .style(Style::default().fg(Color::White));
+            .style(Style::default().fg(Color::White))
+            .to_ratatui();
 
         let inner = block.inner(area);
         frame.render_widget(block, area);
@@ -264,37 +266,35 @@ impl TokenCounter {
 
         // Session usage
         lines.push(Line::from(vec![
-            Span::styled("Session: ", Style::default().add_modifier(Modifier::BOLD)),
-            Span::styled(
-                Self::format_number(self.session_usage.total()),
-                Style::default().fg(Color::Cyan),
-            ),
-            Span::raw(" tokens"),
+            AtomText::new("Session: ")
+                .style(Style::default().add_modifier(Modifier::BOLD))
+                .to_span(),
+            AtomText::new(Self::format_number(self.session_usage.total()))
+                .style(Style::default().fg(Color::Cyan))
+                .to_span(),
+            AtomText::new(" tokens").to_span(),
         ]));
 
         if self.show_details {
             lines.push(Line::from(vec![
-                Span::raw("  Input: "),
-                Span::styled(
-                    Self::format_number(self.session_usage.input_tokens),
-                    Style::default().fg(Color::Green),
-                ),
+                AtomText::new("  Input: ").to_span(),
+                AtomText::new(Self::format_number(self.session_usage.input_tokens))
+                    .style(Style::default().fg(Color::Green))
+                    .to_span(),
             ]));
             lines.push(Line::from(vec![
-                Span::raw("  Output: "),
-                Span::styled(
-                    Self::format_number(self.session_usage.output_tokens),
-                    Style::default().fg(Color::Yellow),
-                ),
+                AtomText::new("  Output: ").to_span(),
+                AtomText::new(Self::format_number(self.session_usage.output_tokens))
+                    .style(Style::default().fg(Color::Yellow))
+                    .to_span(),
             ]));
 
             if self.session_usage.cached_tokens > 0 {
                 lines.push(Line::from(vec![
-                    Span::raw("  Cached: "),
-                    Span::styled(
-                        Self::format_number(self.session_usage.cached_tokens),
-                        Style::default().fg(Color::Blue),
-                    ),
+                    AtomText::new("  Cached: ").to_span(),
+                    AtomText::new(Self::format_number(self.session_usage.cached_tokens))
+                        .style(Style::default().fg(Color::Blue))
+                        .to_span(),
                 ]));
             }
         }
@@ -302,32 +302,31 @@ impl TokenCounter {
         // Session cost
         let session_cost = self.session_cost();
         lines.push(Line::from(vec![
-            Span::raw("  Cost: "),
-            Span::styled(
-                Self::format_cost(session_cost),
-                Style::default().fg(Color::Yellow),
-            ),
+            AtomText::new("  Cost: ").to_span(),
+            AtomText::new(Self::format_cost(session_cost))
+                .style(Style::default().fg(Color::Yellow))
+                .to_span(),
         ]));
 
         lines.push(Line::from(""));
 
         // Total usage
         lines.push(Line::from(vec![
-            Span::styled("Total: ", Style::default().add_modifier(Modifier::BOLD)),
-            Span::styled(
-                Self::format_number(self.total_usage.total()),
-                Style::default().fg(Color::Cyan),
-            ),
-            Span::raw(" tokens"),
+            AtomText::new("Total: ")
+                .style(Style::default().add_modifier(Modifier::BOLD))
+                .to_span(),
+            AtomText::new(Self::format_number(self.total_usage.total()))
+                .style(Style::default().fg(Color::Cyan))
+                .to_span(),
+            AtomText::new(" tokens").to_span(),
         ]));
 
         let total_cost = self.total_cost();
         lines.push(Line::from(vec![
-            Span::raw("  Cost: "),
-            Span::styled(
-                Self::format_cost(total_cost),
-                Style::default().fg(Color::Yellow),
-            ),
+            AtomText::new("  Cost: ").to_span(),
+            AtomText::new(Self::format_cost(total_cost))
+                .style(Style::default().fg(Color::Yellow))
+                .to_span(),
         ]));
 
         // Budget gauge if set
@@ -344,9 +343,13 @@ impl TokenCounter {
             };
 
             lines.push(Line::from(vec![
-                Span::styled("Budget: ", Style::default().add_modifier(Modifier::BOLD)),
-                Span::styled(format!("{}%", percentage), Style::default().fg(color)),
-                Span::raw(format!(" of {}", Self::format_cost(budget))),
+                AtomText::new("Budget: ")
+                    .style(Style::default().add_modifier(Modifier::BOLD))
+                    .to_span(),
+                AtomText::new(format!("{}%", percentage))
+                    .style(Style::default().fg(color))
+                    .to_span(),
+                AtomText::new(format!(" of {}", Self::format_cost(budget))).to_span(),
             ]));
         }
 

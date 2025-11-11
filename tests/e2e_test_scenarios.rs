@@ -3,10 +3,13 @@
 //! Comprehensive tests simulating complete user workflows across multiple widgets.
 //! These tests verify that widgets work correctly together in realistic usage scenarios.
 
-use toad::ui::widgets::{
-    ChatPanel, CostModel, FileStatus, GitCommit, GitDiffViewer, GitGraph, GitStatusPanel,
-    ModelInfo, ModelSelector, SessionManager, TokenCounter, TokenUsage,
-};
+use toad::ui::widgets::chat_panel::{ChatPanel};
+use toad::ui::widgets::git::git_diff_viewer::{GitDiffViewer};
+use toad::ui::widgets::git::git_graph::{GitCommit, GitGraph};
+use toad::ui::widgets::git::git_status_panel::{FileStatus, GitStatusPanel};
+use toad::ui::widgets::progress::token_counter::{CostModel, TokenCounter, TokenUsage};
+use toad::ui::widgets::selection::model_selector::{ModelInfo, ModelSelector};
+use toad::ui::widgets::session_manager::{SessionManager};
 
 // ==================== E2E: Complete AI Coding Session ====================
 

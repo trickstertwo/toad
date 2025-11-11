@@ -16,7 +16,7 @@ use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
+    text::Line,
     widgets::{Borders, Clear, List, ListItem, Paragraph, Widget},
 };
 

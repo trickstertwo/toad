@@ -1,180 +1,13 @@
 //! Progress widget state and data structures
 
-use crate::ui::theme::ToadTheme;
+use crate::ui::{atoms::block::Block as AtomBlock, theme::ToadTheme};
 use ratatui::{
     Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Gauge},
+    widgets::{Borders, Gauge},
 };
 use std::time::{Duration, Instant};
-
-/// Progress bar widget for single tasks
-///
-/// # Examples
-///
-/// ```
-/// use toad::widgets::ProgressBar;
-///
-/// let mut progress = ProgressBar::new("Download");
-/// progress.set_progress(0.5);
-/// assert_eq!(progress.progress(), 0.5);
-/// assert!(!progress.is_complete());
-/// ```
-pub struct ProgressBar {
-    title: String,
-    progress: f64, // 0.0 to 1.0
-    message: Option<String>,
-}
-
-impl ProgressBar {
-    /// Create a new progress bar
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::ProgressBar;
-    ///
-    /// let progress = ProgressBar::new("Loading");
-    /// assert_eq!(progress.progress(), 0.0);
-    /// ```
-    pub fn new(title: impl Into<String>) -> Self {
-        Self {
-            title: title.into(),
-            progress: 0.0,
-            message: None,
-        }
-    }
-
-    /// Set the progress (0.0 to 1.0) using builder pattern
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::ProgressBar;
-    ///
-    /// let progress = ProgressBar::new("Loading")
-    ///     .with_progress(0.75);
-    /// assert_eq!(progress.progress(), 0.75);
-    /// ```
-    pub fn with_progress(mut self, progress: f64) -> Self {
-        self.progress = progress.clamp(0.0, 1.0);
-        self
-    }
-
-    /// Set the progress message using builder pattern
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::ProgressBar;
-    ///
-    /// let progress = ProgressBar::new("Loading")
-    ///     .with_message("Processing files...");
-    /// ```
-    pub fn with_message(mut self, message: impl Into<String>) -> Self {
-        self.message = Some(message.into());
-        self
-    }
-
-    /// Update the progress (0.0 to 1.0)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::ProgressBar;
-    ///
-    /// let mut progress = ProgressBar::new("Loading");
-    /// progress.set_progress(0.5);
-    /// assert_eq!(progress.progress(), 0.5);
-    /// ```
-    pub fn set_progress(&mut self, progress: f64) {
-        self.progress = progress.clamp(0.0, 1.0);
-    }
-
-    /// Set the message
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::ProgressBar;
-    ///
-    /// let mut progress = ProgressBar::new("Loading");
-    /// progress.set_message("Processing...");
-    /// ```
-    pub fn set_message(&mut self, message: impl Into<String>) {
-        self.message = Some(message.into());
-    }
-
-    /// Get current progress
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::ProgressBar;
-    ///
-    /// let progress = ProgressBar::new("Loading")
-    ///     .with_progress(0.75);
-    /// assert_eq!(progress.progress(), 0.75);
-    /// ```
-    pub fn progress(&self) -> f64 {
-        self.progress
-    }
-
-    /// Check if progress is complete (100%)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use toad::widgets::ProgressBar;
-    ///
-    /// let incomplete = ProgressBar::new("Loading").with_progress(0.5);
-    /// assert!(!incomplete.is_complete());
-    ///
-    /// let complete = ProgressBar::new("Loading").with_progress(1.0);
-    /// assert!(complete.is_complete());
-    /// ```
-    pub fn is_complete(&self) -> bool {
-        self.progress >= 1.0
-    }
-
-    /// Render the progress bar to a frame
-    pub fn render(&self, frame: &mut Frame, area: Rect) {
-        let label = if let Some(msg) = &self.message {
-            format!("{} - {:.0}%", msg, self.progress * 100.0)
-        } else {
-            format!("{:.0}%", self.progress * 100.0)
-        };
-
-        let gauge = Gauge::default()
-            .block(
-                Block::default()
-                    .title(format!(" {} ", self.title))
-                    .title_style(
-                        Style::default()
-                            .fg(ToadTheme::TOAD_GREEN)
-                            .add_modifier(Modifier::BOLD),
-                    )
-                    .borders(Borders::ALL)
-                    .border_style(Style::default().fg(ToadTheme::TOAD_GREEN)),
-            )
-            .gauge_style(
-                Style::default()
-                    .fg(ToadTheme::BLACK)
-                    .bg(ToadTheme::TOAD_GREEN),
-            )
-            .label(label)
-            .ratio(self.progress);
-
-        frame.render_widget(gauge, area);
-    }
-}
-
-impl Default for ProgressBar {
-    fn default() -> Self {
-        Self::new("Progress")
-    }
-}
 
 /// Stage completion status
 ///
@@ -578,7 +411,7 @@ impl MultiStageProgress {
 
         let gauge = Gauge::default()
             .block(
-                Block::default()
+                AtomBlock::new()
                     .title(format!(" {} ", self.title))
                     .title_style(
                         Style::default()
@@ -586,7 +419,8 @@ impl MultiStageProgress {
                             .add_modifier(Modifier::BOLD),
                     )
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(ToadTheme::TOAD_GREEN)),
+                    .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+                    .to_ratatui(),
             )
             .gauge_style(
                 Style::default()

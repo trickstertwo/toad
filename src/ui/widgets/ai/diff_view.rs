@@ -20,12 +20,13 @@
 //! view.set_proposed_changes("src/main.rs", diff);
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text};
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, StatefulWidget, Widget},
+    text::Line,
+    widgets::{Borders, List, ListItem, ListState, Paragraph, StatefulWidget, Widget},
 };
 
 /// Diff hunk with accept/reject state
@@ -169,6 +170,7 @@ pub struct AIDiffView {
     /// AI explanation of changes
     explanation: Option<String>,
     /// Show line numbers
+    #[allow(dead_code)]
     show_line_numbers: bool,
 }
 
@@ -422,25 +424,35 @@ impl Widget for &mut AIDiffView {
         // Render header
         let (accepted, rejected, pending) = self.get_summary();
         let header_text = vec![Line::from(vec![
-            Span::styled("File: ", Style::default().fg(Color::Gray)),
-            Span::styled(
-                &self.file_path,
-                Style::default()
-                    .fg(Color::Cyan)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::raw("  |  "),
-            Span::styled(format!("✓ {}", accepted), Style::default().fg(Color::Green)),
-            Span::raw(" "),
-            Span::styled(format!("✗ {}", rejected), Style::default().fg(Color::Red)),
-            Span::raw(" "),
-            Span::styled(format!("? {}", pending), Style::default().fg(Color::Yellow)),
+            Text::new("File: ")
+                .style(Style::default().fg(Color::Gray))
+                .to_span(),
+            Text::new(&self.file_path)
+                .style(
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                )
+                .to_span(),
+            Text::new("  |  ").to_span(),
+            Text::new(format!("✓ {}", accepted))
+                .style(Style::default().fg(Color::Green))
+                .to_span(),
+            Text::new(" ").to_span(),
+            Text::new(format!("✗ {}", rejected))
+                .style(Style::default().fg(Color::Red))
+                .to_span(),
+            Text::new(" ").to_span(),
+            Text::new(format!("? {}", pending))
+                .style(Style::default().fg(Color::Yellow))
+                .to_span(),
         ])];
 
         let header = Paragraph::new(header_text).block(
-            Block::default()
+            AtomBlock::new()
                 .borders(Borders::ALL)
-                .title("AI Proposed Changes"),
+                .title("AI Proposed Changes")
+                .to_ratatui(),
         );
         header.render(chunks[0], buf);
 
@@ -450,12 +462,13 @@ impl Widget for &mut AIDiffView {
                 .hunks
                 .iter()
                 .map(|hunk| {
-                    let mut lines = vec![Line::from(vec![Span::styled(
-                        &hunk.header,
-                        Style::default()
-                            .fg(Color::Cyan)
-                            .add_modifier(Modifier::BOLD),
-                    )])];
+                    let mut lines = vec![Line::from(vec![Text::new(&hunk.header)
+                        .style(
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD),
+                        )
+                        .to_span()])];
 
                     // Add lines from hunk
                     for line in &hunk.lines {
@@ -471,26 +484,28 @@ impl Widget for &mut AIDiffView {
                         }
 
                         lines.push(Line::from(vec![
-                            Span::styled(prefix, style),
-                            Span::styled(&line.content, style),
+                            Text::new(prefix).style(style).to_span(),
+                            Text::new(&line.content).style(style).to_span(),
                         ]));
                     }
 
                     // Add status indicator
                     let status = if hunk.accepted {
-                        Span::styled(
-                            " [ACCEPTED]",
-                            Style::default()
-                                .fg(Color::Green)
-                                .add_modifier(Modifier::BOLD),
-                        )
+                        Text::new(" [ACCEPTED]")
+                            .style(
+                                Style::default()
+                                    .fg(Color::Green)
+                                    .add_modifier(Modifier::BOLD),
+                            )
+                            .to_span()
                     } else if hunk.rejected {
-                        Span::styled(
-                            " [REJECTED]",
-                            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-                        )
+                        Text::new(" [REJECTED]")
+                            .style(Style::default().fg(Color::Red).add_modifier(Modifier::BOLD))
+                            .to_span()
                     } else {
-                        Span::styled(" [PENDING]", Style::default().fg(Color::Yellow))
+                        Text::new(" [PENDING]")
+                            .style(Style::default().fg(Color::Yellow))
+                            .to_span()
                     };
                     lines.push(Line::from(vec![status]));
 
@@ -499,7 +514,12 @@ impl Widget for &mut AIDiffView {
                 .collect();
 
             let list = List::new(items)
-                .block(Block::default().borders(Borders::ALL).title("Changes"))
+                .block(
+                    AtomBlock::new()
+                        .borders(Borders::ALL)
+                        .title("Changes")
+                        .to_ratatui(),
+                )
                 .highlight_style(
                     Style::default()
                         .bg(Color::DarkGray)
@@ -512,7 +532,7 @@ impl Widget for &mut AIDiffView {
         // Render footer with keybindings
         let footer_text = "j/k: Navigate | a: Accept | r: Reject | A: Accept All | R: Reject All | c: Clear | Tab: Toggle View | Esc: Close";
         let footer = Paragraph::new(footer_text)
-            .block(Block::default().borders(Borders::ALL))
+            .block(AtomBlock::new().borders(Borders::ALL).to_ratatui())
             .style(Style::default().fg(Color::Gray));
         footer.render(chunks[2], buf);
     }
