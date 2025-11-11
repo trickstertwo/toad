@@ -9,7 +9,11 @@ use crate::core::app::App;
 use crate::core::app_state::{AppScreen, EvaluationState};
 use crate::core::event::Event;
 use crate::performance::PerformanceMetrics;
-use crate::ui::widgets::{CommandPalette, ConfirmDialog, HelpScreen, InputField, ToastManager};
+use crate::ui::widgets::{
+    core::{dialog::ConfirmDialog, help::HelpScreen},
+    input::{input::InputField, palette::CommandPalette},
+    notifications::toast::ToastManager,
+};
 use crate::workspace::{LayoutManager, SessionState, TabManager};
 use std::path::PathBuf;
 

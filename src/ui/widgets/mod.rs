@@ -35,20 +35,3 @@ pub mod progress;
 pub mod selection;
 pub mod session_manager;
 pub mod workspace;
-
-// Re-export all types for backwards compatibility
-pub use ai::*;
-pub use charts::*;
-pub use chat_panel::{ChatMessage, ChatPanel, MessageRole};
-pub use conversation::ConversationView;
-pub use core::*;
-pub use files::*;
-pub use git::*;
-pub use input::*;
-pub use layout::*;
-pub use notifications::*;
-pub use performance::*;
-pub use progress::*;
-pub use selection::*;
-pub use session_manager::{SessionData, SessionManager};
-pub use workspace::{Workspace, WorkspaceManager};

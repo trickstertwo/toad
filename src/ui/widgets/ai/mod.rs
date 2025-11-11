@@ -5,7 +5,3 @@
 
 pub mod diff_view;
 pub mod suggestions;
-
-// Re-export all types for backwards compatibility
-pub use diff_view::*;
-pub use suggestions::*;

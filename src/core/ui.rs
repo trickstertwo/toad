@@ -6,7 +6,7 @@
 use crate::core::app::App;
 use crate::core::app_state::AppScreen;
 use crate::ui::theme::ToadTheme;
-use crate::ui::widgets::WelcomeScreen;
+use crate::ui::widgets::core::welcome_screen::WelcomeScreen;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},

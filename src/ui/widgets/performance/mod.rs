@@ -7,9 +7,3 @@ pub mod event_metrics;
 pub mod fps;
 pub mod memory;
 pub mod render_profiler;
-
-// Re-export all types for backwards compatibility
-pub use event_metrics::*;
-pub use fps::*;
-pub use memory::*;
-pub use render_profiler::*;
