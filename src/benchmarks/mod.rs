@@ -55,6 +55,7 @@ use async_trait::async_trait;
 
 pub mod types;
 pub mod swebench;
+pub mod livecodebench;
 
 // Re-export core types for convenience
 pub use types::{BenchmarkMetadata, ExecutionContext, ProgressEvent, Task};
