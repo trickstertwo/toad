@@ -4,12 +4,20 @@
 //! and complex state management scenarios.
 
 use std::path::PathBuf;
-use toad::ui::widgets::{
-    ChatPanel, CostModel, DataSeries, FileStatus, GitCommit, GitDiffViewer, GitGraph,
-    GitStatusPanel, InputField, LineChart, ModelInfo, ModelSelector, MultiStageProgress,
-    SessionManager, Spinner, SpinnerStyle, ToastManager, TokenCounter, TokenUsage,
-    WorkspaceManager,
-};
+use toad::ui::widgets::charts::chart::{LineChart};
+use toad::ui::widgets::charts::line_chart::{DataSeries};
+use toad::ui::widgets::chat_panel::{ChatPanel};
+use toad::ui::widgets::git::git_diff_viewer::{GitDiffViewer};
+use toad::ui::widgets::git::git_graph::{GitCommit, GitGraph};
+use toad::ui::widgets::git::git_status_panel::{FileStatus, GitStatusPanel};
+use toad::ui::widgets::input::input::{InputField};
+use toad::ui::widgets::notifications::toast::{ToastManager};
+use toad::ui::widgets::progress::progress::{MultiStageProgress};
+use toad::ui::widgets::progress::spinner::{Spinner, SpinnerStyle};
+use toad::ui::widgets::progress::token_counter::{CostModel, TokenCounter, TokenUsage};
+use toad::ui::widgets::selection::model_selector::{ModelInfo, ModelSelector};
+use toad::ui::widgets::session_manager::{SessionManager};
+use toad::ui::widgets::workspace::{WorkspaceManager};
 
 // ==================== E2E: Performance Monitoring Dashboard ====================
 

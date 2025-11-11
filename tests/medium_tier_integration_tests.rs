@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 use toad::infrastructure::history::History;
 use toad::navigation::search::SearchState;
-use toad::ui::widgets::ToastManager;
+use toad::ui::widgets::notifications::toast::ToastManager;
 use toad::workspace::{SessionState, TabManager};
 
 // =============================================================================

@@ -3,10 +3,9 @@
 //! Tests for user interface and user experience widgets: Workspace, Toast, Progress, etc.
 
 use std::path::PathBuf;
-use toad::ui::widgets::{
-    MultiStageProgress, StageStatus, Toast, ToastLevel, ToastManager, Workspace,
-    WorkspaceManager,
-};
+use toad::ui::widgets::notifications::toast::{ToastManager};
+use toad::ui::widgets::progress::progress::{MultiStageProgress};
+use toad::ui::widgets::workspace::{Workspace, WorkspaceManager};
 
 // ==================== Workspace Tests ====================
 

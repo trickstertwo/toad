@@ -4,10 +4,7 @@
 
 use std::path::PathBuf;
 use std::time::Duration;
-use toad::ui::widgets::{
-    Animation, AnimationState, EasingFunction, EditorMode, IndicatorStyle, ModeIndicator,
-    MultiStageProgress, StageStatus,
-};
+use toad::ui::widgets::progress::progress::{MultiStageProgress};
 use toad::workspace::{Workspace, WorkspaceManager};
 
 // ============================================================================

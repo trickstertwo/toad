@@ -6,7 +6,7 @@
 use toad::commands::{ActionCategory, QuickAction, QuickActionManager};
 use toad::editor::{Macro, MacroAction, MacroManager, Mark, MarkType, MarksManager};
 use toad::editor::{Position, SelectionMode, VisualSelection};
-use toad::ui::widgets::{ContextMenu, MenuItem};
+use toad::ui::widgets::selection::context_menu::{ContextMenu, MenuItem};
 
 // ============================================================================
 // VisualSelection Integration Tests

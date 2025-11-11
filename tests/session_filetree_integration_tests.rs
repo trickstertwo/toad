@@ -3,7 +3,7 @@
 //! Tests session persistence, state management, and file tree navigation.
 
 use std::path::PathBuf;
-use toad::ui::widgets::{FileTreeNode, FileTreeNodeType, SessionData, SessionManager};
+use toad::ui::widgets::session_manager::{SessionManager};
 
 // ==================== SessionData Tests ====================
 

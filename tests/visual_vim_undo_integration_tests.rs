@@ -5,7 +5,10 @@
 
 use ratatui::style::Color;
 use toad::editor::{UndoStack, VimMotions};
-use toad::ui::widgets::{DataSeries, LineChart, Sparkline, SparklineStyle, Spinner, SpinnerStyle};
+use toad::ui::widgets::charts::chart::{LineChart};
+use toad::ui::widgets::charts::line_chart::{DataSeries};
+use toad::ui::widgets::charts::sparkline::{Sparkline};
+use toad::ui::widgets::progress::spinner::{Spinner, SpinnerStyle};
 
 // ============================================================================
 // Spinner Integration Tests
