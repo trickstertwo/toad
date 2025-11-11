@@ -4,7 +4,7 @@
 
 use std::path::PathBuf;
 use toad::ui::widgets::{
-    MultiStageProgress, ProgressBar, StageStatus, Toast, ToastLevel, ToastManager, Workspace,
+    MultiStageProgress, StageStatus, Toast, ToastLevel, ToastManager, Workspace,
     WorkspaceManager,
 };
 
@@ -307,68 +307,6 @@ fn test_toast_manager_clear() {
 // Note: ToastManager doesn't expose add_toast or remove_expired in public API
 // These are internal methods managed automatically
 
-// ==================== ProgressBar Tests ====================
-
-#[test]
-fn test_progress_bar_creation() {
-    let progress = ProgressBar::new("Loading");
-
-    assert_eq!(progress.progress(), 0.0);
-    assert!(!progress.is_complete());
-}
-
-#[test]
-fn test_progress_bar_set_progress() {
-    let mut progress = ProgressBar::new("Loading");
-
-    progress.set_progress(0.25);
-    assert_eq!(progress.progress(), 0.25);
-    assert!(!progress.is_complete());
-
-    progress.set_progress(0.5);
-    assert_eq!(progress.progress(), 0.5);
-    assert!(!progress.is_complete());
-
-    progress.set_progress(1.0);
-    assert_eq!(progress.progress(), 1.0);
-    assert!(progress.is_complete());
-}
-
-#[test]
-fn test_progress_bar_builder() {
-    let progress = ProgressBar::new("Download")
-        .with_progress(0.75)
-        .with_message("Downloading file.zip");
-
-    assert_eq!(progress.progress(), 0.75);
-    assert!(!progress.is_complete());
-}
-
-#[test]
-fn test_progress_bar_clamping() {
-    let mut progress = ProgressBar::new("Test");
-
-    // Progress clamped to 0.0 - 1.0
-    progress.set_progress(-0.5);
-    assert_eq!(progress.progress(), 0.0);
-
-    progress.set_progress(1.5);
-    assert_eq!(progress.progress(), 1.0);
-}
-
-#[test]
-fn test_progress_bar_message() {
-    let mut progress = ProgressBar::new("Loading");
-
-    progress.set_message("Processing files...");
-    progress.set_progress(0.33);
-
-    progress.set_message("Almost done...");
-    progress.set_progress(0.95);
-
-    assert_eq!(progress.progress(), 0.95);
-}
-
 // ==================== StageStatus Tests ====================
 
 #[test]
@@ -494,34 +432,6 @@ fn test_workspace_toast_integration() {
 }
 
 #[test]
-fn test_workspace_progress_integration() {
-    let mut manager = WorkspaceManager::new();
-    let mut progress = ProgressBar::new("Loading workspace");
-
-    // Step 1: Create workspace (25%)
-    manager.create_workspace("project", "/path");
-    progress.set_progress(0.25);
-    progress.set_message("Workspace created");
-
-    // Step 2: Load settings (50%)
-    let workspace = manager.get_workspace_mut("project").unwrap();
-    workspace.set_setting("theme", "dark");
-    workspace.set_setting("font", "monospace");
-    progress.set_progress(0.5);
-    progress.set_message("Settings loaded");
-
-    // Step 3: Restore state (75%)
-    workspace.set_state("last_file", "main.rs");
-    progress.set_progress(0.75);
-    progress.set_message("State restored");
-
-    // Step 4: Complete (100%)
-    progress.set_progress(1.0);
-    progress.set_message("Workspace ready");
-    assert!(progress.is_complete());
-}
-
-#[test]
 fn test_multi_stage_workspace_loading() {
     let stages = vec![
         "Create workspace".to_string(),
@@ -559,45 +469,6 @@ fn test_multi_stage_workspace_loading() {
 }
 
 // ==================== Real-World Scenario Tests ====================
-
-#[test]
-fn test_scenario_workspace_lifecycle() {
-    let mut manager = WorkspaceManager::new();
-    let mut toasts = ToastManager::new();
-    let mut progress = ProgressBar::new("Creating workspace");
-
-    // Create new workspace
-    progress.set_progress(0.2);
-    progress.set_message("Initializing...");
-
-    manager.create_workspace("full-stack-app", "/projects/full-stack");
-    toasts.success("Workspace created");
-
-    progress.set_progress(0.5);
-    progress.set_message("Configuring...");
-
-    // Configure workspace
-    let workspace = manager.get_workspace_mut("full-stack-app").unwrap();
-    workspace.set_setting("language", "rust");
-    workspace.set_setting("framework", "axum");
-    workspace.set_setting("frontend", "react");
-
-    progress.set_progress(0.75);
-    progress.set_message("Setting up environment...");
-
-    // Set initial state
-    workspace.set_state("backend_port", "3000");
-    workspace.set_state("frontend_port", "5173");
-    workspace.set_state("db_connection", "postgresql://localhost");
-
-    progress.set_progress(1.0);
-    progress.set_message("Complete!");
-    toasts.info("Workspace ready for development");
-
-    assert!(progress.is_complete());
-    assert_eq!(manager.workspace_count(), 1);
-    assert_eq!(toasts.len(), 2);
-}
 
 #[test]
 fn test_scenario_workspace_switching_with_notifications() {

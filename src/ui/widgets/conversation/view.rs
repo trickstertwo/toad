@@ -267,6 +267,7 @@ impl Default for ConversationView {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ai::llm::Role;
 
     #[test]
     fn test_conversation_view_new() {
