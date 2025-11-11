@@ -21,7 +21,7 @@ impl App {
     /// - `Ctrl+C`: Quit application
     /// - `Ctrl+D`: Quit if input empty, otherwise page down
     /// - `Ctrl+P`: Open command palette
-    /// - `Ctrl+V`: Open Evaluation Center
+    /// - `F9`: Open Evaluation Center
     /// - `Ctrl+?`: Toggle help screen
     ///
     /// ## Tab Management
@@ -150,8 +150,8 @@ impl App {
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
                 self.show_palette = true;
             }
-            // Ctrl+V opens evaluation center
-            (KeyCode::Char('v'), KeyModifiers::CONTROL) => {
+            // F9 opens evaluation center
+            (KeyCode::F(9), _) => {
                 use crate::core::app_state::AppScreen;
                 self.screen = AppScreen::Evaluation;
                 self.status_message = "Opened Evaluation Center".to_string();
