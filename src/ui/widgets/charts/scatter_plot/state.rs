@@ -18,12 +18,13 @@
 //!     .with_y_label("Output");
 //! ```
 
+use crate::ui::atoms::{block::Block as AtomBlock, text::Text as AtomText};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Widget},
+    text::Line,
+    widgets::{Borders, Widget},
 };
 
 /// A data series for scatter plots
@@ -421,10 +422,11 @@ impl ScatterPlot {
 
         // Title
         if let Some(title) = &self.title {
-            lines.push(Line::from(Span::styled(
-                title.clone(),
-                Style::default().fg(Color::Cyan),
-            )));
+            lines.push(Line::from(
+                AtomText::new(title.clone())
+                    .style(Style::default().fg(Color::Cyan))
+                    .to_span(),
+            ));
         }
 
         if self.series.is_empty() {
@@ -498,9 +500,12 @@ impl ScatterPlot {
             lines.push(Line::from("Legend:"));
             for series in &self.series {
                 lines.push(Line::from(vec![
-                    Span::raw("  "),
-                    Span::styled(series.marker.to_string(), Style::default().fg(series.color)),
-                    Span::raw(format!(" {} ({} points)", series.name, series.points.len())),
+                    AtomText::new("  ").to_span(),
+                    AtomText::new(series.marker.to_string())
+                        .style(Style::default().fg(series.color))
+                        .to_span(),
+                    AtomText::new(format!(" {} ({} points)", series.name, series.points.len()))
+                        .to_span(),
                 ]));
             }
         }
@@ -518,7 +523,7 @@ impl Default for ScatterPlot {
 impl Widget for &ScatterPlot {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let lines = self.render_lines(area.width, area.height);
-        let block = Block::default().borders(Borders::ALL);
+        let block = AtomBlock::new().borders(Borders::ALL).to_ratatui();
         let inner = block.inner(area);
 
         block.render(area, buf);
