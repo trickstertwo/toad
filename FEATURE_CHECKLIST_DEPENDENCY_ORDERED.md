@@ -1150,9 +1150,9 @@ These features are specific to the F9 Evaluation Center dashboard for SWE-bench 
 ## Week 3-4: Layer 3 (Safety & Control)
 **Goal:** Make AI operations safe and visible
 
-- [ ] 🔴 3.1: Tool execution status panel
-- [ ] 🔴 3.2: Error dialog with recovery
-- [ ] 🟡 3.3: Approval system ← **CRITICAL FOR USER TRUST**
+- [x] 🔴 3.1: Tool execution status panel ✅ (widget created + UI wired)
+- [x] 🔴 3.2: Error dialog with recovery ✅ (6 error types, smart recovery actions)
+- [ ] 🟡 3.3: Approval system ← **CRITICAL FOR USER TRUST - IN PROGRESS**
 - [ ] 🟡 3.4: Git auto-commits with undo
 
 **Success Metric:** Can safely let AI modify files with undo support
@@ -1198,16 +1198,16 @@ These features are specific to the F9 Evaluation Center dashboard for SWE-bench 
 ---
 
 ## Parallel Track: Evaluation Center
-**Can be done by separate developer**
+**Status: ✅ COMPLETE**
 
-- [ ] Eval-1: Real-time eval dashboard ← Start here
-- [ ] Eval-2: Task result visualization
-- [ ] Eval-3: Cost/token charts
-- [ ] Eval-4: A/B comparison UI
-- [ ] Eval-5: Dataset manager
-- [ ] Eval-6: Conversation inspector
+- [x] Eval-1: Real-time eval dashboard ✅ (multi-panel layout)
+- [x] Eval-2: Task result visualization ✅ (completion screen with accuracy/cost/duration)
+- [x] Eval-3: Cost/token charts ✅ (inline metrics display)
+- [x] Eval-4: A/B comparison UI ✅ (Welch's t-test, Cohen's d, recommendations)
+- [x] Eval-5: Dataset manager ✅ (HuggingFace auto-download, validation)
+- [x] Eval-6: Conversation inspector ✅ (scrollable conversation with truncation)
 
-**Success Metric:** Can run SWE-bench evals and analyze results in TUI
+**Success Metric:** ✅ ACHIEVED - Can run SWE-bench evals and analyze results in TUI
 
 ---
 
@@ -1263,9 +1263,9 @@ Layer 2: Chat
 [✓] Keyboard input ✅
 
 Layer 3: Safety
-[~] Tool status indicators ← IN PROGRESS (widget created, needs wiring)
-[ ] Error handling UI ← NEXT
-[ ] Approval system ← CRITICAL
+[✓] Tool status indicators ✅ (widget complete + UI wired)
+[✓] Error handling UI ✅ (ErrorDialog with 6 error types + recovery)
+[ ] Approval system ← CRITICAL - NEXT
 [ ] Git auto-commits
 
 Layer 4: Context
@@ -1290,12 +1290,12 @@ Layer 6: Polish
 [ ] Help improvements
 
 Eval Center (Parallel)
-[ ] Real-time dashboard
-[ ] Result visualization
-[ ] Cost charts
-[ ] A/B comparison
-[ ] Dataset manager
-[ ] Conversation inspector
+[✓] Real-time dashboard ✅ (3-column layout with live updates)
+[✓] Result visualization ✅ (completion screen with metrics)
+[✓] Cost charts ✅ (inline cost/token tracking)
+[✓] A/B comparison ✅ (statistical comparison implemented)
+[✓] Dataset manager ✅ (SWE-bench download + validation)
+[✓] Conversation inspector ✅ (conversation panel with truncation)
 ```
 
 ---

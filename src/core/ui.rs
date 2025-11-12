@@ -104,8 +104,28 @@ fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
 
 /// Render the main content area
 fn render_main_content(app: &mut App, frame: &mut Frame, area: Rect) {
-    // Render conversation view
-    app.conversation_view().render(frame, area);
+    // Check if tool status panel should be shown
+    let show_tool_panel = app.tool_status_panel.execution_count() > 0;
+
+    if show_tool_panel {
+        // Split horizontally: conversation on left, tool status on right
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Percentage(70), // Conversation view
+                Constraint::Percentage(30), // Tool status panel
+            ])
+            .split(area);
+
+        // Render conversation view
+        app.conversation_view().render(frame, chunks[0]);
+
+        // Render tool status panel
+        app.tool_status_panel.render(frame, chunks[1]);
+    } else {
+        // No tools executed yet, show full-width conversation
+        app.conversation_view().render(frame, area);
+    }
 }
 
 /// Render the metadata line (path on left, model info and tokens on right)

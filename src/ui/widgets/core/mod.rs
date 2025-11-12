@@ -11,6 +11,7 @@ pub mod collapsible;
 pub mod context_display;
 pub mod contextual_help;
 pub mod dialog;
+pub mod error_dialog;
 pub mod help;
 pub mod icons;
 pub mod preview;
