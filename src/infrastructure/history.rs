@@ -432,6 +432,181 @@ impl History {
             Self::new(max_size)
         }
     }
+
+    /// Get position indicator string for UI display
+    ///
+    /// Returns a string like "↑ (15 of 42)" showing current position.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::history::History;
+    ///
+    /// let mut history = History::new(100);
+    /// history.add("first".to_string());
+    /// history.add("second".to_string());
+    ///
+    /// history.older();
+    /// let indicator = history.position_indicator();
+    /// assert_eq!(indicator, "↑ (1 of 2)");
+    /// ```
+    pub fn position_indicator(&self) -> String {
+        if self.entries.is_empty() {
+            "".to_string()
+        } else if self.position == 0 {
+            "".to_string()
+        } else {
+            format!("↑ ({} of {})", self.position, self.entries.len())
+        }
+    }
+
+    /// Reverse search through history
+    ///
+    /// Returns entries that match the query, starting from most recent.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::history::History;
+    ///
+    /// let mut history = History::new(10);
+    /// history.add("cargo build".to_string());
+    /// history.add("cargo test".to_string());
+    /// history.add("git status".to_string());
+    ///
+    /// let results = history.reverse_search("cargo");
+    /// assert_eq!(results.len(), 2);
+    /// assert_eq!(results[0], "cargo test");
+    /// assert_eq!(results[1], "cargo build");
+    /// ```
+    pub fn reverse_search(&self, query: &str) -> Vec<String> {
+        self.entries
+            .iter()
+            .filter(|entry| entry.contains(query))
+            .cloned()
+            .collect()
+    }
+
+    /// Filter entries by predicate
+    ///
+    /// Returns entries that match the predicate function.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::history::History;
+    ///
+    /// let mut history = History::new(10);
+    /// history.add("/add file.rs".to_string());
+    /// history.add("regular message".to_string());
+    /// history.add("/model claude".to_string());
+    ///
+    /// let commands = history.filter(|entry| entry.starts_with('/'));
+    /// assert_eq!(commands.len(), 2);
+    /// ```
+    pub fn filter<F>(&self, predicate: F) -> Vec<String>
+    where
+        F: Fn(&String) -> bool,
+    {
+        self.entries
+            .iter()
+            .filter(|entry| predicate(entry))
+            .cloned()
+            .collect()
+    }
+
+    /// Get only slash commands from history
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::history::History;
+    ///
+    /// let mut history = History::new(10);
+    /// history.add("/add file.rs".to_string());
+    /// history.add("regular message".to_string());
+    /// history.add("/model claude".to_string());
+    ///
+    /// let commands = history.commands_only();
+    /// assert_eq!(commands.len(), 2);
+    /// ```
+    pub fn commands_only(&self) -> Vec<String> {
+        self.filter(|entry| entry.starts_with('/'))
+    }
+
+    /// Get only non-command messages from history
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::history::History;
+    ///
+    /// let mut history = History::new(10);
+    /// history.add("/add file.rs".to_string());
+    /// history.add("regular message".to_string());
+    /// history.add("another message".to_string());
+    ///
+    /// let messages = history.messages_only();
+    /// assert_eq!(messages.len(), 2);
+    /// ```
+    pub fn messages_only(&self) -> Vec<String> {
+        self.filter(|entry| !entry.starts_with('/'))
+    }
+
+    /// Check if an entry should be excluded (privacy mode)
+    ///
+    /// Returns true if the entry contains sensitive patterns.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::history::History;
+    ///
+    /// assert!(History::is_sensitive("export API_KEY=secret123"));
+    /// assert!(History::is_sensitive("password=hunter2"));
+    /// assert!(!History::is_sensitive("cargo build"));
+    /// ```
+    pub fn is_sensitive(entry: &str) -> bool {
+        let entry_lower = entry.to_lowercase();
+
+        // Common sensitive patterns
+        let sensitive_patterns = [
+            "password",
+            "api_key",
+            "token",
+            "secret",
+            "credential",
+            "auth",
+            "bearer",
+            "private_key",
+        ];
+
+        sensitive_patterns
+            .iter()
+            .any(|pattern| entry_lower.contains(pattern))
+    }
+
+    /// Add entry with privacy check
+    ///
+    /// Only adds the entry if it's not sensitive (privacy mode).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::history::History;
+    ///
+    /// let mut history = History::new(10);
+    /// history.add_with_privacy("cargo build".to_string());
+    /// assert_eq!(history.len(), 1);
+    ///
+    /// history.add_with_privacy("export TOKEN=secret".to_string());
+    /// assert_eq!(history.len(), 1); // Not added
+    /// ```
+    pub fn add_with_privacy(&mut self, entry: String) {
+        if !Self::is_sensitive(&entry) {
+            self.add(entry);
+        }
+    }
 }
 
 #[cfg(test)]

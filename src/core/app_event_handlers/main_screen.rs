@@ -37,6 +37,7 @@ impl App {
     /// - `Left`/`Right`: Move cursor
     /// - `Home`/`End`: Jump to start/end
     /// - `Ctrl+A`/`Ctrl+E`: Emacs-style start/end
+    /// - `Ctrl+O`: Open external editor ($EDITOR, $VISUAL, or vim)
     /// - `Ctrl+U`: Clear input
     /// - Regular characters: Insert into input
     ///
@@ -123,6 +124,19 @@ impl App {
             return Ok(());
         }
 
+        // If config dialog is shown, intercept keys
+        if self.show_config_dialog.is_some() {
+            match (key.code, key.modifiers) {
+                // Esc or Enter closes config dialog
+                (KeyCode::Esc, _) | (KeyCode::Enter, _) => {
+                    self.show_config_dialog = None;
+                    self.status_message = "Config dialog closed".to_string();
+                }
+                _ => {}
+            }
+            return Ok(());
+        }
+
         // If settings screen is shown, intercept keys for settings navigation
         if self.show_settings {
             match (key.code, key.modifiers) {
@@ -196,8 +210,11 @@ impl App {
                 if self.input_field.is_focused() && self.input_field.value().is_empty() {
                     self.should_quit = true;
                 } else if !self.input_field.is_focused() {
+                    // Estimate page height (terminal height minus UI chrome)
+                    // Assuming ~6 lines for borders, input, shortcuts, etc.
+                    let page_height = 20usize; // Conservative default
+                    self.conversation_view.page_down(page_height);
                     self.status_message = "Page down".to_string();
-                    // TODO: Implement page down for scrollable content
                 }
             }
             // Ctrl+U for page up (Vim-style) or clear input if focused
@@ -205,8 +222,10 @@ impl App {
                 if self.input_field.is_focused() {
                     self.input_field.clear();
                 } else {
+                    // Estimate page height (terminal height minus UI chrome)
+                    let page_height = 20usize; // Conservative default
+                    self.conversation_view.page_up(page_height);
                     self.status_message = "Page up".to_string();
-                    // TODO: Implement page up for scrollable content
                 }
             }
             // Ctrl+L to clear conversation history
@@ -220,6 +239,47 @@ impl App {
                     }
                 } else {
                     self.status_message = "Cannot clear during streaming".to_string();
+                }
+            }
+            // Ctrl+T to create a new tab
+            (KeyCode::Char('t'), KeyModifiers::CONTROL) => {
+                if let Some(tab_id) = self.tabs.add_tab("New Tab") {
+                    self.status_message = format!("Created tab {} (ID: {})", self.tabs.count(), tab_id);
+                    // Save session after creating tab
+                    if let Err(e) = self.save_session() {
+                        tracing::warn!("Failed to save session after creating tab: {}", e);
+                    }
+                } else {
+                    self.status_message = format!(
+                        "Cannot create tab: maximum of {} tabs reached",
+                        crate::workspace::tabs::MAX_TABS
+                    );
+                }
+            }
+            // Ctrl+W to close current tab
+            (KeyCode::Char('w'), KeyModifiers::CONTROL) => {
+                if let Some(active_tab) = self.tabs.active_tab() {
+                    let tab_id = active_tab.id;
+                    let title = active_tab.title.clone();
+                    let modified = active_tab.modified;
+
+                    // Check if tab has unsaved changes (modified indicator)
+                    if modified {
+                        // TODO: Show confirmation dialog before closing
+                        self.status_message = "Tab has unsaved changes. Close confirmation not yet implemented".to_string();
+                    } else if self.tabs.count() > 1 {
+                        // Only close if there's more than one tab
+                        self.tabs.close_tab(tab_id);
+                        self.status_message = format!("Closed tab '{}'", title);
+                        // Save session after closing tab
+                        if let Err(e) = self.save_session() {
+                            tracing::warn!("Failed to save session after closing tab: {}", e);
+                        }
+                    } else {
+                        self.status_message = "Cannot close the last tab".to_string();
+                    }
+                } else {
+                    self.status_message = "No active tab to close".to_string();
                 }
             }
             // Ctrl+P opens command palette
@@ -345,14 +405,34 @@ impl App {
             (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
                 self.input_field.move_cursor_end();
             }
+            // Ctrl+O: Open external editor
+            (KeyCode::Char('o'), KeyModifiers::CONTROL) => {
+                let initial_content = self.input_field.value();
+
+                // Open external editor with current input
+                match crate::editor::external::edit_with_external_editor(initial_content) {
+                    Ok(edited_content) => {
+                        self.input_field.set_value(edited_content);
+                        self.status_message = "Content loaded from external editor".to_string();
+                    }
+                    Err(crate::editor::EditorError::EmptyContent) => {
+                        self.status_message = "External editor cancelled (empty content)".to_string();
+                    }
+                    Err(e) => {
+                        self.status_message = format!("Editor error: {}", e);
+                    }
+                }
+            }
             // Page Up/Down keys
             (KeyCode::PageUp, _) => {
+                let page_height = 20usize; // Conservative default
+                self.conversation_view.page_up(page_height);
                 self.status_message = "Page up".to_string();
-                // TODO: Implement page up for scrollable content
             }
             (KeyCode::PageDown, _) => {
+                let page_height = 20usize; // Conservative default
+                self.conversation_view.page_down(page_height);
                 self.status_message = "Page down".to_string();
-                // TODO: Implement page down for scrollable content
             }
             // Vim-style navigation (when not in input field and vim mode enabled)
             (KeyCode::Char('h'), KeyModifiers::NONE)

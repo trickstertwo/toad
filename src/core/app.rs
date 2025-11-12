@@ -15,6 +15,7 @@ use crate::ui::widgets::{
     core::{dialog::ConfirmDialog, help::HelpScreen},
     input::{input::InputField, palette::CommandPalette},
     notifications::toast::ToastManager,
+    tools::ToolStatusPanel,
 };
 use crate::workspace::{LayoutManager, SessionState, TabManager};
 use crossterm::event::KeyEvent;
@@ -70,6 +71,9 @@ pub struct App {
 
     /// Whether to show the settings screen
     pub(crate) show_settings: bool,
+
+    /// Config dialog: (milestone, config)
+    pub(crate) show_config_dialog: Option<(usize, crate::config::ToadConfig)>,
 
     /// Application configuration
     pub(crate) config: Config,
@@ -128,6 +132,9 @@ pub struct App {
 
     /// Clipboard for copy/paste operations
     pub(crate) clipboard: Option<Clipboard>,
+
+    /// Tool execution status panel
+    pub(crate) tool_status_panel: ToolStatusPanel,
 }
 
 impl std::fmt::Debug for App {
@@ -220,6 +227,20 @@ impl Default for App {
             _ => None,
         };
 
+        // Restore tabs from session (or create default if none exist)
+        let mut tabs = TabManager::new();
+        if !session.tabs().is_empty() {
+            for tab in session.tabs() {
+                tabs.add_tab_with(tab.clone());
+            }
+            if let Some(idx) = session.active_tab_index() {
+                tabs.switch_to_index(idx);
+            }
+        } else {
+            // Create default tab if session has no tabs
+            tabs.add_tab("Main");
+        }
+
         Self {
             screen,
             should_quit: false,
@@ -241,9 +262,10 @@ impl Default for App {
             theme_manager,
             settings_screen: crate::ui::widgets::core::settings_screen::SettingsScreen::new(theme_name),
             show_settings: false,
+            show_config_dialog: None,
             config,
             session,
-            tabs: TabManager::new(),
+            tabs,
             layout: LayoutManager::new(),
             vim_mode,
             performance: PerformanceMetrics::new(),
@@ -261,6 +283,7 @@ impl Default for App {
             total_output_tokens: 0,
             total_cost_usd: 0.0,
             clipboard: Clipboard::new().ok(),
+            tool_status_panel: ToolStatusPanel::new(),
         }
     }
 }

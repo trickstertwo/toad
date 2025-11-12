@@ -71,6 +71,7 @@ impl DirEntry {
 /// let service = FilesystemService::new();
 /// assert!(service.read_dir(".").is_ok());
 /// ```
+#[derive(Debug)]
 pub struct FilesystemService {
     /// Configuration flags (for future extension)
     _config: (),

@@ -179,6 +179,43 @@ impl ConversationView {
         self.auto_scroll = false;
     }
 
+    /// Scroll up by one page (full screen height)
+    ///
+    /// # Parameters
+    ///
+    /// - `page_height`: The height of the visible area (in lines)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::conversation::ConversationView;
+    ///
+    /// let mut view = ConversationView::new();
+    /// view.page_up(20); // Scroll up by 20 lines
+    /// ```
+    pub fn page_up(&mut self, page_height: usize) {
+        self.scroll_offset = self.scroll_offset.saturating_add(page_height);
+        self.auto_scroll = false;
+    }
+
+    /// Scroll down by one page (full screen height)
+    ///
+    /// # Parameters
+    ///
+    /// - `page_height`: The height of the visible area (in lines)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::conversation::ConversationView;
+    ///
+    /// let mut view = ConversationView::new();
+    /// view.page_down(20); // Scroll down by 20 lines
+    /// ```
+    pub fn page_down(&mut self, page_height: usize) {
+        self.scroll_offset = self.scroll_offset.saturating_sub(page_height);
+    }
+
     /// Scroll to top
     pub fn scroll_to_top(&mut self) {
         self.scroll_offset = 0;
@@ -402,6 +439,31 @@ mod tests {
         let mut view = ConversationView::new();
         view.scroll_to_bottom();
         assert_eq!(view.scroll_offset(), usize::MAX);
+    }
+
+    #[test]
+    fn test_conversation_view_page_up() {
+        let mut view = ConversationView::new();
+        view.scroll_offset = 10;
+        view.page_up(20);
+        assert_eq!(view.scroll_offset(), 30);
+        assert!(!view.auto_scroll); // Should disable auto-scroll
+    }
+
+    #[test]
+    fn test_conversation_view_page_down() {
+        let mut view = ConversationView::new();
+        view.scroll_offset = 30;
+        view.page_down(20);
+        assert_eq!(view.scroll_offset(), 10);
+    }
+
+    #[test]
+    fn test_conversation_view_page_down_saturates_at_zero() {
+        let mut view = ConversationView::new();
+        view.scroll_offset = 5;
+        view.page_down(20); // Try to scroll past bottom
+        assert_eq!(view.scroll_offset(), 0); // Should saturate at 0
     }
 
     #[test]

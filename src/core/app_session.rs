@@ -38,6 +38,10 @@ impl App {
         // Save conversation history
         self.session.set_conversation(self.conversation.clone());
 
+        // Save tabs
+        self.session.set_tabs(self.tabs.tabs().to_vec());
+        self.session.set_active_tab_index(self.tabs.active_index());
+
         // Convert current screen to string for session
         let screen_str = match self.screen {
             AppScreen::Welcome => "Welcome",

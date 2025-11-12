@@ -35,6 +35,10 @@ pub struct CommandPalette {
     pub(super) filtered: Vec<usize>,
     /// List state for selection
     pub(super) list_state: ListState,
+    /// Recently used command IDs (most recent first)
+    pub(super) recent_commands: Vec<String>,
+    /// Maximum number of recent commands to track
+    pub(super) max_recent: usize,
 }
 
 impl CommandPalette {
@@ -99,7 +103,45 @@ impl CommandPalette {
             commands,
             filtered,
             list_state,
+            recent_commands: Vec::new(),
+            max_recent: 10,
         }
+    }
+
+    /// Record command execution for recent history
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::widgets::input::palette::CommandPalette;
+    ///
+    /// let mut palette = CommandPalette::new();
+    /// palette.record_command_use("help");
+    /// assert_eq!(palette.recent_commands().len(), 1);
+    /// ```
+    pub fn record_command_use(&mut self, command_id: impl Into<String>) {
+        let id = command_id.into();
+
+        // Remove if already in recent list (move to front)
+        self.recent_commands.retain(|cmd_id| cmd_id != &id);
+
+        // Add to front
+        self.recent_commands.insert(0, id);
+
+        // Trim to max size
+        if self.recent_commands.len() > self.max_recent {
+            self.recent_commands.truncate(self.max_recent);
+        }
+    }
+
+    /// Get recent commands list
+    pub fn recent_commands(&self) -> &[String] {
+        &self.recent_commands
+    }
+
+    /// Clear recent commands history
+    pub fn clear_recent_commands(&mut self) {
+        self.recent_commands.clear();
     }
 
     /// Insert character at cursor
@@ -182,12 +224,13 @@ impl CommandPalette {
     }
 
     /// Update filtered list based on query
+    ///
+    /// Filters commands and prioritizes recently used commands at the top.
     fn update_filter(&mut self) {
-        if self.query.is_empty() {
-            self.filtered = (0..self.commands.len()).collect();
+        let mut matches: Vec<usize> = if self.query.is_empty() {
+            (0..self.commands.len()).collect()
         } else {
-            self.filtered = self
-                .commands
+            self.commands
                 .iter()
                 .enumerate()
                 .filter(|(_, cmd)| {
@@ -197,8 +240,20 @@ impl CommandPalette {
                         || cmd.id.to_lowercase().contains(&query_lower)
                 })
                 .map(|(i, _)| i)
-                .collect();
-        }
+                .collect()
+        };
+
+        // Sort by recency: recently used commands first
+        matches.sort_by_key(|&idx| {
+            let cmd_id = &self.commands[idx].id;
+            self.recent_commands
+                .iter()
+                .position(|id| id == cmd_id)
+                .map(|pos| pos)
+                .unwrap_or(usize::MAX)
+        });
+
+        self.filtered = matches;
 
         // Reset selection
         if !self.filtered.is_empty() {
