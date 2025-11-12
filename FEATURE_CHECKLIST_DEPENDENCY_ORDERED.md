@@ -1,7 +1,7 @@
 # TOAD Feature Checklist - Dependency Ordered
 
 **Last Updated:** 2025-11-12
-**Status:** ✅ Layers 0-5 COMPLETE | ✅ Layer 6 67% (4/6) | ✅ Eval Center COMPLETE
+**Status:** ✅ Layers 0-5 COMPLETE | ✅ Layer 6 83% (5/6) | ✅ Eval Center COMPLETE
 
 ---
 
@@ -787,13 +787,13 @@ pub fn parse_slash_command(input: &str) -> Option<SlashCommand> {
 
 Depends on: Layer 5 (everything else works first)
 
-**Completion Status: 67% (4/6 features complete)**
+**Completion Status: 83% (5/6 features complete)**
 - 6.1 Responsive Layout ✅
 - 6.2 Command Palette ✅
 - 6.3 Custom Themes ✅
 - 6.4 Help Screen ✅
 - 6.5 External Editor (optional, low ROI)
-- 6.6 Multiple Session Tabs ⚙ (core infrastructure complete, UI integration pending)
+- 6.6 Multiple Session Tabs ✅ (commit 6e43b0b)
 
 ### 🔵 6.1 Responsive Layout (Adapts to Terminal Size) [POLISH]
 **Status:** [✓] Complete
@@ -932,12 +932,14 @@ Depends on: Layer 5 (everything else works first)
 ---
 
 ### 🔵 6.6 Multiple Session Tabs [OPTIONAL]
-**Status:** [⚙] In Progress (Core features complete)
-**Location:** src/workspace/tabs.rs, src/workspace/session.rs
+**Status:** [✓] Complete
+**Location:** src/workspace/tabs.rs, src/workspace/session.rs, src/core/app_event_handlers/main_screen.rs, src/core/ui.rs
 **Dependencies:** Session Persistence (4.5)
 **Blocks:** Concurrent workflows
 
-**Completed:**
+**Completed** (commit 6e43b0b):
+
+**Core Infrastructure:**
 - ✅ TabManager with tab creation/switching (92 tests)
 - ✅ TabBar widget for rendering (104 tests)
 - ✅ Session persistence for tabs (13 tests)
@@ -949,19 +951,22 @@ Depends on: Layer 5 (everything else works first)
 - ✅ `display_name_with_indicators()` method
 - ✅ Backward compatible serialization
 
-**What remains (optional):**
-- Keyboard shortcuts:
-  - Ctrl+T: New tab
-  - Ctrl+W: Close tab
-  - Ctrl+Tab: Next tab
-  - Ctrl+1-9: Jump to tab N
-- Show tabs in header UI
-- Close confirmation dialog if unsaved
-- Share context across tabs (optional)
-
-**ROI:** Medium - core infrastructure complete, UI integration pending
+**UI Integration:**
+- ✅ Keyboard shortcuts (main_screen.rs:225-265):
+  - Ctrl+T: Create new tab (respects MAX_TABS)
+  - Ctrl+W: Close current tab (prevents closing last tab)
+  - Tab/Shift+Tab: Navigate between tabs (lines 246-278)
+  - Ctrl+1-9: Jump to specific tab by number (lines 280-294)
+- ✅ TabBar shown in header when tabs.count() > 1 (ui.rs:75-117)
+- ✅ Tab restoration from session on startup (app.rs:227-239)
+- ✅ Auto-save tabs after create/close operations
+- ✅ Close confirmation warning for unsaved tabs (line 250)
 
 **Test Coverage:** 237 tests total (92 TabManager + 104 TabBar + 13 session + 16 indicators + 12 max tabs)
+
+**Optional enhancements deferred:**
+- Close confirmation dialog UI (warning message shown, full dialog deferred)
+- Share context across tabs (future enhancement)
 
 ---
 
