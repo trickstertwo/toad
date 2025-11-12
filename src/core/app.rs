@@ -72,6 +72,9 @@ pub struct App {
     /// Whether to show the settings screen
     pub(crate) show_settings: bool,
 
+    /// Config dialog: (milestone, config)
+    pub(crate) show_config_dialog: Option<(usize, crate::config::ToadConfig)>,
+
     /// Application configuration
     pub(crate) config: Config,
 
@@ -259,6 +262,7 @@ impl Default for App {
             theme_manager,
             settings_screen: crate::ui::widgets::core::settings_screen::SettingsScreen::new(theme_name),
             show_settings: false,
+            show_config_dialog: None,
             config,
             session,
             tabs,

@@ -69,13 +69,8 @@ impl App {
                 }
                 Ok(crate::ai::eval_commands::EvalCommand::ShowConfig(args)) => {
                     let config = crate::config::ToadConfig::for_milestone(args.milestone as u8);
-                    self.toast_info(format!("Milestone {} configuration:", args.milestone));
-                    self.status_message = format!(
-                        "M{}: {} features enabled",
-                        args.milestone,
-                        config.features.enabled_count()
-                    );
-                    // TODO: Show config in a dialog or dedicated panel
+                    // Show config dialog with milestone details
+                    self.show_config_dialog(args.milestone, config);
                 }
                 Err(e) => {
                     // Not a valid eval command, treat as regular query/request
@@ -449,5 +444,13 @@ mod tests {
         let second_msg = app.status_message.clone();
 
         assert_ne!(first_msg, second_msg);
+    }
+}
+
+impl App {
+    /// Show configuration dialog for a specific milestone
+    pub(crate) fn show_config_dialog(&mut self, milestone: usize, config: crate::config::ToadConfig) {
+        self.show_config_dialog = Some((milestone, config));
+        self.status_message = format!("Showing configuration for Milestone {}", milestone);
     }
 }

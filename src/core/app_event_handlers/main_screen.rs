@@ -123,6 +123,19 @@ impl App {
             return Ok(());
         }
 
+        // If config dialog is shown, intercept keys
+        if self.show_config_dialog.is_some() {
+            match (key.code, key.modifiers) {
+                // Esc or Enter closes config dialog
+                (KeyCode::Esc, _) | (KeyCode::Enter, _) => {
+                    self.show_config_dialog = None;
+                    self.status_message = "Config dialog closed".to_string();
+                }
+                _ => {}
+            }
+            return Ok(());
+        }
+
         // If settings screen is shown, intercept keys for settings navigation
         if self.show_settings {
             match (key.code, key.modifiers) {

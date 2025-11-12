@@ -117,7 +117,7 @@ fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
         render_shortcuts_bar(frame, chunks[5], &colors);
     }
 
-    // Render overlays (help, command palette, and settings)
+    // Render overlays (help, command palette, settings, and config dialog)
     if app.show_help() {
         app.help_screen().render(frame, area, &colors);
     } else if app.show_palette() {
@@ -126,6 +126,8 @@ fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
         let current_theme = app.theme_manager_mut().current_theme_name();
         let vim_mode = app.vim_mode();
         app.settings_screen_mut().render(frame, area, current_theme, vim_mode, &colors);
+    } else if let Some((milestone, ref config)) = app.show_config_dialog {
+        render_config_dialog(frame, area, milestone, config, &colors);
     }
 }
 
@@ -759,5 +761,182 @@ fn render_evaluation_complete(frame: &mut Frame, area: Rect, state: &crate::core
     }
 
     let paragraph = Paragraph::new(lines).alignment(Alignment::Left);
+    frame.render_widget(paragraph, inner);
+}
+
+/// Render the config dialog showing milestone configuration
+fn render_config_dialog(
+    frame: &mut Frame,
+    area: Rect,
+    milestone: usize,
+    config: &crate::config::ToadConfig,
+    colors: &ResolvedThemeColors,
+) {
+    use ratatui::widgets::{Borders, Clear, Wrap};
+
+    // Create a centered dialog box (60% width, 80% height)
+    let dialog_width = (area.width as f32 * 0.6) as u16;
+    let dialog_height = (area.height as f32 * 0.8) as u16;
+    let dialog_x = (area.width.saturating_sub(dialog_width)) / 2;
+    let dialog_y = (area.height.saturating_sub(dialog_height)) / 2;
+
+    let dialog_area = Rect {
+        x: area.x + dialog_x,
+        y: area.y + dialog_y,
+        width: dialog_width,
+        height: dialog_height,
+    };
+
+    // Clear the area and render background
+    frame.render_widget(Clear, dialog_area);
+
+    // Create dialog title
+    let title = format!("Milestone {} Configuration", milestone);
+    let block = ratatui::widgets::Block::default()
+        .title(title)
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(colors.accent()))
+        .style(Style::default().bg(colors.background()));
+
+    let inner = block.inner(dialog_area);
+    frame.render_widget(block, dialog_area);
+
+    // Build content showing enabled features
+    let mut lines = vec![];
+    lines.push(Line::from(vec![
+        Span::styled("Feature Configuration:", Style::default().fg(colors.foreground()).add_modifier(Modifier::BOLD)),
+    ]));
+    lines.push(Line::from(""));
+
+    // Context Strategies
+    lines.push(Line::from(vec![
+        Span::styled("Context Strategies:", Style::default().fg(colors.accent()).add_modifier(Modifier::UNDERLINED)),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.context_ast { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.context_ast { colors.success() } else { colors.gray() })),
+        Span::raw(" AST-based context"),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.context_embeddings { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.context_embeddings { colors.success() } else { colors.gray() })),
+        Span::raw(" Vector embeddings"),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.context_graph { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.context_graph { colors.success() } else { colors.gray() })),
+        Span::raw(" Code graph analysis"),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.context_reranking { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.context_reranking { colors.success() } else { colors.gray() })),
+        Span::raw(" Context re-ranking"),
+    ]));
+    lines.push(Line::from(""));
+
+    // Routing Strategies
+    lines.push(Line::from(vec![
+        Span::styled("Routing Strategies:", Style::default().fg(colors.accent()).add_modifier(Modifier::UNDERLINED)),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.routing_semantic { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.routing_semantic { colors.success() } else { colors.gray() })),
+        Span::raw(" Semantic router"),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.routing_multi_model { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.routing_multi_model { colors.success() } else { colors.gray() })),
+        Span::raw(" Multi-model ensemble"),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.routing_cascade { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.routing_cascade { colors.success() } else { colors.gray() })),
+        Span::raw(" Cascading routing"),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.routing_speculative { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.routing_speculative { colors.success() } else { colors.gray() })),
+        Span::raw(" Speculative execution"),
+    ]));
+    lines.push(Line::from(""));
+
+    // Intelligence Features
+    lines.push(Line::from(vec![
+        Span::styled("Intelligence Features:", Style::default().fg(colors.accent()).add_modifier(Modifier::UNDERLINED)),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.smart_test_selection { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.smart_test_selection { colors.success() } else { colors.gray() })),
+        Span::raw(" Smart test selection"),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.failure_memory { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.failure_memory { colors.success() } else { colors.gray() })),
+        Span::raw(" Failure memory"),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.opportunistic_planning { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.opportunistic_planning { colors.success() } else { colors.gray() })),
+        Span::raw(" Opportunistic planning"),
+    ]));
+    lines.push(Line::from(""));
+
+    // Optimizations
+    lines.push(Line::from(vec![
+        Span::styled("Optimizations:", Style::default().fg(colors.accent()).add_modifier(Modifier::UNDERLINED)),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.prompt_caching { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.prompt_caching { colors.success() } else { colors.gray() })),
+        Span::raw(" Prompt caching"),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.semantic_caching { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.semantic_caching { colors.success() } else { colors.gray() })),
+        Span::raw(" Semantic caching"),
+    ]));
+    lines.push(Line::from(vec![
+        Span::raw("  "),
+        Span::styled(if config.features.tree_sitter_validation { "✓" } else { "✗" }, 
+            Style::default().fg(if config.features.tree_sitter_validation { colors.success() } else { colors.gray() })),
+        Span::raw(" Tree-sitter validation"),
+    ]));
+    lines.push(Line::from(""));
+
+    // Summary
+    lines.push(Line::from(vec![
+        Span::styled("Total enabled: ", Style::default().fg(colors.foreground()).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            format!("{}", config.features.enabled_count()),
+            Style::default().fg(colors.success()).add_modifier(Modifier::BOLD)
+        ),
+    ]));
+    lines.push(Line::from(""));
+    lines.push(Line::from(vec![
+        Span::styled("Press ", Style::default().fg(colors.gray())),
+        Span::styled("Esc", Style::default().fg(colors.accent()).add_modifier(Modifier::BOLD)),
+        Span::styled(" or ", Style::default().fg(colors.gray())),
+        Span::styled("Enter", Style::default().fg(colors.accent()).add_modifier(Modifier::BOLD)),
+        Span::styled(" to close", Style::default().fg(colors.gray())),
+    ]));
+
+    // Render content
+    let paragraph = Paragraph::new(lines)
+        .wrap(Wrap { trim: false })
+        .alignment(Alignment::Left);
+
     frame.render_widget(paragraph, inner);
 }
