@@ -1,7 +1,7 @@
 # TOAD Feature Checklist - Dependency Ordered
 
 **Last Updated:** 2025-11-12
-**Status:** ✅ Layers 0-2 COMPLETE | ✅ Layer 3 75% COMPLETE (3/4 features) | ✅ Eval Center COMPLETE
+**Status:** ✅ Layers 0-3 COMPLETE | ✅ Eval Center COMPLETE | 🚀 Ready for Layer 4
 
 ---
 
@@ -1153,9 +1153,9 @@ These features are specific to the F9 Evaluation Center dashboard for SWE-bench 
 - [x] 🔴 3.1: Tool execution status panel ✅ (widget created + UI wired)
 - [x] 🔴 3.2: Error dialog with recovery ✅ (6 error types, smart recovery actions)
 - [x] 🟡 3.3: Approval system ✅ COMPLETE (core + UI, needs event wiring)
-- [ ] 🟡 3.4: Git auto-commits with undo ← NEXT
+- [x] 🟡 3.4: Git auto-commits with undo ✅ COMPLETE (auto-commit + message generation + undo stack)
 
-**Success Metric:** Can safely let AI modify files with undo support
+**Success Metric:** ✅ ACHIEVED - Can safely let AI modify files with undo support
 
 ---
 
@@ -1262,11 +1262,11 @@ Layer 2: Chat
 [✓] Message differentiation ✅ COMPLETE (role colors, timestamps, markdown)
 [✓] Keyboard input ✅
 
-Layer 3: Safety
+Layer 3: Safety ✅ ALL COMPLETE
 [✓] Tool status indicators ✅ (widget complete + UI wired)
 [✓] Error handling UI ✅ (ErrorDialog with 6 error types + recovery)
 [✓] Approval system ✅ (core + UI complete, needs event wiring)
-[ ] Git auto-commits ← NEXT
+[✓] Git auto-commits ✅ (AutoCommitManager + message gen + undo)
 
 Layer 4: Context
 [ ] Model selector
