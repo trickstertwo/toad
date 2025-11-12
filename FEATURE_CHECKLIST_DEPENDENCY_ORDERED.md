@@ -135,20 +135,29 @@ impl ScrollbarState {
 ---
 
 ### 🟡 1.2 Text Rendering with Markdown [ESSENTIAL]
-**Status:** [~] Partial (basic rendering exists)
-**Location:** src/ui/atoms/, src/ui/molecules/message_bubble.rs
+**Status:** [✓] Complete
+**Location:** src/ui/atoms/markdown.rs, src/ui/molecules/message_bubble.rs
 **Dependencies:** Terminal Management (0.2)
 **Blocks:** Message display (2.1), Help screen
 
-**What exists:**
-- Message bubble widget
-- Basic text rendering
-- Theme system for colors
+**Completed:**
+- ✅ MarkdownRenderer atom using pulldown-cmark (markdown.rs)
+- ✅ **Bold** text support (Style::BOLD)
+- ✅ *Italic* text support (Style::ITALIC)
+- ✅ `Inline code` support (green on dark gray background)
+- ✅ Block quotes (> quote) with italic gray styling
+- ✅ Code blocks (```language) with syntax support
+- ✅ Headings (# H1 through ###### H6) - bold and underlined
+- ✅ Lists (unordered, ordered, task lists with [x] / [ ])
+- ✅ Links with underline styling
+- ✅ Horizontal rules (---)
+- ✅ Strikethrough text (~~text~~)
+- ✅ Nested formatting (bold within italic, etc.)
+- ✅ Line wrapping handled by event parser
+- ✅ MessageBubble integration for assistant messages (message_bubble.rs:141-150)
 
-**What's needed:**
-- Add markdown parser (use `pulldown-cmark`)
-- Render **bold**, *italic*, `code`, and > quotes
-- Handle line wrapping correctly
+**Test Coverage:** 20 comprehensive tests covering all markdown features
+**Note:** HTML tags skipped for security; Math rendering deferred for future enhancement
 
 ---
 
