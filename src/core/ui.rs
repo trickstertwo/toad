@@ -84,11 +84,14 @@ fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
     render_separator(frame, chunks[4]);
     render_shortcuts_bar(frame, chunks[5]);
 
-    // Render overlays (help and command palette)
+    // Render overlays (help, command palette, and theme selector)
     if app.show_help() {
         app.help_screen().render(frame, area);
     } else if app.show_palette() {
         app.command_palette_mut().render(frame, area);
+    } else if app.show_theme_selector() {
+        let current_theme = app.theme_manager_mut().current_theme_name();
+        app.theme_selector_mut().render(frame, area, current_theme);
     }
 }
 

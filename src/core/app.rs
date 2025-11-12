@@ -62,6 +62,15 @@ pub struct App {
     /// Whether to show the command palette
     pub(crate) show_palette: bool,
 
+    /// Theme manager
+    pub(crate) theme_manager: crate::ui::theme::ThemeManager,
+
+    /// Theme selector widget
+    pub(crate) theme_selector: crate::ui::widgets::core::theme_selector::ThemeSelector,
+
+    /// Whether to show the theme selector
+    pub(crate) show_theme_selector: bool,
+
     /// Application configuration
     pub(crate) config: Config,
 
@@ -137,6 +146,9 @@ impl std::fmt::Debug for App {
             .field("show_help", &self.show_help)
             .field("command_palette", &self.command_palette)
             .field("show_palette", &self.show_palette)
+            .field("theme_manager", &"<ThemeManager>")
+            .field("theme_selector", &"<ThemeSelector>")
+            .field("show_theme_selector", &self.show_theme_selector)
             .field("config", &self.config)
             .field("session", &self.session)
             .field("tabs", &self.tabs)
@@ -217,6 +229,9 @@ impl Default for App {
             show_help: false,
             command_palette: CommandPalette::new(),
             show_palette: false,
+            theme_manager: crate::ui::theme::ThemeManager::new(),
+            theme_selector: crate::ui::widgets::core::theme_selector::ThemeSelector::default(),
+            show_theme_selector: false,
             config,
             session,
             tabs: TabManager::new(),

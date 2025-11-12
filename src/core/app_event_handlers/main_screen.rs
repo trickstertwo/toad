@@ -123,6 +123,35 @@ impl App {
             return Ok(());
         }
 
+        // If theme selector is shown, intercept keys for theme selection
+        if self.show_theme_selector {
+            match (key.code, key.modifiers) {
+                // Esc closes theme selector
+                (KeyCode::Esc, _) | (KeyCode::Char('t'), _) => {
+                    self.show_theme_selector = false;
+                }
+                // Up/Down navigate
+                (KeyCode::Up, _) => {
+                    self.theme_selector.select_previous();
+                }
+                (KeyCode::Down, _) => {
+                    self.theme_selector.select_next();
+                }
+                // Enter applies selected theme
+                (KeyCode::Enter, _) => {
+                    if let Some(theme) = self.theme_selector.selected_theme() {
+                        self.theme_manager.set_theme(theme);
+                        self.status_message = format!("Theme changed to {}", theme.as_str());
+                        self.show_theme_selector = false;
+                        // Update theme selector to reflect new current theme
+                        self.theme_selector = crate::ui::widgets::core::theme_selector::ThemeSelector::new(theme);
+                    }
+                }
+                _ => {}
+            }
+            return Ok(());
+        }
+
         match (key.code, key.modifiers) {
             // Cancel streaming on Ctrl+C, or quit if not streaming
             // But if Shift is also pressed, copy last message instead
@@ -175,6 +204,12 @@ impl App {
             // Ctrl+P opens command palette
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
                 self.show_palette = true;
+            }
+            // 't' opens theme selector
+            (KeyCode::Char('t'), KeyModifiers::NONE) if !self.input_field.is_focused() => {
+                let current_theme = self.theme_manager.current_theme_name();
+                self.theme_selector = crate::ui::widgets::core::theme_selector::ThemeSelector::new(current_theme);
+                self.show_theme_selector = true;
             }
             // F9 opens evaluation center
             (KeyCode::F(9), _) => {

@@ -17,6 +17,7 @@ pub mod preview;
 pub mod scrollbar;
 pub mod statusline;
 pub mod table;
+pub mod theme_selector;
 pub mod undo_redo;
 pub mod vector_canvas;
 pub mod welcome_screen;
