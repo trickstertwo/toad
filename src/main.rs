@@ -44,6 +44,12 @@ enum Commands {
         /// Output directory for results
         #[arg(short, long, default_value = "./results")]
         output: PathBuf,
+
+        /// Use multi-benchmark orchestrator with specified benchmarks (comma-separated)
+        /// Example: --benchmarks swebench-verified,livecodebench
+        /// When specified, uses new orchestrator v2 path instead of legacy evaluation
+        #[arg(long, value_name = "BENCHMARKS")]
+        benchmarks: Option<String>,
     },
 
     /// Compare two configurations (A/B test)
@@ -122,8 +128,9 @@ async fn main() -> Result<()> {
             count,
             milestone,
             output,
+            benchmarks,
         }) => {
-            run_eval(dataset, swebench, count, milestone, output).await?;
+            run_eval(dataset, swebench, count, milestone, output, benchmarks).await?;
         }
 
         Some(Commands::Compare {
@@ -160,8 +167,16 @@ async fn run_eval(
     count: usize,
     milestone: Option<u8>,
     output: PathBuf,
+    benchmarks: Option<String>,
 ) -> Result<()> {
-    info!("Running evaluation...");
+    // Route to v2 (orchestrator) if --benchmarks flag is specified
+    if let Some(benchmark_str) = benchmarks {
+        info!("Using orchestrator v2 with benchmarks: {}", benchmark_str);
+        return run_evaluation_v2(benchmark_str, count, milestone, output).await;
+    }
+
+    // Legacy v1 path (backward compatible)
+    info!("Running evaluation (legacy v1 path)...");
 
     // Load tasks with validation
     let tasks = load_tasks_with_validation(dataset_path, swebench_variant, count).await?;
@@ -193,6 +208,131 @@ async fn run_eval(
     // Print and save results
     results.print_summary();
     harness.save_results(&results)?;
+
+    info!("Results saved to: {:?}", output);
+
+    Ok(())
+}
+
+/// Run evaluation using the new orchestrator (v2 path)
+///
+/// This function uses the multi-benchmark orchestrator introduced in Phase 5.
+/// It supports concurrent execution of multiple benchmarks and emits real-time
+/// progress events.
+///
+/// # Arguments
+///
+/// * `benchmark_str` - Comma-separated list of benchmarks (e.g., "swebench-verified,livecodebench")
+/// * `count` - Number of tasks per benchmark
+/// * `milestone` - Optional milestone configuration
+/// * `output` - Output directory for results
+async fn run_evaluation_v2(
+    benchmark_str: String,
+    count: usize,
+    milestone: Option<u8>,
+    output: PathBuf,
+) -> Result<()> {
+    use toad::benchmarks::{Orchestrator, OrchestratorConfig, ExecutionContext};
+    use toad::ai::evaluation::storage::StorageManager;
+    use tokio_util::sync::CancellationToken;
+    use std::time::Duration;
+
+    info!("Running evaluation with orchestrator v2");
+
+    // Parse benchmarks from comma-separated string
+    let benchmarks: Vec<String> = benchmark_str
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+
+    if benchmarks.is_empty() {
+        anyhow::bail!("No benchmarks specified. Use comma-separated list (e.g., 'swebench-verified,livecodebench')");
+    }
+
+    info!("Benchmarks to run: {:?}", benchmarks);
+    info!("Tasks per benchmark: {}", count);
+
+    // Create configuration
+    let toad_config = if let Some(m) = milestone {
+        info!("Using Milestone {} configuration", m);
+        ToadConfig::for_milestone(m)
+    } else {
+        info!("Using default configuration");
+        ToadConfig::default()
+    };
+
+    info!("Feature flags: {}", toad_config.features.description());
+
+    // Create execution context
+    let execution_context = ExecutionContext {
+        timeout: Duration::from_secs(300), // 5 minutes per task
+        max_steps: 25,
+        system_config: serde_json::to_value(&toad_config)?,
+        sandbox_config: None,
+    };
+
+    // Create orchestrator config
+    let orchestrator_config = OrchestratorConfig {
+        benchmarks,
+        task_limit: Some(count),
+        max_concurrent_benchmarks: 2,
+        execution_context,
+    };
+
+    // Create cancellation token (future: wire to Ctrl+C handler)
+    let cancel_token = CancellationToken::new();
+
+    // Create orchestrator
+    let orchestrator = Orchestrator::new(orchestrator_config, cancel_token);
+
+    // Run evaluation
+    info!("Starting evaluation...");
+    let (evaluation_run, mut progress_rx) = orchestrator.run_evaluation().await?;
+
+    // Consume progress events and print updates
+    tokio::spawn(async move {
+        while let Some(event) = progress_rx.recv().await {
+            use toad::benchmarks::types::ProgressEvent;
+            match event {
+                ProgressEvent::EvaluationStarted { run_id, benchmarks, total_tasks } => {
+                    info!("📊 Evaluation started: {} (benchmarks: {}, tasks: {})", run_id, benchmarks.len(), total_tasks);
+                }
+                ProgressEvent::BenchmarkStarted { benchmark_name, total_tasks } => {
+                    info!("🚀 Starting {}: {} tasks", benchmark_name, total_tasks);
+                }
+                ProgressEvent::TaskCompleted { task_id, solved, duration_ms, cost_usd, .. } => {
+                    let status = if solved { "✅" } else { "❌" };
+                    info!("  {} {} ({}ms, ${:.4})", status, task_id, duration_ms, cost_usd);
+                }
+                ProgressEvent::BenchmarkCompleted { benchmark_name, tasks_solved, total_tasks, duration_ms, cost_usd } => {
+                    info!("✨ Completed {}: {}/{} solved ({}ms, ${:.2})",
+                          benchmark_name, tasks_solved, total_tasks, duration_ms, cost_usd);
+                }
+                ProgressEvent::EvaluationCompleted { run_id, tasks_solved, total_tasks, duration_ms, cost_usd, .. } => {
+                    info!("🎉 Evaluation complete: {} - {}/{} solved ({}ms, ${:.2})",
+                          run_id, tasks_solved, total_tasks, duration_ms, cost_usd);
+                }
+            }
+        }
+    });
+
+    // Wait a moment for progress events to be processed
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    // Print summary
+    info!("\n=== Evaluation Summary ===");
+    info!("Run ID: {}", evaluation_run.run_id);
+    info!("Benchmarks: {}", evaluation_run.benchmark_results.len());
+    info!("Total tasks: {}", evaluation_run.aggregate_metrics.total_tasks);
+    info!("Tasks solved: {}", evaluation_run.aggregate_metrics.tasks_solved);
+    info!("Accuracy: {:.2}%", evaluation_run.aggregate_metrics.mean_accuracy * 100.0);
+    info!("Median latency: {:.0}ms", evaluation_run.aggregate_metrics.median_latency_ms);
+    info!("Total cost: ${:.2}", evaluation_run.aggregate_metrics.total_cost_usd);
+
+    // Save results
+    let storage = StorageManager::new(&output);
+    storage.save_evaluation_run(&evaluation_run).await?;
 
     info!("Results saved to: {:?}", output);
 

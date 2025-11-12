@@ -19,6 +19,16 @@ pub use dataset_manager::{DatasetInfo, DatasetManager, DatasetSource};
 pub mod experiment_manager;
 pub use experiment_manager::{Experiment, ExperimentManager, ExperimentResults, ExperimentStatus};
 
+// Phase 1: Multi-benchmark evaluation models
+pub mod models;
+pub use models::{
+    AggregateMetrics, BehavioralMetrics, BenchmarkResult, EvaluationRun, StatisticalSummary,
+};
+
+// Phase 3: Storage and serialization
+pub mod storage;
+pub use storage::StorageManager;
+
 /// Complexity level of a task
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Complexity {
@@ -173,6 +183,22 @@ pub struct TaskResult {
     /// Cascade routing metadata (M4+ only, when routing_cascade enabled)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cascade_metadata: Option<CascadeMetadata>,
+
+    /// Behavioral metrics for this task (Phase 1: Multi-benchmark evaluation)
+    ///
+    /// Quality signals tracked during task execution. Optional - only populated
+    /// when behavioral tracking is enabled.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub behavioral_metrics: Option<crate::ai::evaluation::models::BehavioralMetrics>,
+
+    /// Additional quality signals as key-value pairs (Phase 1)
+    ///
+    /// Flexible storage for benchmark-specific quality metrics. Examples:
+    /// - "code_quality": 8.5
+    /// - "test_coverage": 0.92
+    /// - "security_score": 0.85
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub quality_signals: Option<std::collections::HashMap<String, f64>>,
 }
 
 impl TaskResult {
@@ -192,6 +218,8 @@ impl TaskResult {
             timestamp: Utc::now(),
             race_metadata: None,
             cascade_metadata: None,
+            behavioral_metrics: None,
+            quality_signals: None,
         }
     }
 

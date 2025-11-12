@@ -268,18 +268,13 @@ mod tests {
 
     #[test]
     fn test_evaluation_progress_creation() {
-        let progress = EvaluationProgress {
-            current_task: 5,
-            total_tasks: 10,
-            task_id: "task_123".to_string(),
-            current_step: Some(3),
-            max_steps: Some(25),
-            last_tool: Some("Read".to_string()),
-            total_tokens: 1500,
-            total_cost: 0.05,
-            message: Some("Reading file...".to_string()),
-            last_result: None,
-        };
+        let mut progress = EvaluationProgress::new(5, 10, "task_123".to_string());
+        progress.current_step = Some(3);
+        progress.max_steps = Some(25);
+        progress.last_tool = Some("Read".to_string());
+        progress.total_tokens = 1500;
+        progress.total_cost = 0.05;
+        progress.message = Some("Reading file...".to_string());
 
         assert_eq!(progress.current_task, 5);
         assert_eq!(progress.total_tasks, 10);
@@ -292,18 +287,7 @@ mod tests {
 
     #[test]
     fn test_evaluation_progress_optional_fields() {
-        let progress = EvaluationProgress {
-            current_task: 1,
-            total_tasks: 1,
-            task_id: "simple".to_string(),
-            current_step: None,
-            max_steps: None,
-            last_tool: None,
-            total_tokens: 0,
-            total_cost: 0.0,
-            message: None,
-            last_result: None,
-        };
+        let progress = EvaluationProgress::new(1, 1, "simple".to_string());
 
         assert!(progress.current_step.is_none());
         assert!(progress.max_steps.is_none());
@@ -379,18 +363,13 @@ mod tests {
 
     #[test]
     fn test_evaluation_progress_clone() {
-        let progress1 = EvaluationProgress {
-            current_task: 1,
-            total_tasks: 5,
-            task_id: "test".to_string(),
-            current_step: Some(2),
-            max_steps: Some(10),
-            last_tool: Some("Write".to_string()),
-            total_tokens: 500,
-            total_cost: 0.01,
-            message: Some("Testing".to_string()),
-            last_result: None,
-        };
+        let mut progress1 = EvaluationProgress::new(1, 5, "test".to_string());
+        progress1.current_step = Some(2);
+        progress1.max_steps = Some(10);
+        progress1.last_tool = Some("Write".to_string());
+        progress1.total_tokens = 500;
+        progress1.total_cost = 0.01;
+        progress1.message = Some("Testing".to_string());
 
         let progress2 = progress1.clone();
         assert_eq!(progress1.current_task, progress2.current_task);
@@ -400,18 +379,13 @@ mod tests {
 
     #[test]
     fn test_evaluation_progress_debug_format() {
-        let progress = EvaluationProgress {
-            current_task: 3,
-            total_tasks: 10,
-            task_id: "debug_test".to_string(),
-            current_step: Some(5),
-            max_steps: Some(25),
-            last_tool: Some("Bash".to_string()),
-            total_tokens: 2000,
-            total_cost: 0.10,
-            message: Some("Running command".to_string()),
-            last_result: None,
-        };
+        let mut progress = EvaluationProgress::new(3, 10, "debug_test".to_string());
+        progress.current_step = Some(5);
+        progress.max_steps = Some(25);
+        progress.last_tool = Some("Bash".to_string());
+        progress.total_tokens = 2000;
+        progress.total_cost = 0.10;
+        progress.message = Some("Running command".to_string());
 
         let debug_str = format!("{:?}", progress);
         assert!(debug_str.contains("current_task"));
@@ -420,18 +394,13 @@ mod tests {
 
     #[test]
     fn test_evaluation_progress_high_token_count() {
-        let progress = EvaluationProgress {
-            current_task: 50,
-            total_tasks: 100,
-            task_id: "large_task".to_string(),
-            current_step: Some(20),
-            max_steps: Some(25),
-            last_tool: Some("Edit".to_string()),
-            total_tokens: 1_000_000, // 1 million tokens
-            total_cost: 15.50,
-            message: Some("Processing large file".to_string()),
-            last_result: None,
-        };
+        let mut progress = EvaluationProgress::new(50, 100, "large_task".to_string());
+        progress.current_step = Some(20);
+        progress.max_steps = Some(25);
+        progress.last_tool = Some("Edit".to_string());
+        progress.total_tokens = 1_000_000; // 1 million tokens
+        progress.total_cost = 15.50;
+        progress.message = Some("Processing large file".to_string());
 
         assert_eq!(progress.total_tokens, 1_000_000);
         assert_eq!(progress.total_cost, 15.50);
@@ -440,32 +409,18 @@ mod tests {
     #[test]
     fn test_evaluation_progress_task_boundaries() {
         // First task
-        let first = EvaluationProgress {
-            current_task: 1,
-            total_tasks: 100,
-            task_id: "first".to_string(),
-            current_step: Some(1),
-            max_steps: Some(25),
-            last_tool: None,
-            total_tokens: 0,
-            total_cost: 0.0,
-            message: None,
-            last_result: None,
-        };
+        let mut first = EvaluationProgress::new(1, 100, "first".to_string());
+        first.current_step = Some(1);
+        first.max_steps = Some(25);
 
         // Last task
-        let last = EvaluationProgress {
-            current_task: 100,
-            total_tasks: 100,
-            task_id: "last".to_string(),
-            current_step: Some(25),
-            max_steps: Some(25),
-            last_tool: Some("Git".to_string()),
-            total_tokens: 50000,
-            total_cost: 2.50,
-            message: Some("Finishing up".to_string()),
-            last_result: None,
-        };
+        let mut last = EvaluationProgress::new(100, 100, "last".to_string());
+        last.current_step = Some(25);
+        last.max_steps = Some(25);
+        last.last_tool = Some("Git".to_string());
+        last.total_tokens = 50000;
+        last.total_cost = 2.50;
+        last.message = Some("Finishing up".to_string());
 
         assert_eq!(first.current_task, 1);
         assert_eq!(last.current_task, 100);
@@ -530,18 +485,14 @@ mod tests {
 
     #[test]
     fn test_event_evaluation_progress_variant() {
-        let progress = EvaluationProgress {
-            current_task: 5,
-            total_tasks: 10,
-            task_id: "task_789".to_string(),
-            current_step: Some(10),
-            max_steps: Some(25),
-            last_tool: Some("Grep".to_string()),
-            total_tokens: 3000,
-            total_cost: 0.15,
-            message: Some("Searching files".to_string()),
-            last_result: None,
-        };
+        let mut progress = EvaluationProgress::new(5, 10, "task_789".to_string());
+        progress.current_step = Some(10);
+        progress.max_steps = Some(25);
+        progress.last_tool = Some("Grep".to_string());
+        progress.total_tokens = 3000;
+        progress.total_cost = 0.15;
+        progress.message = Some("Searching files".to_string());
+
         let event = Event::EvaluationProgress(progress.clone());
 
         if let Event::EvaluationProgress(p) = event {
@@ -635,18 +586,7 @@ mod tests {
     // ===== EvaluationProgress Field Combination Tests =====
     #[test]
     fn test_evaluation_progress_all_none_optionals() {
-        let progress = EvaluationProgress {
-            current_task: 1,
-            total_tasks: 1,
-            task_id: "minimal".to_string(),
-            current_step: None,
-            max_steps: None,
-            last_tool: None,
-            total_tokens: 0,
-            total_cost: 0.0,
-            message: None,
-            last_result: None,
-        };
+        let progress = EvaluationProgress::new(1, 1, "minimal".to_string());
 
         assert!(progress.current_step.is_none());
         assert!(progress.max_steps.is_none());
@@ -657,18 +597,13 @@ mod tests {
 
     #[test]
     fn test_evaluation_progress_all_some_optionals() {
-        let progress = EvaluationProgress {
-            current_task: 5,
-            total_tasks: 10,
-            task_id: "full".to_string(),
-            current_step: Some(15),
-            max_steps: Some(25),
-            last_tool: Some("List".to_string()),
-            total_tokens: 5000,
-            total_cost: 0.25,
-            message: Some("All fields populated".to_string()),
-            last_result: None,
-        };
+        let mut progress = EvaluationProgress::new(5, 10, "full".to_string());
+        progress.current_step = Some(15);
+        progress.max_steps = Some(25);
+        progress.last_tool = Some("List".to_string());
+        progress.total_tokens = 5000;
+        progress.total_cost = 0.25;
+        progress.message = Some("All fields populated".to_string());
 
         assert!(progress.current_step.is_some());
         assert!(progress.max_steps.is_some());
@@ -679,18 +614,7 @@ mod tests {
 
     #[test]
     fn test_evaluation_progress_zero_cost() {
-        let progress = EvaluationProgress {
-            current_task: 1,
-            total_tasks: 1,
-            task_id: "free".to_string(),
-            current_step: None,
-            max_steps: None,
-            last_tool: None,
-            total_tokens: 0,
-            total_cost: 0.0,
-            message: None,
-            last_result: None,
-        };
+        let progress = EvaluationProgress::new(1, 1, "free".to_string());
 
         assert_eq!(progress.total_cost, 0.0);
         assert_eq!(progress.total_tokens, 0);
@@ -698,18 +622,9 @@ mod tests {
 
     #[test]
     fn test_evaluation_progress_decimal_cost() {
-        let progress = EvaluationProgress {
-            current_task: 1,
-            total_tasks: 1,
-            task_id: "precise".to_string(),
-            current_step: None,
-            max_steps: None,
-            last_tool: None,
-            total_tokens: 1234,
-            total_cost: 0.123456,
-            message: None,
-            last_result: None,
-        };
+        let mut progress = EvaluationProgress::new(1, 1, "precise".to_string());
+        progress.total_tokens = 1234;
+        progress.total_cost = 0.123456;
 
         assert_eq!(progress.total_cost, 0.123456);
     }
@@ -762,18 +677,7 @@ mod tests {
                 test: 2,
                 output: None,
             }),
-            Event::EvaluationProgress(EvaluationProgress {
-                current_task: 1,
-                total_tasks: 1,
-                task_id: "test".to_string(),
-                current_step: None,
-                max_steps: None,
-                last_tool: None,
-                total_tokens: 0,
-                total_cost: 0.0,
-                message: None,
-                last_result: None,
-            }),
+            Event::EvaluationProgress(EvaluationProgress::new(1, 1, "test".to_string())),
             Event::EvaluationComplete(EvaluationResults {
                 config_name: "test".to_string(),
                 results: vec![],
