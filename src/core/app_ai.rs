@@ -6,6 +6,39 @@ use crate::ai::llm::Message;
 use crate::core::app::App;
 
 impl App {
+    /// Copy the last assistant message to clipboard
+    ///
+    /// Finds the most recent assistant message and copies its content to the clipboard.
+    /// Shows a status message on success or failure.
+    pub(crate) fn copy_last_assistant_message(&mut self) {
+        // Find the last assistant message
+        let last_assistant = self
+            .conversation
+            .iter()
+            .rev()
+            .find(|msg| matches!(msg.role, crate::ai::llm::Role::Assistant));
+
+        if let Some(message) = last_assistant {
+            if let Some(ref mut clipboard) = self.clipboard {
+                match clipboard.copy(&message.content) {
+                    Ok(_) => {
+                        self.status_message = format!(
+                            "Copied {} chars to clipboard",
+                            message.content.len()
+                        );
+                    }
+                    Err(e) => {
+                        self.status_message = format!("Failed to copy: {}", e);
+                    }
+                }
+            } else {
+                self.status_message = "Clipboard not available".to_string();
+            }
+        } else {
+            self.status_message = "No assistant message to copy".to_string();
+        }
+    }
+
     /// Process an AI query asynchronously
     ///
     /// Sends the user's query to the LLM and updates the conversation with the response.

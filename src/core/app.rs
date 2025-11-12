@@ -7,6 +7,7 @@ use crate::ai::llm::{AnthropicClient, LLMClient, Message};
 use crate::config::Config;
 use crate::core::app_state::{AppScreen, EvaluationState};
 use crate::core::event::Event;
+use crate::infrastructure::clipboard::Clipboard;
 use crate::infrastructure::history::History;
 use crate::performance::PerformanceMetrics;
 use crate::ui::widgets::{
@@ -115,6 +116,9 @@ pub struct App {
 
     /// Total cost in USD for this session
     pub(crate) total_cost_usd: f64,
+
+    /// Clipboard for copy/paste operations
+    pub(crate) clipboard: Option<Clipboard>,
 }
 
 impl std::fmt::Debug for App {
@@ -232,6 +236,7 @@ impl Default for App {
             total_input_tokens: 0,
             total_output_tokens: 0,
             total_cost_usd: 0.0,
+            clipboard: Clipboard::new().ok(),
         }
     }
 }

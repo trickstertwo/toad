@@ -167,6 +167,10 @@ impl App {
                     self.status_message = "Cannot clear during streaming".to_string();
                 }
             }
+            // Ctrl+Shift+C to copy last assistant message
+            (KeyCode::Char('c'), KeyModifiers::CONTROL | KeyModifiers::SHIFT) => {
+                self.copy_last_assistant_message();
+            }
             // Ctrl+P opens command palette
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
                 self.show_palette = true;
