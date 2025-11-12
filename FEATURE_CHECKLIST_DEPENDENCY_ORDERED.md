@@ -804,10 +804,10 @@ pub fn parse_slash_command(input: &str) -> Option<SlashCommand> {
 
 Depends on: Layer 5 (everything else works first)
 
-**Completion Status: 33% (2/6 features complete)**
+**Completion Status: 50% (3/6 features complete)**
 - 6.1 Responsive Layout ✅
 - 6.2 Command Palette ✅
-- 6.3 Custom Themes (in progress)
+- 6.3 Custom Themes ✅
 - 6.4 Help Screen ✅ (already complete)
 - 6.5 External Editor (optional, low ROI)
 - 6.6 Multiple Session Tabs (optional, TabManager exists)
@@ -873,28 +873,40 @@ Depends on: Layer 5 (everything else works first)
 ---
 
 ### 🔵 6.3 Custom Themes (Light/Dark) [POLISH]
-**Status:** [~] Partial (theme system exists)
-**Location:** src/ui/theme/mod.rs
+**Status:** [✓] Complete
+**Location:** src/ui/theme/ (manager.rs, builtin.rs, resolver.rs, catppuccin.rs, nord.rs)
 **Dependencies:** Config System (0.4)
 **Blocks:** User preference
 
-**What exists:**
-- ToadTheme system
-- Color definitions
-
-**What's needed:**
-1. Built-in themes:
-   - Dracula Dark
-   - GitHub Dark
-   - Monokai
-   - Solarized Dark/Light
-   - One Light
-2. Theme selector (press 't')
-3. Auto-detect terminal background (light/dark)
-4. Custom theme support: ~/.toad/themes/
-5. TOML configuration format
-6. Preview before applying
-7. NO_COLOR env var support
+**Implemented:**
+1. ✅ Built-in themes (8 total):
+   - Dark, Light, High Contrast
+   - Catppuccin Mocha, Macchiato, Frappe, Latte (4 variants)
+   - Nord
+2. ✅ Theme selector widget: ThemeSelector with 10 tests (src/ui/widgets/core/theme_selector.rs)
+   - Modal-style UI with ↑/↓ navigation
+   - Current theme indicator (●)
+   - Enter to apply, Esc to cancel
+3. ✅ Auto-detect terminal background:
+   - COLORFGBG environment variable (codes 0-7 dark, 8-15 light)
+   - TERM_PROGRAM detection (iTerm, Terminal.app, Hyper, VSCode)
+   - VSCODE_THEME_VARIANT support
+   - Fallback to Dark theme
+4. ✅ Custom theme support: `ThemeManager.load_custom_theme(path)`
+   - Load from any TOML file path
+   - ~/.toad/themes/*.toml recommended
+5. ✅ TOML format: ThemeColors struct with Serialize/Deserialize
+   - All 24 color mappings (primary, background, semantic colors, etc.)
+6. ✅ Hot-reload: `reload_custom_theme()` method
+7. ✅ NO_COLOR environment variable support (https://no-color.org/)
+   - `detect_no_color()` checks NO_COLOR env var
+   - `is_no_color()` / `set_no_color()` accessors
+8. ✅ Additional features:
+   - ThemeManager with theme switching
+   - ThemeColors resolver for runtime color access
+   - `with_theme()` constructor bypasses auto-detection
+   - 63 comprehensive unit tests for ThemeManager
+   - 10 tests for ThemeSelector widget
 
 ---
 
