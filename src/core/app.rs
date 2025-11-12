@@ -224,6 +224,20 @@ impl Default for App {
             _ => None,
         };
 
+        // Restore tabs from session (or create default if none exist)
+        let mut tabs = TabManager::new();
+        if !session.tabs().is_empty() {
+            for tab in session.tabs() {
+                tabs.add_tab_with(tab.clone());
+            }
+            if let Some(idx) = session.active_tab_index() {
+                tabs.switch_to_index(idx);
+            }
+        } else {
+            // Create default tab if session has no tabs
+            tabs.add_tab("Main");
+        }
+
         Self {
             screen,
             should_quit: false,
@@ -247,7 +261,7 @@ impl Default for App {
             show_settings: false,
             config,
             session,
-            tabs: TabManager::new(),
+            tabs,
             layout: LayoutManager::new(),
             vim_mode,
             performance: PerformanceMetrics::new(),

@@ -7,6 +7,7 @@ use crate::core::app::App;
 use crate::core::app_state::AppScreen;
 use crate::ui::theme::{ToadTheme, ResolvedThemeColors};
 use crate::ui::widgets::core::welcome_screen::WelcomeScreen;
+use crate::ui::widgets::layout::tabbar::TabBar;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -65,30 +66,56 @@ fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
     let colors = ResolvedThemeColors::from_manager(app.theme_manager_mut());
 
     // Create the main layout:
-    // 1. Main content area
-    // 2. Metadata line (path + model info)
-    // 3. Horizontal separator
-    // 4. Input field
-    // 5. Horizontal separator
-    // 6. Keyboard shortcuts bar
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
+    // 1. Tab bar (if multiple tabs exist)
+    // 2. Main content area
+    // 3. Metadata line (path + model info)
+    // 4. Horizontal separator
+    // 5. Input field
+    // 6. Horizontal separator
+    // 7. Keyboard shortcuts bar
+    let show_tabbar = app.tabs().count() > 1;
+    let constraints = if show_tabbar {
+        vec![
+            Constraint::Length(1), // Tab bar
             Constraint::Min(0),    // Main content area
             Constraint::Length(1), // Metadata line
             Constraint::Length(1), // Horizontal separator
             Constraint::Length(1), // Input field
             Constraint::Length(1), // Horizontal separator
             Constraint::Length(1), // Keyboard shortcuts bar
-        ])
+        ]
+    } else {
+        vec![
+            Constraint::Min(0),    // Main content area
+            Constraint::Length(1), // Metadata line
+            Constraint::Length(1), // Horizontal separator
+            Constraint::Length(1), // Input field
+            Constraint::Length(1), // Horizontal separator
+            Constraint::Length(1), // Keyboard shortcuts bar
+        ]
+    };
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(constraints)
         .split(area);
 
-    render_main_content(app, frame, chunks[0]);
-    render_metadata_line(app, frame, chunks[1], &colors);
-    render_separator(frame, chunks[2], &colors);
-    app.input_field().render(frame, chunks[3]);
-    render_separator(frame, chunks[4], &colors);
-    render_shortcuts_bar(frame, chunks[5], &colors);
+    if show_tabbar {
+        render_tabbar(app, frame, chunks[0]);
+        render_main_content(app, frame, chunks[1]);
+        render_metadata_line(app, frame, chunks[2], &colors);
+        render_separator(frame, chunks[3], &colors);
+        app.input_field().render(frame, chunks[4]);
+        render_separator(frame, chunks[5], &colors);
+        render_shortcuts_bar(frame, chunks[6], &colors);
+    } else {
+        render_main_content(app, frame, chunks[0]);
+        render_metadata_line(app, frame, chunks[1], &colors);
+        render_separator(frame, chunks[2], &colors);
+        app.input_field().render(frame, chunks[3]);
+        render_separator(frame, chunks[4], &colors);
+        render_shortcuts_bar(frame, chunks[5], &colors);
+    }
 
     // Render overlays (help, command palette, and settings)
     if app.show_help() {
@@ -195,6 +222,12 @@ fn render_separator(frame: &mut Frame, area: Rect, colors: &ResolvedThemeColors)
     ));
     let separator_paragraph = Paragraph::new(separator_line);
     frame.render_widget(separator_paragraph, area);
+}
+
+/// Render the tab bar
+fn render_tabbar(app: &App, frame: &mut Frame, area: Rect) {
+    let tabbar = TabBar::new(app.tabs());
+    tabbar.render(frame, area);
 }
 
 /// Render keyboard shortcuts bar

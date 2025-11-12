@@ -222,6 +222,47 @@ impl App {
                     self.status_message = "Cannot clear during streaming".to_string();
                 }
             }
+            // Ctrl+T to create a new tab
+            (KeyCode::Char('t'), KeyModifiers::CONTROL) => {
+                if let Some(tab_id) = self.tabs.add_tab("New Tab") {
+                    self.status_message = format!("Created tab {} (ID: {})", self.tabs.count(), tab_id);
+                    // Save session after creating tab
+                    if let Err(e) = self.save_session() {
+                        tracing::warn!("Failed to save session after creating tab: {}", e);
+                    }
+                } else {
+                    self.status_message = format!(
+                        "Cannot create tab: maximum of {} tabs reached",
+                        crate::workspace::tabs::MAX_TABS
+                    );
+                }
+            }
+            // Ctrl+W to close current tab
+            (KeyCode::Char('w'), KeyModifiers::CONTROL) => {
+                if let Some(active_tab) = self.tabs.active_tab() {
+                    let tab_id = active_tab.id;
+                    let title = active_tab.title.clone();
+                    let modified = active_tab.modified;
+
+                    // Check if tab has unsaved changes (modified indicator)
+                    if modified {
+                        // TODO: Show confirmation dialog before closing
+                        self.status_message = "Tab has unsaved changes. Close confirmation not yet implemented".to_string();
+                    } else if self.tabs.count() > 1 {
+                        // Only close if there's more than one tab
+                        self.tabs.close_tab(tab_id);
+                        self.status_message = format!("Closed tab '{}'", title);
+                        // Save session after closing tab
+                        if let Err(e) = self.save_session() {
+                            tracing::warn!("Failed to save session after closing tab: {}", e);
+                        }
+                    } else {
+                        self.status_message = "Cannot close the last tab".to_string();
+                    }
+                } else {
+                    self.status_message = "No active tab to close".to_string();
+                }
+            }
             // Ctrl+P opens command palette
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
                 self.show_palette = true;
