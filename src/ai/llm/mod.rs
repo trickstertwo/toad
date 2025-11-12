@@ -34,6 +34,8 @@ pub use streaming::{MessageStream, StreamAccumulator, StreamEvent};
 pub struct Message {
     pub role: Role,
     pub content: String,
+    #[serde(default = "chrono::Utc::now")]
+    pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 
 /// Message role (user or assistant)
@@ -49,6 +51,7 @@ impl Message {
         Self {
             role: Role::User,
             content: content.into(),
+            timestamp: chrono::Utc::now(),
         }
     }
 
@@ -56,6 +59,7 @@ impl Message {
         Self {
             role: Role::Assistant,
             content: content.into(),
+            timestamp: chrono::Utc::now(),
         }
     }
 }

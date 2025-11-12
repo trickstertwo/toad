@@ -129,8 +129,10 @@ impl<'a> MessageBubble<'a> {
     pub fn to_lines(&self, max_width: usize) -> Vec<Line<'static>> {
         let mut lines = Vec::new();
 
-        // Role header using Text atom
-        let role_text = Text::new(format!("{}:", self.role_label())).style(self.role_style());
+        // Role header with timestamp using Text atom
+        let time_str = self.message.timestamp.format("%H:%M").to_string();
+        let role_text = Text::new(format!("{} [{}]:", self.role_label(), time_str))
+            .style(self.role_style());
         lines.push(role_text.to_line());
 
         // Render content based on role
