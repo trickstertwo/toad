@@ -498,12 +498,12 @@ fn render_files_panel(frame: &mut Frame, area: Rect, progress: &crate::core::eve
 }
 
 /// Render metrics panel with per-step details
-fn render_metrics_panel(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress) {
+fn render_metrics_panel(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress, colors: &ResolvedThemeColors) {
     let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+        .border_style(Style::default().fg(colors.accent()))
         .title(" Metrics ")
-        .title_style(Style::default().fg(ToadTheme::TOAD_GREEN).add_modifier(Modifier::BOLD));
+        .title_style(Style::default().fg(colors.accent()).add_modifier(Modifier::BOLD));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -513,10 +513,10 @@ fn render_metrics_panel(frame: &mut Frame, area: Rect, progress: &crate::core::e
     // Current step metrics
     if let Some(step) = progress.current_step {
         lines.push(Line::from(vec![
-            Span::styled("Step: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("Step: ", Style::default().fg(colors.gray())),
             Span::styled(
                 format!("{}/{}", step, progress.max_steps.unwrap_or(25)),
-                Style::default().fg(ToadTheme::WHITE),
+                Style::default().fg(colors.foreground()),
             ),
         ]));
     }
@@ -525,24 +525,24 @@ fn render_metrics_panel(frame: &mut Frame, area: Rect, progress: &crate::core::e
 
     // Token metrics
     lines.push(Line::from(vec![
-            Span::styled("Total Tokens:", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("Total Tokens:", Style::default().fg(colors.gray())),
         ]));
     lines.push(Line::from(vec![
         Span::styled(
             format!("  {}", progress.total_tokens),
-            Style::default().fg(ToadTheme::BLUE),
+            Style::default().fg(colors.info()),
         ),
     ]));
 
     if let Some(input_tokens) = progress.step_input_tokens {
         lines.push(Line::from(""));
         lines.push(Line::from(vec![
-            Span::styled("Step In/Out:", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("Step In/Out:", Style::default().fg(colors.gray())),
         ]));
         lines.push(Line::from(vec![
             Span::styled(
                 format!("  {} / {}", input_tokens, progress.step_output_tokens.unwrap_or(0)),
-                Style::default().fg(ToadTheme::BLUE),
+                Style::default().fg(colors.info()),
             ),
         ]));
     }
@@ -550,10 +550,10 @@ fn render_metrics_panel(frame: &mut Frame, area: Rect, progress: &crate::core::e
     if let Some(cache_tokens) = progress.cache_read_tokens {
         if cache_tokens > 0 {
             lines.push(Line::from(vec![
-                Span::styled("  Cache: ", Style::default().fg(ToadTheme::GRAY)),
+                Span::styled("  Cache: ", Style::default().fg(colors.gray())),
                 Span::styled(
                     format!("{}", cache_tokens),
-                    Style::default().fg(ToadTheme::TOAD_GREEN),
+                    Style::default().fg(colors.success()),
                 ),
             ]));
         }
@@ -562,12 +562,12 @@ fn render_metrics_panel(frame: &mut Frame, area: Rect, progress: &crate::core::e
     // Cost metrics
     lines.push(Line::from(""));
     lines.push(Line::from(vec![
-        Span::styled("Total Cost:", Style::default().fg(ToadTheme::GRAY)),
+        Span::styled("Total Cost:", Style::default().fg(colors.gray())),
     ]));
     lines.push(Line::from(vec![
         Span::styled(
             format!("  ${:.4}", progress.total_cost),
-            Style::default().fg(ToadTheme::TOAD_GREEN),
+            Style::default().fg(colors.accent()),
         ),
     ]));
 
@@ -575,12 +575,12 @@ fn render_metrics_panel(frame: &mut Frame, area: Rect, progress: &crate::core::e
     if let Some(duration) = progress.step_duration_ms {
         lines.push(Line::from(""));
         lines.push(Line::from(vec![
-            Span::styled("Step Time:", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("Step Time:", Style::default().fg(colors.gray())),
         ]));
         lines.push(Line::from(vec![
             Span::styled(
                 format!("  {}ms", duration),
-                Style::default().fg(ToadTheme::YELLOW),
+                Style::default().fg(colors.warning()),
             ),
         ]));
     }
@@ -590,7 +590,7 @@ fn render_metrics_panel(frame: &mut Frame, area: Rect, progress: &crate::core::e
         if !thinking.is_empty() {
             lines.push(Line::from(""));
             lines.push(Line::from(vec![
-                Span::styled("Thinking:", Style::default().fg(ToadTheme::GRAY)),
+                Span::styled("Thinking:", Style::default().fg(colors.gray())),
             ]));
             let preview = if thinking.len() > 100 {
                 format!("{}...", &thinking[..100])
@@ -601,7 +601,7 @@ fn render_metrics_panel(frame: &mut Frame, area: Rect, progress: &crate::core::e
                 lines.push(Line::from(vec![
                     Span::styled(
                         format!("  {}", line),
-                        Style::default().fg(ToadTheme::WHITE),
+                        Style::default().fg(colors.foreground()),
                     ),
                 ]));
             }
@@ -613,14 +613,14 @@ fn render_metrics_panel(frame: &mut Frame, area: Rect, progress: &crate::core::e
 }
 
 /// Render evaluation completion screen
-fn render_evaluation_complete(frame: &mut Frame, area: Rect, state: &crate::core::app_state::EvaluationState) {
+fn render_evaluation_complete(frame: &mut Frame, area: Rect, state: &crate::core::app_state::EvaluationState, colors: &ResolvedThemeColors) {
     let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+        .border_style(Style::default().fg(colors.accent()))
         .title(" Evaluation Complete ")
         .title_style(
             Style::default()
-                .fg(ToadTheme::TOAD_GREEN)
+                .fg(colors.accent())
                 .add_modifier(Modifier::BOLD),
         );
 
@@ -634,49 +634,49 @@ fn render_evaluation_complete(frame: &mut Frame, area: Rect, state: &crate::core
         lines.push(Line::from(vec![Span::styled(
             "✓ Evaluation Complete",
             Style::default()
-                .fg(ToadTheme::TOAD_GREEN)
+                .fg(colors.success())
                 .add_modifier(Modifier::BOLD),
         )]));
         lines.push(Line::from(""));
         lines.push(Line::from(vec![
-            Span::styled("Accuracy: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("Accuracy: ", Style::default().fg(colors.gray())),
             Span::styled(
                 format!("{:.1}%", results.accuracy),
                 Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
+                    .fg(colors.success())
                     .add_modifier(Modifier::BOLD),
             ),
         ]));
         lines.push(Line::from(vec![
-            Span::styled("Tasks Solved: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("Tasks Solved: ", Style::default().fg(colors.gray())),
             Span::styled(
                 format!("{}/{}", results.tasks_solved, results.total_tasks),
-                Style::default().fg(ToadTheme::WHITE),
+                Style::default().fg(colors.foreground()),
             ),
         ]));
         lines.push(Line::from(vec![
-            Span::styled("Avg Cost: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("Avg Cost: ", Style::default().fg(colors.gray())),
             Span::styled(
                 format!("${:.4}", results.avg_cost_usd),
-                Style::default().fg(ToadTheme::TOAD_GREEN),
+                Style::default().fg(colors.accent()),
             ),
         ]));
         lines.push(Line::from(vec![
-            Span::styled("Avg Duration: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("Avg Duration: ", Style::default().fg(colors.gray())),
             Span::styled(
                 format!("{}ms", results.avg_duration_ms),
-                Style::default().fg(ToadTheme::BLUE),
+                Style::default().fg(colors.info()),
             ),
         ]));
         lines.push(Line::from(""));
         lines.push(Line::from(vec![
-            Span::styled("Press ", Style::default().fg(ToadTheme::GRAY)),
-            Span::styled("q", Style::default().fg(ToadTheme::TOAD_GREEN)),
-            Span::styled(" or ", Style::default().fg(ToadTheme::GRAY)),
-            Span::styled("Esc", Style::default().fg(ToadTheme::TOAD_GREEN)),
+            Span::styled("Press ", Style::default().fg(colors.gray())),
+            Span::styled("q", Style::default().fg(colors.accent())),
+            Span::styled(" or ", Style::default().fg(colors.gray())),
+            Span::styled("Esc", Style::default().fg(colors.accent())),
             Span::styled(
                 " to return to main screen",
-                Style::default().fg(ToadTheme::GRAY),
+                Style::default().fg(colors.gray()),
             ),
         ]));
     }
@@ -686,21 +686,21 @@ fn render_evaluation_complete(frame: &mut Frame, area: Rect, state: &crate::core
         lines.push(Line::from(vec![Span::styled(
             "✗ Evaluation Failed",
             Style::default()
-                .fg(ToadTheme::RED)
+                .fg(colors.error())
                 .add_modifier(Modifier::BOLD),
         )]));
         lines.push(Line::from(""));
         lines.push(Line::from(vec![Span::styled(
             error.clone(),
-            Style::default().fg(ToadTheme::RED),
+            Style::default().fg(colors.error()),
         )]));
         lines.push(Line::from(""));
         lines.push(Line::from(vec![
-            Span::styled("Press ", Style::default().fg(ToadTheme::GRAY)),
-            Span::styled("Esc", Style::default().fg(ToadTheme::TOAD_GREEN)),
+            Span::styled("Press ", Style::default().fg(colors.gray())),
+            Span::styled("Esc", Style::default().fg(colors.accent())),
             Span::styled(
                 " to return to main screen",
-                Style::default().fg(ToadTheme::GRAY),
+                Style::default().fg(colors.gray()),
             ),
         ]));
     }
