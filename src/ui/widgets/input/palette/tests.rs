@@ -902,3 +902,137 @@ fn test_palette_rapid_insert_clear_cycles_1000() {
     assert_eq!(palette.query(), "");
     assert!(palette.selected_command().is_some());
 }
+
+// ============ Recent Commands Tests ============
+
+#[test]
+fn test_record_command_use() {
+    let mut palette = CommandPalette::new();
+    palette.record_command_use("help");
+
+    assert_eq!(palette.recent_commands().len(), 1);
+    assert_eq!(palette.recent_commands()[0], "help");
+}
+
+#[test]
+fn test_record_multiple_commands() {
+    let mut palette = CommandPalette::new();
+    palette.record_command_use("help");
+    palette.record_command_use("quit");
+    palette.record_command_use("clear_conversation");
+
+    assert_eq!(palette.recent_commands().len(), 3);
+    assert_eq!(palette.recent_commands()[0], "clear_conversation"); // Most recent first
+    assert_eq!(palette.recent_commands()[1], "quit");
+    assert_eq!(palette.recent_commands()[2], "help");
+}
+
+#[test]
+fn test_record_duplicate_command_moves_to_front() {
+    let mut palette = CommandPalette::new();
+    palette.record_command_use("help");
+    palette.record_command_use("quit");
+    palette.record_command_use("help"); // Use again
+
+    assert_eq!(palette.recent_commands().len(), 2); // No duplicates
+    assert_eq!(palette.recent_commands()[0], "help"); // Moved to front
+    assert_eq!(palette.recent_commands()[1], "quit");
+}
+
+#[test]
+fn test_recent_commands_max_size() {
+    let mut palette = CommandPalette::new();
+
+    // Record more than max_recent (10) commands
+    for i in 0..15 {
+        palette.record_command_use(format!("command_{}", i));
+    }
+
+    assert_eq!(palette.recent_commands().len(), 10); // Capped at max
+    assert_eq!(palette.recent_commands()[0], "command_14"); // Most recent
+    assert_eq!(palette.recent_commands()[9], "command_5"); // Oldest kept
+}
+
+#[test]
+fn test_clear_recent_commands() {
+    let mut palette = CommandPalette::new();
+    palette.record_command_use("help");
+    palette.record_command_use("quit");
+
+    assert_eq!(palette.recent_commands().len(), 2);
+
+    palette.clear_recent_commands();
+
+    assert_eq!(palette.recent_commands().len(), 0);
+}
+
+#[test]
+fn test_recent_commands_prioritization_in_filter() {
+    let mut palette = CommandPalette::new();
+
+    // Record some commands as "recently used"
+    palette.record_command_use("quit");
+    palette.record_command_use("help");
+
+    // Clear query to get all commands
+    palette.clear_query();
+
+    // Get all filtered commands
+    let filtered: Vec<String> = palette
+        .filtered
+        .iter()
+        .map(|&idx| palette.commands[idx].id.clone())
+        .collect();
+
+    // Recently used commands should be at the top
+    assert_eq!(filtered[0], "help"); // Most recent
+    assert_eq!(filtered[1], "quit"); // Second most recent
+}
+
+#[test]
+fn test_recent_commands_prioritization_with_search() {
+    let mut palette = CommandPalette::new();
+
+    // Record "vim_mode" as recently used
+    palette.record_command_use("vim_mode");
+
+    // Search for something that matches multiple commands
+    palette.insert_char('m'); // Matches "vim_mode" and others
+
+    // Get filtered commands
+    let filtered: Vec<String> = palette
+        .filtered
+        .iter()
+        .map(|&idx| palette.commands[idx].id.clone())
+        .collect();
+
+    // vim_mode should be first (recently used)
+    assert_eq!(filtered[0], "vim_mode");
+}
+
+#[test]
+fn test_empty_recent_commands() {
+    let palette = CommandPalette::new();
+    assert_eq!(palette.recent_commands().len(), 0);
+}
+
+#[test]
+fn test_record_command_use_string_type() {
+    let mut palette = CommandPalette::new();
+    palette.record_command_use(String::from("help"));
+
+    assert_eq!(palette.recent_commands()[0], "help");
+}
+
+#[test]
+fn test_recent_commands_immutability() {
+    let mut palette = CommandPalette::new();
+    palette.record_command_use("help");
+
+    let recent = palette.recent_commands();
+    assert_eq!(recent.len(), 1);
+
+    // Ensure we can only read, not modify
+    // (Rust borrow checker enforces this at compile time)
+}
+
