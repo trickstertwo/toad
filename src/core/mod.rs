@@ -9,6 +9,7 @@
 pub mod app;
 pub mod app_accessors;
 pub mod app_ai;
+pub mod app_approvals;
 pub mod app_commands;
 pub mod app_evaluation;
 pub mod app_event_handlers;

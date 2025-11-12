@@ -4,6 +4,7 @@
 //! contextual help, and undo/redo management.
 
 pub mod animation;
+pub mod approval_dialog;
 pub mod borders;
 pub mod breadcrumbs;
 pub mod cheat_sheet;
