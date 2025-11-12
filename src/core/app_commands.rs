@@ -130,8 +130,25 @@ impl App {
                 self.show_help = true;
                 self.status_message = "Opened help screen".to_string();
             }
-            "clear" => {
-                self.status_message = "Screen cleared".to_string();
+            "clear_conversation" => {
+                if !self.conversation_view.is_streaming() {
+                    self.clear_conversation();
+                    self.status_message = "Conversation cleared".to_string();
+                    // Save session after clearing
+                    if let Err(e) = self.save_session() {
+                        tracing::warn!("Failed to save session: {}", e);
+                    }
+                } else {
+                    self.status_message = "Cannot clear during streaming".to_string();
+                }
+            }
+            "copy_last_message" => {
+                self.copy_last_assistant_message();
+            }
+            "evaluation_center" => {
+                use crate::core::app_state::AppScreen;
+                self.screen = AppScreen::Evaluation;
+                self.status_message = "Opened Evaluation Center".to_string();
             }
             "quit" => {
                 self.should_quit = true;
@@ -139,26 +156,37 @@ impl App {
             "vim_mode" => {
                 self.toggle_vim_mode();
             }
-            "theme_toggle" => {
-                self.status_message = "Theme toggled (coming soon)".to_string();
+            "show_tokens" => {
+                self.status_message = format!(
+                    "Tokens: {}↓ {}↑ | Cost: ${:.4}",
+                    self.total_input_tokens, self.total_output_tokens, self.total_cost_usd
+                );
             }
-            "split_horizontal" => {
-                self.status_message = "Split horizontal (coming soon)".to_string();
+            "new_conversation" => {
+                if !self.conversation_view.is_streaming() {
+                    // Save current conversation first
+                    if let Err(e) = self.save_session() {
+                        tracing::warn!("Failed to save session: {}", e);
+                    }
+                    // Clear conversation for fresh start
+                    self.clear_conversation();
+                    // Reset token counters
+                    self.total_input_tokens = 0;
+                    self.total_output_tokens = 0;
+                    self.total_cost_usd = 0.0;
+                    self.status_message = "Started new conversation".to_string();
+                } else {
+                    self.status_message = "Cannot start new conversation during streaming".to_string();
+                }
             }
-            "split_vertical" => {
-                self.status_message = "Split vertical (coming soon)".to_string();
-            }
-            "open_file" => {
-                self.status_message = "Open file (coming soon)".to_string();
-            }
-            "search_files" => {
-                self.status_message = "Search files (coming soon)".to_string();
-            }
-            "git_status" => {
-                self.status_message = "Git status (coming soon)".to_string();
-            }
-            "recent_files" => {
-                self.status_message = "Recent files (coming soon)".to_string();
+            "cancel_streaming" => {
+                if self.conversation_view.is_streaming() {
+                    self.conversation_view.cancel_streaming();
+                    self.set_ai_processing(false);
+                    self.status_message = "Streaming cancelled".to_string();
+                } else {
+                    self.status_message = "No active streaming to cancel".to_string();
+                }
             }
             _ => {
                 self.status_message = format!("Unknown command: {}", cmd_id);
