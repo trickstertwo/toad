@@ -64,9 +64,17 @@ pub struct SessionState {
     #[serde(default)]
     conversation: Vec<Message>,
 
+    /// Currently selected theme
+    #[serde(default = "default_theme")]
+    theme: String,
+
     /// Version of the session format (for migration)
     #[serde(default = "default_version")]
     version: u32,
+}
+
+fn default_theme() -> String {
+    "Dark".to_string()
 }
 
 fn default_version() -> u32 {
@@ -98,6 +106,7 @@ impl SessionState {
             last_screen: "Welcome".to_string(),
             plugin_count: 0,
             history: History::new(1000),
+            theme: default_theme(),
             conversation: Vec::new(),
             version: 1,
         }
@@ -301,6 +310,35 @@ impl SessionState {
     /// ```
     pub fn set_conversation(&mut self, conversation: Vec<Message>) {
         self.conversation = conversation;
+    }
+
+    /// Get the current theme
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::session::SessionState;
+    ///
+    /// let session = SessionState::new();
+    /// assert_eq!(session.theme(), "Dark");
+    /// ```
+    pub fn theme(&self) -> &str {
+        &self.theme
+    }
+
+    /// Set the current theme
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::session::SessionState;
+    ///
+    /// let mut session = SessionState::new();
+    /// session.set_theme("Nord".to_string());
+    /// assert_eq!(session.theme(), "Nord");
+    /// ```
+    pub fn set_theme(&mut self, theme: String) {
+        self.theme = theme;
     }
 
     /// Get the session format version

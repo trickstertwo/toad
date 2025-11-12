@@ -202,6 +202,15 @@ impl Default for App {
         // Load vim mode from config
         let vim_mode = config.ui.vim_mode;
 
+        // Load theme from session, parse to ThemeName, fallback to Dark
+        let saved_theme_str = session.theme();
+        let theme_name = crate::ui::theme::manager::ThemeName::from_str(saved_theme_str)
+            .unwrap_or(crate::ui::theme::manager::ThemeName::Dark);
+
+        // Initialize theme manager with saved theme
+        let mut theme_manager = crate::ui::theme::ThemeManager::new();
+        theme_manager.set_theme(theme_name);
+
         // Try to initialize LLM client (fallback to None if API key is missing)
         let llm_client = match std::env::var("ANTHROPIC_API_KEY") {
             Ok(api_key) if !api_key.is_empty() => {
@@ -229,8 +238,8 @@ impl Default for App {
             show_help: false,
             command_palette: CommandPalette::new(),
             show_palette: false,
-            theme_manager: crate::ui::theme::ThemeManager::new(),
-            settings_screen: crate::ui::widgets::core::settings_screen::SettingsScreen::default(),
+            theme_manager,
+            settings_screen: crate::ui::widgets::core::settings_screen::SettingsScreen::new(theme_name),
             show_settings: false,
             config,
             session,

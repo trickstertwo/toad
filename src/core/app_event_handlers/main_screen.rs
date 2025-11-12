@@ -151,6 +151,11 @@ impl App {
                         self.status_message = format!("Theme changed to {}", theme.as_str());
                         // Update settings screen to reflect new current theme
                         self.settings_screen.update_theme(theme);
+                        // Save theme to session for persistence
+                        self.session.set_theme(theme.as_str().to_string());
+                        if let Err(e) = self.save_session() {
+                            tracing::warn!("Failed to save session after theme change: {}", e);
+                        }
                     }
                 }
                 _ => {}
