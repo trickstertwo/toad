@@ -15,6 +15,7 @@ pub mod help;
 pub mod icons;
 pub mod preview;
 pub mod scrollbar;
+pub mod settings_screen;
 pub mod statusline;
 pub mod table;
 pub mod theme_selector;

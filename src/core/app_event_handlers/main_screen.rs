@@ -123,28 +123,34 @@ impl App {
             return Ok(());
         }
 
-        // If theme selector is shown, intercept keys for theme selection
-        if self.show_theme_selector {
+        // If settings screen is shown, intercept keys for settings navigation
+        if self.show_settings {
             match (key.code, key.modifiers) {
-                // Esc closes theme selector
-                (KeyCode::Esc, _) | (KeyCode::Char('t'), _) => {
-                    self.show_theme_selector = false;
+                // Esc or F10 closes settings
+                (KeyCode::Esc, _) | (KeyCode::F(10), _) => {
+                    self.show_settings = false;
                 }
-                // Up/Down navigate
+                // Left/Right switch tabs
+                (KeyCode::Left, _) => {
+                    self.settings_screen.previous_category();
+                }
+                (KeyCode::Right, _) => {
+                    self.settings_screen.next_category();
+                }
+                // Up/Down navigate within category
                 (KeyCode::Up, _) => {
-                    self.theme_selector.select_previous();
+                    self.settings_screen.select_previous();
                 }
                 (KeyCode::Down, _) => {
-                    self.theme_selector.select_next();
+                    self.settings_screen.select_next();
                 }
-                // Enter applies selected theme
+                // Enter applies selected setting
                 (KeyCode::Enter, _) => {
-                    if let Some(theme) = self.theme_selector.selected_theme() {
+                    if let Some(theme) = self.settings_screen.selected_theme() {
                         self.theme_manager.set_theme(theme);
                         self.status_message = format!("Theme changed to {}", theme.as_str());
-                        self.show_theme_selector = false;
-                        // Update theme selector to reflect new current theme
-                        self.theme_selector = crate::ui::widgets::core::theme_selector::ThemeSelector::new(theme);
+                        // Update settings screen to reflect new current theme
+                        self.settings_screen.update_theme(theme);
                     }
                 }
                 _ => {}
@@ -205,17 +211,17 @@ impl App {
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
                 self.show_palette = true;
             }
-            // 't' opens theme selector
-            (KeyCode::Char('t'), KeyModifiers::NONE) if !self.input_field.is_focused() => {
-                let current_theme = self.theme_manager.current_theme_name();
-                self.theme_selector = crate::ui::widgets::core::theme_selector::ThemeSelector::new(current_theme);
-                self.show_theme_selector = true;
-            }
             // F9 opens evaluation center
             (KeyCode::F(9), _) => {
                 use crate::core::app_state::AppScreen;
                 self.screen = AppScreen::Evaluation;
                 self.status_message = "Opened Evaluation Center".to_string();
+            }
+            // F10 opens settings screen
+            (KeyCode::F(10), _) => {
+                let current_theme = self.theme_manager.current_theme_name();
+                self.settings_screen.update_theme(current_theme);
+                self.show_settings = true;
             }
             // Toggle help screen with Ctrl+? (Ctrl+Shift+/)
             (KeyCode::Char('?'), KeyModifiers::CONTROL | KeyModifiers::SHIFT) => {

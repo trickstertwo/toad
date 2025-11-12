@@ -65,11 +65,11 @@ pub struct App {
     /// Theme manager
     pub(crate) theme_manager: crate::ui::theme::ThemeManager,
 
-    /// Theme selector widget
-    pub(crate) theme_selector: crate::ui::widgets::core::theme_selector::ThemeSelector,
+    /// Settings screen widget
+    pub(crate) settings_screen: crate::ui::widgets::core::settings_screen::SettingsScreen,
 
-    /// Whether to show the theme selector
-    pub(crate) show_theme_selector: bool,
+    /// Whether to show the settings screen
+    pub(crate) show_settings: bool,
 
     /// Application configuration
     pub(crate) config: Config,
@@ -147,8 +147,8 @@ impl std::fmt::Debug for App {
             .field("command_palette", &self.command_palette)
             .field("show_palette", &self.show_palette)
             .field("theme_manager", &"<ThemeManager>")
-            .field("theme_selector", &"<ThemeSelector>")
-            .field("show_theme_selector", &self.show_theme_selector)
+            .field("settings_screen", &"<SettingsScreen>")
+            .field("show_settings", &self.show_settings)
             .field("config", &self.config)
             .field("session", &self.session)
             .field("tabs", &self.tabs)
@@ -230,8 +230,8 @@ impl Default for App {
             command_palette: CommandPalette::new(),
             show_palette: false,
             theme_manager: crate::ui::theme::ThemeManager::new(),
-            theme_selector: crate::ui::widgets::core::theme_selector::ThemeSelector::default(),
-            show_theme_selector: false,
+            settings_screen: crate::ui::widgets::core::settings_screen::SettingsScreen::default(),
+            show_settings: false,
             config,
             session,
             tabs: TabManager::new(),

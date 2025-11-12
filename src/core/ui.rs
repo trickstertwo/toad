@@ -84,14 +84,14 @@ fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
     render_separator(frame, chunks[4]);
     render_shortcuts_bar(frame, chunks[5]);
 
-    // Render overlays (help, command palette, and theme selector)
+    // Render overlays (help, command palette, and settings)
     if app.show_help() {
         app.help_screen().render(frame, area);
     } else if app.show_palette() {
         app.command_palette_mut().render(frame, area);
-    } else if app.show_theme_selector() {
+    } else if app.show_settings() {
         let current_theme = app.theme_manager_mut().current_theme_name();
-        app.theme_selector_mut().render(frame, area, current_theme);
+        app.settings_screen_mut().render(frame, area, current_theme);
     }
 }
 
@@ -178,6 +178,7 @@ fn render_shortcuts_bar(frame: &mut Frame, area: Rect) {
         ("Ctrl+Shift+C", "Copy"),
         ("Shift+Enter", "Newline"),
         ("F9", "Eval"),
+        ("F10", "Settings"),
         ("?", "Help"),
     ];
 
