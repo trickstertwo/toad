@@ -159,6 +159,10 @@ impl App {
                 if !self.conversation_view.is_streaming() {
                     self.clear_conversation();
                     self.status_message = "Conversation cleared".to_string();
+                    // Save session after clearing conversation
+                    if let Err(e) = self.save_session() {
+                        tracing::warn!("Failed to save session after clearing: {}", e);
+                    }
                 } else {
                     self.status_message = "Cannot clear during streaming".to_string();
                 }

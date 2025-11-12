@@ -157,6 +157,15 @@ impl Default for App {
         let working_directory = session.working_directory().clone();
         let welcome_shown = session.welcome_shown();
 
+        // Restore conversation from session
+        let conversation = session.conversation().clone();
+
+        // Create conversation view and populate with restored messages
+        let mut conversation_view = ConversationView::new();
+        for message in &conversation {
+            conversation_view.add_message(message.clone());
+        }
+
         let mut input_field = InputField::new();
         input_field.set_focused(true);
 
@@ -207,9 +216,9 @@ impl Default for App {
             toasts: ToastManager::new(),
             event_tx: None,
             evaluation_state: None,
-            conversation: Vec::new(),
+            conversation,
             llm_client,
-            conversation_view: ConversationView::new(),
+            conversation_view,
             ai_processing: false,
             tick_count: 0,
             command_history: History::load_or_new(1000),

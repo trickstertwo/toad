@@ -161,6 +161,12 @@ impl App {
             self.conversation_view.complete_streaming();
             self.set_ai_processing(false);
             self.status_message = "AI response complete".to_string();
+
+            // Auto-save session after AI response
+            if let Err(e) = self.save_session() {
+                // Log error but don't interrupt user experience
+                tracing::warn!("Failed to save session after AI response: {}", e);
+            }
         }
     }
 }
