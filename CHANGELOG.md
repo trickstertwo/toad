@@ -20,6 +20,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- COMPLETED 2025-11-09: M4 Cascading Routing implementation -->
 
 ### Added
+- **Evaluation System: Phase 6 CLI/TUI Integration** (PARTIAL - 2025-11-12)
+  - **CLI Integration** (145 LOC):
+    - Added `--benchmarks` flag to `eval` command for orchestrator v2
+    - Created `run_evaluation_v2()` adapter (124 lines) wrapping orchestrator
+    - Routing logic: v1 (legacy) vs v2 (orchestrator) based on --benchmarks presence
+    - Real-time progress logging with emoji status indicators (📊🚀✅❌✨🎉)
+    - Backward compatible: v1 path unchanged, v2 opt-in via flag
+  - **Usage Examples**:
+    - Legacy: `eval --swebench verified --count 10` (v1 path)
+    - Orchestrator: `eval --benchmarks swebench-verified --count 10` (v2 path)
+    - Multi-benchmark: `eval --benchmarks swebench-verified,livecodebench --count 10`
+  - **Remaining**: TUI integration (6.4), enhanced compare (6.5), integration tests (6.6), docs (6.7)
+- **Evaluation System: Phase 5 Orchestrator & Concurrent Execution** (COMPLETE - 2025-11-12)
+  - **Multi-Benchmark Orchestrator** (617 LOC, 3 tests):
+    - `src/benchmarks/orchestrator.rs` (617 lines): Concurrent benchmark coordinator
+    - `tests/orchestrator_integration_tests.rs` (178 lines): 3 integration tests (2 ignored until benchmark impl)
+  - **Orchestrator Features**:
+    - Concurrent benchmark execution via `tokio::spawn`
+    - Configurable concurrency limit via `Semaphore` (default: 2 concurrent benchmarks)
+    - Real-time progress events via `mpsc::unbounded_channel`
+    - Graceful cancellation via `CancellationToken`
+    - Fault isolation: benchmark panics don't crash orchestrator
+    - Aggregate metrics: weighted accuracy, median latency, total cost
+  - **OrchestratorConfig**:
+    - Benchmark list (comma-separated strings)
+    - Task limit per benchmark (optional)
+    - Max concurrent benchmarks setting
+    - Execution context (timeouts, steps, system config)
+  - **Progress Events**:
+    - `EvaluationStarted`: Orchestrator begins with run ID
+    - `BenchmarkStarted`: Each benchmark starts with task count
+    - `TaskCompleted`: Per-task progress (solved, duration, cost)
+    - `BenchmarkCompleted`: Benchmark finishes with summary
+    - `EvaluationCompleted`: Orchestrator done
+  - **Architecture**:
+    - Benchmark-level parallelism (not task-level) for simpler rate limiting
+    - Unbounded channel prevents backpressure on progress events
+    - Semaphore-based concurrency: resource-aware execution
+    - Empty results on cancellation: partial progress preserved
+  - **Dependencies**: `tokio-util = "0.7"` for CancellationToken
+- **Evaluation System: Phase 4 Enhanced Statistical Utilities** (COMPLETE - 2025-11-12)
+  - **Advanced Statistics** (~415 LOC, 13 tests):
+    - Bootstrap confidence intervals: 10k resamples, percentile method
+    - Effect size interpretation: Cohen's d with human-readable categories
+    - Multiple testing correction: Benjamini-Hochberg FDR control
+    - Correlation analysis: Pearson (linear) and Spearman (monotonic)
+    - `StatisticalSummary::from_samples()`: One-stop constructor
+  - **New Methods in StatisticalTest**:
+    - `bootstrap_ci()`: Bootstrap CI with 10k resamples (percentile method, <500ms)
+    - `interpret_effect_size()`: Negligible/Small/Medium/Large/Very Large categories
+    - `benjamini_hochberg()`: FDR correction for multiple hypothesis testing
+    - `pearson_correlation()`: Linear correlation (r ∈ [-1, 1])
+    - `spearman_correlation()`: Rank-based monotonic correlation
+    - `rank_data()`: Helper for Spearman with average rank for ties
+  - **StatisticalSummary Enhancement**:
+    - `from_samples()` constructor combines Welch's t-test, Cohen's d, bootstrap CI
+    - Single call for comprehensive statistical analysis
+  - **Design Decisions**:
+    - Bootstrap: Percentile method (simplified from BCa for performance)
+    - 10,000 resamples balances accuracy vs speed
+    - Spearman: Average rank assignment for tied values
+    - Beasley-Springer-Moro algorithm for inverse normal CDF
+  - **Dependencies**: `rand = "0.9.2"` for bootstrap resampling
+- **Evaluation System: Phase 3 Storage & Serialization Layer** (COMPLETE - 2025-11-12)
+  - **Storage Manager** (509 LOC, 5 tests):
+    - `src/ai/evaluation/storage.rs` (509 lines): Versioned JSON storage with incremental saves
+  - **StorageManager Features**:
+    - Atomic writes via write-then-rename pattern (crash-safe)
+    - Incremental snapshots in `.tmp/{run_id}/` directories
+    - Cleanup of abandoned runs after completion
+    - UUID v4 run ID generation
+  - **Methods**:
+    - `save_evaluation_run()`: Save complete evaluation with atomic write
+    - `load_evaluation_run()`: Load evaluation by run ID
+    - `incremental_save()`: Save progress snapshots during long runs
+    - `list_runs()`: List all saved evaluation IDs
+    - `cleanup_tmp_dirs()`: Remove temporary snapshot directories
+    - `generate_run_id()`: UUID v4 run identifier
+  - **Architecture**:
+    - Atomic writes prevent partial/corrupted saves
+    - Incremental strategy enables crash recovery
+    - `.tmp/` directory isolation for in-progress runs
+  - **Dependencies**: `uuid = { version = "1.18.1", features = ["v4"] }`
 - **Evaluation System: Phase 2 Benchmark Abstraction Layer** (COMPLETE - 2025-11-11)
   - **BenchmarkExecutor Trait** (1,473 LOC, 16 tests):
     - `src/benchmarks/mod.rs` (387 lines): Async trait definition with Send + Sync bounds
