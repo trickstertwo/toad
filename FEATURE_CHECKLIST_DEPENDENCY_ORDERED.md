@@ -1,7 +1,7 @@
 # TOAD Feature Checklist - Dependency Ordered
 
 **Last Updated:** 2025-11-12
-**Status:** ✅ Layers 0-4 COMPLETE | 🚧 Layer 5 50% (3/6) | ✅ Eval Center COMPLETE
+**Status:** ✅ Layers 0-4 COMPLETE | 🚧 Layer 5 67% (4/6) | ✅ Eval Center COMPLETE
 
 ---
 
@@ -721,20 +721,23 @@ pub fn parse_slash_command(input: &str) -> Option<SlashCommand> {
 ---
 
 ### 🔵 5.4 Diff Visualization Before Apply [POLISH]
-**Status:** [ ] Not Started
-**Location:** NEW: src/ui/widgets/git/diff_viewer.rs
+**Status:** [✓] Complete
+**Location:** src/ui/widgets/git/diff_viewer.rs
 **Dependencies:** Git Integration (3.4), Approval System (3.3)
 **Blocks:** Code review workflow
 
-**What's needed:**
-1. Show before/after side-by-side or unified diff
-2. Syntax highlighting in both panes
-3. Inline diff markers: + Added, - Removed, ~ Modified
-4. Navigate between changes: n (next), p (prev)
-5. Selectively apply hunks
-6. Edit proposed changes before applying
-7. Show context lines (configurable, default 3)
-8. git diff compatible format
+**Implemented:**
+1. ✅ Unified diff mode with syntax coloring
+2. ⚠️ Syntax highlighting (placeholder for future tree-sitter integration)
+3. ✅ Inline diff markers: + Added, - Removed, ~ Modified, Context
+4. ✅ Navigate between changes: n (next), p (prev)
+5. ✅ Selectively apply hunks (Space to toggle)
+6. ⚠️ Edit proposed changes (deferred - use external editor)
+7. ✅ Show context lines (configurable, default 3)
+8. ✅ Git diff compatible format (@@ hunk parsing)
+9. ✅ Line number display (old/new side-by-side)
+10. ✅ Scrolling support within hunks
+11. ✅ 15 comprehensive unit tests
 
 ---
 
