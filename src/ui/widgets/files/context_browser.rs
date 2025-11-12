@@ -213,7 +213,8 @@ impl ContextBrowser {
     /// Reload the file tree
     pub fn reload(&mut self) -> std::io::Result<()> {
         self.entries.clear();
-        self.load_directory(&self.root_path, 0)?;
+        let root_path = self.root_path.clone();
+        self.load_directory(&root_path, 0)?;
         self.scroll_state = ScrollbarState::new(self.entries.len());
 
         // Adjust selection if needed

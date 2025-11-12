@@ -194,58 +194,31 @@ impl ScrollbarState {
 Depends on: Layer 1
 
 ### 🔴 2.1 Streaming Message Display [CRITICAL]
-**Status:** [~] Partial (infrastructure exists, integration needed)
-**Location:** src/ai/llm/streaming.rs, src/ui/widgets/conversation/
+**Status:** [✓] Complete
+**Location:** src/ai/llm/streaming.rs, src/ui/widgets/conversation/, src/core/app_ai.rs
 **Dependencies:** Async Runtime (0.1), Scrollable Containers (1.1), Syntax Highlighting (1.3)
 **Blocks:** AI chat functionality (everything depends on this)
 
-**What exists:**
-- StreamEvent enum with all event types
-- MessageStream type with async iterator
-- StreamAccumulator for building responses
-- ConversationView widget
+**Completed** (commit f5c880d):
+- ✅ StreamEvent enum with all event types (streaming.rs)
+- ✅ MessageStream type with async iterator (streaming.rs)
+- ✅ StreamAccumulator for building responses (streaming.rs)
+- ✅ ConversationView widget with streaming support (view.rs)
+- ✅ Event system (AIStreamStart, AIStreamDelta, AIStreamComplete) (event.rs)
+- ✅ LLM integration using send_message_stream() API (app_ai.rs:102)
+- ✅ Real-time UI updates on ContentBlockDelta (app_ai.rs:112-117)
+- ✅ Streaming cursor animation (blinking ▊ every 500ms) (view.rs:294, app.rs:302-304)
+- ✅ Auto-scroll during streaming unless user scrolled up (view.rs:212-225)
+- ✅ Status indicator showing "AI is responding..." (app_ai.rs:185)
+- ✅ Graceful error handling for stream errors (app_ai.rs:125-130, 136-141)
 
-**What's needed:**
-1. Wire ConversationView to actual LLM streaming
-2. Update conversation_view on StreamEvent::ContentBlockDelta
-3. Add streaming cursor animation (blinking ▊)
-4. Auto-scroll during streaming unless user scrolled up
-5. Show "Generating..." indicator with elapsed time
+**Implementation:**
+- ConversationView: start_streaming(), append_streaming_content(), complete_streaming(), cancel_streaming()
+- App handlers: handle_ai_stream_start(), handle_ai_stream_delta(), handle_ai_stream_complete()
+- Async task spawned in process_ai_query() processes StreamEvents and sends UI events
+- Tick events toggle cursor visibility for blinking effect
 
-**Implementation Priority:** 🔴 **DO THIS FIRST**
-
-**Code changes needed:**
-```rust
-// src/core/app_ai.rs
-pub async fn send_message_streaming(
-    &mut self,
-    message: String,
-) -> Result<()> {
-    let mut stream = self.llm_client.send_message_stream(
-        self.conversation.clone(),
-        None,
-    ).await?;
-
-    // Spawn task to handle streaming
-    let event_tx = self.event_tx.clone();
-    tokio::spawn(async move {
-        while let Some(event) = stream.next().await {
-            match event {
-                StreamEvent::ContentBlockDelta { delta, .. } => {
-                    // Send to UI
-                    event_tx.send(Event::AIStreamDelta(delta)).ok();
-                }
-                StreamEvent::MessageStop => {
-                    event_tx.send(Event::AIStreamComplete).ok();
-                }
-                _ => {}
-            }
-        }
-    });
-
-    Ok(())
-}
-```
+**Optional enhancement:** Show elapsed time in status indicator (currently shows static message)
 
 ---
 
