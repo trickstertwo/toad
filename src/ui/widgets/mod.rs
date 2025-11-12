@@ -18,6 +18,7 @@
 //! - **progress**: Progress indicators
 //! - **selection**: Selection widgets (context menus, pickers, multiselect)
 //! - **session_manager**: Session management
+//! - **tools**: Tool execution status and monitoring
 //! - **workspace**: Workspace management
 
 pub mod ai;
@@ -34,4 +35,5 @@ pub mod performance;
 pub mod progress;
 pub mod selection;
 pub mod session_manager;
+pub mod tools;
 pub mod workspace;

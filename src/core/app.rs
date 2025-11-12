@@ -15,6 +15,7 @@ use crate::ui::widgets::{
     core::{dialog::ConfirmDialog, help::HelpScreen},
     input::{input::InputField, palette::CommandPalette},
     notifications::toast::ToastManager,
+    tools::ToolStatusPanel,
 };
 use crate::workspace::{LayoutManager, SessionState, TabManager};
 use crossterm::event::KeyEvent;
@@ -128,6 +129,9 @@ pub struct App {
 
     /// Clipboard for copy/paste operations
     pub(crate) clipboard: Option<Clipboard>,
+
+    /// Tool execution status panel
+    pub(crate) tool_status_panel: ToolStatusPanel,
 }
 
 impl std::fmt::Debug for App {
@@ -261,6 +265,7 @@ impl Default for App {
             total_output_tokens: 0,
             total_cost_usd: 0.0,
             clipboard: Clipboard::new().ok(),
+            tool_status_panel: ToolStatusPanel::new(),
         }
     }
 }

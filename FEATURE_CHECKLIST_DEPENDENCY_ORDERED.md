@@ -1,7 +1,7 @@
 # TOAD Feature Checklist - Dependency Ordered
 
-**Last Updated:** 2025-11-11
-**Status:** Reordered by implementation dependencies + Evaluation Center separated
+**Last Updated:** 2025-11-12
+**Status:** ✅ Layers 0-2 COMPLETE | Layer 3 in progress
 
 ---
 
@@ -1137,14 +1137,13 @@ These features are specific to the F9 Evaluation Center dashboard for SWE-bench 
 ## Week 1-2: Layer 0-2 (Foundation + Core Chat)
 **Goal:** Get basic streaming chat working
 
-- [x] 0.1-0.4: Already complete
-- [x] 1.1-1.3: Already complete
-- [ ] 🔴 1.4: Verify input field fully works
-- [ ] 🔴 2.1: Wire ConversationView to streaming ← **START HERE**
-- [ ] 🟡 2.2: Style messages (user vs assistant)
-- [ ] 🟡 2.3: Add keyboard shortcuts (Ctrl+C cancel)
+- [x] 0.1-0.4: Already complete ✅
+- [x] 1.1-1.4: Already complete ✅ (including input field)
+- [x] 🔴 2.1: ConversationView streaming COMPLETE ✅ (async → events → UI with blinking cursor)
+- [x] 🟡 2.2: Message styling COMPLETE ✅ (role colors, timestamps, markdown)
+- [x] 🟡 2.3: Keyboard shortcuts COMPLETE ✅ (Ctrl+C cancel, Ctrl+L clear, history)
 
-**Success Metric:** Can chat with Claude and see streaming responses
+**Success Metric:** ✅ ACHIEVED - Can chat with Claude and see streaming responses
 
 ---
 
@@ -1247,25 +1246,25 @@ Print this and check off as you implement:
 
 ```
 Layer 0: Infrastructure
-[✓] Async runtime
-[✓] Terminal management
-[✓] Keyboard framework
-[✓] Config system
+[✓] Async runtime ✅
+[✓] Terminal management ✅
+[✓] Keyboard framework ✅
+[✓] Config system ✅
 
 Layer 1: Core UI
-[✓] Scrollable containers
-[~] Markdown rendering
-[✓] Syntax highlighting
-[✓] Input field
+[✓] Scrollable containers ✅
+[✓] Markdown rendering ✅ (pulldown-cmark with full styling)
+[✓] Syntax highlighting ✅
+[✓] Input field ✅
 
 Layer 2: Chat
-[~] Streaming display ← IN PROGRESS
-[~] Message differentiation
-[✓] Keyboard input
+[✓] Streaming display ✅ COMPLETE (was marked partial incorrectly)
+[✓] Message differentiation ✅ COMPLETE (role colors, timestamps, markdown)
+[✓] Keyboard input ✅
 
 Layer 3: Safety
-[ ] Tool status indicators
-[ ] Error handling UI
+[~] Tool status indicators ← IN PROGRESS (widget created, needs wiring)
+[ ] Error handling UI ← NEXT
 [ ] Approval system ← CRITICAL
 [ ] Git auto-commits
 
