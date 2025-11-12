@@ -4,9 +4,12 @@
 //! commit dialogs, diff viewing, staging UI, and conflict resolution.
 
 pub mod conflict_resolver;
+pub mod diff_viewer;
 pub mod git_branch_manager;
 pub mod git_commit_dialog;
 pub mod git_diff_viewer;
 pub mod git_graph;
 pub mod git_stage_ui;
 pub mod git_status_panel;
+
+pub use diff_viewer::{ChangeType, DiffHunk, DiffLine, DiffMode, DiffViewer};
