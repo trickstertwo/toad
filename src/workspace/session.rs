@@ -21,6 +21,7 @@
 
 use crate::ai::llm::Message;
 use crate::infrastructure::history::History;
+use crate::workspace::Tab;
 use color_eyre::{eyre::Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -68,6 +69,14 @@ pub struct SessionState {
     #[serde(default = "default_theme")]
     theme: String,
 
+    /// Open tabs (for session restoration)
+    #[serde(default)]
+    tabs: Vec<Tab>,
+
+    /// Active tab index
+    #[serde(default)]
+    active_tab_index: Option<usize>,
+
     /// Version of the session format (for migration)
     #[serde(default = "default_version")]
     version: u32,
@@ -108,6 +117,8 @@ impl SessionState {
             history: History::new(1000),
             theme: default_theme(),
             conversation: Vec::new(),
+            tabs: Vec::new(),
+            active_tab_index: None,
             version: 1,
         }
     }
@@ -339,6 +350,81 @@ impl SessionState {
     /// ```
     pub fn set_theme(&mut self, theme: String) {
         self.theme = theme;
+    }
+
+    /// Get the open tabs
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::session::SessionState;
+    ///
+    /// let session = SessionState::new();
+    /// assert_eq!(session.tabs().len(), 0);
+    /// ```
+    pub fn tabs(&self) -> &Vec<Tab> {
+        &self.tabs
+    }
+
+    /// Get mutable open tabs
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::session::SessionState;
+    /// use toad::workspace::Tab;
+    ///
+    /// let mut session = SessionState::new();
+    /// session.tabs_mut().push(Tab::new(0, "Main"));
+    /// assert_eq!(session.tabs().len(), 1);
+    /// ```
+    pub fn tabs_mut(&mut self) -> &mut Vec<Tab> {
+        &mut self.tabs
+    }
+
+    /// Set the open tabs
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::session::SessionState;
+    /// use toad::workspace::Tab;
+    ///
+    /// let mut session = SessionState::new();
+    /// session.set_tabs(vec![Tab::new(0, "Main"), Tab::new(1, "Settings")]);
+    /// assert_eq!(session.tabs().len(), 2);
+    /// ```
+    pub fn set_tabs(&mut self, tabs: Vec<Tab>) {
+        self.tabs = tabs;
+    }
+
+    /// Get the active tab index
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::session::SessionState;
+    ///
+    /// let session = SessionState::new();
+    /// assert_eq!(session.active_tab_index(), None);
+    /// ```
+    pub fn active_tab_index(&self) -> Option<usize> {
+        self.active_tab_index
+    }
+
+    /// Set the active tab index
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::session::SessionState;
+    ///
+    /// let mut session = SessionState::new();
+    /// session.set_active_tab_index(Some(1));
+    /// assert_eq!(session.active_tab_index(), Some(1));
+    /// ```
+    pub fn set_active_tab_index(&mut self, index: Option<usize>) {
+        self.active_tab_index = index;
     }
 
     /// Get the session format version
@@ -1227,5 +1313,206 @@ mod tests {
 
         // History order should be preserved (tested via History implementation)
         assert_eq!(deserialized.history().len(), 3);
+    }
+
+    // ============================================================================
+    // TAB PERSISTENCE TESTS (Layer 6.6)
+    // ============================================================================
+
+    #[test]
+    fn test_session_tabs_empty_by_default() {
+        let session = SessionState::new();
+        assert_eq!(session.tabs().len(), 0);
+        assert_eq!(session.active_tab_index(), None);
+    }
+
+    #[test]
+    fn test_session_tabs_add_and_get() {
+        let mut session = SessionState::new();
+
+        session.tabs_mut().push(Tab::new(0, "Main"));
+        session.tabs_mut().push(Tab::new(1, "Settings"));
+
+        assert_eq!(session.tabs().len(), 2);
+        assert_eq!(session.tabs()[0].title, "Main");
+        assert_eq!(session.tabs()[1].title, "Settings");
+    }
+
+    #[test]
+    fn test_session_set_tabs() {
+        let mut session = SessionState::new();
+
+        let tabs = vec![
+            Tab::new(0, "Tab 1"),
+            Tab::new(1, "Tab 2"),
+            Tab::new(2, "Tab 3"),
+        ];
+
+        session.set_tabs(tabs);
+        assert_eq!(session.tabs().len(), 3);
+    }
+
+    #[test]
+    fn test_session_active_tab_index() {
+        let mut session = SessionState::new();
+
+        assert_eq!(session.active_tab_index(), None);
+
+        session.set_active_tab_index(Some(2));
+        assert_eq!(session.active_tab_index(), Some(2));
+
+        session.set_active_tab_index(None);
+        assert_eq!(session.active_tab_index(), None);
+    }
+
+    #[test]
+    fn test_session_tabs_serialization() {
+        let mut session = SessionState::new();
+
+        session.tabs_mut().push(Tab::new(0, "Main"));
+        session.tabs_mut().push(Tab::new(1, "Settings"));
+        session.set_active_tab_index(Some(1));
+
+        let json = serde_json::to_string(&session).unwrap();
+
+        assert!(json.contains("\"tabs\""));
+        assert!(json.contains("\"Main\""));
+        assert!(json.contains("\"Settings\""));
+        assert!(json.contains("\"active_tab_index\":1"));
+    }
+
+    #[test]
+    fn test_session_tabs_deserialization() {
+        let json = r#"{
+            "welcome_shown": false,
+            "working_directory": "/",
+            "last_screen": "Main",
+            "plugin_count": 0,
+            "history": {
+                "max_size": 1000,
+                "entries": []
+            },
+            "theme": "Dark",
+            "tabs": [
+                {"id": 0, "title": "Main", "icon": null, "closable": true, "modified": false},
+                {"id": 1, "title": "Settings", "icon": null, "closable": true, "modified": true}
+            ],
+            "active_tab_index": 1,
+            "version": 1
+        }"#;
+
+        let session: SessionState = serde_json::from_str(json).unwrap();
+
+        assert_eq!(session.tabs().len(), 2);
+        assert_eq!(session.tabs()[0].title, "Main");
+        assert_eq!(session.tabs()[1].title, "Settings");
+        assert!(session.tabs()[1].modified);
+        assert_eq!(session.active_tab_index(), Some(1));
+    }
+
+    #[test]
+    fn test_session_tabs_save_load_cycle() {
+        let mut session = SessionState::new();
+
+        session.tabs_mut().push(Tab::new(0, "Tab 1").with_icon("📁"));
+        session.tabs_mut().push(Tab::new(1, "Tab 2").with_icon("🔧"));
+        session.tabs_mut()[1].set_modified(true);
+        session.set_active_tab_index(Some(1));
+
+        let temp_file = std::env::temp_dir().join("test_tabs_cycle.json");
+
+        // Save
+        session.save(&temp_file).unwrap();
+
+        // Load
+        let loaded = SessionState::load(&temp_file).unwrap();
+
+        // Verify tabs
+        assert_eq!(loaded.tabs().len(), 2);
+        assert_eq!(loaded.tabs()[0].title, "Tab 1");
+        assert_eq!(loaded.tabs()[0].icon, Some("📁".to_string()));
+        assert_eq!(loaded.tabs()[1].title, "Tab 2");
+        assert!(loaded.tabs()[1].modified);
+        assert_eq!(loaded.active_tab_index(), Some(1));
+
+        let _ = std::fs::remove_file(&temp_file);
+    }
+
+    #[test]
+    fn test_session_tabs_with_unicode() {
+        let mut session = SessionState::new();
+
+        session.tabs_mut().push(Tab::new(0, "日本語タブ"));
+        session.tabs_mut().push(Tab::new(1, "🐸 Frog Tab"));
+
+        let json = serde_json::to_string(&session).unwrap();
+        let deserialized: SessionState = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.tabs().len(), 2);
+        assert_eq!(deserialized.tabs()[0].title, "日本語タブ");
+        assert_eq!(deserialized.tabs()[1].title, "🐸 Frog Tab");
+    }
+
+    #[test]
+    fn test_session_tabs_empty_list_serialization() {
+        let session = SessionState::new();
+
+        let json = serde_json::to_string(&session).unwrap();
+        let deserialized: SessionState = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.tabs().len(), 0);
+        assert_eq!(deserialized.active_tab_index(), None);
+    }
+
+    #[test]
+    fn test_session_tabs_large_count() {
+        let mut session = SessionState::new();
+
+        for i in 0..100 {
+            session.tabs_mut().push(Tab::new(i, format!("Tab {}", i)));
+        }
+
+        session.set_active_tab_index(Some(50));
+
+        let json = serde_json::to_string(&session).unwrap();
+        let deserialized: SessionState = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.tabs().len(), 100);
+        assert_eq!(deserialized.active_tab_index(), Some(50));
+    }
+
+    #[test]
+    fn test_session_tabs_backward_compat_missing_field() {
+        // Old session JSON without tabs field
+        let json = r#"{
+            "welcome_shown": true,
+            "working_directory": "/tmp",
+            "last_screen": "Main",
+            "plugin_count": 0,
+            "history": {
+                "max_size": 1000,
+                "entries": []
+            },
+            "theme": "Dark",
+            "version": 1
+        }"#;
+
+        let session: SessionState = serde_json::from_str(json).unwrap();
+
+        // Should default to empty tabs
+        assert_eq!(session.tabs().len(), 0);
+        assert_eq!(session.active_tab_index(), None);
+    }
+
+    #[test]
+    fn test_session_tabs_clone() {
+        let mut session1 = SessionState::new();
+        session1.tabs_mut().push(Tab::new(0, "Main"));
+        session1.set_active_tab_index(Some(0));
+
+        let session2 = session1.clone();
+
+        assert_eq!(session1.tabs().len(), session2.tabs().len());
+        assert_eq!(session1.active_tab_index(), session2.active_tab_index());
     }
 }

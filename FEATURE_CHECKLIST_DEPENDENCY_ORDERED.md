@@ -804,13 +804,13 @@ pub fn parse_slash_command(input: &str) -> Option<SlashCommand> {
 
 Depends on: Layer 5 (everything else works first)
 
-**Completion Status: 50% (3/6 features complete)**
+**Completion Status: 67% (4/6 features complete)**
 - 6.1 Responsive Layout ✅
 - 6.2 Command Palette ✅
 - 6.3 Custom Themes ✅
-- 6.4 Help Screen ✅ (already complete)
+- 6.4 Help Screen ✅
 - 6.5 External Editor (optional, low ROI)
-- 6.6 Multiple Session Tabs (optional, TabManager exists)
+- 6.6 Multiple Session Tabs ⚙ (core infrastructure complete, UI integration pending)
 
 ### 🔵 6.1 Responsive Layout (Adapts to Terminal Size) [POLISH]
 **Status:** [✓] Complete
@@ -948,31 +948,37 @@ Depends on: Layer 5 (everything else works first)
 
 ---
 
-### ⚪ 6.6 Multiple Session Tabs [OPTIONAL]
-**Status:** [✓] Complete (TabManager exists)
-**Location:** src/workspace/tabs.rs
+### 🔵 6.6 Multiple Session Tabs [OPTIONAL]
+**Status:** [⚙] In Progress (Core features complete)
+**Location:** src/workspace/tabs.rs, src/workspace/session.rs
 **Dependencies:** Session Persistence (4.5)
 **Blocks:** Concurrent workflows
 
-**What exists:**
-- TabManager with tab creation/switching
+**Completed:**
+- ✅ TabManager with tab creation/switching (92 tests)
+- ✅ TabBar widget for rendering (104 tests)
+- ✅ Session persistence for tabs (13 tests)
+- ✅ Max tabs limit (10) with `at_max_tabs()` and `remaining_slots()` (12 tests)
+- ✅ Tab indicators (16 tests):
+  - ● Modified (unsaved changes)
+  - * Operation (active operation)
+  - ! Error (error in session)
+- ✅ `display_name_with_indicators()` method
+- ✅ Backward compatible serialization
 
-**What's needed:**
-- Show tabs in header: `[1: jwt-refactor●] [2: api-design] [3: bug-fix] [+]`
+**What remains (optional):**
 - Keyboard shortcuts:
   - Ctrl+T: New tab
   - Ctrl+W: Close tab
   - Ctrl+Tab: Next tab
   - Ctrl+1-9: Jump to tab N
-- Tab indicators:
-  - ● Unsaved changes
-  - * Active operation
-  - ! Error in session
-- Close confirmation if unsaved
-- Max tabs limit (10)
+- Show tabs in header UI
+- Close confirmation dialog if unsaved
 - Share context across tabs (optional)
 
-**ROI:** Medium - useful for power users but complex UX
+**ROI:** Medium - core infrastructure complete, UI integration pending
+
+**Test Coverage:** 237 tests total (92 TabManager + 104 TabBar + 13 session + 16 indicators + 12 max tabs)
 
 ---
 
