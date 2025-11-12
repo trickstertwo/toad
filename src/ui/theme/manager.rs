@@ -78,16 +78,153 @@ pub struct ThemeManager {
     custom_theme: Option<CustomTheme>,
     /// Custom theme path (for hot-reload)
     custom_theme_path: Option<PathBuf>,
+    /// NO_COLOR environment variable support (ANSI-compatible)
+    no_color_mode: bool,
 }
 
 impl ThemeManager {
     /// Create a new theme manager with default theme
+    ///
+    /// Automatically detects terminal background and NO_COLOR environment variable.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::theme::manager::ThemeManager;
+    ///
+    /// let manager = ThemeManager::new();
+    /// ```
     pub fn new() -> Self {
+        let no_color_mode = Self::detect_no_color();
+        let current_theme = Self::auto_detect_theme();
+
         Self {
-            current_theme: ThemeName::Dark,
+            current_theme,
             custom_theme: None,
             custom_theme_path: None,
+            no_color_mode,
         }
+    }
+
+    /// Create a theme manager with explicit theme (bypass auto-detection)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::theme::manager::{ThemeManager, ThemeName};
+    ///
+    /// let manager = ThemeManager::with_theme(ThemeName::Nord);
+    /// ```
+    pub fn with_theme(theme: ThemeName) -> Self {
+        Self {
+            current_theme: theme,
+            custom_theme: None,
+            custom_theme_path: None,
+            no_color_mode: Self::detect_no_color(),
+        }
+    }
+
+    /// Detect NO_COLOR environment variable
+    ///
+    /// Follows the NO_COLOR standard: https://no-color.org/
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::theme::manager::ThemeManager;
+    ///
+    /// let no_color = ThemeManager::detect_no_color();
+    /// ```
+    pub fn detect_no_color() -> bool {
+        std::env::var("NO_COLOR").is_ok()
+    }
+
+    /// Auto-detect appropriate theme based on terminal background
+    ///
+    /// Attempts to detect terminal background and select appropriate theme:
+    /// - Light backgrounds → Light theme
+    /// - Dark backgrounds → Dark theme
+    /// - Unknown → Dark theme (safe default)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::theme::manager::ThemeManager;
+    ///
+    /// let theme = ThemeManager::auto_detect_theme();
+    /// ```
+    pub fn auto_detect_theme() -> ThemeName {
+        // Try environment hints first
+        if let Ok(colorfgbg) = std::env::var("COLORFGBG") {
+            // COLORFGBG format: "foreground;background"
+            // Background color codes: 0-7 are dark, 8-15 are light
+            if let Some(bg_str) = colorfgbg.split(';').nth(1) {
+                if let Ok(bg_code) = bg_str.parse::<u8>() {
+                    return if bg_code >= 8 {
+                        ThemeName::Light
+                    } else {
+                        ThemeName::Dark
+                    };
+                }
+            }
+        }
+
+        // Check TERM_PROGRAM for known terminals with default backgrounds
+        if let Ok(term_program) = std::env::var("TERM_PROGRAM") {
+            match term_program.as_str() {
+                "iTerm.app" | "Terminal.app" | "Hyper" => {
+                    // These typically default to dark
+                    return ThemeName::Dark;
+                }
+                "vscode" => {
+                    // VSCode can vary, check VSCODE_THEME_VARIANT
+                    if let Ok(variant) = std::env::var("VSCODE_THEME_VARIANT") {
+                        return if variant == "light" {
+                            ThemeName::Light
+                        } else {
+                            ThemeName::Dark
+                        };
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        // Default to Dark theme if detection fails
+        ThemeName::Dark
+    }
+
+    /// Check if NO_COLOR mode is enabled
+    ///
+    /// When NO_COLOR is enabled, applications should use minimal colors.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::theme::manager::ThemeManager;
+    ///
+    /// let manager = ThemeManager::new();
+    /// if manager.is_no_color() {
+    ///     // Use minimal colors
+    /// }
+    /// ```
+    pub fn is_no_color(&self) -> bool {
+        self.no_color_mode
+    }
+
+    /// Force enable/disable NO_COLOR mode
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use toad::ui::theme::manager::ThemeManager;
+    ///
+    /// let mut manager = ThemeManager::new();
+    /// manager.set_no_color(true);
+    /// assert!(manager.is_no_color());
+    /// ```
+    pub fn set_no_color(&mut self, enabled: bool) {
+        self.no_color_mode = enabled;
     }
 
     /// Get current theme name
@@ -921,3 +1058,177 @@ accent = [100, 100, 100]
         assert_eq!(theme_name.as_str(), "Custom");
     }
 }
+
+    // ===== NO_COLOR and Auto-Detection Tests =====
+    #[test]
+    fn test_detect_no_color_when_set() {
+        std::env::set_var("NO_COLOR", "1");
+        assert!(ThemeManager::detect_no_color());
+        std::env::remove_var("NO_COLOR");
+    }
+
+    #[test]
+    fn test_detect_no_color_when_not_set() {
+        std::env::remove_var("NO_COLOR");
+        assert!(!ThemeManager::detect_no_color());
+    }
+
+    #[test]
+    fn test_is_no_color() {
+        std::env::set_var("NO_COLOR", "1");
+        let manager = ThemeManager::new();
+        assert!(manager.is_no_color());
+        std::env::remove_var("NO_COLOR");
+    }
+
+    #[test]
+    fn test_set_no_color() {
+        std::env::remove_var("NO_COLOR");
+        let mut manager = ThemeManager::new();
+        assert!(!manager.is_no_color());
+
+        manager.set_no_color(true);
+        assert!(manager.is_no_color());
+
+        manager.set_no_color(false);
+        assert!(!manager.is_no_color());
+    }
+
+    #[test]
+    fn test_auto_detect_theme_colorfgbg_dark() {
+        std::env::set_var("COLORFGBG", "15;0");
+        let theme = ThemeManager::auto_detect_theme();
+        assert_eq!(theme, ThemeName::Dark);
+        std::env::remove_var("COLORFGBG");
+    }
+
+    #[test]
+    fn test_auto_detect_theme_colorfgbg_light() {
+        std::env::set_var("COLORFGBG", "0;15");
+        let theme = ThemeManager::auto_detect_theme();
+        assert_eq!(theme, ThemeName::Light);
+        std::env::remove_var("COLORFGBG");
+    }
+
+    #[test]
+    fn test_auto_detect_theme_term_program_iterm() {
+        std::env::remove_var("COLORFGBG");
+        std::env::set_var("TERM_PROGRAM", "iTerm.app");
+        let theme = ThemeManager::auto_detect_theme();
+        assert_eq!(theme, ThemeName::Dark);
+        std::env::remove_var("TERM_PROGRAM");
+    }
+
+    #[test]
+    fn test_auto_detect_theme_term_program_vscode_light() {
+        std::env::remove_var("COLORFGBG");
+        std::env::set_var("TERM_PROGRAM", "vscode");
+        std::env::set_var("VSCODE_THEME_VARIANT", "light");
+        let theme = ThemeManager::auto_detect_theme();
+        assert_eq!(theme, ThemeName::Light);
+        std::env::remove_var("TERM_PROGRAM");
+        std::env::remove_var("VSCODE_THEME_VARIANT");
+    }
+
+    #[test]
+    fn test_auto_detect_theme_term_program_vscode_dark() {
+        std::env::remove_var("COLORFGBG");
+        std::env::set_var("TERM_PROGRAM", "vscode");
+        std::env::set_var("VSCODE_THEME_VARIANT", "dark");
+        let theme = ThemeManager::auto_detect_theme();
+        assert_eq!(theme, ThemeName::Dark);
+        std::env::remove_var("TERM_PROGRAM");
+        std::env::remove_var("VSCODE_THEME_VARIANT");
+    }
+
+    #[test]
+    fn test_auto_detect_theme_default_fallback() {
+        std::env::remove_var("COLORFGBG");
+        std::env::remove_var("TERM_PROGRAM");
+        let theme = ThemeManager::auto_detect_theme();
+        assert_eq!(theme, ThemeName::Dark); // Should default to Dark
+    }
+
+    #[test]
+    fn test_with_theme_constructor() {
+        std::env::remove_var("NO_COLOR");
+        let manager = ThemeManager::with_theme(ThemeName::Nord);
+        assert_eq!(manager.current_theme_name(), ThemeName::Nord);
+    }
+
+    #[test]
+    fn test_with_theme_respects_no_color() {
+        std::env::set_var("NO_COLOR", "1");
+        let manager = ThemeManager::with_theme(ThemeName::Light);
+        assert_eq!(manager.current_theme_name(), ThemeName::Light);
+        assert!(manager.is_no_color());
+        std::env::remove_var("NO_COLOR");
+    }
+
+    #[test]
+    fn test_new_auto_detects_theme() {
+        std::env::set_var("COLORFGBG", "0;15");
+        std::env::remove_var("NO_COLOR");
+        let manager = ThemeManager::new();
+        assert_eq!(manager.current_theme_name(), ThemeName::Light);
+        std::env::remove_var("COLORFGBG");
+    }
+
+    #[test]
+    fn test_colorfgbg_parsing_edge_cases() {
+        std::env::set_var("COLORFGBG", "invalid;7");
+        let theme = ThemeManager::auto_detect_theme();
+        assert_eq!(theme, ThemeName::Dark);
+        std::env::remove_var("COLORFGBG");
+    }
+
+    #[test]
+    fn test_colorfgbg_missing_background() {
+        std::env::set_var("COLORFGBG", "15");
+        let theme = ThemeManager::auto_detect_theme();
+        assert_eq!(theme, ThemeName::Dark); // Should fallback
+        std::env::remove_var("COLORFGBG");
+    }
+
+    #[test]
+    fn test_term_program_hyper() {
+        std::env::remove_var("COLORFGBG");
+        std::env::set_var("TERM_PROGRAM", "Hyper");
+        let theme = ThemeManager::auto_detect_theme();
+        assert_eq!(theme, ThemeName::Dark);
+        std::env::remove_var("TERM_PROGRAM");
+    }
+
+    #[test]
+    fn test_term_program_terminal_app() {
+        std::env::remove_var("COLORFGBG");
+        std::env::set_var("TERM_PROGRAM", "Terminal.app");
+        let theme = ThemeManager::auto_detect_theme();
+        assert_eq!(theme, ThemeName::Dark);
+        std::env::remove_var("TERM_PROGRAM");
+    }
+
+    #[test]
+    fn test_colorfgbg_prioritized_over_term_program() {
+        std::env::set_var("COLORFGBG", "0;15");
+        std::env::set_var("TERM_PROGRAM", "iTerm.app");
+        let theme = ThemeManager::auto_detect_theme();
+        assert_eq!(theme, ThemeName::Light); // COLORFGBG wins
+        std::env::remove_var("COLORFGBG");
+        std::env::remove_var("TERM_PROGRAM");
+    }
+
+    #[test]
+    fn test_no_color_empty_string() {
+        std::env::set_var("NO_COLOR", "");
+        assert!(ThemeManager::detect_no_color()); // ANY value enables NO_COLOR
+        std::env::remove_var("NO_COLOR");
+    }
+
+    #[test]
+    fn test_manager_no_color_field_initialized() {
+        std::env::set_var("NO_COLOR", "1");
+        let manager = ThemeManager::new();
+        assert_eq!(manager.no_color_mode, true);
+        std::env::remove_var("NO_COLOR");
+    }
