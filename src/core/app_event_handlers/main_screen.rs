@@ -125,15 +125,20 @@ impl App {
 
         match (key.code, key.modifiers) {
             // Cancel streaming on Ctrl+C, or quit if not streaming
-            (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
-                if self.conversation_view.is_streaming() {
-                    // Cancel streaming response
-                    self.conversation_view.cancel_streaming();
-                    self.set_ai_processing(false);
-                    self.status_message = "Streaming cancelled".to_string();
+            // But if Shift is also pressed, copy last message instead
+            (KeyCode::Char('c'), mods) if mods.contains(KeyModifiers::CONTROL) => {
+                if mods.contains(KeyModifiers::SHIFT) {
+                    // Ctrl+Shift+C: Copy last assistant message
+                    self.copy_last_assistant_message();
                 } else {
-                    // Quit application
-                    self.should_quit = true;
+                    // Ctrl+C: Cancel streaming or quit
+                    if self.conversation_view.is_streaming() {
+                        self.conversation_view.cancel_streaming();
+                        self.set_ai_processing(false);
+                        self.status_message = "Streaming cancelled".to_string();
+                    } else {
+                        self.should_quit = true;
+                    }
                 }
             }
             // Ctrl+D for page down (Vim-style), or quit if input is focused and empty
@@ -166,10 +171,6 @@ impl App {
                 } else {
                     self.status_message = "Cannot clear during streaming".to_string();
                 }
-            }
-            // Ctrl+Shift+C to copy last assistant message
-            (KeyCode::Char('c'), KeyModifiers::CONTROL | KeyModifiers::SHIFT) => {
-                self.copy_last_assistant_message();
             }
             // Ctrl+P opens command palette
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
