@@ -4,7 +4,7 @@
 
 use crate::ui::{
     atoms::{block::Block, text::Text},
-    theme::{ToadTheme, manager::ThemeName},
+    theme::{ToadTheme, manager::ThemeName, ResolvedThemeColors},
     widgets::core::theme_selector::ThemeSelector,
 };
 use ratatui::{
