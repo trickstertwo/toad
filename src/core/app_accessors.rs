@@ -88,6 +88,21 @@ impl App {
         self.show_palette
     }
 
+    /// Get mutable theme manager
+    pub fn theme_manager_mut(&mut self) -> &mut crate::ui::theme::ThemeManager {
+        &mut self.theme_manager
+    }
+
+    /// Get mutable settings screen
+    pub fn settings_screen_mut(&mut self) -> &mut crate::ui::widgets::core::settings_screen::SettingsScreen {
+        &mut self.settings_screen
+    }
+
+    /// Check if settings screen should be shown
+    pub fn show_settings(&self) -> bool {
+        self.show_settings
+    }
+
     /// Get the layout manager
     pub fn layout(&self) -> &LayoutManager {
         &self.layout

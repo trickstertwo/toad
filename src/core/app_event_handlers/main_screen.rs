@@ -123,10 +123,73 @@ impl App {
             return Ok(());
         }
 
+        // If settings screen is shown, intercept keys for settings navigation
+        if self.show_settings {
+            match (key.code, key.modifiers) {
+                // Esc or F10 closes settings
+                (KeyCode::Esc, _) | (KeyCode::F(10), _) => {
+                    self.show_settings = false;
+                }
+                // Left/Right switch tabs
+                (KeyCode::Left, _) => {
+                    self.settings_screen.previous_category();
+                }
+                (KeyCode::Right, _) => {
+                    self.settings_screen.next_category();
+                }
+                // Up/Down navigate within category
+                (KeyCode::Up, _) => {
+                    self.settings_screen.select_previous();
+                }
+                (KeyCode::Down, _) => {
+                    self.settings_screen.select_next();
+                }
+                // Enter applies selected setting
+                (KeyCode::Enter, _) => {
+                    // Check for theme change
+                    if let Some(theme) = self.settings_screen.selected_theme() {
+                        self.theme_manager.set_theme(theme);
+                        self.status_message = format!("Theme changed to {}", theme.as_str());
+                        // Update settings screen to reflect new current theme
+                        self.settings_screen.update_theme(theme);
+                        // Save theme to session for persistence
+                        self.session.set_theme(theme.as_str().to_string());
+                        if let Err(e) = self.save_session() {
+                            tracing::warn!("Failed to save session after theme change: {}", e);
+                        }
+                    }
+                    // Check for vim mode toggle
+                    else if self.settings_screen.should_toggle_vim_mode() {
+                        self.toggle_vim_mode();
+                        self.status_message = format!("Vim mode: {}", if self.vim_mode { "ON" } else { "OFF" });
+                        // Save to config
+                        if let Err(e) = self.config.save_to_file(&crate::config::Config::default_path()) {
+                            tracing::warn!("Failed to save config after vim mode toggle: {}", e);
+                        }
+                    }
+                }
+                _ => {}
+            }
+            return Ok(());
+        }
+
         match (key.code, key.modifiers) {
-            // Quit on Ctrl+C
-            (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
-                self.should_quit = true;
+            // Cancel streaming on Ctrl+C, or quit if not streaming
+            // But if Shift is also pressed, copy last message instead
+            (KeyCode::Char('c'), mods) if mods.contains(KeyModifiers::CONTROL) => {
+                if mods.contains(KeyModifiers::SHIFT) {
+                    // Ctrl+Shift+C: Copy last assistant message
+                    self.copy_last_assistant_message();
+                } else {
+                    // Ctrl+C: Cancel streaming or quit
+                    if self.conversation_view.is_streaming() {
+                        self.conversation_view.cancel_streaming();
+                        self.set_ai_processing(false);
+                        self.status_message = "Streaming cancelled".to_string();
+                    } else {
+                        self.should_quit = true;
+                    }
+                }
             }
             // Ctrl+D for page down (Vim-style), or quit if input is focused and empty
             (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
@@ -146,6 +209,19 @@ impl App {
                     // TODO: Implement page up for scrollable content
                 }
             }
+            // Ctrl+L to clear conversation history
+            (KeyCode::Char('l'), KeyModifiers::CONTROL) => {
+                if !self.conversation_view.is_streaming() {
+                    self.clear_conversation();
+                    self.status_message = "Conversation cleared".to_string();
+                    // Save session after clearing conversation
+                    if let Err(e) = self.save_session() {
+                        tracing::warn!("Failed to save session after clearing: {}", e);
+                    }
+                } else {
+                    self.status_message = "Cannot clear during streaming".to_string();
+                }
+            }
             // Ctrl+P opens command palette
             (KeyCode::Char('p'), KeyModifiers::CONTROL) => {
                 self.show_palette = true;
@@ -155,6 +231,12 @@ impl App {
                 use crate::core::app_state::AppScreen;
                 self.screen = AppScreen::Evaluation;
                 self.status_message = "Opened Evaluation Center".to_string();
+            }
+            // F10 opens settings screen
+            (KeyCode::F(10), _) => {
+                let current_theme = self.theme_manager.current_theme_name();
+                self.settings_screen.update_theme(current_theme);
+                self.show_settings = true;
             }
             // Toggle help screen with Ctrl+? (Ctrl+Shift+/)
             (KeyCode::Char('?'), KeyModifiers::CONTROL | KeyModifiers::SHIFT) => {
@@ -210,10 +292,15 @@ impl App {
                     self.status_message = format!("Tab {} does not exist", number);
                 }
             }
-            // Enter submits the command
+            // Shift+Enter inserts newline, Enter submits
+            (KeyCode::Enter, KeyModifiers::SHIFT) => {
+                self.input_field.insert_char('\n');
+            }
             (KeyCode::Enter, _) => {
                 let input = self.input_field.value().to_string();
                 if !input.is_empty() {
+                    // Add to command history before processing
+                    self.command_history.add(input.clone());
                     self.process_command(&input);
                     self.input_field.clear();
                 }
@@ -222,7 +309,22 @@ impl App {
             (KeyCode::Backspace, _) => {
                 self.input_field.delete_char();
             }
-            // Arrow keys move cursor
+            // Up arrow navigates to older command in history
+            (KeyCode::Up, _) => {
+                if let Some(command) = self.command_history.older() {
+                    self.input_field.set_value(command.clone());
+                }
+            }
+            // Down arrow navigates to newer command in history
+            (KeyCode::Down, _) => {
+                if let Some(command) = self.command_history.newer() {
+                    self.input_field.set_value(command.clone());
+                } else {
+                    // At the end of history, clear input
+                    self.input_field.clear();
+                }
+            }
+            // Arrow keys move cursor (only left/right now, up/down for history)
             (KeyCode::Left, _) => {
                 self.input_field.move_cursor_left();
             }

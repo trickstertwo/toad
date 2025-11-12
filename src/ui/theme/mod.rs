@@ -5,6 +5,7 @@ pub mod builtin;
 pub mod catppuccin;
 pub mod manager;
 pub mod nord;
+pub mod resolver;
 
 use ratatui::style::Color;
 use serde::{Deserialize, Serialize};
@@ -272,6 +273,7 @@ pub use builtin::{DarkTheme, HighContrastTheme, LightTheme};
 pub use catppuccin::{CatppuccinFrappe, CatppuccinLatte, CatppuccinMacchiato, CatppuccinMocha};
 pub use manager::ThemeManager;
 pub use nord::NordTheme;
+pub use resolver::ThemeColors as ResolvedThemeColors;
 
 #[cfg(test)]
 mod tests {

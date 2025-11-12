@@ -35,6 +35,9 @@ impl App {
             .set_working_directory(self.working_directory.clone());
         self.session.set_plugin_count(self.plugin_count);
 
+        // Save conversation history
+        self.session.set_conversation(self.conversation.clone());
+
         // Convert current screen to string for session
         let screen_str = match self.screen {
             AppScreen::Welcome => "Welcome",

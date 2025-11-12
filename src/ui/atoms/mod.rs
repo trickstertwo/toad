@@ -16,6 +16,7 @@
 //! - [`text`]: Styled text primitive
 //! - [`block`]: Bordered container primitive
 //! - [`icon`]: Nerd Font icon primitive
+//! - [`markdown`]: Markdown rendering primitive
 //!
 //! # Examples
 //!
@@ -23,17 +24,22 @@
 //! use toad::ui::atoms::text::Text;
 //! use toad::ui::atoms::block::Block;
 //! use toad::ui::atoms::icon::Icon;
+//! use toad::ui::atoms::markdown::MarkdownRenderer;
 //! use toad::ui::nerd_fonts::UiIcon;
 //!
 //! let text = Text::new("Hello").bold();
 //! let block = Block::themed("Panel");
 //! let icon = Icon::ui(UiIcon::Success);
+//! let md = MarkdownRenderer::new();
+//! let lines = md.render("**Bold** text");
 //! ```
 
 pub mod block;
 pub mod icon;
+pub mod markdown;
 pub mod text;
 
 pub use block::Block;
 pub use icon::Icon;
+pub use markdown::MarkdownRenderer;
 pub use text::Text;

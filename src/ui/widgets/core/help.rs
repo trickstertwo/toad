@@ -4,7 +4,7 @@
 
 use crate::ui::{
     atoms::{block::Block, text::Text},
-    theme::ToadTheme,
+    theme::ResolvedThemeColors,
 };
 use ratatui::{
     Frame,
@@ -23,7 +23,7 @@ impl HelpScreen {
         Self
     }
 
-    pub fn render(&self, frame: &mut Frame, area: Rect) {
+    pub fn render(&self, frame: &mut Frame, area: Rect, colors: &ResolvedThemeColors) {
         // Create centered modal-style layout
         let vertical = Layout::default()
             .direction(Direction::Vertical)
@@ -48,8 +48,8 @@ impl HelpScreen {
         // Render help content using Block atom
         let help_block = Block::new()
             .title(" TOAD - Keyboard Shortcuts ")
-            .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
-            .style(Style::default().bg(ToadTheme::BLACK))
+            .border_style(Style::default().fg(colors.accent()))
+            .style(Style::default().bg(colors.background()))
             .to_ratatui();
 
         let inner = help_block.inner(help_area);
@@ -64,51 +64,55 @@ impl HelpScreen {
         // Left column: General & Navigation
         let left_content = vec![
             Line::from(""),
-            self.section_header("GENERAL"),
+            self.section_header("GENERAL", colors),
             Line::from(""),
-            self.keybinding_line("Ctrl+c", "Quit application"),
-            self.keybinding_line("?", "Toggle help screen"),
-            self.keybinding_line("Esc", "Go back / Close dialog"),
+            self.keybinding_line("Ctrl+c", "Quit application", colors),
+            self.keybinding_line("?", "Toggle help screen", colors),
+            self.keybinding_line("Esc", "Go back / Close dialog", colors),
             Line::from(""),
-            self.section_header("INPUT & EDITING"),
+            self.section_header("INPUT & EDITING", colors),
             Line::from(""),
-            self.keybinding_line("Enter", "Submit command"),
-            self.keybinding_line("Ctrl+u", "Clear input"),
-            self.keybinding_line("Ctrl+a / Home", "Move to start"),
-            self.keybinding_line("Ctrl+e / End", "Move to end"),
-            self.keybinding_line("← / →", "Move cursor"),
-            self.keybinding_line("Backspace", "Delete character"),
+            self.keybinding_line("Enter", "Submit command", colors),
+            self.keybinding_line("Shift+Enter", "Insert newline", colors),
+            self.keybinding_line("Ctrl+u", "Clear input", colors),
+            self.keybinding_line("Ctrl+l", "Clear conversation", colors),
+            self.keybinding_line("Ctrl+Shift+c", "Copy last message", colors),
+            self.keybinding_line("Ctrl+a / Home", "Move to start", colors),
+            self.keybinding_line("Ctrl+e / End", "Move to end", colors),
+            self.keybinding_line("← / →", "Move cursor", colors),
+            self.keybinding_line("Backspace", "Delete character", colors),
             Line::from(""),
-            self.section_header("NAVIGATION"),
+            self.section_header("NAVIGATION", colors),
             Line::from(""),
-            self.keybinding_line("↑ / ↓", "Navigate lists"),
-            self.keybinding_line("Tab", "Next panel"),
-            self.keybinding_line("Shift+Tab", "Previous panel"),
+            self.keybinding_line("↑ / ↓", "Navigate lists", colors),
+            self.keybinding_line("Tab", "Next panel", colors),
+            self.keybinding_line("Shift+Tab", "Previous panel", colors),
         ];
 
         // Right column: Commands & Features
         let right_content = vec![
             Line::from(""),
-            self.section_header("COMMANDS"),
+            self.section_header("COMMANDS", colors),
             Line::from(""),
-            self.keybinding_line("/help", "Show command reference"),
-            self.keybinding_line("/commands", "List available commands"),
-            self.keybinding_line("/clear", "Clear screen"),
-            self.keybinding_line("@filename", "Mention file in context"),
+            self.keybinding_line("/help", "Show command reference", colors),
+            self.keybinding_line("/commands", "List available commands", colors),
+            self.keybinding_line("/clear", "Clear screen", colors),
+            self.keybinding_line("@filename", "Mention file in context", colors),
             Line::from(""),
-            self.section_header("FEATURES"),
+            self.section_header("FEATURES", colors),
             Line::from(""),
-            self.keybinding_line("Ctrl+p", "Command palette"),
-            self.keybinding_line("Ctrl+r", "Expand recent"),
-            self.keybinding_line("/", "Start command"),
-            Line::from(""),
+            self.keybinding_line("Ctrl+p", "Command palette", colors),
+            self.keybinding_line("F9", "Evaluation center", colors),
+            self.keybinding_line("F10", "Settings", colors),
+            self.keybinding_line("Ctrl+r", "Expand recent", colors),
+            self.keybinding_line("/", "Start command", colors),
             Line::from(""),
             Line::from(""),
             Line::from(
                 Text::new("Press ESC or ? to close this help screen")
                     .style(
                         Style::default()
-                            .fg(ToadTheme::DARK_GRAY)
+                            .fg(colors.dark_gray())
                             .add_modifier(Modifier::ITALIC),
                     )
                     .to_span(),
@@ -122,26 +126,26 @@ impl HelpScreen {
         frame.render_widget(right_paragraph, columns[1]);
     }
 
-    fn section_header(&self, title: &str) -> Line<'static> {
+    fn section_header(&self, title: &str, colors: &ResolvedThemeColors) -> Line<'static> {
         // Use Text atom for section headers
         let header_text = Text::new(title).style(
             Style::default()
-                .fg(ToadTheme::TOAD_GREEN_BRIGHT)
+                .fg(colors.accent_bright())
                 .add_modifier(Modifier::BOLD),
         );
         Line::from(header_text.to_span())
     }
 
-    fn keybinding_line(&self, key: &str, description: &str) -> Line<'static> {
+    fn keybinding_line(&self, key: &str, description: &str, colors: &ResolvedThemeColors) -> Line<'static> {
         // Use Text atoms for each component
         let indent = Text::new("  ");
         let key_text = Text::new(format!("{:<15}", key)).style(
             Style::default()
-                .fg(ToadTheme::TOAD_GREEN)
+                .fg(colors.accent())
                 .add_modifier(Modifier::BOLD),
         );
         let space = Text::new(" ");
-        let desc_text = Text::new(description).style(Style::default().fg(ToadTheme::FOREGROUND));
+        let desc_text = Text::new(description).style(Style::default().fg(colors.foreground()));
 
         Line::from(vec![
             indent.to_span(),
@@ -184,8 +188,11 @@ mod tests {
 
     #[test]
     fn test_keybinding_line_formatting() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let help = HelpScreen::new();
-        let line = help.keybinding_line("Ctrl+c", "Quit application");
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
+        let line = help.keybinding_line("Ctrl+c", "Quit application", &colors);
 
         // Verify the line contains the key and description
         let line_str = format!("{:?}", line);
@@ -195,8 +202,11 @@ mod tests {
 
     #[test]
     fn test_keybinding_line_with_short_key() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let help = HelpScreen::new();
-        let line = help.keybinding_line("?", "Toggle help");
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
+        let line = help.keybinding_line("?", "Toggle help", &colors);
 
         let line_str = format!("{:?}", line);
         assert!(line_str.contains("?"));
@@ -205,8 +215,11 @@ mod tests {
 
     #[test]
     fn test_keybinding_line_with_long_key() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let help = HelpScreen::new();
-        let line = help.keybinding_line("Ctrl+Shift+Alt+X", "Complex keybinding");
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
+        let line = help.keybinding_line("Ctrl+Shift+Alt+X", "Complex keybinding", &colors);
 
         let line_str = format!("{:?}", line);
         assert!(line_str.contains("Ctrl+Shift+Alt+X"));
@@ -215,8 +228,11 @@ mod tests {
 
     #[test]
     fn test_keybinding_line_with_empty_description() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let help = HelpScreen::new();
-        let line = help.keybinding_line("Enter", "");
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
+        let line = help.keybinding_line("Enter", "", &colors);
 
         let line_str = format!("{:?}", line);
         assert!(line_str.contains("Enter"));
@@ -224,8 +240,11 @@ mod tests {
 
     #[test]
     fn test_keybinding_line_with_unicode() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let help = HelpScreen::new();
-        let line = help.keybinding_line("→", "Navigate right 🐸");
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
+        let line = help.keybinding_line("→", "Navigate right 🐸", &colors);
 
         let line_str = format!("{:?}", line);
         assert!(line_str.contains("→"));
@@ -234,8 +253,11 @@ mod tests {
 
     #[test]
     fn test_keybinding_line_with_special_chars() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let help = HelpScreen::new();
-        let line = help.keybinding_line("Ctrl+/", "Search & find");
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
+        let line = help.keybinding_line("Ctrl+/", "Search & find", &colors);
 
         let line_str = format!("{:?}", line);
         assert!(line_str.contains("Ctrl+/"));
@@ -244,10 +266,13 @@ mod tests {
 
     #[test]
     fn test_keybinding_line_multiple_calls() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let help = HelpScreen::new();
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
 
-        let line1 = help.keybinding_line("a", "Action A");
-        let line2 = help.keybinding_line("b", "Action B");
+        let line1 = help.keybinding_line("a", "Action A", &colors);
+        let line2 = help.keybinding_line("b", "Action B", &colors);
 
         let str1 = format!("{:?}", line1);
         let str2 = format!("{:?}", line2);
@@ -273,15 +298,18 @@ mod tests {
 
     #[test]
     fn test_render_with_test_backend() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let backend = TestBackend::new(80, 24);
         let mut terminal = Terminal::new(backend).unwrap();
 
         let help = HelpScreen::new();
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
 
         terminal
             .draw(|frame| {
                 let area = frame.area();
-                help.render(frame, area);
+                help.render(frame, area, &colors);
             })
             .unwrap();
 
@@ -290,15 +318,18 @@ mod tests {
 
     #[test]
     fn test_render_with_small_area() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let backend = TestBackend::new(40, 12);
         let mut terminal = Terminal::new(backend).unwrap();
 
         let help = HelpScreen::new();
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
 
         terminal
             .draw(|frame| {
                 let area = frame.area();
-                help.render(frame, area);
+                help.render(frame, area, &colors);
             })
             .unwrap();
 
@@ -307,15 +338,18 @@ mod tests {
 
     #[test]
     fn test_render_with_large_area() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let backend = TestBackend::new(200, 60);
         let mut terminal = Terminal::new(backend).unwrap();
 
         let help = HelpScreen::new();
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
 
         terminal
             .draw(|frame| {
                 let area = frame.area();
-                help.render(frame, area);
+                help.render(frame, area, &colors);
             })
             .unwrap();
 
@@ -324,15 +358,18 @@ mod tests {
 
     #[test]
     fn test_render_with_minimal_area() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let backend = TestBackend::new(20, 10);
         let mut terminal = Terminal::new(backend).unwrap();
 
         let help = HelpScreen::new();
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
 
         terminal
             .draw(|frame| {
                 let area = frame.area();
-                help.render(frame, area);
+                help.render(frame, area, &colors);
             })
             .unwrap();
 
@@ -341,16 +378,19 @@ mod tests {
 
     #[test]
     fn test_render_content_includes_keybindings() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         // Use larger terminal to ensure content is visible
         let backend = TestBackend::new(120, 40);
         let mut terminal = Terminal::new(backend).unwrap();
 
         let help = HelpScreen::new();
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
 
         terminal
             .draw(|frame| {
                 let area = frame.area();
-                help.render(frame, area);
+                help.render(frame, area, &colors);
             })
             .unwrap();
 
@@ -377,15 +417,18 @@ mod tests {
 
     #[test]
     fn test_render_includes_title() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let backend = TestBackend::new(80, 24);
         let mut terminal = Terminal::new(backend).unwrap();
 
         let help = HelpScreen::new();
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
 
         terminal
             .draw(|frame| {
                 let area = frame.area();
-                help.render(frame, area);
+                help.render(frame, area, &colors);
             })
             .unwrap();
 
@@ -397,17 +440,20 @@ mod tests {
 
     #[test]
     fn test_render_multiple_times() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let backend = TestBackend::new(80, 24);
         let mut terminal = Terminal::new(backend).unwrap();
 
         let help = HelpScreen::new();
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
 
         // Render multiple times
         for _ in 0..3 {
             terminal
                 .draw(|frame| {
                     let area = frame.area();
-                    help.render(frame, area);
+                    help.render(frame, area, &colors);
                 })
                 .unwrap();
         }
@@ -417,10 +463,13 @@ mod tests {
 
     #[test]
     fn test_render_with_different_areas() {
+        use crate::ui::theme::manager::{ThemeManager, ThemeName};
         let backend = TestBackend::new(100, 50);
         let mut terminal = Terminal::new(backend).unwrap();
 
         let help = HelpScreen::new();
+        let theme_manager = ThemeManager::new();
+        let colors = ResolvedThemeColors::from_manager(&theme_manager);
 
         terminal
             .draw(|frame| {
@@ -434,7 +483,7 @@ mod tests {
                     height: full_area.height / 2,
                 };
 
-                help.render(frame, top_half);
+                help.render(frame, top_half, &colors);
             })
             .unwrap();
     }

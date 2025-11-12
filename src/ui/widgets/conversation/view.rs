@@ -59,6 +59,10 @@ pub struct ConversationView {
     scroll_offset: usize,
     /// Whether to auto-scroll to bottom on new messages
     auto_scroll: bool,
+    /// Current streaming message content (if streaming)
+    streaming_content: Option<String>,
+    /// Whether the streaming cursor should be visible (for blinking effect)
+    cursor_visible: bool,
 }
 
 impl ConversationView {
@@ -77,6 +81,8 @@ impl ConversationView {
             messages: Vec::new(),
             scroll_offset: 0,
             auto_scroll: true,
+            streaming_content: None,
+            cursor_visible: true,
         }
     }
 
@@ -195,6 +201,59 @@ impl ConversationView {
         self.scroll_offset
     }
 
+    // === Streaming support methods ===
+
+    /// Start streaming a new assistant message
+    ///
+    /// Call this when AI starts generating a response.
+    pub fn start_streaming(&mut self) {
+        self.streaming_content = Some(String::new());
+        self.cursor_visible = true;
+        if self.auto_scroll {
+            self.scroll_to_bottom();
+        }
+    }
+
+    /// Append content to the current streaming message
+    ///
+    /// Call this for each delta/chunk received from the LLM.
+    pub fn append_streaming_content(&mut self, content: &str) {
+        if let Some(ref mut streaming) = self.streaming_content {
+            streaming.push_str(content);
+            if self.auto_scroll {
+                self.scroll_to_bottom();
+            }
+        }
+    }
+
+    /// Complete the streaming and add the final message
+    ///
+    /// Call this when streaming finishes.
+    pub fn complete_streaming(&mut self) {
+        if let Some(content) = self.streaming_content.take() {
+            self.add_message(Message::assistant(content));
+        }
+        self.cursor_visible = false;
+    }
+
+    /// Cancel streaming without adding the message
+    pub fn cancel_streaming(&mut self) {
+        self.streaming_content = None;
+        self.cursor_visible = false;
+    }
+
+    /// Check if currently streaming
+    pub fn is_streaming(&self) -> bool {
+        self.streaming_content.is_some()
+    }
+
+    /// Toggle cursor visibility (for blinking effect)
+    ///
+    /// Call this on each Tick event to create blinking cursor.
+    pub fn toggle_cursor(&mut self) {
+        self.cursor_visible = !self.cursor_visible;
+    }
+
     /// Render the conversation view
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
         // Create border using Block atom
@@ -205,7 +264,7 @@ impl ConversationView {
         // Convert messages to lines using MessageBubble molecule
         let mut lines = Vec::new();
 
-        if self.messages.is_empty() {
+        if self.messages.is_empty() && self.streaming_content.is_none() {
             // Show empty state
             lines.push(Line::from(vec![AtomText::new(
                 "No messages yet. Start typing to chat with AI...",
@@ -219,11 +278,27 @@ impl ConversationView {
         } else {
             let max_width = inner.width.saturating_sub(2) as usize;
 
+            // Render existing messages
             for message in &self.messages {
                 // Use MessageBubble molecule to render each message
                 let bubble = MessageBubble::new(message);
                 let message_lines = bubble.to_lines(max_width);
                 lines.extend(message_lines);
+            }
+
+            // Render streaming message with cursor (if streaming)
+            if let Some(ref streaming) = self.streaming_content {
+                let mut streaming_text = streaming.clone();
+                // Add blinking cursor
+                if self.cursor_visible {
+                    streaming_text.push('▊');
+                }
+
+                // Create temporary streaming message for rendering
+                let streaming_msg = Message::assistant(streaming_text);
+                let bubble = MessageBubble::new(&streaming_msg);
+                let streaming_lines = bubble.to_lines(max_width);
+                lines.extend(streaming_lines);
             }
         }
 

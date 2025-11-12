@@ -4,8 +4,7 @@
 //! and complex state management scenarios.
 
 use std::path::PathBuf;
-use toad::ui::widgets::charts::chart::{LineChart};
-use toad::ui::widgets::charts::line_chart::{DataSeries};
+use toad::ui::widgets::charts::line_chart::{LineChart, DataSeries};
 use toad::ui::widgets::chat_panel::{ChatPanel};
 use toad::ui::widgets::git::git_diff_viewer::{GitDiffViewer};
 use toad::ui::widgets::git::git_graph::{GitCommit, GitGraph};

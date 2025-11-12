@@ -22,7 +22,7 @@
 //! ```
 
 use crate::ai::llm::{Message, Role};
-use crate::ui::atoms::Text;
+use crate::ui::atoms::{MarkdownRenderer, Text};
 use crate::ui::theme::ToadTheme;
 use ratatui::{
     style::{Modifier, Style},
@@ -129,41 +129,62 @@ impl<'a> MessageBubble<'a> {
     pub fn to_lines(&self, max_width: usize) -> Vec<Line<'static>> {
         let mut lines = Vec::new();
 
-        // Role header using Text atom
-        let role_text = Text::new(format!("{}:", self.role_label())).style(self.role_style());
+        // Role header with timestamp using Text atom
+        let time_str = self.message.timestamp.format("%H:%M").to_string();
+        let role_text = Text::new(format!("{} [{}]:", self.role_label(), time_str))
+            .style(self.role_style());
         lines.push(role_text.to_line());
 
-        // Message content with word wrapping
-        let content_style = self.content_style();
-        for content_line in self.message.content.lines() {
-            if content_line.is_empty() {
-                lines.push(Line::from(""));
-            } else {
-                // Word wrap if needed
-                if content_line.len() <= max_width {
-                    let text = Text::new(format!("  {}", content_line)).style(content_style);
-                    lines.push(text.to_line());
-                } else {
-                    // Simple word wrapping
-                    let words: Vec<&str> = content_line.split_whitespace().collect();
-                    let mut current_line = String::from("  ");
+        // Render content based on role
+        match self.message.role {
+            Role::Assistant => {
+                // Use markdown rendering for assistant messages
+                let renderer = MarkdownRenderer::new();
+                let markdown_lines = renderer.render(&self.message.content);
 
-                    for word in words {
-                        if current_line.len() + word.len() < max_width {
-                            if current_line.len() > 2 {
-                                current_line.push(' ');
-                            }
-                            current_line.push_str(word);
-                        } else {
-                            let text = Text::new(current_line.clone()).style(content_style);
+                // Indent each line by prepending "  " span
+                for line in markdown_lines {
+                    let mut indented_spans = vec![ratatui::text::Span::raw("  ")];
+                    indented_spans.extend(line.spans);
+                    lines.push(Line::from(indented_spans));
+                }
+            }
+            Role::User => {
+                // Plain text rendering for user messages
+                let content_style = self.content_style();
+                for content_line in self.message.content.lines() {
+                    if content_line.is_empty() {
+                        lines.push(Line::from(""));
+                    } else {
+                        // Word wrap if needed
+                        if content_line.len() <= max_width {
+                            let text =
+                                Text::new(format!("  {}", content_line)).style(content_style);
                             lines.push(text.to_line());
-                            current_line = format!("  {}", word);
-                        }
-                    }
+                        } else {
+                            // Simple word wrapping
+                            let words: Vec<&str> = content_line.split_whitespace().collect();
+                            let mut current_line = String::from("  ");
 
-                    if current_line.len() > 2 {
-                        let text = Text::new(current_line).style(content_style);
-                        lines.push(text.to_line());
+                            for word in words {
+                                if current_line.len() + word.len() < max_width {
+                                    if current_line.len() > 2 {
+                                        current_line.push(' ');
+                                    }
+                                    current_line.push_str(word);
+                                } else {
+                                    let text =
+                                        Text::new(current_line.clone()).style(content_style);
+                                    lines.push(text.to_line());
+                                    current_line = format!("  {}", word);
+                                }
+                            }
+
+                            if current_line.len() > 2 {
+                                let text = Text::new(current_line).style(content_style);
+                                lines.push(text.to_line());
+                            }
+                        }
                     }
                 }
             }

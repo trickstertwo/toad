@@ -6,6 +6,39 @@ use crate::ai::llm::Message;
 use crate::core::app::App;
 
 impl App {
+    /// Copy the last assistant message to clipboard
+    ///
+    /// Finds the most recent assistant message and copies its content to the clipboard.
+    /// Shows a status message on success or failure.
+    pub(crate) fn copy_last_assistant_message(&mut self) {
+        // Find the last assistant message
+        let last_assistant = self
+            .conversation
+            .iter()
+            .rev()
+            .find(|msg| matches!(msg.role, crate::ai::llm::Role::Assistant));
+
+        if let Some(message) = last_assistant {
+            if let Some(ref mut clipboard) = self.clipboard {
+                match clipboard.copy(&message.content) {
+                    Ok(_) => {
+                        self.status_message = format!(
+                            "Copied {} chars to clipboard",
+                            message.content.len()
+                        );
+                    }
+                    Err(e) => {
+                        self.status_message = format!("Failed to copy: {}", e);
+                    }
+                }
+            } else {
+                self.status_message = "Clipboard not available".to_string();
+            }
+        } else {
+            self.status_message = "No assistant message to copy".to_string();
+        }
+    }
+
     /// Process an AI query asynchronously
     ///
     /// Sends the user's query to the LLM and updates the conversation with the response.
@@ -62,13 +95,57 @@ impl App {
         // Build conversation history for context
         let conversation = self.conversation.clone();
 
-        // Spawn async task to process query
+        // Spawn async task to process query with streaming
         tokio::spawn(async move {
-            match llm_client.send_message(conversation, None).await {
-                Ok(response) => {
-                    // Send AI response back to main thread
-                    let assistant_message = Message::assistant(response.content);
-                    let _ = event_tx.send(crate::core::event::Event::AIResponse(assistant_message));
+            use crate::ai::llm::streaming::{ContentDelta, StreamEvent};
+            use futures::StreamExt;
+
+            match llm_client.send_message_stream(conversation, None).await {
+                Ok(mut stream) => {
+                    // Send stream start event
+                    let _ = event_tx.send(crate::core::event::Event::AIStreamStart);
+
+                    // Process streaming events
+                    while let Some(result) = stream.next().await {
+                        match result {
+                            Ok(event) => match event {
+                                StreamEvent::ContentBlockDelta { delta, .. } => {
+                                    // Extract text from delta and send to UI
+                                    if let ContentDelta::TextDelta { text } = delta {
+                                        let _ = event_tx
+                                            .send(crate::core::event::Event::AIStreamDelta(text));
+                                    }
+                                }
+                                StreamEvent::MessageDelta { usage, .. } => {
+                                    // Send token usage update
+                                    let _ = event_tx.send(crate::core::event::Event::AITokenUsage {
+                                        input_tokens: usage.input_tokens,
+                                        output_tokens: usage.output_tokens,
+                                    });
+                                }
+                                StreamEvent::Error { error } => {
+                                    // Error during streaming
+                                    let _ = event_tx.send(crate::core::event::Event::AIError(
+                                        format!("{}: {}", error.error_type, error.message),
+                                    ));
+                                    return;
+                                }
+                                _ => {
+                                    // Ignore other event types (MessageStart, Ping, etc.)
+                                }
+                            },
+                            Err(e) => {
+                                // Stream error
+                                let _ = event_tx.send(crate::core::event::Event::AIError(
+                                    e.to_string(),
+                                ));
+                                return;
+                            }
+                        }
+                    }
+
+                    // Send stream complete event
+                    let _ = event_tx.send(crate::core::event::Event::AIStreamComplete);
                 }
                 Err(e) => {
                     // Send error back to main thread
@@ -98,6 +175,39 @@ impl App {
         // Add error message to conversation
         let error_msg = Message::assistant(format!("Error: {}", error));
         self.add_message(error_msg);
+    }
+
+    /// Handle AI stream start event
+    ///
+    /// Called when AI starts streaming a response.
+    pub(crate) fn handle_ai_stream_start(&mut self) {
+        self.conversation_view.start_streaming();
+        self.status_message = "AI is responding...".to_string();
+    }
+
+    /// Handle AI stream delta event
+    ///
+    /// Called when AI sends a chunk of streaming content.
+    pub(crate) fn handle_ai_stream_delta(&mut self, content: String) {
+        self.conversation_view.append_streaming_content(&content);
+    }
+
+    /// Handle AI stream complete event
+    ///
+    /// Called when AI finishes streaming a response.
+    pub(crate) fn handle_ai_stream_complete(&mut self) {
+        // Only complete if still streaming (handles cancellation gracefully)
+        if self.conversation_view.is_streaming() {
+            self.conversation_view.complete_streaming();
+            self.set_ai_processing(false);
+            self.status_message = "AI response complete".to_string();
+
+            // Auto-save session after AI response
+            if let Err(e) = self.save_session() {
+                // Log error but don't interrupt user experience
+                tracing::warn!("Failed to save session after AI response: {}", e);
+            }
+        }
     }
 }
 

@@ -47,8 +47,20 @@ pub enum Event {
     CancelEvaluation,
 
     // AI chat events
-    /// AI response received
+    /// AI response received (complete message)
     AIResponse(Message),
+
+    /// AI streaming started
+    AIStreamStart,
+
+    /// AI streaming delta (incremental content)
+    AIStreamDelta(String),
+
+    /// AI streaming completed
+    AIStreamComplete,
+
+    /// AI token usage update
+    AITokenUsage { input_tokens: u32, output_tokens: u32 },
 
     /// AI error occurred
     AIError(String),
@@ -695,6 +707,10 @@ mod tests {
                 Event::EvaluationError(_) => {}
                 Event::CancelEvaluation => {}
                 Event::AIResponse(_) => {}
+                Event::AIStreamStart => {}
+                Event::AIStreamDelta(_) => {}
+                Event::AIStreamComplete => {}
+                Event::AITokenUsage { .. } => {}
                 Event::AIError(_) => {}
             }
         }

@@ -43,57 +43,47 @@ impl CommandPalette {
             PaletteCommand {
                 id: "help".to_string(),
                 label: "Show Help".to_string(),
-                description: "Open the help screen with keybindings".to_string(),
+                description: "Open the help screen with keybindings (?)".to_string(),
             },
             PaletteCommand {
-                id: "clear".to_string(),
-                label: "Clear Screen".to_string(),
-                description: "Clear the main content area".to_string(),
+                id: "clear_conversation".to_string(),
+                label: "Clear Conversation".to_string(),
+                description: "Clear all messages from the current conversation (Ctrl+L)".to_string(),
+            },
+            PaletteCommand {
+                id: "copy_last_message".to_string(),
+                label: "Copy Last Assistant Message".to_string(),
+                description: "Copy the last AI response to clipboard (Ctrl+Shift+C)".to_string(),
+            },
+            PaletteCommand {
+                id: "evaluation_center".to_string(),
+                label: "Open Evaluation Center".to_string(),
+                description: "Open the M0 evaluation framework (F9)".to_string(),
             },
             PaletteCommand {
                 id: "quit".to_string(),
                 label: "Quit Application".to_string(),
-                description: "Exit Toad".to_string(),
+                description: "Exit Toad (Ctrl+C)".to_string(),
             },
             PaletteCommand {
                 id: "vim_mode".to_string(),
                 label: "Toggle Vim Mode".to_string(),
-                description: "Enable/disable Vim-style keybindings (h/j/k/l, g/G)".to_string(),
+                description: "Enable/disable Vim-style keybindings".to_string(),
             },
             PaletteCommand {
-                id: "theme_toggle".to_string(),
-                label: "Toggle Theme".to_string(),
-                description: "Switch between light and dark themes".to_string(),
+                id: "show_tokens".to_string(),
+                label: "Show Token Usage".to_string(),
+                description: "Display current session token usage and cost".to_string(),
             },
             PaletteCommand {
-                id: "split_horizontal".to_string(),
-                label: "Split Horizontal".to_string(),
-                description: "Split the current panel horizontally".to_string(),
+                id: "new_conversation".to_string(),
+                label: "New Conversation".to_string(),
+                description: "Start a fresh conversation (saves current)".to_string(),
             },
             PaletteCommand {
-                id: "split_vertical".to_string(),
-                label: "Split Vertical".to_string(),
-                description: "Split the current panel vertically".to_string(),
-            },
-            PaletteCommand {
-                id: "open_file".to_string(),
-                label: "Open File".to_string(),
-                description: "Browse and open a file".to_string(),
-            },
-            PaletteCommand {
-                id: "search_files".to_string(),
-                label: "Search Files".to_string(),
-                description: "Search for files in the workspace".to_string(),
-            },
-            PaletteCommand {
-                id: "git_status".to_string(),
-                label: "Git Status".to_string(),
-                description: "Show git repository status".to_string(),
-            },
-            PaletteCommand {
-                id: "recent_files".to_string(),
-                label: "Recent Files".to_string(),
-                description: "Show recently opened files".to_string(),
+                id: "cancel_streaming".to_string(),
+                label: "Cancel AI Response".to_string(),
+                description: "Stop the currently streaming AI response (Ctrl+C)".to_string(),
             },
         ];
 

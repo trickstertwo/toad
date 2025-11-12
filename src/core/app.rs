@@ -7,6 +7,8 @@ use crate::ai::llm::{AnthropicClient, LLMClient, Message};
 use crate::config::Config;
 use crate::core::app_state::{AppScreen, EvaluationState};
 use crate::core::event::Event;
+use crate::infrastructure::clipboard::Clipboard;
+use crate::infrastructure::history::History;
 use crate::performance::PerformanceMetrics;
 use crate::ui::widgets::{
     conversation::ConversationView,
@@ -60,6 +62,15 @@ pub struct App {
     /// Whether to show the command palette
     pub(crate) show_palette: bool,
 
+    /// Theme manager
+    pub(crate) theme_manager: crate::ui::theme::ThemeManager,
+
+    /// Settings screen widget
+    pub(crate) settings_screen: crate::ui::widgets::core::settings_screen::SettingsScreen,
+
+    /// Whether to show the settings screen
+    pub(crate) show_settings: bool,
+
     /// Application configuration
     pub(crate) config: Config,
 
@@ -104,6 +115,19 @@ pub struct App {
 
     /// Tick counter for cursor blinking (toggles every 2 ticks = 500ms)
     tick_count: u32,
+
+    /// Command history for up/down arrow navigation
+    pub(crate) command_history: History,
+
+    /// Total tokens used in this session
+    pub(crate) total_input_tokens: u32,
+    pub(crate) total_output_tokens: u32,
+
+    /// Total cost in USD for this session
+    pub(crate) total_cost_usd: f64,
+
+    /// Clipboard for copy/paste operations
+    pub(crate) clipboard: Option<Clipboard>,
 }
 
 impl std::fmt::Debug for App {
@@ -122,6 +146,9 @@ impl std::fmt::Debug for App {
             .field("show_help", &self.show_help)
             .field("command_palette", &self.command_palette)
             .field("show_palette", &self.show_palette)
+            .field("theme_manager", &"<ThemeManager>")
+            .field("settings_screen", &"<SettingsScreen>")
+            .field("show_settings", &self.show_settings)
             .field("config", &self.config)
             .field("session", &self.session)
             .field("tabs", &self.tabs)
@@ -153,6 +180,15 @@ impl Default for App {
         let working_directory = session.working_directory().clone();
         let welcome_shown = session.welcome_shown();
 
+        // Restore conversation from session
+        let conversation = session.conversation().clone();
+
+        // Create conversation view and populate with restored messages
+        let mut conversation_view = ConversationView::new();
+        for message in &conversation {
+            conversation_view.add_message(message.clone());
+        }
+
         let mut input_field = InputField::new();
         input_field.set_focused(true);
 
@@ -165,6 +201,15 @@ impl Default for App {
 
         // Load vim mode from config
         let vim_mode = config.ui.vim_mode;
+
+        // Load theme from session, parse to ThemeName, fallback to Dark
+        let saved_theme_str = session.theme();
+        let theme_name = crate::ui::theme::manager::ThemeName::from_str(saved_theme_str)
+            .unwrap_or(crate::ui::theme::manager::ThemeName::Dark);
+
+        // Initialize theme manager with saved theme
+        let mut theme_manager = crate::ui::theme::ThemeManager::new();
+        theme_manager.set_theme(theme_name);
 
         // Try to initialize LLM client (fallback to None if API key is missing)
         let llm_client = match std::env::var("ANTHROPIC_API_KEY") {
@@ -193,6 +238,9 @@ impl Default for App {
             show_help: false,
             command_palette: CommandPalette::new(),
             show_palette: false,
+            theme_manager,
+            settings_screen: crate::ui::widgets::core::settings_screen::SettingsScreen::new(theme_name),
+            show_settings: false,
             config,
             session,
             tabs: TabManager::new(),
@@ -203,11 +251,16 @@ impl Default for App {
             toasts: ToastManager::new(),
             event_tx: None,
             evaluation_state: None,
-            conversation: Vec::new(),
+            conversation,
             llm_client,
-            conversation_view: ConversationView::new(),
+            conversation_view,
             ai_processing: false,
             tick_count: 0,
+            command_history: History::load_or_new(1000),
+            total_input_tokens: 0,
+            total_output_tokens: 0,
+            total_cost_usd: 0.0,
+            clipboard: Clipboard::new().ok(),
         }
     }
 }
@@ -240,6 +293,10 @@ impl App {
                 self.tick_count = self.tick_count.wrapping_add(1);
                 if self.tick_count % 2 == 0 {
                     self.input_field.toggle_cursor();
+                    // Toggle streaming cursor if streaming
+                    if self.conversation_view.is_streaming() {
+                        self.conversation_view.toggle_cursor();
+                    }
                 }
 
                 // Toasts are automatically cleaned up during render
@@ -302,6 +359,33 @@ impl App {
             }
             Event::AIResponse(message) => {
                 self.handle_ai_response(message);
+                Ok(())
+            }
+            Event::AIStreamStart => {
+                self.handle_ai_stream_start();
+                Ok(())
+            }
+            Event::AIStreamDelta(content) => {
+                self.handle_ai_stream_delta(content);
+                Ok(())
+            }
+            Event::AIStreamComplete => {
+                self.handle_ai_stream_complete();
+                Ok(())
+            }
+            Event::AITokenUsage {
+                input_tokens,
+                output_tokens,
+            } => {
+                self.total_input_tokens += input_tokens;
+                self.total_output_tokens += output_tokens;
+
+                // Calculate cost using Claude Sonnet 3.5 pricing
+                // $3.00 per million input tokens, $15.00 per million output tokens
+                let input_cost = (input_tokens as f64 / 1_000_000.0) * 3.0;
+                let output_cost = (output_tokens as f64 / 1_000_000.0) * 15.0;
+                self.total_cost_usd += input_cost + output_cost;
+
                 Ok(())
             }
             Event::AIError(error) => {

@@ -22,21 +22,100 @@ pub struct ScrollbarState {
     pub position: usize,
     /// Viewport size (how many items visible)
     pub viewport_size: usize,
+    /// Whether auto-scroll is enabled (follows new content)
+    pub auto_scroll: bool,
 }
 
 impl ScrollbarState {
-    /// Create a new scrollbar state
+    /// Create a new scrollbar state with auto-scroll enabled
     pub fn new(total: usize, position: usize, viewport_size: usize) -> Self {
         Self {
             total,
             position,
             viewport_size,
+            auto_scroll: true, // Default to auto-scroll enabled
         }
     }
 
     /// Check if scrollbar should be visible
     pub fn should_show(&self) -> bool {
         self.total > self.viewport_size
+    }
+
+    /// Check if scrolled to bottom (within 1 item of end)
+    pub fn is_at_bottom(&self) -> bool {
+        if self.total == 0 || self.viewport_size >= self.total {
+            return true; // If everything fits, we're at "bottom"
+        }
+
+        let max_position = self.total.saturating_sub(self.viewport_size);
+        self.position >= max_position
+    }
+
+    /// Enable or disable auto-scroll
+    ///
+    /// When auto-scroll is enabled, the view will automatically scroll
+    /// to the bottom when new content is added. When disabled (e.g., user
+    /// manually scrolls up), the view stays at the current position.
+    pub fn set_auto_scroll(&mut self, enabled: bool) {
+        self.auto_scroll = enabled;
+    }
+
+    /// Scroll to the bottom (last item visible)
+    ///
+    /// This also re-enables auto-scroll.
+    pub fn scroll_to_bottom(&mut self) {
+        let max_position = self.total.saturating_sub(self.viewport_size);
+        self.position = max_position;
+        self.auto_scroll = true;
+    }
+
+    /// Scroll to a specific position
+    ///
+    /// This disables auto-scroll to respect user navigation.
+    pub fn scroll_to(&mut self, position: usize) {
+        let max_position = self.total.saturating_sub(self.viewport_size);
+        self.position = position.min(max_position);
+
+        // Disable auto-scroll unless we're at the bottom
+        if !self.is_at_bottom() {
+            self.auto_scroll = false;
+        } else {
+            self.auto_scroll = true;
+        }
+    }
+
+    /// Scroll up by N items
+    ///
+    /// Disables auto-scroll to respect user navigation.
+    pub fn scroll_up(&mut self, amount: usize) {
+        self.position = self.position.saturating_sub(amount);
+        self.auto_scroll = false; // User is scrolling, disable auto
+    }
+
+    /// Scroll down by N items
+    ///
+    /// Re-enables auto-scroll if we reach the bottom.
+    pub fn scroll_down(&mut self, amount: usize) {
+        let max_position = self.total.saturating_sub(self.viewport_size);
+        self.position = (self.position + amount).min(max_position);
+
+        // Re-enable auto-scroll if we hit bottom
+        if self.is_at_bottom() {
+            self.auto_scroll = true;
+        }
+    }
+
+    /// Update total items and auto-scroll to bottom if enabled
+    ///
+    /// Call this when new content is added to the scrollable area.
+    pub fn update_total(&mut self, new_total: usize) {
+        self.total = new_total;
+
+        // If auto-scroll is enabled, follow to bottom
+        if self.auto_scroll {
+            self.scroll_to_bottom();
+        }
     }
 
     /// Get scroll percentage (0.0 to 1.0)

@@ -951,3 +951,325 @@ fn test_comprehensive_scrollbar_stress() {
     assert_eq!(final_scrollbar.thumb_char, '#');
     assert_eq!(final_scrollbar.state().position, 9900);
 }
+
+// ============================================================================
+// AUTO-SCROLL FEATURE TESTS (Layer 1.1)
+// ============================================================================
+
+#[test]
+fn test_auto_scroll_enabled_by_default() {
+    let state = ScrollbarState::new(100, 0, 20);
+    assert!(state.auto_scroll, "Auto-scroll should be enabled by default");
+}
+
+#[test]
+fn test_is_at_bottom_empty_list() {
+    let state = ScrollbarState::new(0, 0, 20);
+    assert!(state.is_at_bottom(), "Empty list should be at bottom");
+}
+
+#[test]
+fn test_is_at_bottom_everything_fits() {
+    let state = ScrollbarState::new(20, 0, 20);
+    assert!(
+        state.is_at_bottom(),
+        "When everything fits, should be at bottom"
+    );
+}
+
+#[test]
+fn test_is_at_bottom_at_end() {
+    let mut state = ScrollbarState::new(100, 0, 20);
+    state.position = 80; // 100 - 20 = 80 (max position)
+    assert!(state.is_at_bottom(), "Should be at bottom when at max position");
+}
+
+#[test]
+fn test_is_at_bottom_not_at_end() {
+    let state = ScrollbarState::new(100, 50, 20);
+    assert!(
+        !state.is_at_bottom(),
+        "Should not be at bottom when in middle"
+    );
+}
+
+#[test]
+fn test_set_auto_scroll() {
+    let mut state = ScrollbarState::new(100, 0, 20);
+
+    assert!(state.auto_scroll);
+
+    state.set_auto_scroll(false);
+    assert!(!state.auto_scroll);
+
+    state.set_auto_scroll(true);
+    assert!(state.auto_scroll);
+}
+
+#[test]
+fn test_scroll_to_bottom() {
+    let mut state = ScrollbarState::new(100, 0, 20);
+
+    state.scroll_to_bottom();
+
+    assert_eq!(state.position, 80, "Should scroll to max position");
+    assert!(state.auto_scroll, "Should re-enable auto-scroll");
+}
+
+#[test]
+fn test_scroll_to_bottom_already_at_bottom() {
+    let mut state = ScrollbarState::new(100, 80, 20);
+
+    state.scroll_to_bottom();
+
+    assert_eq!(state.position, 80);
+    assert!(state.auto_scroll);
+}
+
+#[test]
+fn test_scroll_to_disables_auto_scroll() {
+    let mut state = ScrollbarState::new(100, 0, 20);
+
+    state.scroll_to(50);
+
+    assert_eq!(state.position, 50);
+    assert!(
+        !state.auto_scroll,
+        "Should disable auto-scroll when scrolling to middle"
+    );
+}
+
+#[test]
+fn test_scroll_to_bottom_re_enables_auto_scroll() {
+    let mut state = ScrollbarState::new(100, 0, 20);
+
+    state.scroll_to(80); // Scroll to bottom manually
+
+    assert_eq!(state.position, 80);
+    assert!(
+        state.auto_scroll,
+        "Should re-enable auto-scroll when reaching bottom"
+    );
+}
+
+#[test]
+fn test_scroll_to_beyond_max_clamps() {
+    let mut state = ScrollbarState::new(100, 0, 20);
+
+    state.scroll_to(200); // Beyond max
+
+    assert_eq!(
+        state.position, 80,
+        "Should clamp to max position (100 - 20)"
+    );
+}
+
+#[test]
+fn test_scroll_up_disables_auto_scroll() {
+    let mut state = ScrollbarState::new(100, 80, 20);
+    assert!(state.auto_scroll);
+
+    state.scroll_up(10);
+
+    assert_eq!(state.position, 70);
+    assert!(
+        !state.auto_scroll,
+        "User scrolling up should disable auto-scroll"
+    );
+}
+
+#[test]
+fn test_scroll_up_from_zero() {
+    let mut state = ScrollbarState::new(100, 0, 20);
+
+    state.scroll_up(10);
+
+    assert_eq!(state.position, 0, "Should not go below zero");
+    assert!(!state.auto_scroll);
+}
+
+#[test]
+fn test_scroll_down_to_bottom_enables_auto_scroll() {
+    let mut state = ScrollbarState::new(100, 70, 20);
+    state.auto_scroll = false;
+
+    state.scroll_down(10); // Now at position 80 (bottom)
+
+    assert_eq!(state.position, 80);
+    assert!(
+        state.auto_scroll,
+        "Should re-enable auto-scroll when reaching bottom"
+    );
+}
+
+#[test]
+fn test_scroll_down_not_to_bottom() {
+    let mut state = ScrollbarState::new(100, 10, 20);
+    state.auto_scroll = false;
+
+    state.scroll_down(10); // Now at position 20 (not bottom)
+
+    assert_eq!(state.position, 20);
+    assert!(
+        !state.auto_scroll,
+        "Should not enable auto-scroll when not at bottom"
+    );
+}
+
+#[test]
+fn test_scroll_down_beyond_max_clamps() {
+    let mut state = ScrollbarState::new(100, 70, 20);
+
+    state.scroll_down(50); // Would go to 120, but max is 80
+
+    assert_eq!(state.position, 80, "Should clamp to max position");
+    assert!(state.auto_scroll, "Should enable auto-scroll at bottom");
+}
+
+#[test]
+fn test_update_total_with_auto_scroll() {
+    let mut state = ScrollbarState::new(100, 80, 20);
+    assert!(state.auto_scroll);
+
+    state.update_total(200); // Add more items
+
+    assert_eq!(state.total, 200);
+    assert_eq!(
+        state.position, 180,
+        "Should follow to new bottom (200 - 20)"
+    );
+    assert!(state.auto_scroll);
+}
+
+#[test]
+fn test_update_total_without_auto_scroll() {
+    let mut state = ScrollbarState::new(100, 50, 20);
+    state.auto_scroll = false; // User scrolled up
+
+    state.update_total(200); // Add more items
+
+    assert_eq!(state.total, 200);
+    assert_eq!(state.position, 50, "Should stay at same position");
+    assert!(!state.auto_scroll, "Should not re-enable auto-scroll");
+}
+
+#[test]
+fn test_update_total_shrinking() {
+    let mut state = ScrollbarState::new(100, 80, 20);
+    assert!(state.auto_scroll);
+
+    state.update_total(50); // Fewer items now
+
+    assert_eq!(state.total, 50);
+    assert_eq!(state.position, 30, "Should adjust to new bottom (50 - 20)");
+}
+
+#[test]
+fn test_update_total_to_zero() {
+    let mut state = ScrollbarState::new(100, 50, 20);
+
+    state.update_total(0);
+
+    assert_eq!(state.total, 0);
+    assert_eq!(state.position, 0, "Should go to position 0");
+}
+
+#[test]
+fn test_streaming_chat_scenario() {
+    // Simulate streaming chat: start at bottom, new messages arrive
+    let mut state = ScrollbarState::new(10, 0, 5);
+    state.scroll_to_bottom();
+
+    assert!(state.auto_scroll);
+    assert_eq!(state.position, 5); // 10 - 5
+
+    // New message arrives
+    state.update_total(11);
+    assert_eq!(state.position, 6, "Should follow to new bottom");
+    assert!(state.auto_scroll);
+
+    // Another message
+    state.update_total(12);
+    assert_eq!(state.position, 7);
+    assert!(state.auto_scroll);
+
+    // User scrolls up to read history
+    state.scroll_up(3);
+    assert_eq!(state.position, 4);
+    assert!(!state.auto_scroll, "Auto-scroll should pause");
+
+    // New messages arrive while user is reading
+    state.update_total(15);
+    assert_eq!(state.position, 4, "Should stay at position, not follow");
+    assert!(!state.auto_scroll);
+
+    // User scrolls back to bottom
+    state.scroll_to_bottom();
+    assert_eq!(state.position, 10); // 15 - 5
+    assert!(state.auto_scroll, "Should re-enable auto-scroll");
+
+    // New messages now follow again
+    state.update_total(16);
+    assert_eq!(state.position, 11);
+    assert!(state.auto_scroll);
+}
+
+#[test]
+fn test_auto_scroll_with_very_large_list() {
+    let mut state = ScrollbarState::new(1_000_000, 0, 100);
+    state.scroll_to_bottom();
+
+    assert_eq!(state.position, 999_900);
+    assert!(state.auto_scroll);
+
+    // Add 1000 more items
+    state.update_total(1_001_000);
+    assert_eq!(state.position, 1_000_900);
+    assert!(state.auto_scroll);
+}
+
+#[test]
+fn test_auto_scroll_stress_test() {
+    let mut state = ScrollbarState::new(100, 0, 10);
+
+    // Simulate 100 new items arriving one by one
+    for i in 101..=200 {
+        state.update_total(i);
+        assert_eq!(state.position, i - 10, "Should follow each new item");
+        assert!(state.auto_scroll);
+    }
+}
+
+#[test]
+fn test_auto_scroll_toggle_stress() {
+    let mut state = ScrollbarState::new(100, 50, 10);
+
+    for i in 0..1000 {
+        state.set_auto_scroll(i % 2 == 0);
+        assert_eq!(state.auto_scroll, i % 2 == 0);
+    }
+}
+
+#[test]
+fn test_scroll_operations_preserve_auto_scroll_state() {
+    let mut state = ScrollbarState::new(100, 0, 10);
+
+    // Initially at top with auto-scroll
+    assert!(state.auto_scroll);
+
+    // Scroll to middle (disables auto-scroll)
+    state.scroll_to(50);
+    assert!(!state.auto_scroll);
+
+    // Scroll up further (should stay disabled)
+    state.scroll_up(10);
+    assert!(!state.auto_scroll);
+
+    // Scroll down but not to bottom (should stay disabled)
+    state.scroll_down(5);
+    assert!(!state.auto_scroll);
+
+    // Scroll down to exactly bottom (should re-enable)
+    state.scroll_down(50); // Will clamp to max
+    assert!(state.auto_scroll);
+}
