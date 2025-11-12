@@ -27,11 +27,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Routing logic: v1 (legacy) vs v2 (orchestrator) based on --benchmarks presence
     - Real-time progress logging with emoji status indicators (📊🚀✅❌✨🎉)
     - Backward compatible: v1 path unchanged, v2 opt-in via flag
+  - **CLI Integration Tests** (237 LOC, 9 tests ✅):
+    - `tests/cli_evaluation_integration_tests.rs`: Backward compat & v2 path validation
+    - Backward compatibility: v1 signature verification, routing logic
+    - V2 orchestrator: config creation, multi-benchmark support
+    - Benchmark parsing: edge cases (whitespace, trailing commas, empty strings)
+    - Configuration defaults: ExecutionContext (5min timeout, 25 steps)
+    - Error handling: empty benchmark lists, normalization
   - **Usage Examples**:
     - Legacy: `eval --swebench verified --count 10` (v1 path)
     - Orchestrator: `eval --benchmarks swebench-verified --count 10` (v2 path)
     - Multi-benchmark: `eval --benchmarks swebench-verified,livecodebench --count 10`
-  - **Remaining**: TUI integration (6.4), enhanced compare (6.5), integration tests (6.6), docs (6.7)
+  - **Completed**: CLI integration (6.1-6.3 ✅), integration tests (6.6 ✅)
+  - **Remaining**: TUI integration (6.4), enhanced compare command (6.5)
 - **Evaluation System: Phase 5 Orchestrator & Concurrent Execution** (COMPLETE - 2025-11-12)
   - **Multi-Benchmark Orchestrator** (617 LOC, 3 tests):
     - `src/benchmarks/orchestrator.rs` (617 lines): Concurrent benchmark coordinator
