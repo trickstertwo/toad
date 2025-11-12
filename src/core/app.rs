@@ -112,6 +112,9 @@ pub struct App {
     /// Total tokens used in this session
     pub(crate) total_input_tokens: u32,
     pub(crate) total_output_tokens: u32,
+
+    /// Total cost in USD for this session
+    pub(crate) total_cost_usd: f64,
 }
 
 impl std::fmt::Debug for App {
@@ -228,6 +231,7 @@ impl Default for App {
             command_history: History::load_or_new(1000),
             total_input_tokens: 0,
             total_output_tokens: 0,
+            total_cost_usd: 0.0,
         }
     }
 }
@@ -346,6 +350,13 @@ impl App {
             } => {
                 self.total_input_tokens += input_tokens;
                 self.total_output_tokens += output_tokens;
+
+                // Calculate cost using Claude Sonnet 3.5 pricing
+                // $3.00 per million input tokens, $15.00 per million output tokens
+                let input_cost = (input_tokens as f64 / 1_000_000.0) * 3.0;
+                let output_cost = (output_tokens as f64 / 1_000_000.0) * 15.0;
+                self.total_cost_usd += input_cost + output_cost;
+
                 Ok(())
             }
             Event::AIError(error) => {

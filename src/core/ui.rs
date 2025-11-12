@@ -103,11 +103,19 @@ fn render_metadata_line(app: &mut App, frame: &mut Frame, area: Rect) {
     let project_path = app.working_directory().to_string_lossy();
     let model_info = "claude-sonnet-4.5 (1x)";
 
-    // Format token usage
+    // Format token usage and cost
     let token_usage = if app.total_input_tokens > 0 || app.total_output_tokens > 0 {
+        let cost_str = if app.total_cost_usd >= 0.01 {
+            format!(" ${:.2}", app.total_cost_usd)
+        } else if app.total_cost_usd > 0.0 {
+            format!(" $<0.01")
+        } else {
+            String::new()
+        };
+
         format!(
-            " | {}↓ {}↑",
-            app.total_input_tokens, app.total_output_tokens
+            " | {}↓ {}↑{}",
+            app.total_input_tokens, app.total_output_tokens, cost_str
         )
     } else {
         String::new()
