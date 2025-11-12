@@ -108,6 +108,10 @@ pub struct App {
 
     /// Command history for up/down arrow navigation
     pub(crate) command_history: History,
+
+    /// Total tokens used in this session
+    pub(crate) total_input_tokens: u32,
+    pub(crate) total_output_tokens: u32,
 }
 
 impl std::fmt::Debug for App {
@@ -222,6 +226,8 @@ impl Default for App {
             ai_processing: false,
             tick_count: 0,
             command_history: History::load_or_new(1000),
+            total_input_tokens: 0,
+            total_output_tokens: 0,
         }
     }
 }
@@ -332,6 +338,14 @@ impl App {
             }
             Event::AIStreamComplete => {
                 self.handle_ai_stream_complete();
+                Ok(())
+            }
+            Event::AITokenUsage {
+                input_tokens,
+                output_tokens,
+            } => {
+                self.total_input_tokens += input_tokens;
+                self.total_output_tokens += output_tokens;
                 Ok(())
             }
             Event::AIError(error) => {

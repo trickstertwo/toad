@@ -98,22 +98,33 @@ fn render_main_content(app: &mut App, frame: &mut Frame, area: Rect) {
     app.conversation_view().render(frame, area);
 }
 
-/// Render the metadata line (path on left, model info on right)
+/// Render the metadata line (path on left, model info and tokens on right)
 fn render_metadata_line(app: &mut App, frame: &mut Frame, area: Rect) {
     let project_path = app.working_directory().to_string_lossy();
     let model_info = "claude-sonnet-4.5 (1x)";
 
+    // Format token usage
+    let token_usage = if app.total_input_tokens > 0 || app.total_output_tokens > 0 {
+        format!(
+            " | {}↓ {}↑",
+            app.total_input_tokens, app.total_output_tokens
+        )
+    } else {
+        String::new()
+    };
+
     // Calculate spacing to push model info to the right
     let path_len = project_path.len();
-    let model_len = model_info.len();
-    let total_len = path_len + model_len;
+    let right_side = format!("{}{}", model_info, token_usage);
+    let right_len = right_side.len();
+    let total_len = path_len + right_len;
     let padding = if total_len < area.width as usize {
         " ".repeat(area.width as usize - total_len)
     } else {
         " ".to_string()
     };
 
-    let metadata_line = Line::from(vec![
+    let mut spans = vec![
         Span::styled(" ", Style::default()),
         Span::styled(
             project_path.to_string(),
@@ -121,7 +132,17 @@ fn render_metadata_line(app: &mut App, frame: &mut Frame, area: Rect) {
         ),
         Span::styled(padding, Style::default()),
         Span::styled(model_info, Style::default().fg(ToadTheme::GRAY)),
-    ]);
+    ];
+
+    // Add token usage if present
+    if !token_usage.is_empty() {
+        spans.push(Span::styled(
+            token_usage,
+            Style::default().fg(ToadTheme::TOAD_GREEN),
+        ));
+    }
+
+    let metadata_line = Line::from(spans);
 
     let paragraph = Paragraph::new(metadata_line);
     frame.render_widget(paragraph, area);

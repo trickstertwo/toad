@@ -59,6 +59,9 @@ pub enum Event {
     /// AI streaming completed
     AIStreamComplete,
 
+    /// AI token usage update
+    AITokenUsage { input_tokens: u32, output_tokens: u32 },
+
     /// AI error occurred
     AIError(String),
 }
@@ -803,6 +806,7 @@ mod tests {
                 Event::AIStreamStart => {}
                 Event::AIStreamDelta(_) => {}
                 Event::AIStreamComplete => {}
+                Event::AITokenUsage { .. } => {}
                 Event::AIError(_) => {}
             }
         }

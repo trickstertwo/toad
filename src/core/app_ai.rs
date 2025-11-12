@@ -83,6 +83,13 @@ impl App {
                                             .send(crate::core::event::Event::AIStreamDelta(text));
                                     }
                                 }
+                                StreamEvent::MessageDelta { usage, .. } => {
+                                    // Send token usage update
+                                    let _ = event_tx.send(crate::core::event::Event::AITokenUsage {
+                                        input_tokens: usage.input_tokens,
+                                        output_tokens: usage.output_tokens,
+                                    });
+                                }
                                 StreamEvent::Error { error } => {
                                     // Error during streaming
                                     let _ = event_tx.send(crate::core::event::Event::AIError(
