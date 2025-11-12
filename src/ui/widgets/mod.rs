@@ -7,6 +7,7 @@
 //! - **ai**: AI-powered widgets (diff view, suggestions)
 //! - **charts**: Data visualization charts
 //! - **chat_panel**: Chat interface components
+//! - **context**: Context management (token usage, file list, cost tracking)
 //! - **conversation**: Conversation view widgets
 //! - **core**: Core UI primitives (dialogs, tables, help, collapsible, undo/redo)
 //! - **files**: File management (tree, preview, cards)
@@ -24,6 +25,7 @@
 pub mod ai;
 pub mod charts;
 pub mod chat_panel;
+pub mod context;
 pub mod conversation;
 pub mod core;
 pub mod files;

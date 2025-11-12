@@ -1,7 +1,7 @@
 # TOAD Feature Checklist - Dependency Ordered
 
 **Last Updated:** 2025-11-12
-**Status:** ✅ Layers 0-3 COMPLETE | ✅ Eval Center COMPLETE | 🚀 Ready for Layer 4
+**Status:** ✅ Layers 0-3 COMPLETE | 🚧 Layer 4 40% (2/5) | ✅ Eval Center COMPLETE
 
 ---
 
@@ -1162,10 +1162,10 @@ These features are specific to the F9 Evaluation Center dashboard for SWE-bench 
 ## Week 5-6: Layer 4 (Intelligence & Context)
 **Goal:** Give AI more context and control
 
-- [ ] 🟢 4.1: Model selector UI
+- [x] 🟢 4.1: Model selector UI ✅ (ModelInfo + selection widget with 6 models)
 - [ ] 🟢 4.2: Provider configuration screen
-- [ ] 🟢 4.3: Context panel with token usage
-- [ ] 🟢 4.4: File browser with context management
+- [x] 🟢 4.3: Context panel with token usage ✅ (ContextPanel + file management + cost estimation)
+- [ ] 🟢 4.4: File browser with context management ← NEXT
 - [ ] 🟢 4.5: Full session persistence
 
 **Success Metric:** Can manage context and switch models easily
@@ -1268,10 +1268,10 @@ Layer 3: Safety ✅ ALL COMPLETE
 [✓] Approval system ✅ (core + UI complete, needs event wiring)
 [✓] Git auto-commits ✅ (AutoCommitManager + message gen + undo)
 
-Layer 4: Context
-[ ] Model selector
-[ ] Provider switcher
-[ ] Context panel
+Layer 4: Context (40% complete - 2/5)
+[✓] Model selector ✅ (6 models with capabilities/cost/speed)
+[ ] Provider switcher ← NEXT
+[✓] Context panel ✅ (token tracking + file list + cost estimation)
 [ ] File browser
 [ ] Session persistence
 
