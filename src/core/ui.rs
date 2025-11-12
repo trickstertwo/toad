@@ -170,11 +170,12 @@ fn render_separator(frame: &mut Frame, area: Rect) {
 /// Render keyboard shortcuts bar
 fn render_shortcuts_bar(frame: &mut Frame, area: Rect) {
     let shortcuts = [
-        ("Ctrl+c", "Exit"),
-        ("Ctrl+r", "Expand recent"),
+        ("Ctrl+P", "Palette"),
+        ("Ctrl+L", "Clear"),
+        ("Ctrl+Shift+C", "Copy"),
+        ("Shift+Enter", "Newline"),
+        ("F9", "Eval"),
         ("?", "Help"),
-        ("/", "Commands"),
-        ("Ctrl+p", "Palette"),
     ];
 
     let mut spans = vec![Span::styled(" ", Style::default())];
