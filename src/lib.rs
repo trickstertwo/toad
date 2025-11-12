@@ -41,7 +41,7 @@ pub use config::{
     AiConfig, Config, EditorConfig, FeatureFlags, SessionConfig, ToadConfig, UiConfig,
 };
 pub use core::{App, AppScreen, EvaluationProgress, EvaluationState, Event, EventHandler, Tui};
-pub use editor::{Motion, MultiCursor, UndoStack, VimMotions};
+pub use editor::{EditorError, Motion, MultiCursor, UndoStack, VimMotions, edit_with_external_editor};
 pub use git::{BranchInfo, CommitInfo, FileChange, GitGraphService, GitService};
 pub use infrastructure::{Clipboard, ErrorHandler, KeyBindings};
 pub use navigation::{FuzzyFinder, SearchState};

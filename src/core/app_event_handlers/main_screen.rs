@@ -37,6 +37,7 @@ impl App {
     /// - `Left`/`Right`: Move cursor
     /// - `Home`/`End`: Jump to start/end
     /// - `Ctrl+A`/`Ctrl+E`: Emacs-style start/end
+    /// - `Ctrl+O`: Open external editor ($EDITOR, $VISUAL, or vim)
     /// - `Ctrl+U`: Clear input
     /// - Regular characters: Insert into input
     ///
@@ -403,6 +404,24 @@ impl App {
             }
             (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
                 self.input_field.move_cursor_end();
+            }
+            // Ctrl+O: Open external editor
+            (KeyCode::Char('o'), KeyModifiers::CONTROL) => {
+                let initial_content = self.input_field.value();
+
+                // Open external editor with current input
+                match crate::editor::external::edit_with_external_editor(initial_content) {
+                    Ok(edited_content) => {
+                        self.input_field.set_value(edited_content);
+                        self.status_message = "Content loaded from external editor".to_string();
+                    }
+                    Err(crate::editor::EditorError::EmptyContent) => {
+                        self.status_message = "External editor cancelled (empty content)".to_string();
+                    }
+                    Err(e) => {
+                        self.status_message = format!("Editor error: {}", e);
+                    }
+                }
             }
             // Page Up/Down keys
             (KeyCode::PageUp, _) => {
