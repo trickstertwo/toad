@@ -56,9 +56,11 @@ use async_trait::async_trait;
 pub mod types;
 pub mod swebench;
 pub mod livecodebench;
+pub mod orchestrator;
 
 // Re-export core types for convenience
 pub use types::{BenchmarkMetadata, ExecutionContext, ProgressEvent, Task};
+pub use orchestrator::{Orchestrator, OrchestratorConfig};
 
 /// Async trait for benchmark execution
 ///
