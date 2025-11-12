@@ -5,7 +5,7 @@
 
 use crate::core::app::App;
 use crate::core::app_state::AppScreen;
-use crate::ui::theme::ToadTheme;
+use crate::ui::theme::{ToadTheme, ResolvedThemeColors};
 use crate::ui::widgets::core::welcome_screen::WelcomeScreen;
 use ratatui::{
     Frame,
@@ -86,13 +86,15 @@ fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
 
     // Render overlays (help, command palette, and settings)
     if app.show_help() {
-        app.help_screen().render(frame, area);
+        let colors = ResolvedThemeColors::from_manager(app.theme_manager_mut());
+        app.help_screen().render(frame, area, &colors);
     } else if app.show_palette() {
         app.command_palette_mut().render(frame, area);
     } else if app.show_settings() {
         let current_theme = app.theme_manager_mut().current_theme_name();
         let vim_mode = app.vim_mode();
-        app.settings_screen_mut().render(frame, area, current_theme, vim_mode);
+        let colors = ResolvedThemeColors::from_manager(app.theme_manager_mut());
+        app.settings_screen_mut().render(frame, area, current_theme, vim_mode, &colors);
     }
 }
 

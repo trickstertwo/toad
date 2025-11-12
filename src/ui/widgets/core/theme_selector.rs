@@ -4,7 +4,7 @@
 
 use crate::ui::{
     atoms::{block::Block, text::Text},
-    theme::{ToadTheme, manager::ThemeName},
+    theme::{manager::ThemeName, ResolvedThemeColors},
 };
 use ratatui::{
     Frame,
@@ -79,7 +79,7 @@ impl ThemeSelector {
             .map(|i| self.themes[i])
     }
 
-    pub fn render(&mut self, frame: &mut Frame, area: Rect, current_theme: ThemeName) {
+    pub fn render(&mut self, frame: &mut Frame, area: Rect, current_theme: ThemeName, colors: &ResolvedThemeColors) {
         // Create centered modal-style layout
         let vertical = Layout::default()
             .direction(Direction::Vertical)
@@ -104,8 +104,8 @@ impl ThemeSelector {
         // Render selector using Block atom
         let selector_block = Block::new()
             .title(" Select Theme ")
-            .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
-            .style(Style::default().bg(ToadTheme::BLACK))
+            .border_style(Style::default().fg(colors.accent()))
+            .style(Style::default().bg(colors.background()))
             .to_ratatui();
 
         let inner = selector_block.inner(selector_area);
@@ -135,7 +135,7 @@ impl ThemeSelector {
                 let content = Line::from(vec![
                     Text::new("  ").to_span(),
                     Text::new(label)
-                        .style(Style::default().fg(ToadTheme::FOREGROUND))
+                        .style(Style::default().fg(colors.foreground()))
                         .to_span(),
                 ]);
                 ListItem::new(content)
@@ -145,7 +145,7 @@ impl ThemeSelector {
         let list = List::new(items)
             .highlight_style(
                 Style::default()
-                    .bg(ToadTheme::TOAD_GREEN_DARK)
+                    .bg(colors.accent_dark())
                     .add_modifier(Modifier::BOLD),
             )
             .highlight_symbol("> ");
@@ -158,7 +158,7 @@ impl ThemeSelector {
             Text::new(help)
                 .style(
                     Style::default()
-                        .fg(ToadTheme::DARK_GRAY)
+                        .fg(colors.dark_gray())
                         .add_modifier(Modifier::ITALIC),
                 )
                 .to_span(),

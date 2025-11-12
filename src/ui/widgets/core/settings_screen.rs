@@ -4,7 +4,7 @@
 
 use crate::ui::{
     atoms::{block::Block, text::Text},
-    theme::{ToadTheme, manager::ThemeName},
+    theme::{manager::ThemeName, ResolvedThemeColors},
     widgets::core::theme_selector::ThemeSelector,
 };
 use ratatui::{
@@ -128,7 +128,7 @@ impl SettingsScreen {
         self.category == SettingsCategory::Editor && self.editor_selected_item == 0
     }
 
-    pub fn render(&mut self, frame: &mut Frame, area: Rect, current_theme: ThemeName, vim_mode: bool) {
+    pub fn render(&mut self, frame: &mut Frame, area: Rect, current_theme: ThemeName, vim_mode: bool, colors: &ResolvedThemeColors) {
         // Create centered modal-style layout (slightly larger than theme selector)
         let vertical = Layout::default()
             .direction(Direction::Vertical)
@@ -153,8 +153,8 @@ impl SettingsScreen {
         // Render main settings block
         let settings_block = Block::new()
             .title(" Settings ")
-            .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
-            .style(Style::default().bg(ToadTheme::BLACK))
+            .border_style(Style::default().fg(colors.accent()))
+            .style(Style::default().bg(colors.background()))
             .to_ratatui();
 
         let inner = settings_block.inner(settings_area);
@@ -186,7 +186,7 @@ impl SettingsScreen {
             .select(selected_idx)
             .highlight_style(
                 Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
+                    .fg(colors.accent())
                     .add_modifier(Modifier::BOLD),
             );
 
@@ -195,16 +195,16 @@ impl SettingsScreen {
         // Render content based on selected category
         match self.category {
             SettingsCategory::Theme => {
-                self.render_theme_settings(frame, chunks[1], current_theme);
+                self.render_theme_settings(frame, chunks[1], current_theme, colors);
             }
             SettingsCategory::Editor => {
-                self.render_editor_settings(frame, chunks[1], vim_mode);
+                self.render_editor_settings(frame, chunks[1], vim_mode, colors);
             }
             SettingsCategory::AI => {
-                self.render_ai_settings(frame, chunks[1]);
+                self.render_ai_settings(frame, chunks[1], colors);
             }
             SettingsCategory::Session => {
-                self.render_session_settings(frame, chunks[1]);
+                self.render_session_settings(frame, chunks[1], colors);
             }
         }
 
@@ -219,7 +219,7 @@ impl SettingsScreen {
             Text::new(help)
                 .style(
                     Style::default()
-                        .fg(ToadTheme::DARK_GRAY)
+                        .fg(colors.dark_gray())
                         .add_modifier(Modifier::ITALIC),
                 )
                 .to_span(),
@@ -228,7 +228,7 @@ impl SettingsScreen {
         frame.render_widget(help_paragraph, chunks[2]);
     }
 
-    fn render_theme_settings(&mut self, frame: &mut Frame, area: Rect, current_theme: ThemeName) {
+    fn render_theme_settings(&mut self, frame: &mut Frame, area: Rect, current_theme: ThemeName, colors: &ResolvedThemeColors) {
         // Get theme list from selector
         let all_themes = ThemeName::all();
         let theme_items: Vec<ListItem> = all_themes
@@ -241,7 +241,7 @@ impl SettingsScreen {
                 ListItem::new(Line::from(vec![
                     Text::new("  ").to_span(),
                     Text::new(label)
-                        .style(Style::default().fg(ToadTheme::FOREGROUND))
+                        .style(Style::default().fg(colors.foreground()))
                         .to_span(),
                 ]))
             })
@@ -250,7 +250,7 @@ impl SettingsScreen {
         let list = List::new(theme_items)
             .highlight_style(
                 Style::default()
-                    .bg(ToadTheme::TOAD_GREEN_DARK)
+                    .bg(colors.accent_dark())
                     .add_modifier(Modifier::BOLD),
             )
             .highlight_symbol("> ");
@@ -264,7 +264,7 @@ impl SettingsScreen {
         frame.render_stateful_widget(list, area, &mut list_state);
     }
 
-    fn render_editor_settings(&mut self, frame: &mut Frame, area: Rect, vim_mode: bool) {
+    fn render_editor_settings(&mut self, frame: &mut Frame, area: Rect, vim_mode: bool, colors: &ResolvedThemeColors) {
         // Create list items for editor settings
         let items = vec![
             format!("Vim Mode: {}", if vim_mode { "ON" } else { "OFF" }),
@@ -278,7 +278,7 @@ impl SettingsScreen {
                 ListItem::new(Line::from(vec![
                     Text::new("  ").to_span(),
                     Text::new(item)
-                        .style(Style::default().fg(ToadTheme::FOREGROUND))
+                        .style(Style::default().fg(colors.foreground()))
                         .to_span(),
                 ]))
             })
@@ -287,7 +287,7 @@ impl SettingsScreen {
         let list = List::new(list_items)
             .highlight_style(
                 Style::default()
-                    .bg(ToadTheme::TOAD_GREEN_DARK)
+                    .bg(colors.accent_dark())
                     .add_modifier(Modifier::BOLD),
             )
             .highlight_symbol("> ");
@@ -298,17 +298,17 @@ impl SettingsScreen {
         frame.render_stateful_widget(list, area, &mut list_state);
     }
 
-    fn render_ai_settings(&self, frame: &mut Frame, area: Rect) {
+    fn render_ai_settings(&self, frame: &mut Frame, area: Rect, colors: &ResolvedThemeColors) {
         let content = vec![
             Line::from(""),
             Line::from(Text::new("AI Settings").style(
                 Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
+                    .fg(colors.accent_bright())
                     .add_modifier(Modifier::BOLD),
             ).to_span()),
             Line::from(""),
             Line::from(Text::new("Coming soon...").style(
-                Style::default().fg(ToadTheme::GRAY)
+                Style::default().fg(colors.gray())
             ).to_span()),
             Line::from(""),
             Line::from("• Model selection"),
@@ -321,17 +321,17 @@ impl SettingsScreen {
         frame.render_widget(paragraph, area);
     }
 
-    fn render_session_settings(&self, frame: &mut Frame, area: Rect) {
+    fn render_session_settings(&self, frame: &mut Frame, area: Rect, colors: &ResolvedThemeColors) {
         let content = vec![
             Line::from(""),
             Line::from(Text::new("Session Settings").style(
                 Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
+                    .fg(colors.accent_bright())
                     .add_modifier(Modifier::BOLD),
             ).to_span()),
             Line::from(""),
             Line::from(Text::new("Coming soon...").style(
-                Style::default().fg(ToadTheme::GRAY)
+                Style::default().fg(colors.gray())
             ).to_span()),
             Line::from(""),
             Line::from("• Auto-save"),
