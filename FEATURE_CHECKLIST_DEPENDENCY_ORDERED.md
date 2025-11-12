@@ -1,7 +1,7 @@
 # TOAD Feature Checklist - Dependency Ordered
 
 **Last Updated:** 2025-11-12
-**Status:** ✅ Layers 0-4 COMPLETE | 🚧 Layer 5 67% (4/6) | ✅ Eval Center COMPLETE
+**Status:** ✅ Layers 0-2 COMPLETE | ✅ Layer 3 75% (3/4) | ✅ Layer 4 COMPLETE | ✅ Layer 5 100% (6/6) | ✅ Layer 6 67% (4/6) | ✅ Eval Center COMPLETE
 
 ---
 
@@ -232,21 +232,22 @@ Depends on: Layer 1
 ---
 
 ### 🟡 2.2 Clear Message Differentiation [ESSENTIAL]
-**Status:** [~] Partial (widget exists, styling needed)
+**Status:** [✓] Complete
 **Location:** src/ui/molecules/message_bubble.rs
 **Dependencies:** Text Rendering (1.2)
 **Blocks:** Conversation usability
 
-**What exists:**
-- Message bubble widget
-- Basic border drawing
+**Completed** (commit b7e72e9):
+- ✅ MessageBubble widget with role-based styling (message_bubble.rs)
+- ✅ Timestamp added to each message in HH:MM format (line 133)
+- ✅ Color coding: User (TOAD_GREEN), Assistant (BLUE) (lines 92-101)
+- ✅ User messages: Plain text with word wrapping (lines 152-190)
+- ✅ Assistant messages: Rich markdown rendering with indentation (lines 140-150)
+- ✅ Role headers: "You [HH:MM]:" and "Assistant [HH:MM]:" (line 134)
+- ✅ Content indentation: 2-space indent for readability
+- ✅ Integrated with MarkdownRenderer for assistant responses
 
-**What's needed:**
-- User messages: Right-aligned with square corners
-- Assistant messages: Left-aligned with rounded corners (╭╮╰╯)
-- System messages: Centered with dim color
-- Add timestamp to each message (HH:MM format)
-- Color coding: user (blue), assistant (green), system (gray)
+**Note:** System role not implemented as Message enum only has User/Assistant roles. Alignment variations (right/center) and border corner styles (square/rounded) deferred as optional polish features
 
 ---
 
