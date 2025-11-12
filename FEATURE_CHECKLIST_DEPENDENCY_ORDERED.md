@@ -1,7 +1,7 @@
 # TOAD Feature Checklist - Dependency Ordered
 
 **Last Updated:** 2025-11-12
-**Status:** ✅ Layers 0-4 COMPLETE | ✅ Eval Center COMPLETE
+**Status:** ✅ Layers 0-4 COMPLETE | 🚧 Layer 5 33% (2/6) | ✅ Eval Center COMPLETE
 
 ---
 
@@ -626,31 +626,26 @@ Depends on: Layer 3 (need safety before giving AI more context)
 Depends on: Layer 4 (need working context before advanced commands)
 
 ### 🟢 5.1 Slash Commands for Power Users [IMPORTANT]
-**Status:** [ ] Not Started
-**Location:** NEW: src/commands/slash_parser.rs
+**Status:** [✓] Complete
+**Location:** src/commands/slash_parser.rs
 **Dependencies:** Input Field (1.4), Context Management (4.4), Model Switching (4.1)
 **Blocks:** Command palette (5.2)
 
-**What's needed:**
-1. Detect input starting with `/`
-2. Parse command and arguments
-3. Commands to implement:
-   - `/add <pattern>` - Add files to context
-   - `/drop <file>` - Remove file from context
-   - `/clear-context` - Remove all files
-   - `/model <name>` - Switch model
-   - `/provider <name>` - Switch provider
-   - `/undo` - Revert last AI change
-   - `/diff` - Show changes since last commit
-   - `/commit <msg>` - Manual commit
-   - `/save <name>` - Save session
-   - `/load <name>` - Load session
-   - `/clear` - Clear conversation
-   - `/reset` - Full reset
-4. Tab completion for commands
-5. Argument validation
-6. Fuzzy matching
-7. Alias support: /m → /model
+**Implemented:**
+1. ✅ Slash command detection and parsing
+2. ✅ Quoted argument support ("/commit \"message\"")
+3. ✅ 13 default commands with aliases:
+   - Context: /add (a), /drop (d, remove), /clear-context (cc)
+   - Model/Provider: /model (m), /provider (p)
+   - Git: /undo (u), /diff, /commit
+   - Session: /save (s), /load (l)
+   - Conversation: /clear, /reset
+   - Help: /help (h, ?)
+4. ✅ Tab completion support via find_matches()
+5. ✅ Argument validation with count checking
+6. ✅ Fuzzy matching for command names
+7. ✅ SlashCommandRegistry for extensibility
+8. ✅ 15 comprehensive unit tests
 
 **Implementation:**
 ```rust
@@ -680,24 +675,22 @@ pub fn parse_slash_command(input: &str) -> Option<SlashCommand> {
 ---
 
 ### 🟢 5.2 Command History Navigation [IMPORTANT]
-**Status:** [~] Partial (History struct exists, integration needed)
+**Status:** [✓] Complete
 **Location:** src/infrastructure/history.rs
 **Dependencies:** Input Field (1.4)
 **Blocks:** User efficiency
 
-**What exists:**
-- History struct with add/prev/next methods
-- Stored in SessionState
-
-**What's needed:**
-1. Up arrow: Load previous message from history
-2. Down arrow: Load next message (or clear if at end)
-3. Show history position indicator: "↑ (15 of 42)"
-4. Ctrl+R: Reverse search through history
-5. Filter by type: /commands vs. prompts
-6. Persistent across sessions
-7. Configurable max size (default 1000)
-8. Privacy mode: exclude from history
+**Implemented:**
+1. ✅ Up arrow: older() method for previous messages
+2. ✅ Down arrow: newer() method for next messages
+3. ✅ History position indicator: position_indicator() → "↑ (15 of 42)"
+4. ✅ Ctrl+R: reverse_search(query) for reverse search
+5. ✅ Filter by type: commands_only(), messages_only()
+6. ✅ Persistent across sessions (save/load methods)
+7. ✅ Configurable max size (constructor parameter)
+8. ✅ Privacy mode: is_sensitive(), add_with_privacy()
+9. ✅ Sensitive pattern detection (password, api_key, token, etc.)
+10. ✅ Generic filter() with predicate support
 
 ---
 
