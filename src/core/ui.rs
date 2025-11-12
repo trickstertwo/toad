@@ -46,8 +46,11 @@ fn render_welcome(_app: &mut App, frame: &mut Frame, area: Rect) {
 
 /// Render the trust dialog screen
 fn render_trust_dialog(app: &mut App, frame: &mut Frame, area: Rect) {
+    // Create colors from theme
+    let colors = ResolvedThemeColors::from_manager(app.theme_manager_mut());
+
     // Render a semi-transparent background
-    let background = Block::default().style(Style::default().bg(ToadTheme::BLACK));
+    let background = Block::default().style(Style::default().bg(colors.background()));
     frame.render_widget(background, area);
 
     // Render the dialog on top
@@ -58,6 +61,9 @@ fn render_trust_dialog(app: &mut App, frame: &mut Frame, area: Rect) {
 
 /// Render the main interface
 fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
+    // Create colors from theme once
+    let colors = ResolvedThemeColors::from_manager(app.theme_manager_mut());
+
     // Create the main layout:
     // 1. Main content area
     // 2. Metadata line (path + model info)
@@ -78,22 +84,20 @@ fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
         .split(area);
 
     render_main_content(app, frame, chunks[0]);
-    render_metadata_line(app, frame, chunks[1]);
-    render_separator(frame, chunks[2]);
+    render_metadata_line(app, frame, chunks[1], &colors);
+    render_separator(frame, chunks[2], &colors);
     app.input_field().render(frame, chunks[3]);
-    render_separator(frame, chunks[4]);
-    render_shortcuts_bar(frame, chunks[5]);
+    render_separator(frame, chunks[4], &colors);
+    render_shortcuts_bar(frame, chunks[5], &colors);
 
     // Render overlays (help, command palette, and settings)
     if app.show_help() {
-        let colors = ResolvedThemeColors::from_manager(app.theme_manager_mut());
         app.help_screen().render(frame, area, &colors);
     } else if app.show_palette() {
         app.command_palette_mut().render(frame, area);
     } else if app.show_settings() {
         let current_theme = app.theme_manager_mut().current_theme_name();
         let vim_mode = app.vim_mode();
-        let colors = ResolvedThemeColors::from_manager(app.theme_manager_mut());
         app.settings_screen_mut().render(frame, area, current_theme, vim_mode, &colors);
     }
 }
@@ -105,7 +109,7 @@ fn render_main_content(app: &mut App, frame: &mut Frame, area: Rect) {
 }
 
 /// Render the metadata line (path on left, model info and tokens on right)
-fn render_metadata_line(app: &mut App, frame: &mut Frame, area: Rect) {
+fn render_metadata_line(app: &mut App, frame: &mut Frame, area: Rect, colors: &ResolvedThemeColors) {
     let project_path = app.working_directory().to_string_lossy();
     let model_info = "claude-sonnet-4.5 (1x)";
 
@@ -142,17 +146,17 @@ fn render_metadata_line(app: &mut App, frame: &mut Frame, area: Rect) {
         Span::styled(" ", Style::default()),
         Span::styled(
             project_path.to_string(),
-            Style::default().fg(ToadTheme::GRAY),
+            Style::default().fg(colors.gray()),
         ),
         Span::styled(padding, Style::default()),
-        Span::styled(model_info, Style::default().fg(ToadTheme::GRAY)),
+        Span::styled(model_info, Style::default().fg(colors.gray())),
     ];
 
     // Add token usage if present
     if !token_usage.is_empty() {
         spans.push(Span::styled(
             token_usage,
-            Style::default().fg(ToadTheme::TOAD_GREEN),
+            Style::default().fg(colors.accent()),
         ));
     }
 
@@ -163,18 +167,18 @@ fn render_metadata_line(app: &mut App, frame: &mut Frame, area: Rect) {
 }
 
 /// Render horizontal separator
-fn render_separator(frame: &mut Frame, area: Rect) {
+fn render_separator(frame: &mut Frame, area: Rect, colors: &ResolvedThemeColors) {
     let separator = "─".repeat(area.width as usize);
     let separator_line = Line::from(Span::styled(
         separator,
-        Style::default().fg(ToadTheme::DARK_GRAY),
+        Style::default().fg(colors.dark_gray()),
     ));
     let separator_paragraph = Paragraph::new(separator_line);
     frame.render_widget(separator_paragraph, area);
 }
 
 /// Render keyboard shortcuts bar
-fn render_shortcuts_bar(frame: &mut Frame, area: Rect) {
+fn render_shortcuts_bar(frame: &mut Frame, area: Rect, colors: &ResolvedThemeColors) {
     let shortcuts = [
         ("Ctrl+P", "Palette"),
         ("Ctrl+L", "Clear"),
@@ -188,11 +192,11 @@ fn render_shortcuts_bar(frame: &mut Frame, area: Rect) {
     let mut spans = vec![Span::styled(" ", Style::default())];
     for (i, (key, desc)) in shortcuts.iter().enumerate() {
         if i > 0 {
-            spans.push(Span::styled(" · ", Style::default().fg(ToadTheme::GRAY)));
+            spans.push(Span::styled(" · ", Style::default().fg(colors.gray())));
         }
-        spans.push(Span::styled(*key, Style::default().fg(ToadTheme::GRAY)));
+        spans.push(Span::styled(*key, Style::default().fg(colors.gray())));
         spans.push(Span::styled(" ", Style::default()));
-        spans.push(Span::styled(*desc, Style::default().fg(ToadTheme::GRAY)));
+        spans.push(Span::styled(*desc, Style::default().fg(colors.gray())));
     }
 
     let shortcuts_line = Line::from(spans);
@@ -202,6 +206,9 @@ fn render_shortcuts_bar(frame: &mut Frame, area: Rect) {
 
 /// Render the evaluation screen with comprehensive real-time visibility
 fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
+    // Create colors from theme
+    let colors = ResolvedThemeColors::from_manager(app.theme_manager_mut());
+
     // Get evaluation state
     let eval_state = app.evaluation_state();
 
@@ -209,18 +216,18 @@ fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
     if eval_state.is_none() {
         let block = Block::default()
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+            .border_style(Style::default().fg(colors.accent()))
             .title("Evaluation Center")
             .title_style(
                 Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
+                    .fg(colors.accent())
                     .add_modifier(Modifier::BOLD),
             );
         let inner = block.inner(area);
         frame.render_widget(block, area);
 
         let msg = Paragraph::new("Starting evaluation...")
-            .style(Style::default().fg(ToadTheme::GRAY));
+            .style(Style::default().fg(colors.gray()));
         frame.render_widget(msg, inner);
         return;
     }
@@ -237,18 +244,18 @@ fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
         .split(area);
 
     // Render header with task progress
-    render_evaluation_header(frame, main_chunks[0], &state);
+    render_evaluation_header(frame, main_chunks[0], &state, &colors);
 
     // If evaluation has results or error, show completion screen
     if state.results.is_some() || state.error.is_some() {
-        render_evaluation_complete(frame, main_chunks[1], &state);
+        render_evaluation_complete(frame, main_chunks[1], &state, &colors);
         app.toasts_mut().render(frame, area);
         return;
     }
 
     // Otherwise show running evaluation with multi-panel layout
     if let Some(progress) = &state.progress {
-        render_evaluation_running(frame, main_chunks[1], progress);
+        render_evaluation_running(frame, main_chunks[1], progress, &colors);
     }
 
     // Render toasts on top
@@ -256,11 +263,11 @@ fn render_evaluation(app: &mut App, frame: &mut Frame, area: Rect) {
 }
 
 /// Render evaluation header with task progress
-fn render_evaluation_header(frame: &mut Frame, area: Rect, state: &crate::core::app_state::EvaluationState) {
+fn render_evaluation_header(frame: &mut Frame, area: Rect, state: &crate::core::app_state::EvaluationState, colors: &ResolvedThemeColors) {
     if let Some(progress) = &state.progress {
         let header_block = Block::default()
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(ToadTheme::TOAD_GREEN))
+            .border_style(Style::default().fg(colors.accent()))
             .title(format!(
                 " Evaluation: Task {}/{} - Step {}/{} ",
                 progress.current_task,
@@ -270,7 +277,7 @@ fn render_evaluation_header(frame: &mut Frame, area: Rect, state: &crate::core::
             ))
             .title_style(
                 Style::default()
-                    .fg(ToadTheme::TOAD_GREEN)
+                    .fg(colors.accent())
                     .add_modifier(Modifier::BOLD),
             );
 
@@ -279,17 +286,17 @@ fn render_evaluation_header(frame: &mut Frame, area: Rect, state: &crate::core::
 
         // Show task ID and metrics on one line
         let info_line = Line::from(vec![
-            Span::styled("Task: ", Style::default().fg(ToadTheme::GRAY)),
-            Span::styled(progress.task_id.clone(), Style::default().fg(ToadTheme::WHITE)),
-            Span::styled("  │  Tokens: ", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("Task: ", Style::default().fg(colors.gray())),
+            Span::styled(progress.task_id.clone(), Style::default().fg(colors.foreground())),
+            Span::styled("  │  Tokens: ", Style::default().fg(colors.gray())),
             Span::styled(
                 format!("{}", progress.total_tokens),
-                Style::default().fg(ToadTheme::BLUE),
+                Style::default().fg(colors.info()),
             ),
-            Span::styled("  Cost: $", Style::default().fg(ToadTheme::GRAY)),
+            Span::styled("  Cost: $", Style::default().fg(colors.gray())),
             Span::styled(
                 format!("{:.4}", progress.total_cost),
-                Style::default().fg(ToadTheme::TOAD_GREEN),
+                Style::default().fg(colors.accent()),
             ),
         ]);
 
@@ -299,7 +306,7 @@ fn render_evaluation_header(frame: &mut Frame, area: Rect, state: &crate::core::
 }
 
 /// Render running evaluation with multi-panel layout
-fn render_evaluation_running(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress) {
+fn render_evaluation_running(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress, colors: &ResolvedThemeColors) {
     // Create 3-column layout: Conversation | Tool Log | Metrics
     let columns = Layout::default()
         .direction(Direction::Horizontal)
@@ -311,7 +318,7 @@ fn render_evaluation_running(frame: &mut Frame, area: Rect, progress: &crate::co
         .split(area);
 
     // Render conversation panel
-    render_conversation_panel(frame, columns[0], progress);
+    render_conversation_panel(frame, columns[0], progress, colors);
 
     // Split middle column: Tool log (top) + Files (bottom)
     let middle_split = Layout::default()
@@ -322,20 +329,20 @@ fn render_evaluation_running(frame: &mut Frame, area: Rect, progress: &crate::co
         ])
         .split(columns[1]);
 
-    render_tool_log_panel(frame, middle_split[0], progress);
-    render_files_panel(frame, middle_split[1], progress);
+    render_tool_log_panel(frame, middle_split[0], progress, colors);
+    render_files_panel(frame, middle_split[1], progress, colors);
 
     // Render metrics panel
-    render_metrics_panel(frame, columns[2], progress);
+    render_metrics_panel(frame, columns[2], progress, colors);
 }
 
 /// Render conversation panel showing LLM messages
-fn render_conversation_panel(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress) {
+fn render_conversation_panel(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress, colors: &ResolvedThemeColors) {
     let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(ToadTheme::BLUE))
+        .border_style(Style::default().fg(colors.info()))
         .title(" Conversation ")
-        .title_style(Style::default().fg(ToadTheme::BLUE).add_modifier(Modifier::BOLD));
+        .title_style(Style::default().fg(colors.info()).add_modifier(Modifier::BOLD));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -352,8 +359,8 @@ fn render_conversation_panel(frame: &mut Frame, area: Rect, progress: &crate::co
         }
 
         let (prefix, color) = match message.role {
-            crate::ai::llm::Role::User => ("▶ User", ToadTheme::TOAD_GREEN),
-            crate::ai::llm::Role::Assistant => ("◀ Assistant", ToadTheme::BLUE),
+            crate::ai::llm::Role::User => ("▶ User", colors.accent()),
+            crate::ai::llm::Role::Assistant => ("◀ Assistant", colors.info()),
         };
 
         lines.push(Line::from(Span::styled(
@@ -374,7 +381,7 @@ fn render_conversation_panel(frame: &mut Frame, area: Rect, progress: &crate::co
         for line in display_content.lines().take(3) {
             lines.push(Line::from(Span::styled(
                 line.to_string(),
-                Style::default().fg(ToadTheme::WHITE),
+                Style::default().fg(colors.foreground()),
             )));
         }
     }
@@ -382,7 +389,7 @@ fn render_conversation_panel(frame: &mut Frame, area: Rect, progress: &crate::co
     if lines.is_empty() {
         lines.push(Line::from(Span::styled(
             "Waiting for conversation...",
-            Style::default().fg(ToadTheme::GRAY),
+            Style::default().fg(colors.gray()),
         )));
     }
 
@@ -391,12 +398,12 @@ fn render_conversation_panel(frame: &mut Frame, area: Rect, progress: &crate::co
 }
 
 /// Render tool execution log
-fn render_tool_log_panel(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress) {
+fn render_tool_log_panel(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress, colors: &ResolvedThemeColors) {
     let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(ToadTheme::YELLOW))
+        .border_style(Style::default().fg(colors.warning()))
         .title(format!(" Tool Executions ({}) ", progress.tool_executions.len()))
-        .title_style(Style::default().fg(ToadTheme::YELLOW).add_modifier(Modifier::BOLD));
+        .title_style(Style::default().fg(colors.warning()).add_modifier(Modifier::BOLD));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -413,7 +420,7 @@ fn render_tool_log_panel(frame: &mut Frame, area: Rect, progress: &crate::core::
         }
 
         let status_icon = if tool.success { "✓" } else { "✗" };
-        let status_color = if tool.success { ToadTheme::TOAD_GREEN } else { ToadTheme::RED };
+        let status_color = if tool.success { colors.success() } else { colors.error() };
 
         lines.push(Line::from(vec![
             Span::styled(
@@ -422,11 +429,11 @@ fn render_tool_log_panel(frame: &mut Frame, area: Rect, progress: &crate::core::
             ),
             Span::styled(
                 tool.tool_name.clone(),
-                Style::default().fg(ToadTheme::YELLOW),
+                Style::default().fg(colors.warning()),
             ),
             Span::styled(
                 format!(" ({}ms)", tool.duration_ms),
-                Style::default().fg(ToadTheme::GRAY),
+                Style::default().fg(colors.gray()),
             ),
         ]));
 
@@ -440,7 +447,7 @@ fn render_tool_log_panel(frame: &mut Frame, area: Rect, progress: &crate::core::
             };
             lines.push(Line::from(Span::styled(
                 format!("  {}", truncated),
-                Style::default().fg(ToadTheme::GRAY),
+                Style::default().fg(colors.gray()),
             )));
         }
     }
@@ -448,7 +455,7 @@ fn render_tool_log_panel(frame: &mut Frame, area: Rect, progress: &crate::core::
     if lines.is_empty() {
         lines.push(Line::from(Span::styled(
             "No tools executed yet",
-            Style::default().fg(ToadTheme::GRAY),
+            Style::default().fg(colors.gray()),
         )));
     }
 
@@ -457,12 +464,12 @@ fn render_tool_log_panel(frame: &mut Frame, area: Rect, progress: &crate::core::
 }
 
 /// Render files modified panel
-fn render_files_panel(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress) {
+fn render_files_panel(frame: &mut Frame, area: Rect, progress: &crate::core::event::EvaluationProgress, colors: &ResolvedThemeColors) {
     let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(ToadTheme::GRAY))
+        .border_style(Style::default().fg(colors.gray()))
         .title(format!(" Files Modified ({}) ", progress.files_modified.len()))
-        .title_style(Style::default().fg(ToadTheme::GRAY));
+        .title_style(Style::default().fg(colors.gray()));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -474,15 +481,15 @@ fn render_files_panel(frame: &mut Frame, area: Rect, progress: &crate::core::eve
             .and_then(|n| n.to_str())
             .unwrap_or("<unknown>");
         lines.push(Line::from(vec![
-            Span::styled("● ", Style::default().fg(ToadTheme::TOAD_GREEN)),
-            Span::styled(file_name, Style::default().fg(ToadTheme::WHITE)),
+            Span::styled("● ", Style::default().fg(colors.success())),
+            Span::styled(file_name, Style::default().fg(colors.foreground())),
         ]));
     }
 
     if lines.is_empty() {
         lines.push(Line::from(Span::styled(
             "No files modified yet",
-            Style::default().fg(ToadTheme::GRAY),
+            Style::default().fg(colors.gray()),
         )));
     }
 
