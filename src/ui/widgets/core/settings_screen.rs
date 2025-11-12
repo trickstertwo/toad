@@ -4,7 +4,7 @@
 
 use crate::ui::{
     atoms::{block::Block, text::Text},
-    theme::{ToadTheme, manager::ThemeName, ResolvedThemeColors},
+    theme::{ToadTheme, manager::ThemeName},
     widgets::core::theme_selector::ThemeSelector,
 };
 use ratatui::{
@@ -51,6 +51,8 @@ pub struct SettingsScreen {
     category: SettingsCategory,
     /// Theme selector
     theme_selector: ThemeSelector,
+    /// Editor settings state
+    editor_selected_item: usize,  // 0 = vim mode toggle
 }
 
 impl SettingsScreen {
@@ -58,6 +60,7 @@ impl SettingsScreen {
         Self {
             category: SettingsCategory::Theme,
             theme_selector: ThemeSelector::new(current_theme),
+            editor_selected_item: 0,
         }
     }
 
@@ -85,6 +88,10 @@ impl SettingsScreen {
     pub fn select_next(&mut self) {
         match self.category {
             SettingsCategory::Theme => self.theme_selector.select_next(),
+            SettingsCategory::Editor => {
+                // Currently only 1 item (vim mode), no wrapping needed
+                // Future: Add more items and implement wrapping
+            }
             _ => {} // Other categories don't have selections yet
         }
     }
@@ -93,6 +100,11 @@ impl SettingsScreen {
     pub fn select_previous(&mut self) {
         match self.category {
             SettingsCategory::Theme => self.theme_selector.select_previous(),
+            SettingsCategory::Editor => {
+                if self.editor_selected_item > 0 {
+                    self.editor_selected_item -= 1;
+                }
+            }
             _ => {} // Other categories don't have selections yet
         }
     }
@@ -111,7 +123,12 @@ impl SettingsScreen {
         self.theme_selector = ThemeSelector::new(theme);
     }
 
-    pub fn render(&mut self, frame: &mut Frame, area: Rect, current_theme: ThemeName) {
+    /// Check if vim mode toggle should be applied (Editor category, Enter pressed)
+    pub fn should_toggle_vim_mode(&self) -> bool {
+        self.category == SettingsCategory::Editor && self.editor_selected_item == 0
+    }
+
+    pub fn render(&mut self, frame: &mut Frame, area: Rect, current_theme: ThemeName, vim_mode: bool) {
         // Create centered modal-style layout (slightly larger than theme selector)
         let vertical = Layout::default()
             .direction(Direction::Vertical)
@@ -181,7 +198,7 @@ impl SettingsScreen {
                 self.render_theme_settings(frame, chunks[1], current_theme);
             }
             SettingsCategory::Editor => {
-                self.render_editor_settings(frame, chunks[1]);
+                self.render_editor_settings(frame, chunks[1], vim_mode);
             }
             SettingsCategory::AI => {
                 self.render_ai_settings(frame, chunks[1]);
@@ -194,6 +211,7 @@ impl SettingsScreen {
         // Render help text
         let help = match self.category {
             SettingsCategory::Theme => "←→ Switch Tab · ↑↓ Navigate · Enter Apply · Esc Close",
+            SettingsCategory::Editor => "←→ Switch Tab · ↑↓ Navigate · Enter Toggle · Esc Close",
             _ => "←→ Switch Tab · Esc Close",
         };
 
@@ -246,26 +264,38 @@ impl SettingsScreen {
         frame.render_stateful_widget(list, area, &mut list_state);
     }
 
-    fn render_editor_settings(&self, frame: &mut Frame, area: Rect) {
-        let content = vec![
-            Line::from(""),
-            Line::from(Text::new("Editor Settings").style(
-                Style::default()
-                    .fg(ToadTheme::TOAD_GREEN_BRIGHT)
-                    .add_modifier(Modifier::BOLD),
-            ).to_span()),
-            Line::from(""),
-            Line::from(Text::new("Coming soon...").style(
-                Style::default().fg(ToadTheme::GRAY)
-            ).to_span()),
-            Line::from(""),
-            Line::from("• Vim mode toggle"),
-            Line::from("• Tab width"),
-            Line::from("• Syntax highlighting"),
+    fn render_editor_settings(&mut self, frame: &mut Frame, area: Rect, vim_mode: bool) {
+        // Create list items for editor settings
+        let items = vec![
+            format!("Vim Mode: {}", if vim_mode { "ON" } else { "OFF" }),
+            // Future: "Tab Width: 4".to_string(),
+            // Future: "Syntax Highlighting: ON".to_string(),
         ];
 
-        let paragraph = Paragraph::new(content);
-        frame.render_widget(paragraph, area);
+        let list_items: Vec<ListItem> = items
+            .iter()
+            .map(|item| {
+                ListItem::new(Line::from(vec![
+                    Text::new("  ").to_span(),
+                    Text::new(item)
+                        .style(Style::default().fg(ToadTheme::FOREGROUND))
+                        .to_span(),
+                ]))
+            })
+            .collect();
+
+        let list = List::new(list_items)
+            .highlight_style(
+                Style::default()
+                    .bg(ToadTheme::TOAD_GREEN_DARK)
+                    .add_modifier(Modifier::BOLD),
+            )
+            .highlight_symbol("> ");
+
+        let mut list_state = ListState::default();
+        list_state.select(Some(self.editor_selected_item));
+
+        frame.render_stateful_widget(list, area, &mut list_state);
     }
 
     fn render_ai_settings(&self, frame: &mut Frame, area: Rect) {

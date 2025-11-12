@@ -91,7 +91,8 @@ fn render_main(app: &mut App, frame: &mut Frame, area: Rect) {
         app.command_palette_mut().render(frame, area);
     } else if app.show_settings() {
         let current_theme = app.theme_manager_mut().current_theme_name();
-        app.settings_screen_mut().render(frame, area, current_theme);
+        let vim_mode = app.vim_mode();
+        app.settings_screen_mut().render(frame, area, current_theme, vim_mode);
     }
 }
 

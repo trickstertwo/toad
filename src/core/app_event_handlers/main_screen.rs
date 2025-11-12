@@ -146,6 +146,7 @@ impl App {
                 }
                 // Enter applies selected setting
                 (KeyCode::Enter, _) => {
+                    // Check for theme change
                     if let Some(theme) = self.settings_screen.selected_theme() {
                         self.theme_manager.set_theme(theme);
                         self.status_message = format!("Theme changed to {}", theme.as_str());
@@ -155,6 +156,15 @@ impl App {
                         self.session.set_theme(theme.as_str().to_string());
                         if let Err(e) = self.save_session() {
                             tracing::warn!("Failed to save session after theme change: {}", e);
+                        }
+                    }
+                    // Check for vim mode toggle
+                    else if self.settings_screen.should_toggle_vim_mode() {
+                        self.toggle_vim_mode();
+                        self.status_message = format!("Vim mode: {}", if self.vim_mode { "ON" } else { "OFF" });
+                        // Save to config
+                        if let Err(e) = self.config.save_to_file(&crate::config::Config::default_path()) {
+                            tracing::warn!("Failed to save config after vim mode toggle: {}", e);
                         }
                     }
                 }
