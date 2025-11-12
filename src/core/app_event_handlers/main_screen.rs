@@ -196,8 +196,11 @@ impl App {
                 if self.input_field.is_focused() && self.input_field.value().is_empty() {
                     self.should_quit = true;
                 } else if !self.input_field.is_focused() {
+                    // Estimate page height (terminal height minus UI chrome)
+                    // Assuming ~6 lines for borders, input, shortcuts, etc.
+                    let page_height = 20usize; // Conservative default
+                    self.conversation_view.page_down(page_height);
                     self.status_message = "Page down".to_string();
-                    // TODO: Implement page down for scrollable content
                 }
             }
             // Ctrl+U for page up (Vim-style) or clear input if focused
@@ -205,8 +208,10 @@ impl App {
                 if self.input_field.is_focused() {
                     self.input_field.clear();
                 } else {
+                    // Estimate page height (terminal height minus UI chrome)
+                    let page_height = 20usize; // Conservative default
+                    self.conversation_view.page_up(page_height);
                     self.status_message = "Page up".to_string();
-                    // TODO: Implement page up for scrollable content
                 }
             }
             // Ctrl+L to clear conversation history
