@@ -578,12 +578,30 @@ mod tests {
             contamination_risk: "LOW".to_string(),
         };
 
+        // Create task results using new() constructor
+        let mut task1_1 = TaskResult::new("task-1-1".to_string());
+        task1_1.solved = true;
+        task1_1.duration_ms = 1000;
+
+        let mut task1_2 = TaskResult::new("task-1-2".to_string());
+        task1_2.solved = false;
+        task1_2.duration_ms = 2000;
+
+        let mut task2_1 = TaskResult::new("task-2-1".to_string());
+        task2_1.solved = true;
+        task2_1.duration_ms = 1500;
+
+        let mut task2_2 = TaskResult::new("task-2-2".to_string());
+        task2_2.solved = true;
+        task2_2.duration_ms = 1500;
+
+        let mut task2_3 = TaskResult::new("task-2-3".to_string());
+        task2_3.solved = false;
+        task2_3.duration_ms = 2000;
+
         let result1 = BenchmarkResult {
             benchmark_metadata: metadata1,
-            task_results: vec![
-                TaskResult { solved: true, duration_ms: 1000, ..Default::default() },
-                TaskResult { solved: false, duration_ms: 2000, ..Default::default() },
-            ],
+            task_results: vec![task1_1, task1_2],
             duration_ms: 3000,
             success_rate: 0.5,
             total_cost_usd: 0.50,
@@ -593,11 +611,7 @@ mod tests {
 
         let result2 = BenchmarkResult {
             benchmark_metadata: metadata2,
-            task_results: vec![
-                TaskResult { solved: true, duration_ms: 1500, ..Default::default() },
-                TaskResult { solved: true, duration_ms: 1500, ..Default::default() },
-                TaskResult { solved: false, duration_ms: 2000, ..Default::default() },
-            ],
+            task_results: vec![task2_1, task2_2, task2_3],
             duration_ms: 5000,
             success_rate: 0.666,
             total_cost_usd: 0.75,
