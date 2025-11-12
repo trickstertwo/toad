@@ -1,7 +1,7 @@
 # TOAD Feature Checklist - Dependency Ordered
 
 **Last Updated:** 2025-11-12
-**Status:** ✅ Layers 0-3 COMPLETE | 🚧 Layer 4 40% (2/5) | ✅ Eval Center COMPLETE
+**Status:** ✅ Layers 0-3 COMPLETE | 🚧 Layer 4 80% (4/5) | ✅ Eval Center COMPLETE
 
 ---
 
@@ -1163,12 +1163,12 @@ These features are specific to the F9 Evaluation Center dashboard for SWE-bench 
 **Goal:** Give AI more context and control
 
 - [x] 🟢 4.1: Model selector UI ✅ (ModelInfo + selection widget with 6 models)
-- [ ] 🟢 4.2: Provider configuration screen
+- [ ] 🟢 4.2: Provider configuration screen ← REMAINING
 - [x] 🟢 4.3: Context panel with token usage ✅ (ContextPanel + file management + cost estimation)
-- [ ] 🟢 4.4: File browser with context management ← NEXT
-- [ ] 🟢 4.5: Full session persistence
+- [x] 🟢 4.4: File browser with context management ✅ (ContextBrowser + token estimates + add/remove)
+- [x] 🟢 4.5: Full session persistence ✅ (SessionState with working dir/history/conversation/theme)
 
-**Success Metric:** Can manage context and switch models easily
+**Success Metric:** ✅ MOSTLY ACHIEVED - Can manage context and switch models (80% complete - only provider config missing)
 
 ---
 
@@ -1268,12 +1268,12 @@ Layer 3: Safety ✅ ALL COMPLETE
 [✓] Approval system ✅ (core + UI complete, needs event wiring)
 [✓] Git auto-commits ✅ (AutoCommitManager + message gen + undo)
 
-Layer 4: Context (40% complete - 2/5)
+Layer 4: Context (80% complete - 4/5) ✨
 [✓] Model selector ✅ (6 models with capabilities/cost/speed)
-[ ] Provider switcher ← NEXT
+[ ] Provider switcher ← REMAINING (non-blocking)
 [✓] Context panel ✅ (token tracking + file list + cost estimation)
-[ ] File browser
-[ ] Session persistence
+[✓] File browser ✅ (ContextBrowser + token estimates + context integration)
+[✓] Session persistence ✅ (working dir/history/conversation/theme/plugins)
 
 Layer 5: Power User
 [ ] Slash commands
