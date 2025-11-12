@@ -73,6 +73,7 @@ arrow = "57.0.0"
 mockall = "0.13.1"
 humantime-serde = "1.1.1"
 uuid = { version = "1.18.1", features = ["v4"] }
+rand = "0.9.2"
 
 [dev-dependencies]
 tempfile = "3.8"

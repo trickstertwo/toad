@@ -416,6 +416,83 @@ pub struct StatisticalSummary {
     pub confidence_interval_95: (f64, f64),
 }
 
+impl StatisticalSummary {
+    /// Create statistical summary from two samples
+    ///
+    /// Computes all statistical tests comparing two samples:
+    /// - Welch's t-test (unequal variances)
+    /// - Cohen's d effect size
+    /// - 95% bootstrap confidence interval
+    ///
+    /// # Parameters
+    ///
+    /// - `sample_a`: Baseline/control group measurements
+    /// - `sample_b`: Treatment/experimental group measurements
+    ///
+    /// # Examples
+    ///
+    /// ```rust,ignore
+    /// use toad::ai::evaluation::models::StatisticalSummary;
+    ///
+    /// let baseline = vec![0.5, 0.6, 0.55, 0.58, 0.52];
+    /// let improved = vec![0.68, 0.72, 0.70, 0.75, 0.69];
+    ///
+    /// let summary = StatisticalSummary::from_samples(&baseline, &improved);
+    ///
+    /// println!("p-value: {}", summary.p_value);
+    /// println!("Effect size: {} ({})",
+    ///     summary.effect_size_cohens_d,
+    ///     if summary.effect_size_cohens_d > 0.8 { "Large" } else { "Medium" }
+    /// );
+    /// ```
+    pub fn from_samples(sample_a: &[f64], sample_b: &[f64]) -> Self {
+        use crate::ai::stats::StatisticalTest;
+        use statrs::distribution::{ContinuousCDF, StudentsT};
+        use statrs::statistics::Statistics;
+
+        // Welch's t-test
+        let mean_a = sample_a.mean();
+        let mean_b = sample_b.mean();
+        let var_a = sample_a.variance();
+        let var_b = sample_b.variance();
+        let n_a = sample_a.len() as f64;
+        let n_b = sample_b.len() as f64;
+
+        let t_statistic = (mean_b - mean_a) / ((var_a / n_a) + (var_b / n_b)).sqrt();
+
+        // Welch-Satterthwaite degrees of freedom
+        let df_num = ((var_a / n_a) + (var_b / n_b)).powi(2);
+        let df_denom = (var_a / n_a).powi(2) / (n_a - 1.0) + (var_b / n_b).powi(2) / (n_b - 1.0);
+        let degrees_of_freedom = df_num / df_denom;
+
+        // Two-tailed p-value
+        let t_dist = StudentsT::new(0.0, 1.0, degrees_of_freedom).unwrap();
+        let p_value = 2.0 * (1.0 - t_dist.cdf(t_statistic.abs()));
+
+        // Cohen's d effect size
+        let effect_size_cohens_d = StatisticalTest::cohens_d(sample_a, sample_b);
+
+        // Bootstrap 95% confidence interval for mean difference
+        let combined: Vec<f64> = sample_a.iter().chain(sample_b.iter()).copied().collect();
+        let (lower, upper) = StatisticalTest::bootstrap_ci(
+            &combined,
+            |s| {
+                let mid = sample_a.len();
+                s[..mid].mean() - s[mid..].mean()
+            },
+            0.95,
+        );
+
+        Self {
+            t_statistic,
+            p_value,
+            degrees_of_freedom,
+            effect_size_cohens_d,
+            confidence_interval_95: (lower, upper),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
