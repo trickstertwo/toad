@@ -425,12 +425,14 @@ impl App {
             }
             // Page Up/Down keys
             (KeyCode::PageUp, _) => {
+                let page_height = 20usize; // Conservative default
+                self.conversation_view.page_up(page_height);
                 self.status_message = "Page up".to_string();
-                // TODO: Implement page up for scrollable content
             }
             (KeyCode::PageDown, _) => {
+                let page_height = 20usize; // Conservative default
+                self.conversation_view.page_down(page_height);
                 self.status_message = "Page down".to_string();
-                // TODO: Implement page down for scrollable content
             }
             // Vim-style navigation (when not in input field and vim mode enabled)
             (KeyCode::Char('h'), KeyModifiers::NONE)
